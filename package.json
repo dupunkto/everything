@@ -1,0 +1,14 @@
+{
+  "name": "linio",
+  "module": "linio.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "marked": "^16.1.1"
+  }
+}

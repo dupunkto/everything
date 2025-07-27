@@ -1,0 +1,78 @@
+@import url("https://cdn.geheimesite.nl/punkt.css");
+
+section {
+  width: 500px;
+  margin: 15px;
+  padding: 45px 35px;
+  padding-top: 55px;
+  word-wrap: break-word;
+  box-shadow: 10px 10px 30px 10px rgba(0, 0, 0, 0.1);
+  position: absolute;
+  background: light-dark(white, #2b2b33);
+}
+
+section header {
+  position: absolute;
+  right: 10px;
+  top: 0;
+  margin-right: 10px;
+}
+
+section header time,
+section header span {
+  background: white;
+  color: black;
+  line-height: 1;
+  padding: 10px;
+  padding-top: 4px;
+  padding-bottom: 2px;
+  margin-right: 5px;
+}
+
+[data-page="404"] {
+  color: gray;
+  font-style: italic;
+  padding: 20px 30px;
+}
+
+section :first-child {
+  margin-top: 0;
+}
+
+section input[type="checkbox"] + * {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-top: 0;
+  line-height: 1.6;
+}
+
+section :last-child {
+  margin-bottom: 0;
+}
+
+input[type="checkbox"] {
+  transform: scale(3);
+  transform-origin: left top;
+  float: left;
+  margin-right: 50px;
+}
+
+.deadline::before {
+  content: "deadline ";
+}
+
+.completed-at::before {
+  content: "completed ";
+}
+
+.shelved-at::before {
+  content: "dnf ";
+}
+
+.edit {
+  position: absolute;
+  font-size: 0.9rem;
+  opacity: 0.8;
+  right: 20px;
+  bottom: 5px;
+}

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Linio</title>
+    <link rel="stylesheet" href="./main.css" />
+  </head>
+  <body>
+    <noscript>
+      I'm afraid this monstrosity requires JavaScript to function. Sorry!
+    </noscript>
+    
+    <script>
+      // This tracks the mouse position. Needed because JavaScript sucks
+      // and doesn't allow me to read the mouse position at an arbitrary
+      // point in the code :(
+
+      let mouseX = 0;
+      let mouseY = 0;
+
+      document.addEventListener("mousemove", (event) => {
+        mouseX = event.clientX;
+        mouseY = event.clientY;
+      });
+
+      async function openNote(path, x, y) {
+        const response = await fetch(`/api/note${path}`);
+        const section = document.createElement("section");
+
+        section.style.top = y + "px";
+        section.style.left = x + "px";
+        section.onclick = (event) => {
+          if (event.shiftKey) {
+            section.remove();
+            history.back();
+          }
+        };
+        
+        if (response.ok) {
+          const note = await response.json();
+          const link = document.createElement("a");
+
+          link.href = "#";
+          link.innerText = "edit";
+          link.className = "edit";
+
+          section.appendChild(link);
+
+          if(note.task) {
+            const header = document.createElement("header");
+            const checkbox = document.createElement("input");
+
+            if(note.task.completed_at) {
+              const timestamp = document.createElement("time");
+
+              timestamp.innerText = note.task.completed_at;
+              timestamp.dateTime = note.task.completed_at;
+              timestamp.className = "completed-at";
+              header.appendChild(timestamp);
+            }
+
+            if(note.task.shelved_at) {
+              const timestamp = document.createElement("time");
+
+              timestamp.innerText = note.task.shelved_at;
+              timestamp.dateTime = note.task.shelved_at;
+              timestamp.className = "shelved-at";
+              header.appendChild(timestamp);
+            }
+            
+            if(note.task.deadline) {
+              const timestamp = document.createElement("time");
+
+              timestamp.innerText = note.task.deadline;
+              timestamp.dateTime = note.task.deadline;
+              timestamp.className = "deadline";
+              header.appendChild(timestamp);
+            }
+
+            if(note.task.list) {
+              const list = document.createElement("span");
+
+              list.innerText = `~${note.task.list}`;
+              header.appendChild(list);
+            }
+
+            checkbox.type = "checkbox";
+            checkbox.checked = note.task.status == 'done';
+
+            section.appendChild(header);
+            section.appendChild(checkbox);
+          }
+
+          document.title = note.title;
+          section.innerHTML += note.html;
+          section.setAttribute("data-page", path);
+          history.pushState({}, "", path);
+        } else {
+          section.innerHTML = "<p>This note doesn't exist (yet)</p>";
+          section.setAttribute("data-page", "404");
+        }
+
+        document.body.appendChild(section);
+
+        // Overwrite click events for all links.
+        section.querySelectorAll("a:not(.edit)")
+          .forEach(a => a.addEventListener("click", clickLink));
+      }
+
+      function clickLink(event) {
+        event.preventDefault();
+        if (event.ctrlKey || event.metaKey) {
+          window.open(event.target.pathname);
+        } else {
+          openNote(event.target.pathname, mouseX, mouseY);
+        }
+      }
+
+      window.clickLink = clickLink;
+      window.openNote = openNote;
+
+      openNote(window.location.pathname);
+    </script>
+  </body>
+</html>
