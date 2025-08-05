@@ -166,7 +166,9 @@ async function linkOtherNotes(md: string) {
 
 async function parseTask(md: string) {
   const lines = md.trim().split('\n').map(line => line.trim());
-  const pattern = /^(?<status>TODO|DONE|DNF)(?:\s+@?\s*(?<date>\d{4}(?:-\d{2})?(?:-\d{2})?)?)?(?:\s+~(?<list>\S+))?$/i;
+
+  const attributeOrder = ['TODO', 'DONE', 'DNF'];
+  const pattern = /^(?<status>TODO|DONE|DNF)(?:\s+@\s*(?<date>\d{4}(?:-\d{1,2})?(?:-\d{1,2})?)?)?(?:\s+~(?<list>\S+))?$/i;
 
   const task = {
     status: "none",
@@ -176,7 +178,15 @@ async function parseTask(md: string) {
     shelved_at: null
   };
 
-  for (const line of lines) {
+  const modifiers = lines
+    .filter(line => line.match(pattern))
+    .sort((a, b) => {
+      const statusA = a.match(pattern)?.groups?.status?.toUpperCase() || '';
+      const statusB = b.match(pattern)?.groups?.status?.toUpperCase() || '';
+      return attributeOrder.indexOf(statusA) - attributeOrder.indexOf(statusB);
+    });
+
+  for (const line of modifiers) {
     const match = line.match(pattern);
     if (!match) continue;
 
