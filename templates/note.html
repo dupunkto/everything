@@ -22,6 +22,105 @@
         mouseY = event.clientY;
       });
 
+      // Helper for formatting notes.
+      const formatDate = (d) => d.toISOString().slice(0, 10).replace(/-(0)/g, '-');
+
+      async function loadNote(section, note) {
+        const link = document.createElement("a");
+
+        link.href = "#";
+        link.innerText = "edit";
+        link.className = "edit";
+
+        section.appendChild(link);
+
+        if(note.task) {
+          const header = document.createElement("header");
+          const checkbox = document.createElement("input");
+
+          if(note.task.completed_at) {
+            const timestamp = document.createElement("time");
+
+            timestamp.innerText = note.task.completed_at;
+            timestamp.dateTime = note.task.completed_at;
+            timestamp.className = "completed-at";
+            header.appendChild(timestamp);
+          }
+
+          if(note.task.shelved_at) {
+            const timestamp = document.createElement("time");
+
+            timestamp.innerText = note.task.shelved_at;
+            timestamp.dateTime = note.task.shelved_at;
+            timestamp.className = "shelved-at";
+            header.appendChild(timestamp);
+          }
+          
+          if(note.task.deadline) {
+            const timestamp = document.createElement("time");
+
+            timestamp.innerText = note.task.deadline;
+            timestamp.dateTime = note.task.deadline;
+            timestamp.className = "deadline";
+            header.appendChild(timestamp);
+          }
+
+          if(note.task.list) {
+            const list = document.createElement("span");
+
+            list.innerText = `~${note.task.list}`;
+            header.appendChild(list);
+          }
+
+          checkbox.name = note.id;
+          checkbox.type = "checkbox";
+
+          if(note.task.status == 'done') {
+            checkbox.setAttribute("checked", "checked");
+          }
+
+          section.appendChild(header);
+          section.appendChild(checkbox);
+
+          checkbox.addEventListener("click", async (e) => {
+            e.target.disabled = true; // Prevents race conditions when rapidly clicking.
+            
+            const md = e.target.checked ?
+              `DONE @ ${formatDate(new Date())}\n${note.md}` :
+              note.md.replace(/^(DONE|DNF).*$(\r?\n)?/im, '');
+
+            console.log(md);
+
+            await updateNote(section, note, md);
+          });
+        }
+
+        document.title = note.title;
+        section.insertAdjacentHTML('beforeend', note.html);
+
+        // Overwrite click events for all links.
+        section.querySelectorAll("a:not(.edit)")
+          .forEach(a => a.addEventListener("click", clickLink));
+      }
+
+      async function updateNote(section, note, md) {
+        const response = await fetch(`/api/note/${note.id}`, {
+          method: "PUT", body: JSON.stringify({ md })
+        });
+
+        if(response.ok) {
+          note = await response.json();
+          section.innerHTML = "";
+          await loadNote(section, note);
+
+          section.setAttribute("data-page", `/${note.id}`);
+          history.pushState({}, "", `/${note.id}`);
+        } else {
+          section.innerHTML = "<p>linio crashed :[</p>";
+          section.setAttribute("data-page", "500");
+        }
+      }
+
       async function openNote(path, x, y) {
         const response = await fetch(`/api/note${path}`);
         const section = document.createElement("section");
@@ -34,76 +133,18 @@
             history.back();
           }
         };
-        
-        if (response.ok) {
+
+        if(response.ok) {
           const note = await response.json();
-          const link = document.createElement("a");
-
-          link.href = "#";
-          link.innerText = "edit";
-          link.className = "edit";
-
-          section.appendChild(link);
-
-          if(note.task) {
-            const header = document.createElement("header");
-            const checkbox = document.createElement("input");
-
-            if(note.task.completed_at) {
-              const timestamp = document.createElement("time");
-
-              timestamp.innerText = note.task.completed_at;
-              timestamp.dateTime = note.task.completed_at;
-              timestamp.className = "completed-at";
-              header.appendChild(timestamp);
-            }
-
-            if(note.task.shelved_at) {
-              const timestamp = document.createElement("time");
-
-              timestamp.innerText = note.task.shelved_at;
-              timestamp.dateTime = note.task.shelved_at;
-              timestamp.className = "shelved-at";
-              header.appendChild(timestamp);
-            }
-            
-            if(note.task.deadline) {
-              const timestamp = document.createElement("time");
-
-              timestamp.innerText = note.task.deadline;
-              timestamp.dateTime = note.task.deadline;
-              timestamp.className = "deadline";
-              header.appendChild(timestamp);
-            }
-
-            if(note.task.list) {
-              const list = document.createElement("span");
-
-              list.innerText = `~${note.task.list}`;
-              header.appendChild(list);
-            }
-
-            checkbox.type = "checkbox";
-            checkbox.checked = note.task.status == 'done';
-
-            section.appendChild(header);
-            section.appendChild(checkbox);
-          }
-
-          document.title = note.title;
-          section.innerHTML += note.html;
+          await loadNote(section, note);
           section.setAttribute("data-page", path);
           history.pushState({}, "", path);
         } else {
           section.innerHTML = "<p>This note doesn't exist (yet)</p>";
           section.setAttribute("data-page", "404");
-        }
+        }          
 
         document.body.appendChild(section);
-
-        // Overwrite click events for all links.
-        section.querySelectorAll("a:not(.edit)")
-          .forEach(a => a.addEventListener("click", clickLink));
       }
 
       function clickLink(event) {
@@ -117,6 +158,7 @@
 
       window.clickLink = clickLink;
       window.openNote = openNote;
+      window.loadNote = loadNote;
 
       openNote(window.location.pathname);
     </script>
