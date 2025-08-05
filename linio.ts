@@ -68,21 +68,21 @@ async function deleteNote(req: Request) {
 // Public API
 
 async function listNotes() {
-  const files = await $`ls ${ROOT} | grep '\.txt$'`;
-  const humids = files.text().trim().split("\n");
+  const files = await $`ls ${ROOT} | grep '\.txt$'`.text();
+  const humids = files.trim().split("\n");
 
   return Promise.all(humids.map(fetchNoteByPath));
 }
 
 async function fetchNote(humid: string) {
-  const file = await $`cat ${join(ROOT, `/${humid}.txt`)}`;
-  return parseNote(humid, file.text());
+  const file = await $`cat ${join(ROOT, `/${humid}.txt`)}`.text();
+  return parseNote(humid, file);
 }
 
 async function fetchNoteByPath(path: string) {
-  const file = await $`cat ${join(ROOT, path)}`;
+  const file = await $`cat ${join(ROOT, path)}`.text();
   const humid = path.replace("/", "").replace(".txt", "");
-  return parseNote(humid, file.text());
+  return parseNote(humid, file);
 }
 
 async function putNote(humid: string, md: string) {
