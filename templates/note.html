@@ -4,7 +4,7 @@
     <title>Linio</title>
     <link rel="stylesheet" href="./main.css" />
   </head>
-  <body>
+  <body class="note">
     <noscript>
       I'm afraid this monstrosity requires JavaScript to function. Sorry!
     </noscript>
@@ -22,7 +22,7 @@
         mouseY = event.clientY;
       });
 
-      // Helper for formatting notes.
+      // Helper for formatting datetimes.
       const formatDate = (d) => d.toISOString().slice(0, 10).replace(/-(0)/g, '-');
 
       async function loadNote(section, note) {
@@ -82,17 +82,15 @@
           section.appendChild(header);
           section.appendChild(checkbox);
 
-          checkbox.addEventListener("click", async (e) => {
+          checkbox.onclick = async (e) => {
             e.target.disabled = true; // Prevents race conditions when rapidly clicking.
             
             const md = e.target.checked ?
               `DONE @ ${formatDate(new Date())}\n${note.md}` :
               note.md.replace(/^(DONE|DNF).*$(\r?\n)?/im, '');
 
-            console.log(md);
-
             await updateNote(section, note, md);
-          });
+          }
         }
 
         document.title = note.title;
@@ -112,17 +110,14 @@
           note = await response.json();
           section.innerHTML = "";
           await loadNote(section, note);
-
-          section.setAttribute("data-page", `/${note.id}`);
-          history.pushState({}, "", `/${note.id}`);
         } else {
           section.innerHTML = "<p>linio crashed :[</p>";
           section.setAttribute("data-page", "500");
         }
       }
 
-      async function openNote(path, x, y) {
-        const response = await fetch(`/api/note${path}`);
+      async function openNote(humid, x, y) {
+        const response = await fetch(`/api/note/${humid}`);
         const section = document.createElement("section");
 
         section.style.top = y + "px";
@@ -137,8 +132,7 @@
         if(response.ok) {
           const note = await response.json();
           await loadNote(section, note);
-          section.setAttribute("data-page", path);
-          history.pushState({}, "", path);
+          section.setAttribute("data-page", humid);
         } else {
           section.innerHTML = "<p>This note doesn't exist (yet)</p>";
           section.setAttribute("data-page", "404");
@@ -152,7 +146,9 @@
         if (event.ctrlKey || event.metaKey) {
           window.open(event.target.pathname);
         } else {
-          openNote(event.target.pathname, mouseX, mouseY);
+          const humid = event.target.pathname.split("/")[1];
+          openNote(humid, mouseX, mouseY);
+          history.pushState({}, "", `/${humid}`);
         }
       }
 
@@ -160,7 +156,10 @@
       window.openNote = openNote;
       window.loadNote = loadNote;
 
-      openNote(window.location.pathname);
+      const url = new URL("https://example.com/first/second/third");
+      const firstSegment = url.pathname.split("/").filter(Boolean)[0];
+
+      openNote(window.location.pathname.split("/")[1]);
     </script>
   </body>
 </html>

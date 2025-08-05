@@ -2,7 +2,7 @@ import { $, argv, serve } from "bun";
 import { join } from "node:path";
 import { marked } from "marked";
 
-import dashboard from "./templates/dash.html";
+import dashboard from "./templates/dashboard.html";
 import index from "./templates/index.html";
 import todo from "./templates/todo.html";
 import note from "./templates/note.html";
