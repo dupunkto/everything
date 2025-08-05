@@ -20,7 +20,7 @@ section header {
 
 section header time,
 section header span {
-  background: white;
+  background: light-dark(#f2f2f2, white);
   color: black;
   line-height: 1;
   padding: 10px;
