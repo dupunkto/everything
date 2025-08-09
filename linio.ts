@@ -2,21 +2,20 @@ import { $, argv, serve } from "bun";
 import { join } from "node:path";
 import { marked } from "marked";
 
-import dashboard from "./templates/dashboard.html";
-import index from "./templates/index.html";
-import todo from "./templates/todo.html";
-import note from "./templates/note.html";
-
 const ROOT = argv[2];
+const TODOS = ['TODO', 'DONE', 'NVM'];
+
+import { generateHumID } from "./linio/humid";
+import { Note, Task } from "./linio/types";
+
+import app from "./public/index.html";
 
 const server = serve({
   port: 4000,
   development: true,
   routes: {
-    "/": dashboard,
-    "/Index": index,
-    "/ToDo": todo,
-    "/:humid": note,
+    "/": app,
+    "/:page": app,
     
     // API endpoints
     "/api/notes": {
@@ -34,7 +33,7 @@ const server = serve({
 
 console.log(`Serving '${ROOT}' on ${server.url}`);
 
-// Request handlers
+// HTTP handlers
 
 async function getNotes(req: Request) {
   return Response.json(await listNotes());
@@ -56,7 +55,7 @@ async function updateNote(req: Request) {
 
 async function newNote(req: Request) {
   const { md } = await req.json();
-  return Response.json(await putNote(generateID(), md));
+  return Response.json(await putNote(generateHumID(), md));
 }
 
 async function deleteNote(req: Request) {
@@ -65,32 +64,32 @@ async function deleteNote(req: Request) {
   return Response.json(await removeNote(humid));
 }
 
-// Public API
+// Programmatic API
 
-async function listNotes() {
+async function listNotes(): Promise<Note[]> {
   const files = await $`ls ${ROOT} | grep '\.txt$'`.text();
   const humids = files.trim().split("\n");
 
   return Promise.all(humids.map(fetchNoteByPath));
 }
 
-async function fetchNote(humid: string) {
+async function fetchNote(humid: string): Promise<Note> {
   const file = await $`cat ${join(ROOT, `/${humid}.txt`)}`.text();
   return parseNote(humid, file);
 }
 
-async function fetchNoteByPath(path: string) {
+async function fetchNoteByPath(path: string): Promise<Note> {
   const file = await $`cat ${join(ROOT, path)}`.text();
   const humid = path.replace("/", "").replace(".txt", "");
   return parseNote(humid, file);
 }
 
-async function putNote(humid: string, md: string) {
+async function putNote(humid: string, md: string): Promise<Note> {
   await Bun.write(join(ROOT, `${humid}.txt`), md);
   return fetchNote(humid);
 }
 
-async function removeNote(humid: string) {
+async function removeNote(humid: string): Promise<Note> {
   const path = join(ROOT, `${humid}.txt`);
   const file = Bun.file(path);
   const note = fetchNoteByPath(path);
@@ -99,57 +98,51 @@ async function removeNote(humid: string) {
   return note;
 }
 
-async function parseNote(humid: string, md: string) {
+// Filesystem management
+
+async function parseNote(humid: string, md: string): Promise<Note> {
   const title = await parseTitle(md);
+  const headline = await parseHeadline(md);
   const html = await parseContents(md);
   const task = await parseTask(md);
 
-  return { id: humid, title, md, html, task };
+  return { id: humid, title, headline, md, html, task };
 }
 
-async function parseTitle(md: string) {
+async function parseTitle(md: string): Promise<string | null> {
   for (const line of md.split("\n")) {
     if(line.startsWith("TODO")) continue;
     if(line.startsWith("DONE")) continue;
-    if(line.startsWith("DNF")) continue;
+    if(line.startsWith("NVM")) continue;
     if(line.trim() == "") continue;
-    else return truncate(trimHeading(line), 20);
+    if(!line.trim().startsWith("# ")) break;
+    return truncate(trimHeading(line), 20);
   }
+
+  return null;
 }
 
-function trimHeading(str: string) {
-  return str.replace(/^#+\s*/, "");
+async function parseHeadline(md: string): Promise<string> {
+  const contents = await removeToDos(md);
+  return contents.split("\n").filter(line => line.trim() != "")[0];
 }
 
-function truncate(str: string, length: number) {
-  if(str.length <= length) return str;
-  else return str.substring(0, length - 3) + "...";
-}
-
-async function parseContents(md: string) {
-  md = removeToDos(md);
-  md = replaceLineBreaks(md);
+async function parseContents(md: string): Promise<string> {
+  md = await removeToDos(md);
   md = await linkOtherNotes(md);
+  md = removeTitle(md);
+  md = replaceLineBreaks(md);
 
   return marked.parse(md);
 }
 
-function removeToDos(md: string) {
-  const lines = md.split('\n');
-  const kw = ['TODO', 'DONE', 'DNF'];
-
-  for(let i = 0; i < 2; i++) {
-    if (lines[0] && kw.some(k => lines[0].startsWith(k))) lines.shift();
-  }
-
-  return lines.join('\n');
+async function removeToDos(md: string): Promise<string> {
+  return md.split('\n')
+    .filter(line => !TODOS.some(m => line.startsWith(m)))
+    .join('\n');
 }
 
-function replaceLineBreaks(md: string) {
-  return md.trim().split("\n").join("  \n");
-}
-
-async function linkOtherNotes(md: string) {
+async function linkOtherNotes(md: string): Promise<string> {
   const matches = [...md.matchAll(/#([A-Z0-9]{5})/g)];
   const uniqueCodes = [...new Set(matches.map(m => m[1]))];
 
@@ -159,23 +152,23 @@ async function linkOtherNotes(md: string) {
   }))
 
   return md.replace(/#([A-Z0-9]{5})/g, (_, humid: string) => {
-    const { id, title } = notes[humid];
-    return `[${title} (${id})](/${id})`;
+    const { id, title, headline } = notes[humid];
+    return `[**#${id}**: ${title || headline}](/${id})`;
   });
 }
 
-async function parseTask(md: string) {
+async function parseTask(md: string): Promise<Task | null> {
   const lines = md.trim().split('\n').map(line => line.trim());
 
-  const attributeOrder = ['TODO', 'DONE', 'DNF'];
-  const pattern = /^(?<status>TODO|DONE|DNF)(?:\s+@\s*(?<date>\d{4}(?:-\d{1,2})?(?:-\d{1,2})?)?)?(?:\s+~(?<list>\S+))?$/i;
+  const attributeOrder = ['TODO', 'DONE', 'NVM'];
+  const pattern = /^(?<status>TODO|DONE|NVM)(?:\s+@\s*(?<date>\d{4}(?:-\d{1,2})?(?:-\d{1,2})?)?)?(?:\s+~(?<list>\S+))?$/i;
 
   const task = {
-    status: "none",
-    deadline: null,
+    status: undefined,
+    deadline: undefined,
     list: "all",
-    completed_at: null,
-    shelved_at: null
+    completed_at: undefined,
+    shelved_at: undefined
   };
 
   const modifiers = lines
@@ -204,25 +197,32 @@ async function parseTask(md: string) {
         if (date) task.completed_at = date;
         break;
 
-      case 'dnf':
+      case 'nvm':
         if (date) task.shelved_at = date;
         break;
     }
   }
 
-  return task.status != "none" ? task : null;
+  return task.status ? task : null;
 }
 
-function generateID() {
-  const LENGTH = 5;
-  const BASE = 36;
+// String utilities
 
-  const buffer = new Uint8Array(4);
-  crypto.getRandomValues(buffer);
+function truncate(str: string, length: number): string {
+  if(str.length <= length) return str;
+  else return str.substring(0, length - 3) + "...";
+}
 
-  let n = 0;
-  for (let i = 0; i < buffer.length; i++)
-    n = (n << 8) | buffer[i];
+function trimHeading(str: string): string {
+  return str.replace(/^#+\s*/, "");
+}
 
-  return n.toString(BASE).toUpperCase().padStart(LENGTH, '0').slice(-LENGTH);
+function removeTitle(str: string): string {
+  const lines = str.trim().split('\n');
+  if (lines[0].trim().startsWith('#')) lines.shift();
+  return lines.join('\n');
+}
+
+function replaceLineBreaks(md: string): string {
+  return md.trim().split("\n").join("  \n");
 }

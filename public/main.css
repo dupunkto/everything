@@ -1,0 +1,108 @@
+@import url("https://cdn.geheimesite.nl/reset.css");
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, avenir next, avenir, segoe ui,
+    helvetica neue, Adwaita Sans, Cantarell, Ubuntu, roboto, noto, helvetica,
+    arial, sans-serif;
+  color: #333;
+  margin: 8px;
+}
+
+a {
+  color: rgb(0, 100, 200);
+  text-decoration: none;
+
+  &:hover { opacity: 0.9; text-decoration: underline; }
+  &:visited { color: rgb(0, 80, 160); }
+}
+
+input,
+button,
+select,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+  -webkit-padding: 0.4em 0;
+  padding: 0.4em;
+  margin: 0 0 0.5em 0;
+  box-sizing: border-box;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+
+  &:disabled {
+    color: #ccc;
+  }
+}
+
+select {
+  min-width: 20vw;
+}
+
+button {
+  color: #333;
+  background-color: #f4f4f4;
+  outline: none;
+
+  &:disabled { color: #999; }
+  &:focus { border-color: #666; }
+
+  &:not(:disabled):active {
+    background-color: #ddd;
+  }
+}
+
+main {
+  margin-top: 6em;
+  padding: 1em;
+}
+
+@media (min-width: 800px) {
+  main {
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+nav {
+  position: absolute;
+  right: 30px;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  align-items: flex-end;
+}
+
+nav p {
+  margin: 0 8 px;
+}
+
+nav a {
+  color: currentColor !important;
+}
+
+nav menu {
+  display: flex;
+  list-style: none;
+  flex-direction: row;
+  gap: 0.5em;
+  margin: 0;
+  padding: 0;
+}
+
+nav menu li {
+  background: black;
+  color: white;
+  &:hover { background: #3f3f46; }
+  border-bottom-right-radius: 10px;
+  border-bottom-left-radius: 10px;
+  display: flex;
+}
+
+nav menu li a {
+  color: currentColor !important;
+  text-decoration: none !important;
+  font-size: 1.5em;
+  padding: 0.5em;
+}
