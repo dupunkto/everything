@@ -36,6 +36,13 @@
     note = updated;
   }
 
+  function handleKey(e: KeyboardEvent) {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+      e.preventDefault();
+      (e.target as HTMLTextAreaElement).form?.requestSubmit();
+    }
+  }
+
   async function handleSubmit(e: SubmitEvent) {
     e.preventDefault();
 
@@ -292,6 +299,7 @@
             name="text"
             rows={note.text.split("\n").length}
             oninput={(e) => autoResize(e)}
+            onkeydown={(e) => handleKey(e)}
           >{note.text}</textarea>
         </form>
       {:else}

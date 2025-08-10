@@ -11,7 +11,12 @@
     navigate(`/${note.id}`);
   }
 
-  document.querySelector("textarea")?.focus();
+  function handleKey(e: KeyboardEvent) {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+      e.preventDefault();
+      (e.target as HTMLTextAreaElement).form?.requestSubmit();
+    }
+  }
 
   function autoResize(e: Event) {
     const target = e.target as HTMLTextAreaElement;
@@ -38,7 +43,14 @@
   }
 </style>
 
-<form onsubmit={(e) => handleSubmit(e)} oninput={(e) => autoResize(e)}>
-  <textarea name="text" autofocus placeholder="What's on your mind?"></textarea>
+<form onsubmit={(e) => handleSubmit(e)}>
+  <textarea
+    name="text"
+    rows="2"
+    autofocus
+    placeholder="What's on your mind?"
+    oninput={(e) => autoResize(e)}
+    onkeydown={(e) => handleKey(e)}
+    required></textarea>
   <button type="submit">Save <i class="fa fa-arrow-right"></i></button>
 </form>
