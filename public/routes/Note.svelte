@@ -106,17 +106,20 @@
   }
 
   function autoResize(e: Event) {
-    const target = e.target as HTMLTextAreaElement;
+    resizeToFit(e.target as HTMLTextAreaElement);
+  }
+
+  function resizeToFit(target: HTMLTextAreaElement | null) {
+    if(!target) return;
     target.rows = 0; target.style.height = "";
-    target.style.height = `${target.scrollHeight + 2}px`
+    target.style.height = `${target.scrollHeight + 2}px`;
   }
 
-  function autoFillToday(e: Event) {
-    const target = e.target as HTMLInputElement;
-    if(!target.value) target.value = formatDate(new Date());
-  }
+  onMount(() => {
+    window.addEventListener('keydown', handleWindowKey);
+    if(mode == 'edit') resizeToFit(document.querySelector("textarea"));
+  });
 
-  onMount(() => window.addEventListener('keydown', handleWindowKey));
   onDestroy(() => window.removeEventListener('keydown', handleWindowKey));
 
   $effect(() => {
@@ -350,7 +353,6 @@
           {/if}
           <textarea
             name="text"
-            rows={note.text.split("\n").length}
             oninput={(e) => autoResize(e)}
             onkeydown={(e) => handleKey(e)}
           >{note.text}</textarea>
