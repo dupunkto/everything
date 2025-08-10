@@ -4,7 +4,11 @@
   
   import Item from "../components/Item.svelte";
 
+  // TODO(robin): it would be nice if this were configurable with a CLI argument.
+  const ORDER = ["all", "life", "projects", "maakotheek", "qdentity", "writing"];
+
   let tasks: Record<string, Note[]> = $state({all : []});
+  let lists: string[] = $state([]);
 
   let view_completed = $state(false);
   let view_shelved = $state(false);
@@ -51,6 +55,16 @@
         }
       })
     }
+
+    lists = Object.keys(tasks).sort((x, y) => {
+      const ix = ORDER.indexOf(x);
+      const iy = ORDER.indexOf(y);
+
+      if (ix != -1 && iy != -1) return ix - iy;
+      else if (ix !== -1) return -1;
+      else if (iy !== -1) return 1;
+      else return x.localeCompare(y);
+    });
   });
 
   let selected: string | null = $state(null);
@@ -133,7 +147,7 @@
 </header>
 
 <div class="todos">
-  {#each Object.keys(tasks) as list}
+  {#each lists as list}
     {#if tasks[list].length > 0}
       <section>
         <h2>~{list}</h2>
