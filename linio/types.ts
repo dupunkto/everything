@@ -1,5 +1,6 @@
 export interface Note {
   id: string,
+  type: string, // 'note', 'task', 'wish'
   title: string | null,
   headline: string,
   html: string,

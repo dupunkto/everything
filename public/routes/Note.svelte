@@ -92,6 +92,8 @@
       md = `${modifiers}\n${md}`;
     }
 
+    if(note.type == 'wish') md = `WISHLIST\n${md}`;
+
     note = await updateNote(note, md);
     navigate(from ?? `/${note.id}?mode=view`)
   }
@@ -162,18 +164,19 @@
     margin-top: 20px;
   }
 
+  .type::before { content: "Type "; }
   .ref::before { content: "Ref "; }
   .list::before { content: "List "; }
   .due::before { content: "Due "; }
   .completed::before { content: "Completed at "; }
   .shelved::before { content: "Shelved at "; }
 
-  :is(.ref, .list, .due, .completed, .shelved)::before, label {
+  :is(.type, .ref, .list, .due, .completed, .shelved)::before, label {
     display: block;
     color: gray;
   }
 
-  .ref, .list, .due, .completed, .shelved {
+  .type, .ref, .list, .due, .completed, .shelved {
     text-transform: lowercase;
   }
 
@@ -226,6 +229,17 @@
   textarea {
     border: none;
   }
+
+  form .type {
+    margin-top: 0;
+    text-align: right;
+    margin-bottom: 0.6em;
+  }
+
+  form .type::before {
+    display: inline;
+    margin-inline-end: 0.8em;
+  }
 </style>
 
 {#if note}
@@ -259,63 +273,70 @@
         {#if !note.title}
           <time class="ref">#{note.id}</time>
         {/if}
+        {#if !(note.type == 'note' || note.type == 'task')}
+          <span class="type">{note.type}</span>
+        {/if}
       </div>
     </aside>
     <article>
       {#if mode == 'edit'}
         <form id="edit-form" onsubmit={(e) => handleSubmit(e)}>
-          <table>
-            <tbody>
-              <tr style="height: 36.4px">
-                <td style="width: 83.4667px"><label for="task">task</label></td>
-                <td>
-                  <input
-                    type="checkbox"
-                    name="task"
-                    checked={!!note.task}
-                    onclick={(e) => task = (e.target as HTMLInputElement).checked}
-                  />
-                </td>
+          {#if note.type == 'note' || note.type == 'task'}
+            <table>
+              <tbody>
+                <tr style="height: 36.4px">
+                  <td style="width: 83.4667px"><label for="task">task</label></td>
+                  <td>
+                    <input
+                      type="checkbox"
+                      name="task"
+                      checked={!!note.task}
+                      onclick={(e) => task = (e.target as HTMLInputElement).checked}
+                    />
+                  </td>
+                  {#if task}
+                    <td><label for="list">list</label></td>
+                    <td><input type="text" name="list" value={note.task?.list ?? "all"}></td>
+                  {/if}
+                </tr>
                 {#if task}
-                  <td><label for="list">list</label></td>
-                  <td><input type="text" name="list" value={note.task?.list ?? "all"}></td>
-                {/if}
-              </tr>
-              {#if task}
-                {#if status && status != 'todo'}
+                  {#if status && status != 'todo'}
+                    <tr>
+                      <td colspan="2"><label for="deadline">todo</label></td>
+                      <td><label for="deadline">before</label></td>
+                      <td>
+                        <input
+                          type="date"
+                          name="deadline"
+                          value={normalizeDate(note.task?.deadline)}
+                        />
+                      </td>
+                    </tr>
+                  {/if}
                   <tr>
-                    <td colspan="2"><label for="deadline">todo</label></td>
-                    <td><label for="deadline">before</label></td>
+                    <td><label for="status">status</label></td>
+                    <td>
+                      <select name="status" onchange={(e) => status = (e.target as HTMLInputElement).value}>
+                        <option>todo</option>
+                        <option selected={note.task?.status == 'done'}>done</option>
+                        <option selected={note.task?.status == 'nvm'}>nvm</option>
+                      </select>
+                    </td>
+                    <td><label for={date_for_status(status)}>{status == 'todo' ? 'before' : 'at'}</label></td>
                     <td>
                       <input
                         type="date"
-                        name="deadline"
-                        value={normalizeDate(note.task?.deadline)}
+                        name={date_for_status(status)}
+                        value={normalizeDate(note.task?.[date_for_status(status)]) || (status != 'todo' && formatDate(new Date()))}
                       />
                     </td>
                   </tr>
                 {/if}
-                <tr>
-                  <td><label for="status">status</label></td>
-                  <td>
-                    <select name="status" onchange={(e) => status = (e.target as HTMLInputElement).value}>
-                      <option>todo</option>
-                      <option selected={note.task?.status == 'done'}>done</option>
-                      <option selected={note.task?.status == 'nvm'}>nvm</option>
-                    </select>
-                  </td>
-                  <td><label for={date_for_status(status)}>{status == 'todo' ? 'before' : 'at'}</label></td>
-                  <td>
-                    <input
-                      type="date"
-                      name={date_for_status(status)}
-                      value={normalizeDate(note.task?.[date_for_status(status)]) || (status != 'todo' && formatDate(new Date()))}
-                    />
-                  </td>
-                </tr>
-              {/if}
-            </tbody>
-          </table>
+              </tbody>
+            </table>
+          {:else}
+            <p class="type"><code>{note.type}</code></p>
+          {/if}
           <textarea
             name="text"
             rows={note.text.split("\n").length}
