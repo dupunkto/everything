@@ -6,6 +6,10 @@
 
   import Item from "../components/Item.svelte";
 
+  let { route } = $props();
+
+  let autofocus = $derived(route.result.querystring.params.autofocus);
+
   let notes: Note[] = $state(await listNotes());
   let query = $state('');
 
@@ -26,20 +30,26 @@
     ? notes.filter(note => [note.title, note.headline, note.text, note.task?.list].some(
         field => field?.toLowerCase().includes(query.toLowerCase()))) : notes);
 
-  function handleKey(e: KeyboardEvent) {
+  function handleWindowKey(e: KeyboardEvent) {
     const isEditable = (element: Element | null) =>
       (element as HTMLElement)?.isContentEditable ||
-      element?.tagName === 'INPUT' || 
-      element?.tagName === 'TEXTAREA';
+      element?.tagName == 'INPUT' || 
+      element?.tagName == 'TEXTAREA';
 
-    if(e.key == '/' && !isEditable(document.activeElement)) {
+    if(isEditable(document.activeElement)) return;
+
+    if(e.key == '/') {
       e.preventDefault();
       document.querySelector("input")?.focus();
     }
   }
 
-  onMount(() => window.addEventListener('keydown', handleKey));
-  onDestroy(() => window.removeEventListener('keydown', handleKey));
+  onMount(() => window.addEventListener('keydown', handleWindowKey));
+  onDestroy(() => window.removeEventListener('keydown', handleWindowKey));
+
+  $effect(() => {
+    if(autofocus) document.querySelector("input")?.focus();
+  });
 </script>
 
 <style>

@@ -20,10 +20,12 @@
   function handleWindowKey(e: KeyboardEvent) {
     const isEditable = (element: Element | null) =>
       (element as HTMLElement)?.isContentEditable ||
-      element?.tagName === 'INPUT' || 
-      element?.tagName === 'TEXTAREA';
+      element?.tagName == 'INPUT' || 
+      element?.tagName == 'TEXTAREA';
 
-    if((e.key == '/' || e.key == 'e') && !isEditable(document.activeElement)) {
+    if(isEditable(document.activeElement)) return;
+
+    if(e.key == 'e' || e.key == 'n') {
       e.preventDefault();
       document.querySelector("textarea")?.focus();
     }

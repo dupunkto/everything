@@ -19,11 +19,10 @@
   }
 
   async function handleKey(e: KeyboardEvent) {
-    if (!['Enter', ' '].includes(e.key) 
-      || document.activeElement != e.target) return;
-
-    e.preventDefault();
-    onclick(e);
+    if (['Enter', ' '].includes(e.key) && document.activeElement == e.target) {
+      e.preventDefault();
+      onclick(e);
+    }
   }
 </script>
 

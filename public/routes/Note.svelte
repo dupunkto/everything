@@ -40,19 +40,20 @@
   }
 
   function handleWindowKey(e: KeyboardEvent) {  
-    if(e.key == 'e' && mode == 'view') {
-      e.preventDefault();
-      navigate(`/${note.id}?mode=edit&autofocus=1`);
-    }
-
     const isEditable = (element: Element | null) =>
       (element as HTMLElement)?.isContentEditable ||
       element?.tagName === 'INPUT' || 
       element?.tagName === 'TEXTAREA';
 
-    if(e.key == 'e' && !isEditable(document.activeElement)) {
+    if(isEditable(document.activeElement)) return;
+
+    if(e.key == 'e') {
       e.preventDefault();
-      document.querySelector("textarea")?.focus();
+      
+      switch(mode) {
+        case 'view': return navigate(`/${note.id}?mode=edit&autofocus=1`);
+        case 'edit': return document.querySelector("textarea")?.focus();
+      }
     }
   }
 

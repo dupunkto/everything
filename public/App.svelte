@@ -20,15 +20,27 @@
     navigate(`/${note.id}`); confetti();
   }
 
-  function handleKey(e: KeyboardEvent) {
-    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === '/') {
+  function handleWindowKey(e: KeyboardEvent) {
+    const isEditable = (element: Element | null) =>
+      (element as HTMLElement)?.isContentEditable ||
+      element?.tagName == 'INPUT' || 
+      element?.tagName == 'TEXTAREA';
+
+    if(isEditable(document.activeElement)) return;
+    
+    const shortcuts = {
+      '/': () => navigate('/Search?autofocus=1'),
+      'n': () => navigate('/New?autofocus=1')
+    };
+
+    if(Object.keys(shortcuts).includes(e.key)) {
       e.preventDefault();
-      navigate("/New?autofocus=1");
+      shortcuts[e.key]();
     }
   }
 
-  onMount(() => window.addEventListener('keydown', handleKey));
-  onDestroy(() => window.removeEventListener('keydown', handleKey));
+  onMount(() => window.addEventListener('keydown', handleWindowKey));
+  onDestroy(() => window.removeEventListener('keydown', handleWindowKey));
 </script>
 
 <style>
