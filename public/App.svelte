@@ -80,7 +80,7 @@
     position: absolute;
     bottom: 0;
     opacity: 0.7;
-    margin-left: 0.8em;
+    margin-left: 1em;
   }
 </style>
 

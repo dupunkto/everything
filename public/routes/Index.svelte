@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { onMount, onDestroy } from 'svelte';
+
   import { Note } from "../../linio/types";
   import { listNotes } from "../../linio/api";
 
@@ -8,6 +10,21 @@
 
   let selected: string | null = $state(null);
   let selectNote = (n: Note) => selected = selected == n.id ? null : n.id;
+
+  function handleKey(e: KeyboardEvent) {
+    const isEditable = (element: Element | null) =>
+      (element as HTMLElement)?.isContentEditable ||
+      element?.tagName === 'INPUT' || 
+      element?.tagName === 'TEXTAREA';
+
+    if(e.key == '/' && !isEditable(document.activeElement)) {
+      e.preventDefault();
+      document.querySelector("input")?.focus();
+    }
+  }
+
+  onMount(() => window.addEventListener('keydown', handleKey));
+  onDestroy(() => window.removeEventListener('keydown', handleKey));
 </script>
 
 <style>
@@ -21,12 +38,11 @@
 
   input {
     background: #fefefe;
-    font-size: 1.2em;
+    font-size: 1em;
+    padding: .5em .8em;
     margin-bottom: 1em;
   }
 </style>
-
-<h1>Index</h1>
 
 <input placeholder="Search...">
 

@@ -115,7 +115,6 @@ textarea {
 input:focus, textarea:focus {
   background: #dddddd;
   outline: none;
-  border-radius: 0;
 }
 
 blockquote {

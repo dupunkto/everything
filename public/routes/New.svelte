@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onDestroy, onMount } from 'svelte';
 
   import { newNote } from "../../linio/api";
   import { navigate } from "../../linio/navigation";
@@ -13,8 +13,20 @@
     navigate(`/${note.id}`);
   }
 
+  function handleWindowKey(e: KeyboardEvent) {
+    const isEditable = (element: Element | null) =>
+      (element as HTMLElement)?.isContentEditable ||
+      element?.tagName === 'INPUT' || 
+      element?.tagName === 'TEXTAREA';
+
+    if(e.key == '/' && !isEditable(document.activeElement)) {
+      e.preventDefault();
+      document.querySelector("textarea")?.focus();
+    }
+  }
+
   function handleKey(e: KeyboardEvent) {
-    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+    if ((e.metaKey || e.ctrlKey) && e.key == 'Enter') {
       e.preventDefault();
       (e.target as HTMLTextAreaElement).form?.requestSubmit();
     }
@@ -26,12 +38,20 @@
     target.style.height = `${target.scrollHeight + 2}px`
   }
 
-  onMount(() => document.querySelector("textarea")?.focus())
+  onMount(() => {
+    window.addEventListener('keydown', handleWindowKey);
+    document.querySelector("textarea")?.focus()
+  });
+
+  onDestroy(() => {
+    window.removeEventListener('keydown', handleWindowKey);
+  })
 </script>
 
 <style>
   textarea {
     background: #fefefe;
+    min-height: 150px;
   }
 
   form, textarea {

@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { onMount, onDestroy } from 'svelte';
+
   import { Note } from "../../linio/types";
   import { fetchNote, updateNote, completeTask } from "../../linio/api";
   import { formatDate, normalizeDate } from "../../linio/dates";
@@ -34,6 +36,18 @@
     checkbox.checked = updated?.task?.status == 'done';
 
     note = updated;
+  }
+
+  function handleWindowKey(e: KeyboardEvent) {
+    const isEditable = (element: Element | null) =>
+      (element as HTMLElement)?.isContentEditable ||
+      element?.tagName === 'INPUT' || 
+      element?.tagName === 'TEXTAREA';
+
+    if(e.key == '/' && !isEditable(document.activeElement)) {
+      e.preventDefault();
+      document.querySelector("textarea")?.focus();
+    }
   }
 
   function handleKey(e: KeyboardEvent) {
@@ -92,6 +106,9 @@
     const target = e.target as HTMLInputElement;
     if(!target.value) target.value = formatDate(new Date());
   }
+
+  onMount(() => window.addEventListener('keydown', handleWindowKey));
+  onDestroy(() => window.removeEventListener('keydown', handleWindowKey));
 </script>
 
 <style>
@@ -204,6 +221,10 @@
 
   table input[type="checkbox"] {
     width: initial;
+  }
+
+  textarea {
+    border: none;
   }
 </style>
 
