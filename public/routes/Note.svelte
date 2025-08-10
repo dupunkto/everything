@@ -41,7 +41,7 @@
 
     const data = new FormData(e.target as HTMLFormElement);
 
-    let md = data.get("text") as string;
+    let md = data.get("text") as string; // @ts-ignore
     if(!md) throw `no content, got: ${JSON.stringify(Object.fromEntries(data))}`;
 
     if(data.get('task') == 'on') {

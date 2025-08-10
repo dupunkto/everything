@@ -5,7 +5,7 @@
 
   let { note, opened, onclick, from } = $props();
 
-  async function handleClick(e: PointerEvent) {
+  async function handleClick(e: MouseEvent) {
     e.stopPropagation();
 
     const checkbox = e.target as HTMLInputElement;

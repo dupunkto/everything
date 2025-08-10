@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@mateothegreat/svelte5-router": "^2.16.8",
+    "@types/canvas-confetti": "^1.9.0",
     "bun-plugin-svelte": "github:RobinBoers/bun-plugin-svelte",
     "canvas-confetti": "^1.9.3",
     "marked": "^16.1.1",
