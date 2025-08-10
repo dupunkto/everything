@@ -70,20 +70,36 @@
   }
 
   @media (max-width: 815px) {
-    .actions {
+    header {
       margin-top: 5em;
     }
   }
 
-  .actions, .todos {
+  header, .todos {
     padding: 0 min(3em, 3vw);
   }
 
-  .actions {
-    margin-top: 1em;
-    margin-bottom: -4em;
+  header {
+    margin-top: 1.5em;
     position: relative;
     z-index: 1;
+    display: flex;
+    gap: 0.5em;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  header h1, header button {
+    margin: 0;
+  }
+
+  header h1 {
+    transform: scale(2);
+    transform-origin: left top;
+  }
+
+  .actions button {
+    margin-bottom: 0;
   }
 
   .todos {
@@ -100,17 +116,21 @@
   }
 </style>
 
-<div class="actions">
-  <button onclick={() => view_completed = !view_completed}>
-    <i class="{view_completed ? "fas" : "far"} fa-eye-slash"></i>
-    {view_completed ? "Hide finished" : "Show finished"}
-  </button>
+<header class="actions">
+  <h1>ToDo</h1>
 
-  <button onclick={() => view_shelved = !view_shelved}>
-    <i class="{view_shelved ? "fas" : "far"} fa-eye-slash"></i>
-    {view_shelved ? "Hide shelved" : "Show shelved"}
-  </button>
-</div>
+  <div class="actions">
+    <button onclick={() => view_completed = !view_completed}>
+      <i class="{view_completed ? "fas" : "far"} fa-eye-slash"></i>
+      {view_completed ? "Hide finished" : "Show finished"}
+    </button>
+
+    <button onclick={() => view_shelved = !view_shelved}>
+      <i class="{view_shelved ? "fas" : "far"} fa-eye-slash"></i>
+      {view_shelved ? "Hide shelved" : "Show shelved"}
+    </button>
+  </div>
+</header>
 
 <div class="todos">
   {#each Object.keys(tasks) as list}
