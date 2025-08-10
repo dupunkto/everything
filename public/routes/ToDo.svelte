@@ -19,17 +19,24 @@
       }
     }
 
+    const compareDates = (a: string | undefined, b: string | undefined) => {
+      if(!a && !b) return 0; if(!a) return 1; if(!b) return -1;
+      return new Date(a).getTime() - new Date(b).getTime();
+    };
+
     for(const list of Object.keys(tasks)) {
       tasks[list].sort((a: Note, b: Note) => {
+        if(!a.task || !b.task) return 0;
+        
         const statuses = ['todo', 'done', 'nvm'];
         const diff = statuses.indexOf(a.task.status) - statuses.indexOf(b.task.status);
 
         if (diff != 0) return diff;
 
         switch(a.task.status) {
-          case 'todo':  return (a.task.deadline || Infinity) - (b.task.deadline || Infinity);
-          case 'done': return (a.task.completed_at || 0) - (b.task.completed_at || 0);
-          case 'nvm': return (a.task.shelved_at || 0) - (b.task.shelved_at || 0);
+          case 'todo': return compareDates(a.task.deadline, b.task.deadline);
+          case 'done': return compareDates(b.task.completed_at, a.task.completed_at);
+          case 'nvm': return compareDates(b.task.shelved_at, a.task.shelved_at);
           default: return 0;
         }
       })
