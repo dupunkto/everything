@@ -110,7 +110,6 @@ input, select, textarea {
 textarea {
   resize: none;
   padding: 5px;
-  border: none;
 }
 
 input:focus, textarea:focus {

@@ -18,9 +18,17 @@
     overflow-y: auto;
     flex-grow: 1;
   }
+
+  input {
+    background: #fefefe;
+    font-size: 1.2em;
+    margin-bottom: 1em;
+  }
 </style>
 
 <h1>Index</h1>
+
+<input placeholder="Search...">
 
 <ul class="note-list">
   {#each notes as note}
