@@ -6,6 +6,16 @@
 
   let tasks: Record<string, Note[]> = $state({all : []});
 
+  let view_completed = $state(false);
+  let view_shelved = $state(false);
+
+  const isVisible = (note: Note) => {
+    if(!note.task) return false;
+    else return note.task.status == 'todo'
+      || (note.task.status == 'done' && view_completed)
+      || (note.task.status == 'nvm' && view_shelved)
+  }
+
   listNotes().then((notes) => {
     for(const note of notes) {
       if (!note.task) continue;
@@ -60,16 +70,26 @@
   }
 
   @media (max-width: 815px) {
-    .todos {
+    .actions {
       margin-top: 5em;
     }
+  }
+
+  .actions, .todos {
+    padding: 0 min(3em, 3vw);
+  }
+
+  .actions {
+    margin-top: 1em;
+    margin-bottom: -4em;
+    position: relative;
+    z-index: 1;
   }
 
   .todos {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
     gap: 1em;
-    padding: 0 min(3em, 3vw);
     overflow-y: auto;
   }
 
@@ -80,6 +100,18 @@
   }
 </style>
 
+<div class="actions">
+  <button onclick={() => view_completed = !view_completed}>
+    <i class="{view_completed ? "fas" : "far"} fa-eye-slash"></i>
+    {view_completed ? "Hide finished" : "Show finished"}
+  </button>
+
+  <button onclick={() => view_shelved = !view_shelved}>
+    <i class="{view_shelved ? "fas" : "far"} fa-eye-slash"></i>
+    {view_shelved ? "Hide shelved" : "Show shelved"}
+  </button>
+</div>
+
 <div class="todos">
   {#each Object.keys(tasks) as list}
     {#if tasks[list].length > 0}
@@ -87,7 +119,9 @@
         <h2>~{list}</h2>
 
         {#each tasks[list] as note}
-          <Item {note} opened={note.id == selected} onclick={() => selectNote(note)} from="/ToDo" />
+          {#if isVisible(note)}
+            <Item {note} opened={note.id == selected} onclick={() => selectNote(note)} from="/ToDo" />
+          {/if}
         {/each}
       </section>
     {/if}
