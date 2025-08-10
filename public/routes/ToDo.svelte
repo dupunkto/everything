@@ -43,7 +43,7 @@
 <style>
   @media (min-width: 815px) {
     :global(main:has(.todos)) {
-      max-width: calc(100% - 370px);
+      max-width: calc(100% - 400px);
     }
   }
 
@@ -52,11 +52,18 @@
     padding: 0;
   }
 
+  @media (max-width: 815px) {
+    .todos {
+      margin-top: 5em;
+    }
+  }
+
   .todos {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
     gap: 1em;
     padding: 0 min(3em, 3vw);
+    overflow-y: auto;
   }
 
   section h2 {

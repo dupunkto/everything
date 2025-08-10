@@ -22,7 +22,7 @@
 <style>
   nav {
     position: absolute;
-    right: 2em;
+    right: min(3em, 3vw);
     top: 0;
     display: flex;
     flex-direction: column;
