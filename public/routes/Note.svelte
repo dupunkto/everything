@@ -288,7 +288,7 @@
                     <input
                       type="date"
                       name={date_for_status(status)}
-                      value={normalizeDate(note.task?.[date_for_status(status)]) || formatDate(new Date())}
+                      value={normalizeDate(note.task?.[date_for_status(status)]) || (status != 'todo' && formatDate(new Date()))}
                     />
                   </td>
                 </tr>
