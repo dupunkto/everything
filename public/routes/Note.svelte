@@ -8,11 +8,12 @@
 
   let id = route.result.path.params.id;
   let mode = $derived(route.result.querystring.params.mode || "view");
+  let from = $derived(route.result.querystring.params.from);
 
-  let note: Note | undefined = $state (await fetchNote(id));
+  let note: Note = $state (await fetchNote(id));
 
   let task = $derived(!!note.task);
-  let status = $derived(note.task.status);
+  let status = $derived(note.task?.status);
 
   function date_for_status(status: string) {
     switch(status) {
@@ -22,7 +23,7 @@
     }
   }
 
-  async function handleClick(e: PointerEvent) {
+  async function handleClick(e: MouseEvent) {
     e.stopPropagation();
 
     const checkbox = e.target as HTMLInputElement;
@@ -39,8 +40,6 @@
     e.preventDefault();
 
     const data = new FormData(e.target as HTMLFormElement);
-
-    console.log(data);
 
     let md = data.get("text") as string;
     if(!md) throw `no content, got: ${JSON.stringify(Object.fromEntries(data))}`;
@@ -73,12 +72,13 @@
     }
 
     note = await updateNote(note, md);
-    navigate(`/${note.id}?mode=view`)
+    navigate(from ?? `/${note.id}?mode=view`)
   }
 
-  function autoResize(e) {
-    e.target.rows = ""; e.target.style.height = "";
-    e.target.style.height = `${e.target.scrollHeight + 2}px`
+  function autoResize(e: Event) {
+    const target = e.target as HTMLTextAreaElement;
+    target.rows = 0; target.style.height = "";
+    target.style.height = `${target.scrollHeight + 2}px`
   }
 </script>
 
@@ -125,23 +125,26 @@
     padding-right: 1em;
   }
 
-  .dates {
+  .metadata {
     clear: both;
     display: flex;
     flex-direction: column;
     gap: 0.8em;
+    margin-top: 20px;
   }
 
+  .ref::before { content: "Ref "; }
+  .list::before { content: "List "; }
   .due::before { content: "Due "; }
   .completed::before { content: "Completed at "; }
   .shelved::before { content: "Shelved at "; }
 
-  :is(.due, .completed, .shelved)::before, label {
+  :is(.ref, .list, .due, .completed, .shelved)::before, label {
     display: block;
     color: gray;
   }
 
-  .due, .completed, .shelved {
+  .ref, .list, .due, .completed, .shelved {
     text-transform: lowercase;
   }
 
@@ -194,31 +197,37 @@
 
 {#if note}
   <div class="note">
-    {#if note.task}
-      <aside>
+    <aside>
+      {#if note.task}
         <input
           type="checkbox"
           class="checkbox"
           checked={note.task.status != 'todo'}
           disabled={note.task.status == 'nvm' || mode == 'edit'}
           onclick={(e) => handleClick(e)}
-        >
+        />
+      {/if}
 
-        <div class="dates">
-          {#if note.task}
-            {#if note.task.deadline}
-              <time class="due">{note.task.deadline}</time>
-            {/if}
-            {#if note.task.shelved_at}
-              <time class="shelved">{note.task.shelved_at}</time>
-            {/if}
-            {#if note.task.completed_at}
-              <time class="completed">{note.task.completed_at}</time>
-            {/if}
+      <div class="metadata">
+        {#if note.task}
+          {#if note.task.list}
+            <time class="list">{note.task.list}</time>
           {/if}
-        </div>
-      </aside>
-    {/if}
+          {#if note.task.deadline}
+            <time class="due">{note.task.deadline}</time>
+          {/if}
+          {#if note.task.shelved_at}
+            <time class="shelved">{note.task.shelved_at}</time>
+          {/if}
+          {#if note.task.completed_at}
+            <time class="completed">{note.task.completed_at}</time>
+          {/if}
+        {/if}
+        {#if !note.title}
+          <time class="ref">#{note.id}</time>
+        {/if}
+      </div>
+    </aside>
     <article>
       {#if mode == 'edit'}
         <form id="edit-form" onsubmit={(e) => handleSubmit(e)}>
@@ -230,8 +239,8 @@
                   <input
                     type="checkbox"
                     name="task"
-                    checked={note.task}
-                    onclick={(e) => task = e.target.checked}
+                    checked={!!note.task}
+                    onclick={(e) => task = (e.target as HTMLInputElement).checked}
                   />
                 </td>
                 {#if task}
@@ -240,7 +249,7 @@
                 {/if}
               </tr>
               {#if task}
-                {#if status != 'todo'}
+                {#if status && status != 'todo'}
                   <tr>
                     <td colspan="2"><label for="deadline">todo</label></td>
                     <td><label for="deadline">before</label></td>
@@ -256,7 +265,7 @@
                 <tr>
                   <td><label for="status">status</label></td>
                   <td>
-                    <select name="status" onchange={(e) => status = e.target.value}>
+                    <select name="status" onchange={(e) => status = (e.target as HTMLInputElement).value}>
                       <option>todo</option>
                       <option selected={note.task?.status == 'done'}>done</option>
                       <option selected={note.task?.status == 'nvm'}>nvm</option>
@@ -267,7 +276,7 @@
                     <input
                       type="date"
                       name={date_for_status(status)}
-                      value={normalizeDate(note.task[date_for_status(status)])}
+                      value={normalizeDate(note.task && note.task[date_for_status(status)])}
                     />
                   </td>
                 </tr>
@@ -292,7 +301,7 @@
 
       <footer>
         {#if mode == 'edit'}
-          <button onclick={() => navigate(`/${note.id}?mode=view`)}>Cancel</button>
+          <button onclick={() => navigate(from ?? `/${note.id}?mode=view`)}>Cancel</button>
           <button type="submit" form="edit-form">Save</button>
         {:else}
           <button onclick={() => navigate(`/${note.id}?mode=edit`)}>Edit</button>
