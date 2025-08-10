@@ -73,9 +73,14 @@ async function listNotes(): Promise<Note[]> {
   return Promise.all(humids.map(fetchNoteByPath));
 }
 
-async function fetchNote(humid: string): Promise<Note> {
-  const file = await $`cat ${join(ROOT, `/${humid}.txt`)}`.text();
-  return parseNote(humid, file);
+async function fetchNote(humid: string): Promise<Note|null> {
+  try {
+    const file = await $`cat ${join(ROOT, `/${humid}.txt`)}`.text();
+    return parseNote(humid, file);
+  }
+  catch(e) {
+    return null;
+  }
 }
 
 async function fetchNoteByPath(path: string): Promise<Note> {
@@ -154,11 +159,13 @@ async function linkOtherNotes(md: string): Promise<string> {
 
   const notes: any = {};
   await Promise.all(uniqueCodes.map(async (humid: string) => {
-    notes[humid] = await fetchNote(humid);
-  }))
+    const note = await fetchNote(humid);
+    if(note) notes[humid] = note;
+  }));
 
   return md.replace(/#([A-Z0-9]{5})/g, (_, humid: string) => {
-    const { id, title, headline } = notes[humid];
+    const note = notes[humid]; if(!note) return `#${humid}`;
+    const { id, title, headline } = note;
     return `[**#${id}**: ${title || headline}](/${id})`;
   });
 }
