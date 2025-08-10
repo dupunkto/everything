@@ -1,2 +1,2 @@
 [serve.static]
-plugins = ["./bun-plugin-svelte/src/index.ts"]
+plugins = ["bun-plugin-svelte"]
