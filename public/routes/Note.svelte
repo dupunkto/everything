@@ -39,14 +39,20 @@
   }
 
   function handleWindowKey(e: KeyboardEvent) {
-    const isEditable = (element: Element | null) =>
-      (element as HTMLElement)?.isContentEditable ||
-      element?.tagName === 'INPUT' || 
-      element?.tagName === 'TEXTAREA';
-
-    if(e.key == '/' && !isEditable(document.activeElement)) {
+    if(e.key == 'e' && mode == 'view') {
       e.preventDefault();
-      document.querySelector("textarea")?.focus();
+      navigate(`/${note.id}?mode=edit`);
+    }
+    else {
+      const isEditable = (element: Element | null) =>
+        (element as HTMLElement)?.isContentEditable ||
+        element?.tagName === 'INPUT' || 
+        element?.tagName === 'TEXTAREA';
+
+      if(e.key == '/' && !isEditable(document.activeElement)) {
+        e.preventDefault();
+        document.querySelector("textarea")?.focus();
+      }
     }
   }
 
