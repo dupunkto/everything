@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount, onDestroy } from 'svelte';
   import { Router } from "@mateothegreat/svelte5-router";
 
   import Home from "./routes/Home.svelte";
@@ -18,6 +19,16 @@
     const note = randomOf(await listNotes());
     navigate(`/${note.id}`); confetti();
   }
+
+  function handleKey(e: KeyboardEvent) {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === '/') {
+      e.preventDefault();
+      navigate("/New");
+    }
+  }
+
+  onMount(() => window.addEventListener('keydown', handleKey));
+  onDestroy(() => window.removeEventListener('keydown', handleKey));
 </script>
 
 <style>

@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
+
   import { newNote } from "../../linio/api";
   import { navigate } from "../../linio/navigation";
 
@@ -23,6 +25,8 @@
     target.rows = 0; target.style.height = "";
     target.style.height = `${target.scrollHeight + 2}px`
   }
+
+  onMount(() => document.querySelector("textarea")?.focus())
 </script>
 
 <style>
@@ -47,7 +51,6 @@
   <textarea
     name="text"
     rows="2"
-    autofocus
     placeholder="What's on your mind?"
     oninput={(e) => autoResize(e)}
     onkeydown={(e) => handleKey(e)}
