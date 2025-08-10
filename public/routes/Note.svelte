@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Note } from "../../linio/types";
   import { fetchNote, updateNote, completeTask } from "../../linio/api";
-  import { normalizeDate } from "../../linio/dates";
+  import { formatDate, normalizeDate } from "../../linio/dates";
   import { navigate } from "../../linio/navigation";
 
   let { route } = $props();
@@ -13,7 +13,7 @@
   let note: Note = $state (await fetchNote(id));
 
   let task = $derived(!!note.task);
-  let status = $derived(note.task?.status);
+  let status = $derived(note.task?.status ?? "todo");
 
   function date_for_status(status: string) {
     switch(status) {
@@ -79,6 +79,11 @@
     const target = e.target as HTMLTextAreaElement;
     target.rows = 0; target.style.height = "";
     target.style.height = `${target.scrollHeight + 2}px`
+  }
+
+  function autoFillToday(e: Event) {
+    const target = e.target as HTMLInputElement;
+    if(!target.value) target.value = formatDate(new Date());
   }
 </script>
 
@@ -276,7 +281,7 @@
                     <input
                       type="date"
                       name={date_for_status(status)}
-                      value={normalizeDate(note.task && note.task[date_for_status(status)])}
+                      value={normalizeDate(note.task?.[date_for_status(status)]) || formatDate(new Date())}
                     />
                   </td>
                 </tr>
