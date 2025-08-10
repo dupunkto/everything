@@ -1,9 +1,14 @@
-import { $, argv, serve } from "bun";
+import { argv, serve } from "bun";
+import * as fs from "node:fs/promises";
 import { join } from "node:path";
+import { watch } from "node:fs";
 import { marked } from "marked";
 
 const ROOT = argv[2];
 const TODOS = ['TODO', 'DONE', 'NVM'];
+
+const HUMID_PATTERN = /#([A-Z0-9]{5})/g;
+const TODO_PATTERN = /^(TODO|DONE|NVM)(?:\s+@\s*(\d{4}(?:-\d{1,2})?(?:-\d{1,2})?))?(?:\s+~(\S+))?$/i;
 
 import { generateHumID } from "./linio/humid";
 import { Note, Task } from "./linio/types";
@@ -33,174 +38,210 @@ const server = serve({
 
 console.log(`Serving '${ROOT}' on ${server.url}`);
 
+// In-memory cache
+const noteCache = new Map<string, Note>();
+const fileStats = new Map<string, number>();
+
+watch(ROOT, (_, filename) => {
+  if (!filename?.endsWith('.txt')) return;
+
+  const humid = filename.replace('.txt', '');
+  noteCache.delete(humid);
+  fileStats.delete(filename);
+});
+
 // HTTP handlers
 
-async function getNotes(req: Request) {
+import { BunRequest } from "bun";
+
+async function getNotes(req: BunRequest) {
   return Response.json(await listNotes());
 }
 
-async function getNote(req: Request) {
-  // @ts-ignore
-  const { humid } = req.params;
-  return Response.json(await fetchNote(humid));
+async function getNote(req: BunRequest) {
+  const { humid }: any = req.params;
+  const note = await fetchNote(humid);
+
+  return note ? Response.json(note)
+    : sendError(404, "Note not found");
 }
 
-async function updateNote(req: Request) {
-  // @ts-ignore
-  const { humid } = req.params;
-  const { md } = await req.json();
+async function updateNote(req: BunRequest) {
+  const { humid }: any = req.params;
+  const body = await req.json().catch(() => null);
+  
+  if (!humid || typeof humid != 'string')
+    return sendError(400, 'Missing or bad HumID.');
+  
+  if (!body || typeof body.md != 'string')
+    return sendError(400, 'Missing or bad Markdown.');
 
-  return Response.json(await putNote(humid, md));
+  return Response.json(await putNote(humid, body.md));
 }
 
 async function newNote(req: Request) {
-  const { md } = await req.json();
-  return Response.json(await putNote(generateHumID(), md));
+  const body = await req.json().catch(() => null);
+  
+  if (!body || typeof body.md != 'string')
+    return sendError(400, "Missing or bad Markdown.");
+
+  return Response.json(await putNote(generateHumID(), body.md));
 }
 
-async function deleteNote(req: Request) {
-  // @ts-ignore
-  const { humid } = req.params;
+async function deleteNote(req: BunRequest) {
+  const { humid }: any = req.params;
+
+  if (!humid || typeof humid !== 'string')
+    return sendError(400, 'Missing or bad HumID.');
+
   return Response.json(await removeNote(humid));
+}
+
+function sendError(status: number, error: string) {
+  return new Response(JSON.stringify({ error }), {
+    status, headers: {'Content-Type': 'application/json'}
+  });
 }
 
 // Programmatic API
 
 async function listNotes(): Promise<Note[]> {
-  const files = await $`ls ${ROOT} | grep '\.txt$'`.text();
-  const humids = files.trim().split("\n");
+  const humids = (await fs.readdir(ROOT, { withFileTypes: true }))
+    .filter(f => f.isFile() && f.name.endsWith('.txt'))
+    .map(f => f.name.replace('.txt', ''));
 
-  return Promise.all(humids.map(fetchNoteByPath));
+  const notes = await Promise.all(humids.map(id => fetchNote(id)));
+  return notes.filter((note): note is Note => note != null);
 }
 
-async function fetchNote(humid: string): Promise<Note|null> {
-  try {
-    const file = await $`cat ${join(ROOT, `/${humid}.txt`)}`.text();
-    return parseNote(humid, file);
-  }
-  catch(e) {
-    return null;
-  }
-}
-
-async function fetchNoteByPath(path: string): Promise<Note> {
-  const file = await $`cat ${join(ROOT, path)}`.text();
-  const humid = path.replace("/", "").replace(".txt", "");
-  return parseNote(humid, file);
-}
-
-async function putNote(humid: string, md: string): Promise<Note> {
-  await Bun.write(join(ROOT, `${humid}.txt`), md);
-  return fetchNote(humid);
-}
-
-async function removeNote(humid: string): Promise<Note> {
+async function fetchNote(humid: string): Promise<Note | null> {  
   const path = join(ROOT, `${humid}.txt`);
   const file = Bun.file(path);
-  const note = fetchNoteByPath(path);
+  
+  if (!await file.exists()) return null;
 
-  await file.delete();
+  const stat = await file.stat();
+  const cachedMod = fileStats.get(humid);
+  
+  if (noteCache.has(humid) && cachedMod == stat.mtime.getTime())
+    return noteCache.get(humid)!;
+
+  const content = await file.text();
+  const note = await parseNote(humid, content);
+  
+  noteCache.set(humid, note);
+  fileStats.set(humid, stat.mtime.getTime());
+  
   return note;
 }
 
-// Filesystem management
+async function putNote(humid: string, md: string): Promise<Note> {
+  const path = join(ROOT, `${humid}.txt`);
+  await Bun.write(path, md);
+  
+  noteCache.delete(humid);
+  fileStats.delete(humid);
+  
+  return await fetchNote(humid) as Note;
+}
+
+async function removeNote(humid: string): Promise<Note> {
+  const note = await fetchNote(humid);
+  if (!note) throw new Error('Note not found');
+
+  const path = join(ROOT, `${humid}.txt`);
+  const file = Bun.file(path);
+
+  if (await file.exists()) await fs.unlink(path);
+  
+  noteCache.delete(humid);
+  fileStats.delete(humid);
+  
+  return note;
+}
+
+// Note parsing (single-pass optimization)
 
 async function parseNote(humid: string, md: string): Promise<Note> {
-  const title = await parseTitle(md);
-  const headline = await parseHeadline(md);
-  const text = await parseText(md);
-  const html = await parseHTML(text);
-  const task = await parseTask(md);
+  const note: Note = {
+    id: humid,
+    type: 'note',
+    title: null,
+    headline: "",
+    raw: md,
+    text: "",
+    html: "",
+    task: null,
+  };
+  
+  if (!md || typeof md != 'string') return note;
 
-  return { id: humid, title, headline, raw: md, text, html, task };
-}
+  const lines = md.split('\n');
 
-async function parseTitle(md: string): Promise<string | null> {
-  for (const line of md.split("\n")) {
-    if(line.startsWith("TODO")) continue;
-    if(line.startsWith("DONE")) continue;
-    if(line.startsWith("NVM")) continue;
-    if(line.trim() == "") continue;
-    if(!line.trim().startsWith("# ")) break;
-    return trimHeading(line);
+  const taskLines: string[] = [];
+  const contentLines: string[] = [];
+
+  for (let line of lines) {    
+    if (TODOS.some(todo => line.startsWith(todo))) {
+      note.type = 'task';
+      taskLines.push(line);
+      continue;
+    }
+
+    if(line.startsWith("WISHLIST")) {
+      note.type = 'wish';
+      continue;
+    }
+
+    if (!note.title && line.startsWith('# '))
+      note.title = line.replace(/^#+\s*/, '');
+    
+    if (!note.headline && line.trim() != '')
+      note.headline = line;
+
+    contentLines.push(await linkOtherNotes(line));
   }
 
-  return null;
+  note.text = contentLines.join('\n');
+
+  // We do not want the title in the HTML
+  while(contentLines[0].trim() == '') contentLines.shift();
+  if (contentLines.length > 0 && contentLines[0].trim().startsWith('#'))
+    contentLines.shift();
+
+  note.html = await marked.parse(contentLines.join('  \n'));
+  note.task = parseTask(taskLines);
+
+  return note;
 }
 
-async function parseHeadline(md: string): Promise<string> {
-  const contents = await removeToDos(md);
-  return contents.split("\n").filter(line => line.trim() != "")[0];
-}
+function parseTask(lines: string[]): Task | null {
+  if (lines.length == 0) return null;
 
-async function parseHTML(text: string): Promise<string> {
-  text = removeTitle(text);
-  text = replaceLineBreaks(text);
-
-  return marked.parse(text);
-}
-
-async function parseText(md: string) {
-  md = await removeToDos(md);
-  md = await linkOtherNotes(md);
-
-  return md.trim(); 
-}
-
-async function removeToDos(md: string): Promise<string> {
-  return md.split('\n')
-    .filter(line => !TODOS.some(m => line.startsWith(m)))
-    .join('\n');
-}
-
-async function linkOtherNotes(md: string): Promise<string> {
-  const matches = [...md.matchAll(/#([A-Z0-9]{5})/g)];
-  const uniqueCodes = [...new Set(matches.map(m => m[1]))];
-
-  const notes: any = {};
-  await Promise.all(uniqueCodes.map(async (humid: string) => {
-    const note = await fetchNote(humid);
-    if(note) notes[humid] = note;
-  }));
-
-  return md.replace(/#([A-Z0-9]{5})/g, (_, humid: string) => {
-    const note = notes[humid]; if(!note) return `#${humid}`;
-    const { id, title, headline } = note;
-    return `[**#${id}**: ${title || headline}](/${id})`;
-  });
-}
-
-async function parseTask(md: string): Promise<Task | null> {
-  const lines = md.trim().split('\n').map(line => line.trim());
-
-  const attributeOrder = ['TODO', 'DONE', 'NVM'];
-  const pattern = /^(?<status>TODO|DONE|NVM)(?:\s+@\s*(?<date>\d{4}(?:-\d{1,2})?(?:-\d{1,2})?)?)?(?:\s+~(?<list>\S+))?$/i;
-
-  const task = {
-    status: 'none',
+  const task: Task = {
+    status: 'todo',
     deadline: undefined,
-    list: "all",
+    list: undefined,
     completed_at: undefined,
     shelved_at: undefined
   };
 
   const modifiers = lines
-    .filter(line => line.match(pattern))
+    .map(line => line.match(TODO_PATTERN))
+    .filter(match => match != null)
     .sort((a, b) => {
-      const statusA = a.match(pattern)?.groups?.status?.toUpperCase() || '';
-      const statusB = b.match(pattern)?.groups?.status?.toUpperCase() || '';
-      return attributeOrder.indexOf(statusA) - attributeOrder.indexOf(statusB);
+      const statusA = a[1]?.toUpperCase() || '';
+      const statusB = b[1]?.toUpperCase() || '';
+
+      return TODOS.indexOf(statusA) - TODOS.indexOf(statusB);
     });
 
-  for (const line of modifiers) {
-    const match = line.match(pattern);
-    if (!match) continue;
+  for (const [, status, date, list] of modifiers) {
+    if (!status) continue;
 
-    // @ts-ignore
-    const { status, date, list } = match.groups;
-    task.status = status?.toLowerCase();
+    task.status = status.toLowerCase();
 
-    switch(task.status) {
+    switch (task.status) {
       case 'todo':
         if (date) task.deadline = date;
         if (list) task.list = list;
@@ -216,21 +257,24 @@ async function parseTask(md: string): Promise<Task | null> {
     }
   }
 
-  return task.status != 'none' ? task : null;
+  return task;
 }
 
-// Markdown utilities
+async function linkOtherNotes(line: string): Promise<string> {  
+  const matches = Array.from(line.matchAll(HUMID_PATTERN));
+  if (matches.length == 0) return line;
+  
+  const uniqueCodes = Array.from(new Set(matches.map(m => m[1])));
+  const notes: Record<string, Note> = {};
 
-function trimHeading(line: string): string {
-  return line.replace(/^#+\s*/, "");
-}
+  await Promise.all(uniqueCodes.map(async (humid: string) => {
+    const note = await fetchNote(humid);
+    if (note) notes[humid] = note;
+  }));
 
-function removeTitle(md: string): string {
-  const lines = md.trim().split('\n');
-  if (lines[0].trim().startsWith('#')) lines.shift();
-  return lines.join('\n');
-}
-
-function replaceLineBreaks(md: string): string {
-  return md.trim().split("\n").join("  \n");
+  return line.replace(/#([A-Z0-9]{5})/g, (_, humid: string) => {
+    const note = notes[humid]; if (!note) return `#${humid}`;
+    const { id, title, headline } = note;
+    return `[**#${id}**: ${title || headline}](/${id})`;
+  });
 }
