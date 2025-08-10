@@ -9,7 +9,7 @@
 
   import { listNotes } from "../linio/api";
   import { randomOf } from "../linio/arrays";
-  import { u, navigate} from "./helpers";
+  import { u, navigate} from "../linio/navigation";
 
   import confetti from "canvas-confetti";
 
@@ -20,8 +20,55 @@
 </script>
 
 <style>
+  nav {
+    position: absolute;
+    right: 2em;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+    align-items: flex-end;
+  }
+
+  nav p {
+    margin: 0 0.2em;
+  }
+
+  nav a {
+    color: currentColor !important;
+  }
+
+  nav menu {
+    display: flex;
+    list-style: none;
+    flex-direction: row;
+    gap: 0.5em;
+    margin: 0;
+    padding: 0;
+  }
+
+  nav menu li {
+    display: flex;
+    background: black;
+    color: white;
+    &:hover { background: #3f3f46; }
+    border-bottom-right-radius: var(--radius);
+    border-bottom-left-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+
+  nav menu li a {
+    color: currentColor !important;
+    text-decoration: none !important;
+    font-size: 1.5em;
+    padding: 0.5em;
+  }
+
   footer {
+    position: absolute;
+    bottom: 0;
     opacity: 0.7;
+    margin-left: 0.8em;
   }
 </style>
 
@@ -40,20 +87,25 @@
 </nav>
 
 <main>
-  <Router routes={[
-    { component: Home },
-    { component: Imbox, path: "/Imbox" },
-    { component: ToDo, path: "/ToDo" },
-    { component: Index, path: "/Index" },
-    { component: Index, path: "/Search" },
-    { component: Note, path: "(?<id>[0-9A-Z]{5})"}
-  ]} />
-
-	<footer>
-		<p>
-      Powered by
-      <a href="//git.dupunkto.org/dupunkto/linio">Linio</a>,
-      a <a href="//dupunkto.org">&lbrace;du&rbrace;punkto</a> project.
-    </p>
-	</footer>
+  <svelte:boundary>
+    <Router routes={[
+      { component: Home },
+      { component: Imbox, path: "/Imbox" },
+      { component: ToDo, path: "/ToDo" },
+      { component: Index, path: "/Index" },
+      { component: Index, path: "/Search" },
+      { component: Note, path: "(?<id>[0-9A-Z]{5})"}
+    ]} />
+    {#snippet pending()}
+      <p>Loading...</p>
+    {/snippet}
+  </svelte:boundary>
 </main>
+
+<footer>
+  <p>
+    Powered by
+    <a href="//git.dupunkto.org/dupunkto/linio">Linio</a>,
+    a <a href="//dupunkto.org">&lbrace;du&rbrace;punkto</a> project.
+  </p>
+</footer>

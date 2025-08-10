@@ -103,10 +103,11 @@ async function removeNote(humid: string): Promise<Note> {
 async function parseNote(humid: string, md: string): Promise<Note> {
   const title = await parseTitle(md);
   const headline = await parseHeadline(md);
-  const html = await parseContents(md);
+  const text = await parseText(md);
+  const html = await parseHTML(text);
   const task = await parseTask(md);
 
-  return { id: humid, title, headline, md, html, task };
+  return { id: humid, title, headline, raw: md, text, html, task };
 }
 
 async function parseTitle(md: string): Promise<string | null> {
@@ -116,7 +117,7 @@ async function parseTitle(md: string): Promise<string | null> {
     if(line.startsWith("NVM")) continue;
     if(line.trim() == "") continue;
     if(!line.trim().startsWith("# ")) break;
-    return truncate(trimHeading(line), 20);
+    return trimHeading(line);
   }
 
   return null;
@@ -127,13 +128,18 @@ async function parseHeadline(md: string): Promise<string> {
   return contents.split("\n").filter(line => line.trim() != "")[0];
 }
 
-async function parseContents(md: string): Promise<string> {
+async function parseHTML(text: string): Promise<string> {
+  text = removeTitle(text);
+  text = replaceLineBreaks(text);
+
+  return marked.parse(text);
+}
+
+async function parseText(md: string) {
   md = await removeToDos(md);
   md = await linkOtherNotes(md);
-  md = removeTitle(md);
-  md = replaceLineBreaks(md);
 
-  return marked.parse(md);
+  return md.trim(); 
 }
 
 async function removeToDos(md: string): Promise<string> {
@@ -164,7 +170,7 @@ async function parseTask(md: string): Promise<Task | null> {
   const pattern = /^(?<status>TODO|DONE|NVM)(?:\s+@\s*(?<date>\d{4}(?:-\d{1,2})?(?:-\d{1,2})?)?)?(?:\s+~(?<list>\S+))?$/i;
 
   const task = {
-    status: undefined,
+    status: 'none',
     deadline: undefined,
     list: "all",
     completed_at: undefined,
@@ -203,22 +209,17 @@ async function parseTask(md: string): Promise<Task | null> {
     }
   }
 
-  return task.status ? task : null;
+  return task.status != 'none' ? task : null;
 }
 
-// String utilities
+// Markdown utilities
 
-function truncate(str: string, length: number): string {
-  if(str.length <= length) return str;
-  else return str.substring(0, length - 3) + "...";
+function trimHeading(line: string): string {
+  return line.replace(/^#+\s*/, "");
 }
 
-function trimHeading(str: string): string {
-  return str.replace(/^#+\s*/, "");
-}
-
-function removeTitle(str: string): string {
-  const lines = str.trim().split('\n');
+function removeTitle(md: string): string {
+  const lines = md.trim().split('\n');
   if (lines[0].trim().startsWith('#')) lines.shift();
   return lines.join('\n');
 }

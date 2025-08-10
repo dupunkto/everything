@@ -1,25 +1,52 @@
 <script lang="ts">
   import { completeTask } from "../../linio/api";
-  import { navigate } from "../helpers";
+  import { truncate } from "../../linio/strings";
+  import { navigate } from "../../linio/navigation";
+
   let { note, opened, onclick } = $props();
+
+  async function handleClick(e: PointerEvent) {
+    e.stopPropagation();
+
+    const checkbox = e.target as HTMLInputElement;
+    checkbox.disabled = true;
+
+    const updated = await completeTask(note, checkbox.checked);
+    checkbox.disabled = false;
+    checkbox.checked = updated?.task?.status == 'done';
+
+    note = updated;
+  }
+
+  async function handleKey(e: KeyboardEvent) {
+    if (!['Enter', ' '].includes(e.key) 
+      || document.activeElement != e.target) return;
+
+    e.preventDefault();
+    onclick(e);
+  }
 </script>
 
 <style>
   section {
     position: relative;
-    font-size: 18px;
+    font-size: 1em;
+    background: #fefefe;
+    border-radius: var(--radius);
+    margin-bottom: 0.5em;
+    box-shadow: var(--shadow);
   }
 
   section:not(.open):hover {
-    background-color: rgb(235, 235, 235);
+    background-color: #f6f6f6;
   }
 
   section.open {
-    background-color: rgb(247, 247, 247);
+    background-color: white;
   }
 
   header {
-    padding: 15px;
+    padding: 0.8em;
     cursor: pointer;
     display: flex;
     justify-content: space-between;
@@ -31,8 +58,7 @@
 
   .id {
     font-weight: bold;
-    padding-left: 3px;
-    padding-right: 2px;
+    padding: 0 0.3em;
   }
 
   .nvm {
@@ -47,19 +73,17 @@
   }
 
   .title i,
-  .title input[type="checkbox"] {
-    width: 16px;
+  .title .checkbox {
+    width: 1em;
     margin-right: 0.5em;
   }
 
   .contents {
-    padding: 0 15px;
+    padding: 0 0.8em;
   }
 
-  .list {
-    float: right;
-    padding: 1px 10px;
-    border-radius: 10px;
+  .contents :not(pre) {
+    max-width: 42ch;
   }
 
   .list::before {
@@ -87,17 +111,17 @@
 
   footer {
     display: flex;
-    gap: 0.7em;
+    gap: 0.2em;
     align-items: center;
-    margin-top: 20px;
-    padding: 0 15px;
+    margin-top: 1.5em;
+    padding: 0 0.8em;
   }
 
   footer time,
   footer button {
     padding: 0.25em 0.5em;
-    border-top-left-radius: 5px;
-    border-top-right-radius: 5px;
+    border-top-left-radius: calc(var(--radius) / 2);
+    border-top-right-radius: calc(var(--radius) / 2);
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
   }
@@ -108,7 +132,7 @@
     border-bottom: none;
   }
 
-  input[type="checkbox"] {
+  .checkbox {
     transform: scale(1.5);
     transform-origin: center;
     margin-bottom: 0;
@@ -116,21 +140,16 @@
   }
 </style>
 
-<section class="{ opened && "open" || "" }">
-  <header class="{ note.task?.status }" {onclick}>
+<section role="group" class="{ opened && "open" || "" }">
+  <header role="button" tabindex="0" class="{ note.task?.status }" {onclick} onkeydown={(e) => handleKey(e)}>
     <p class="title">
       {#if note.task}
         <input
           type="checkbox"
+          class="checkbox"
           checked={note.task.status != 'todo'}
           disabled={note.task.status == 'nvm'}
-          onclick={async (e) => {
-            e.stopPropagation();
-            e.target.disabled = true;
-            const updated = await completeTask(note, e.target.checked);
-            e.target.disabled = false;
-            e.target.checked = updated.task.status == 'done';
-          }}
+          onclick={(e) => handleClick(e)}
         >
       {:else}
         <i></i>
@@ -139,9 +158,9 @@
       <span class="id">#{note.id}</span>
 
       {#if note.title}
-        <span class="title">{note.title}</span>
+        <span class="title" title={note.title}>{truncate(note.title, 25)}</span>
       {:else if !opened}
-        {note.headline}
+        {truncate(note.headline, 25)}
       {/if}
     </p>
 
@@ -157,9 +176,11 @@
 
     <footer>
       <button onclick={() => navigate(`/${note.id}`)}>Open</button>
+      <button onclick={() => navigate(`/${note.id}?mode=edit`)}>Edit</button>
+
       <div class="dates">
         {#if note.task}
-          {#if note.task.deadline}
+          {#if note.task.deadline && !(note.task.completed_at || note.task.shelved_at)}
             <time class="due">{note.task.deadline}</time>
           {/if}
           {#if note.task.shelved_at}

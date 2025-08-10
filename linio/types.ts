@@ -3,7 +3,8 @@ export interface Note {
   title: string | null,
   headline: string,
   html: string,
-  md: string,
+  text: string,
+  raw: string,
   task: Task | null
 }
 

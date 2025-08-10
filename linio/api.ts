@@ -13,8 +13,8 @@ export async function listNotes(): Promise<Note[]> {
 
 export function completeTask(note: Note, checked: boolean): Promise<Note> {
   const md = checked ?
-    `DONE @ ${formatDate(new Date())}\n${note.md}` :
-    note.md.replace(/^(DONE|NVM).*$(\r?\n)?/im, '');
+    `DONE @ ${formatDate(new Date())}\n${note.raw}` :
+    note.raw.replace(/^(DONE|NVM).*$(\r?\n)?/im, '');
 
   return updateNote(note, md);
 }
