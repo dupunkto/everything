@@ -3,6 +3,7 @@
 
   import { Note } from "../../linio/types";
   import { listNotes } from "../../linio/api";
+  import { navigate } from "../../linio/navigation";
 
   import Item from "../components/Item.svelte";
 
@@ -22,9 +23,6 @@
       || (note.task.status == 'done' && view_completed)
       || (note.task.status == 'nvm' && view_shelved)
   }
-
-  let selected: string | null = $state(null);
-  let selectNote = (n: Note) => selected = selected == n.id ? null : n.id;
 
   let filteredNotes = $derived(query.trim() 
     ? notes.filter(note => [note.title, note.headline, note.text, note.task?.list].some(
@@ -94,8 +92,8 @@
       <li class="note-item">
         <Item {note}
           from="/Search"
-          opened={note.id == selected}
-          onclick={() => selectNote(note)}
+          opened={false}
+          onclick={() => navigate(`/${note.id}`)}
           truncate_at={70}
         />
       </li>
