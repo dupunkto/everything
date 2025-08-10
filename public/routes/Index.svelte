@@ -7,9 +7,14 @@
   import Item from "../components/Item.svelte";
 
   let notes: Note[] = $state(await listNotes());
+  let query = $state('');
 
   let selected: string | null = $state(null);
   let selectNote = (n: Note) => selected = selected == n.id ? null : n.id;
+
+  let filteredNotes = $derived(query.trim() 
+    ? notes.filter(note => [note.title, note.headline, note.text, note.task?.list].some(
+        field => field?.toLowerCase().includes(query))) : notes);
 
   function handleKey(e: KeyboardEvent) {
     const isEditable = (element: Element | null) =>
@@ -44,10 +49,10 @@
   }
 </style>
 
-<input placeholder="Search...">
+<input placeholder="Search..." bind:value={query}>
 
 <ul class="note-list">
-  {#each notes as note}
+  {#each filteredNotes as note}
     <li class="note-item">
       <Item {note} opened={note.id == selected} onclick={() => selectNote(note)} from="/Index" />
     </li>
