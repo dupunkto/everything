@@ -121,6 +121,7 @@
     grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
     gap: 1em;
     overflow-y: auto;
+    padding-bottom: 4em;
   }
 
   section h2 {
@@ -154,7 +155,13 @@
 
         {#each tasks[list] as note}
           {#if isVisible(note)}
-            <Item {note} opened={note.id == selected} onclick={() => selectNote(note)} from="/ToDo" />
+            <Item {note}
+              from="/ToDo"
+              opened={note.id == selected}
+              onclick={() => selectNote(note)}
+              truncate_at={38}
+              hide_list={true}
+            />
           {/if}
         {/each}
       </section>

@@ -3,7 +3,7 @@
   import { truncate } from "../../linio/strings";
   import { navigate } from "../../linio/navigation";
 
-  let { note, opened, onclick, from } = $props();
+  let { note, opened, onclick, from, ...props } = $props();
 
   async function handleClick(e: MouseEvent) {
     e.stopPropagation();
@@ -86,10 +86,6 @@
     max-width: 42ch;
   }
 
-  .list::before {
-    content: "~";
-  }
-
   .dates {
     position: absolute;
     display: flex;
@@ -141,7 +137,13 @@
 </style>
 
 <section role="group" class="{ opened && "open" || "" }">
-  <header role="button" tabindex="0" class="{ note.task?.status }" {onclick} onkeydown={(e) => handleKey(e)}>
+  <header
+    role="button"
+    tabindex="0"
+    class="{ note.task?.status }"
+    {onclick}
+    onkeydown={(e) => handleKey(e)}
+  >
     <p class="title">
       {#if note.task}
         <input
@@ -158,14 +160,20 @@
       <span class="id">#{note.id}</span>
 
       {#if note.title}
-        <span class="title" title={note.title}>{truncate(note.title, 25)}</span>
+        <span class="title" title={note.title}>
+          {truncate(note.title, props.truncate_at || 25)}
+        </span>
       {:else if !opened}
-        {truncate(note.headline, 25)}
+        {truncate(note.headline, props.truncate_at || 25)}
       {/if}
     </p>
 
-    {#if note.task?.list}
-      <span class="list">{note.task.list}</span>
+    {#if note.task?.list && !props.hide_list}
+      <span class="list">~{note.task.list}</span>
+    {/if}
+
+    {#if note.type != 'note' && note.type != 'task'}
+      <code class="type">{note.type}</code>
     {/if}
   </header>
 

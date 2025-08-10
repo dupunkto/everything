@@ -202,7 +202,7 @@ async function parseNote(humid: string, md: string): Promise<Note> {
     contentLines.push(await linkOtherNotes(line));
   }
 
-  note.text = contentLines.join('\n');
+  note.text = contentLines.join('\n').trim();
 
   // We do not want the title in the HTML
   while(contentLines[0].trim() == '') contentLines.shift();
