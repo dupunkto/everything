@@ -75,12 +75,14 @@
 
 <div class="todos">
   {#each Object.keys(tasks) as list}
-    <section>
-      <h2>~{list}</h2>
+    {#if tasks[list].length > 0}
+      <section>
+        <h2>~{list}</h2>
 
-      {#each tasks[list] as note}
-        <Item {note} opened={note.id == selected} onclick={() => selectNote(note)} />
-      {/each}
-    </section>
+        {#each tasks[list] as note}
+          <Item {note} opened={note.id == selected} onclick={() => selectNote(note)} from="/ToDo" />
+        {/each}
+      </section>
+    {/if}
   {/each}
 </div>

@@ -25,7 +25,7 @@
 <ul class="note-list">
   {#each notes as note}
     <li class="note-item">
-      <Item {note} opened={note.id == selected} onclick={() => selectNote(note)} />
+      <Item {note} opened={note.id == selected} onclick={() => selectNote(note)} from="/Index" />
     </li>
   {/each}
 </ul>

@@ -3,7 +3,7 @@
   import { truncate } from "../../linio/strings";
   import { navigate } from "../../linio/navigation";
 
-  let { note, opened, onclick } = $props();
+  let { note, opened, onclick, from } = $props();
 
   async function handleClick(e: PointerEvent) {
     e.stopPropagation();
@@ -176,7 +176,7 @@
 
     <footer>
       <button onclick={() => navigate(`/${note.id}`)}>Open</button>
-      <button onclick={() => navigate(`/${note.id}?mode=edit`)}>Edit</button>
+      <button onclick={() => navigate(`/${note.id}?mode=edit&from=${from}`)}>Edit</button>
 
       <div class="dates">
         {#if note.task}
