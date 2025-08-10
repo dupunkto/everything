@@ -5,7 +5,7 @@
   import Home from "./routes/Home.svelte";
   import Imbox from "./routes/Imbox.svelte";
   import ToDo from "./routes/ToDo.svelte";
-  import Index from "./routes/Index.svelte";
+  import Search from "./routes/Search.svelte";
   import New from "./routes/New.svelte";
   import Note from "./routes/Note.svelte";
 
@@ -23,7 +23,7 @@
   function handleKey(e: KeyboardEvent) {
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === '/') {
       e.preventDefault();
-      navigate("/New");
+      navigate("/New?autofocus=1");
     }
   }
 
@@ -88,7 +88,9 @@
   <menu>
     <li><a href={u`/Imbox`}>Imbox</a></li>
     <li><a href={u`/ToDo`}>ToDo</a></li>
-    <li><a href={u`/Index`}>Browse</a></li>
+    <li><a href={u`/Search`} aria-label="Search">
+      <i class="fa fa-search"></i>
+    </a></li>
     <li><a href={u`/New`} aria-label="New">
       <i class="fa fa-plus"></i>
     </a></li>
@@ -104,8 +106,7 @@
       { component: Home },
       { component: Imbox, path: "/Imbox" },
       { component: ToDo, path: "/ToDo" },
-      { component: Index, path: "/Index" },
-      { component: Index, path: "/Search" },
+      { component: Search, path: "/Search" },
       { component: New, path: "/New" },
       { component: Note, path: "(?<id>[0-9A-Z]{5})"}
     ]} />

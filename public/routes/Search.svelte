@@ -83,7 +83,7 @@
     {#if isVisible(note)}
       <li class="note-item">
         <Item {note}
-          from="/Index"
+          from="/Search"
           opened={note.id == selected}
           onclick={() => selectNote(note)}
           truncate_at={70}

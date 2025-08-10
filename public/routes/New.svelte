@@ -4,6 +4,10 @@
   import { newNote } from "../../linio/api";
   import { navigate } from "../../linio/navigation";
 
+  let { route } = $props();
+
+  let autofocus = $derived(route.result.querystring.params.autofocus);
+
   async function handleSubmit(e: SubmitEvent) {
     e.preventDefault();
 
@@ -19,7 +23,7 @@
       element?.tagName === 'INPUT' || 
       element?.tagName === 'TEXTAREA';
 
-    if(e.key == '/' && !isEditable(document.activeElement)) {
+    if((e.key == '/' || e.key == 'e') && !isEditable(document.activeElement)) {
       e.preventDefault();
       document.querySelector("textarea")?.focus();
     }
@@ -38,14 +42,12 @@
     target.style.height = `${target.scrollHeight + 2}px`
   }
 
-  onMount(() => {
-    window.addEventListener('keydown', handleWindowKey);
-    document.querySelector("textarea")?.focus()
-  });
+  onMount(() => window.addEventListener('keydown', handleWindowKey));
+  onDestroy(() => window.removeEventListener('keydown', handleWindowKey))
 
-  onDestroy(() => {
-    window.removeEventListener('keydown', handleWindowKey);
-  })
+  $effect(() => {
+    if(autofocus) document.querySelector("textarea")?.focus();
+  });
 </script>
 
 <style>

@@ -10,6 +10,7 @@
 
   let id = route.result.path.params.id;
   let mode = $derived(route.result.querystring.params.mode || "view");
+  let autofocus = $derived(route.result.querystring.params.autofocus);
   let from = $derived(route.result.querystring.params.from);
 
   let note: Note = $state (await fetchNote(id));
@@ -38,21 +39,20 @@
     note = updated;
   }
 
-  function handleWindowKey(e: KeyboardEvent) {
+  function handleWindowKey(e: KeyboardEvent) {  
     if(e.key == 'e' && mode == 'view') {
       e.preventDefault();
-      navigate(`/${note.id}?mode=edit`);
+      navigate(`/${note.id}?mode=edit&autofocus=1`);
     }
-    else {
-      const isEditable = (element: Element | null) =>
-        (element as HTMLElement)?.isContentEditable ||
-        element?.tagName === 'INPUT' || 
-        element?.tagName === 'TEXTAREA';
 
-      if(e.key == '/' && !isEditable(document.activeElement)) {
-        e.preventDefault();
-        document.querySelector("textarea")?.focus();
-      }
+    const isEditable = (element: Element | null) =>
+      (element as HTMLElement)?.isContentEditable ||
+      element?.tagName === 'INPUT' || 
+      element?.tagName === 'TEXTAREA';
+
+    if(e.key == 'e' && !isEditable(document.activeElement)) {
+      e.preventDefault();
+      document.querySelector("textarea")?.focus();
     }
   }
 
@@ -117,6 +117,10 @@
 
   onMount(() => window.addEventListener('keydown', handleWindowKey));
   onDestroy(() => window.removeEventListener('keydown', handleWindowKey));
+
+  $effect(() => {
+    if(autofocus) document.querySelector("textarea")?.focus();
+  });
 </script>
 
 <style>
