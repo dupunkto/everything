@@ -19,6 +19,14 @@ export function completeTask(note: Note, checked: boolean): Promise<Note> {
   return updateNote(note, md);
 }
 
+export async function newNote(md: string): Promise<Note> {
+  const response = await fetch(`/api/notes`, {
+    method: "POST", body: JSON.stringify({ md })
+  });
+
+  return await response.json();
+}
+
 export function updateNote(note: Note, md: string): Promise<Note> {
   return new Promise(async (resolve, reject) => {
     const response = await fetch(`/api/note/${note.id}`, {

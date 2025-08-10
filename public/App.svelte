@@ -5,6 +5,7 @@
   import Imbox from "./routes/Imbox.svelte";
   import ToDo from "./routes/ToDo.svelte";
   import Index from "./routes/Index.svelte";
+  import New from "./routes/New.svelte";
   import Note from "./routes/Note.svelte";
 
   import { listNotes } from "../linio/api";
@@ -77,8 +78,8 @@
     <li><a href={u`/Imbox`}>Imbox</a></li>
     <li><a href={u`/ToDo`}>ToDo</a></li>
     <li><a href={u`/Index`}>Browse</a></li>
-    <li><a href={u`/Index`} aria-label="Search">
-      <i class="fa fa-search"></i>
+    <li><a href={u`/New`} aria-label="New">
+      <i class="fa fa-plus"></i>
     </a></li>
   </menu>
   <p>
@@ -94,6 +95,7 @@
       { component: ToDo, path: "/ToDo" },
       { component: Index, path: "/Index" },
       { component: Index, path: "/Search" },
+      { component: New, path: "/New" },
       { component: Note, path: "(?<id>[0-9A-Z]{5})"}
     ]} />
     {#snippet pending()}
