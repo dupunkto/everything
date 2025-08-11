@@ -164,7 +164,6 @@
           from="/Search"
           opened={false}
           onclick={() => navigate(`/${note.id}`)}
-          truncate_at={70}
         />
       </li>
     {/if}

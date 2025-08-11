@@ -1,6 +1,5 @@
 <script lang="ts">
   import { completeTask } from "../../linio/api";
-  import { truncate } from "../../linio/strings";
   import { navigate } from "../../linio/navigation";
 
   let { note, opened, onclick, from, ...props } = $props();
@@ -69,6 +68,15 @@
     display: flex;
     align-items: center;
     gap: 0.2em;
+  }
+  
+  .headline {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+    overflow: hidden;
+    flex: 1;
+    min-width: 0;
   }
 
   .title i,
@@ -159,11 +167,11 @@
       <span class="id">#{note.id}</span>
 
       {#if note.title}
-        <span class="title" title={note.title}>
-          {truncate(note.title, props.truncate_at || 25)}
+        <span class="headline" title={note.title.replace(/<[^>]*>/g, '')}>
+          {@html note.title}
         </span>
       {:else if !opened}
-        {truncate(note.headline, props.truncate_at || 25)}
+        <span class="headline">{note.headline}</span>
       {/if}
     </p>
 

@@ -370,7 +370,7 @@
         {/if}
         <div class="contents">
           {#if note.title}
-            <h1>{note.title} <span class="id">#{note.id}</span></h1>
+            <h1>{@html note.title} <span class="id">#{note.id}</span></h1>
           {/if}
 
           {@html note.html}

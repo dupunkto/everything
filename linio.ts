@@ -200,8 +200,10 @@ async function parseNote(humid: string, md: string, stat: any): Promise<Note> {
       continue;
     }
 
-    if (!note.title && line.startsWith('# '))
-      note.title = line.replace(/^#+\s*/, '');
+    if (!note.title && line.startsWith('# ')) {
+      const title = line.replace(/^#+\s*/, '');
+      note.title = await marked.parseInline(title);
+    }
     
     if (!note.headline && line.trim() != '')
       note.headline = line;

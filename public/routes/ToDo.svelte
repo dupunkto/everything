@@ -160,7 +160,6 @@
               from="/ToDo"
               opened={note.id == selected}
               onclick={() => selectNote(note)}
-              truncate_at={38}
               hide_list={true}
             />
           {/if}
