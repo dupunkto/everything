@@ -119,7 +119,8 @@
   .todos {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-    gap: 1em;
+    grid-template-rows: masonry;
+    column-gap: 1em;
     overflow-y: auto;
     padding-bottom: 4em;
   }
