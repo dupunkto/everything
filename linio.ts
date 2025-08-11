@@ -16,7 +16,8 @@ import { Note, Task } from "./linio/types";
 import app from "./public/index.html";
 
 const server = serve({
-  port: 4000,
+  port: 9000,
+  hostname: "linio",
   development: true,
   routes: {
     "/": app,
