@@ -21,11 +21,13 @@
     due?: string[];
     completed?: string[];
     shelved?: string[];
+    created?: string[];
+    modified?: string[];
   }
 
   function parseQuery(query: string): { selectors: Selectors; terms: string[] } {
     const selectors: Selectors = {};
-    const attributes = ['type', 'status', 'list', 'due', 'completed', 'shelved'];
+    const attributes = ['type', 'status', 'list', 'due', 'completed', 'shelved', 'created', 'modified'];
     const matches = [...query.matchAll(/(\w+):(\S+)/g)];
     
     matches
@@ -56,6 +58,12 @@
     
     if (selectors.shelved && (!note.task?.shelved_at || !selectors.shelved.some(shelved => 
       note.task!.shelved_at == shelved))) return false;
+
+    if (selectors.created && !selectors.created.some(created => 
+      note.created_at == created)) return false;
+
+    if (selectors.modified && !selectors.modified.some(modified => 
+      note.modified_at == modified)) return false;
 
     return true;
   }

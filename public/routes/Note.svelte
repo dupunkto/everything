@@ -158,6 +158,12 @@
   .contents > :first-child { margin-top: 0; }
   .contents > :last-child { margin-bottom: 0; }
 
+  .list {
+    position: absolute;
+    top: 0.8em;
+    right: 1em;
+  }
+
   .note {
     position: relative;
   }
@@ -180,17 +186,18 @@
 
   .type::before { content: "Type "; }
   .ref::before { content: "Ref "; }
-  .list::before { content: "List "; }
   .due::before { content: "Due "; }
-  .completed::before { content: "Completed at "; }
-  .shelved::before { content: "Shelved at "; }
+  .completed::before { content: "Completed "; }
+  .shelved::before { content: "Shelved "; }
+  .created::before { content: "Created "; }
+  .modified::before { content: "Last modified "; }
 
-  :is(.type, .ref, .list, .due, .completed, .shelved)::before, label {
+  :is(.type, .ref, .due, .completed, .shelved, .created, .modified)::before, label {
     display: block;
     color: gray;
   }
 
-  .type, .ref, .list, .due, .completed, .shelved {
+  .type, .ref, .due, .completed, .shelved, .created, .modified {
     text-transform: lowercase;
   }
 
@@ -270,22 +277,22 @@
       {/if}
 
       <div class="metadata">
-        {#if note.task}
-          {#if note.task.list}
-            <time class="list">{note.task.list}</time>
-          {/if}
-          {#if note.task.deadline}
-            <time class="due">{note.task.deadline}</time>
-          {/if}
-          {#if note.task.shelved_at}
-            <time class="shelved">{note.task.shelved_at}</time>
-          {/if}
-          {#if note.task.completed_at}
-            <time class="completed">{note.task.completed_at}</time>
-          {/if}
-        {/if}
         {#if !note.title}
           <time class="ref">#{note.id}</time>
+        {/if}
+          
+        {#if note.task?.deadline}
+          <time class="due">{note.task.deadline}</time>
+        {/if}
+        {#if note.task?.shelved_at}
+          <time class="shelved">{note.task.shelved_at}</time>
+        {/if}
+        {#if note.task?.completed_at}
+          <time class="completed">{note.task.completed_at}</time>
+        {/if}
+        <time class="created">{note.created_at}</time>
+        {#if note.modified_at != note.created_at}
+          <time class="modified">{note.modified_at}</time>
         {/if}
         {#if !(note.type == 'note' || note.type == 'task')}
           <span class="type">{note.type}</span>
@@ -358,6 +365,9 @@
           >{note.text}</textarea>
         </form>
       {:else}
+        {#if note.task?.list}
+          <span class="list">~{note.task.list}</span>
+        {/if}
         <div class="contents">
           {#if note.title}
             <h1>{note.title} <span class="id">#{note.id}</span></h1>

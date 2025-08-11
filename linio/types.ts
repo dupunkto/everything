@@ -6,7 +6,9 @@ export interface Note {
   html: string,
   text: string,
   raw: string,
-  task: Task | null
+  task: Task | null,
+  created_at: string,
+  modified_at: string
 }
 
 export interface Task {

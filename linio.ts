@@ -12,6 +12,7 @@ const TODO_PATTERN = /^(TODO|DONE|NVM)(?:\s+@\s*(\d{4}(?:-\d{1,2})?(?:-\d{1,2})?
 
 import { generateHumID } from "./linio/humid";
 import { Note, Task } from "./linio/types";
+import { normalizeDate } from "./linio/dates";
 
 import app from "./public/index.html";
 
@@ -128,7 +129,7 @@ async function fetchNote(humid: string): Promise<Note | null> {
     return noteCache.get(humid)!;
 
   const content = await file.text();
-  const note = await parseNote(humid, content);
+  const note = await parseNote(humid, content, stat);
   
   noteCache.set(humid, note);
   fileStats.set(humid, stat.mtime.getTime());
@@ -163,7 +164,10 @@ async function removeNote(humid: string): Promise<Note> {
 
 // Note parsing (single-pass optimization)
 
-async function parseNote(humid: string, md: string): Promise<Note> {
+async function parseNote(humid: string, md: string, stat: any): Promise<Note> {
+  const created_at = normalizeDate(stat.birthtime.toISOString())!;
+  const modified_at = normalizeDate(stat.mtime.toISOString())!;
+
   const note: Note = {
     id: humid,
     type: 'note',
@@ -173,6 +177,8 @@ async function parseNote(humid: string, md: string): Promise<Note> {
     text: "",
     html: "",
     task: null,
+    created_at,
+    modified_at
   };
   
   if (!md || typeof md != 'string') return note;
