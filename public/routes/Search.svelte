@@ -14,19 +14,81 @@
   let notes: Note[] = $state(await listNotes());
   let query = $state('');
 
+  interface Selectors {
+    type?: string[];
+    list?: string[];
+    status?: string[];
+    due?: string[];
+    completed?: string[];
+    shelved?: string[];
+  }
+
+  function parseQuery(query: string): { selectors: Selectors; terms: string[] } {
+    const selectors: Selectors = {};
+    const attributes = ['type', 'status', 'list', 'due', 'completed', 'shelved'];
+    const matches = [...query.matchAll(/(\w+):(\S+)/g)];
+    
+    matches
+      .filter(([, key]) => attributes.includes(key))
+      .forEach(([match, key, value]) => {
+        (selectors[key as keyof Selectors] ??= []).push(value);
+        query = query.replace(match, '');
+      });
+
+    const terms = query.split(/\s+/).filter(Boolean);
+    return { selectors, terms };
+  }
+
+  function selectorsMatches(note: Note, selectors: Selectors): boolean {
+    if (selectors.type && !selectors.type.some(type => note.type === type)) return false;
+    
+    if (selectors.list && (!note.task?.list || !selectors.list.some(list => 
+      note.task?.list == list))) return false;
+    
+    if (selectors.status && (!note.task || !selectors.status.some(status => 
+      note.task?.status == status))) return false;
+    
+    if (selectors.due && (!note.task?.deadline || !selectors.due.some(due => 
+      note.task!.deadline == due))) return false;
+    
+    if (selectors.completed && (!note.task?.completed_at || !selectors.completed.some(completed => 
+      note.task!.completed_at == completed))) return false;
+    
+    if (selectors.shelved && (!note.task?.shelved_at || !selectors.shelved.some(shelved => 
+      note.task!.shelved_at == shelved))) return false;
+
+    return true;
+  }
+
+  function queryMatches(note: Note, terms: string[]): boolean {
+    if (terms.length == 0) return true;
+    
+    const haystack = [note.title, note.headline, note.text]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+
+    return terms.every(needle => haystack.includes(needle.toLowerCase()));
+  }
+
   let view_completed = $state(true);
   let view_shelved = $state(false);
 
   const isVisible = (note: Note) => {
     return note.type != 'task'
-      || note.task.status == 'todo'
-      || (note.task.status == 'done' && view_completed)
-      || (note.task.status == 'nvm' && view_shelved)
+      || note.task?.status == 'todo'
+      || (note.task?.status == 'done' && view_completed)
+      || (note.task?.status == 'nvm' && view_shelved)
   }
 
-  let filteredNotes = $derived(query.trim() 
-    ? notes.filter(note => [note.title, note.headline, note.text, note.task?.list].some(
-        field => field?.toLowerCase().includes(query.toLowerCase()))) : notes);
+  let filteredNotes = $derived.by((): Note[] => {
+    if (query.trim() == '') return notes;
+    const { selectors, terms } = parseQuery(query);
+
+    return notes.filter(note => 
+      selectorsMatches(note, selectors) && queryMatches(note, terms)
+    );
+  });
 
   function handleWindowKey(e: KeyboardEvent) {
     const isEditable = (element: Element | null) =>
