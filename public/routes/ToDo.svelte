@@ -20,6 +20,10 @@
       || (note.task.status == 'nvm' && view_shelved)
   }
 
+  const hasVisibleItems = (list: string) => {
+    return tasks[list]?.some(note => isVisible(note)) || false;
+  }
+
   listNotes().then((notes) => {
     for(const note of notes) {
       if (!note.task) continue;
@@ -150,7 +154,7 @@
 
 <div class="todos">
   {#each lists as list}
-    {#if tasks[list].length > 0}
+    {#if hasVisibleItems(list)}
       <section>
         <h2>~{list}</h2>
 
