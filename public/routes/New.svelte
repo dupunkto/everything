@@ -36,6 +36,20 @@
       e.preventDefault();
       (e.target as HTMLTextAreaElement).form?.requestSubmit();
     }
+    
+    if (e.key == 'Tab') {
+      e.preventDefault();
+      insertEnter(e);
+      autoResize(e);
+    }
+  }
+
+  function insertEnter(e: Event) {
+    const target = e.target as HTMLTextAreaElement;
+    const start = target.selectionStart;
+    const end = target.selectionEnd;
+    target.value = target.value.substring(0, start) + '\n' + target.value.substring(end);
+    target.selectionStart = target.selectionEnd = start + 1;
   }
 
   function autoResize(e: Event) {
