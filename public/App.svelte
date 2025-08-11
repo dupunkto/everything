@@ -16,8 +16,11 @@
   import confetti from "canvas-confetti";
 
   async function lucky() {
-    const note = randomOf(await listNotes());
-    navigate(`/${note.id}`); confetti();
+    const notes = (await listNotes()).filter(n => {
+      return n.type != 'task' || n.task?.status == 'todo';
+    });
+
+    navigate(`/${randomOf(notes).id}`); confetti();
   }
 
   function handleWindowKey(e: KeyboardEvent) {
