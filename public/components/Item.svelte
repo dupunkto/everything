@@ -18,7 +18,14 @@
   }
 
   async function handleKey(e: KeyboardEvent) {
-    if (['Enter', ' '].includes(e.key) && document.activeElement == e.target) {
+    const focused = document.activeElement == e.target;
+    
+    if(e.key == 'e' && (opened || focused)) {
+      e.preventDefault();
+      navigate(`/${note.id}?mode=edit&from=${from}&autofocus=1`);
+    }
+
+    if (['Enter', ' '].includes(e.key) && focused) {
       e.preventDefault();
       onclick(e);
     }
