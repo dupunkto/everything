@@ -82,7 +82,7 @@
       const shelved_at = data.get('shelved_at') as string;
 
       if(deadline) modifiers += ` @ ${normalizeDate(deadline)}`;
-      if(list) modifiers += ` ~${list}`;
+      if(list && list != 'all') modifiers += ` ~${list}`;
 
       switch (status) {
         case 'done':
@@ -317,7 +317,7 @@
                   </td>
                   {#if task}
                     <td><label for="list">list</label></td>
-                    <td><input type="text" name="list" value={note.task?.list ?? "all"}></td>
+                    <td><input type="text" name="list" value={note.task?.list} placeholder="all"></td>
                   {/if}
                 </tr>
                 {#if task}

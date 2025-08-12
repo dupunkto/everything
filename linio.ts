@@ -253,7 +253,7 @@ function parseTask(lines: string[]): Task | null {
     switch (task.status) {
       case 'todo':
         if (date) task.deadline = date;
-        if (list) task.list = list;
+        if (list && list != 'all') task.list = list;
         break;
 
       case 'done':
