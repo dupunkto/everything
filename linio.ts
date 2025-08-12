@@ -9,6 +9,7 @@ const TODOS = ['TODO', 'DONE', 'NVM'];
 
 const HUMID_PATTERN = /#([A-Z0-9]{5})/g;
 const TODO_PATTERN = /^(TODO|DONE|NVM)(?:\s+@\s*(\d{4}(?:-\d{1,2})?(?:-\d{1,2})?))?(?:\s+~(\S+))?$/i;
+const HEADER_PATTERN = /^(Created|Modified):\s*(\d+)$/i;
 
 import { generateHumID } from "./linio/humid";
 import { Note, Task } from "./linio/types";
@@ -165,8 +166,8 @@ async function removeNote(humid: string): Promise<Note> {
 // Note parsing (single-pass optimization)
 
 async function parseNote(humid: string, md: string, stat: any): Promise<Note> {
-  const created_at = normalizeDate(stat.birthtime.toISOString())!;
-  const modified_at = normalizeDate(stat.mtime.toISOString())!;
+  let created_at = normalizeDate(stat.birthtime.toISOString())!;
+  let modified_at = normalizeDate(stat.mtime.toISOString())!;
 
   const note: Note = {
     id: humid,
@@ -200,6 +201,20 @@ async function parseNote(humid: string, md: string, stat: any): Promise<Note> {
       continue;
     }
 
+    if (line.match(HEADER_PATTERN)) {
+      const [, header, timestamp] = line.match(HEADER_PATTERN)!;
+      const date = normalizeDate(parseTimestamp(timestamp));
+
+      if(date) {
+        switch(header.toLowerCase()) {
+          case 'created': note.created_at = date; break;
+          case 'modified': note.modified_at = date; break;
+        }
+      }
+
+      continue;
+    }
+
     if (!note.title && line.startsWith('# ')) {
       const title = line.replace(/^#+\s*/, '');
       note.title = await marked.parseInline(title);
@@ -222,6 +237,49 @@ async function parseNote(humid: string, md: string, stat: any): Promise<Note> {
   note.task = parseTask(taskLines);
 
   return note;
+}
+
+async function linkOtherNotes(line: string): Promise<string> {  
+  const matches = Array.from(line.matchAll(HUMID_PATTERN));
+  if (matches.length == 0) return line;
+  
+  const uniqueCodes = Array.from(new Set(matches.map(m => m[1])));
+  const notes: Record<string, Note> = {};
+
+  await Promise.all(uniqueCodes.map(async (humid: string) => {
+    const note = await fetchNote(humid);
+    if (note) notes[humid] = note;
+  }));
+
+  return line.replace(/#([A-Z0-9]{5})/g, (_, humid: string) => {
+    const note = notes[humid]; if (!note) return `#${humid}`;
+    const { id, title, headline } = note;
+    return `[**#${id}**: ${title || headline}](/${id})`;
+  });
+}
+
+function parseTimestamp(ts: string): string | undefined {
+  let year, dayOfYear, hour, minute;
+
+  if (ts.length == 9) { // YYJJJHHMM
+    year = parseInt('20' + ts.slice(0, 2));
+    dayOfYear = parseInt(ts.slice(2, 5));
+    hour = parseInt(ts.slice(5, 7));
+    minute = parseInt(ts.slice(7, 9));
+  }
+  else if (ts.length === 11) { // YYYYJJJHHMM
+    year = parseInt(ts.slice(0, 4));
+    dayOfYear = parseInt(ts.slice(4, 7));
+    hour = parseInt(ts.slice(7, 9));
+    minute = parseInt(ts.slice(9, 11));
+  }
+  else {
+    return undefined;
+  }
+  
+  const date = new Date(year, 0, dayOfYear);
+  date.setHours(hour, minute, 0, 0);
+  return date.toISOString();
 }
 
 function parseTask(lines: string[]): Task | null {
@@ -269,21 +327,3 @@ function parseTask(lines: string[]): Task | null {
   return task;
 }
 
-async function linkOtherNotes(line: string): Promise<string> {  
-  const matches = Array.from(line.matchAll(HUMID_PATTERN));
-  if (matches.length == 0) return line;
-  
-  const uniqueCodes = Array.from(new Set(matches.map(m => m[1])));
-  const notes: Record<string, Note> = {};
-
-  await Promise.all(uniqueCodes.map(async (humid: string) => {
-    const note = await fetchNote(humid);
-    if (note) notes[humid] = note;
-  }));
-
-  return line.replace(/#([A-Z0-9]{5})/g, (_, humid: string) => {
-    const note = notes[humid]; if (!note) return `#${humid}`;
-    const { id, title, headline } = note;
-    return `[**#${id}**: ${title || headline}](/${id})`;
-  });
-}
