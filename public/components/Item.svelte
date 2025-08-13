@@ -20,6 +20,11 @@
   async function handleKey(e: KeyboardEvent) {
     const focused = document.activeElement == e.target;
     
+    if(e.key == 'o' && (opened || focused)) {
+      e.preventDefault();
+      navigate(`/${note.id}?mode=view`);
+    }
+
     if(e.key == 'e' && (opened || focused)) {
       e.preventDefault();
       navigate(`/${note.id}?mode=edit&from=${from}&autofocus=1`);
