@@ -42,27 +42,27 @@
   section {
     position: relative;
     font-size: 1em;
-    background: light-dark(#fefefe, #1e1e1e);
+    background: #fefefe;
     border-radius: var(--radius);
     margin-bottom: 0.5em;
     box-shadow: var(--shadow);
   }
 
   section:not(.open):hover {
-    background-color: light-dark(#f6f6f6, #2a2a2a);
+    background-color: #f6f6f6;
   }
 
   section:has(header:focus-visible) {
-    background-color: light-dark(#ddd, #444);
+    background-color: #ddd;
     & > header { outline: none; }
   }
 
   section.open:has(header:focus-visible) {
-    background-color: light-dark(#f6f6f6, #2a2a2a);
+    background-color: #f6f6f6;
   }
 
   section.open {
-    background-color: light-dark(white, #1e1e1e);
+    background-color: white;
   }
 
   header {
@@ -152,19 +152,9 @@
   }
 
   footer button {
-    background: light-dark(#fdfdfd, #f4f4f4);
-    color: #333;
+    background: #fdfdfd;
     margin-bottom: 0;
     border-bottom: none;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    footer button:focus {
-      border-color: #666;
-    }
-    footer button:active {
-      background: #ddd;
-    }
   }
 
   .checkbox {
