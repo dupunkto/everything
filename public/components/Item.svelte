@@ -18,7 +18,8 @@
   }
 
   async function handleKey(e: KeyboardEvent) {
-    const focused = document.activeElement == e.target;
+    const focused = document.activeElement == e.target
+      && document.activeElement!.tagName == "HEADER";
     
     if(e.key == 'o' && (opened || focused)) {
       e.preventDefault();
