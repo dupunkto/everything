@@ -42,27 +42,27 @@
   section {
     position: relative;
     font-size: 1em;
-    background: light-dark(#fefefe, #1a1e23);
+    background: light-dark(#fefefe, #1e1e1e);
     border-radius: var(--radius);
     margin-bottom: 0.5em;
     box-shadow: var(--shadow);
   }
 
   section:not(.open):hover {
-    background-color: light-dark(#f6f6f6, #21242c);
+    background-color: light-dark(#f6f6f6, #2a2a2a);
   }
 
   section:has(header:focus-visible) {
-    background-color: light-dark(#ddd, #3a3f47);
+    background-color: light-dark(#ddd, #444);
     & > header { outline: none; }
   }
 
   section.open:has(header:focus-visible) {
-    background-color: light-dark(#f6f6f6, #21242c);
+    background-color: light-dark(#f6f6f6, #2a2a2a);
   }
 
   section.open {
-    background-color: light-dark(white, #161a1f);
+    background-color: light-dark(white, #1e1e1e);
   }
 
   header {
@@ -152,7 +152,7 @@
   }
 
   footer button {
-    background: light-dark(#fdfdfd, #2f3136);
+    background: light-dark(#fdfdfd, #f4f4f4);
     color: #333;
     margin-bottom: 0;
     border-bottom: none;

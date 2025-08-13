@@ -144,7 +144,7 @@
 
   article {
     position: relative;
-    background: light-dark(#fefefe, #1a1e23);
+    background: light-dark(#fefefe, #1e1e1e);
     box-shadow: var(--shadow);
     border-radius: var(--radius);
     padding: 3px 3px 0 3px;
@@ -152,7 +152,7 @@
 
   .id {
     font-weight: normal;
-    color: light-dark(gray, #6a737d);
+    color: light-dark(gray, #6f6f6f);
     font-size: 0.85em;
     margin-left: 0.2em;
   }
@@ -200,7 +200,7 @@
 
   :is(.type, .ref, .due, .completed, .shelved, .created, .modified)::before, label {
     display: block;
-    color: light-dark(gray, #6a737d);
+    color: light-dark(gray, #6f6f6f);
   }
 
   .type, .ref, .due, .completed, .shelved, .created, .modified {
@@ -216,7 +216,7 @@
   }
 
   footer button {
-    background: light-dark(#fdfdfd, #2f3136);
+    background: light-dark(#fdfdfd, #f4f4f4);
     color: #333;
     margin-bottom: 0;
     border-bottom: none;
