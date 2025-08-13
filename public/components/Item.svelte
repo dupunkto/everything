@@ -52,12 +52,12 @@
     background-color: #f6f6f6;
   }
 
-  section:has(header:focus) {
+  section:has(header:focus-visible) {
     background-color: #ddd;
     & > header { outline: none; }
   }
 
-  section.open:has(header:focus) {
+  section.open:has(header:focus-visible) {
     background-color: #f6f6f6;
   }
 
