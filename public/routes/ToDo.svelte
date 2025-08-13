@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Note } from "../../linio/types"
   import { listNotes } from "../../linio/api";
+  import { keyboardNavigation } from "../../linio/keyboard";
   
   import Item from "../components/Item.svelte";
 
@@ -70,6 +71,8 @@
       else return x.localeCompare(y);
     });
   });
+
+  let visibleLists = $derived(lists.filter(hasVisibleItems));
 
   let selected: string | null = $state(null);
   let selectNote = (n: Note) => selected = selected == n.id ? null : n.id;
@@ -152,23 +155,21 @@
   </div>
 </header>
 
-<div class="todos">
-  {#each lists as list}
-    {#if hasVisibleItems(list)}
-      <section>
-        <h2>~{list}</h2>
+<div class="todos" use:keyboardNavigation={{ listClasses: visibleLists }}>
+  {#each visibleLists as list}
+    <section class={list}>
+      <h2>~{list}</h2>
 
-        {#each tasks[list] as note}
-          {#if isVisible(note)}
-            <Item {note}
-              from="/ToDo"
-              opened={note.id == selected}
-              onclick={() => selectNote(note)}
-              hide_list={true}
-            />
-          {/if}
-        {/each}
-      </section>
-    {/if}
+      {#each tasks[list] as note}
+        {#if isVisible(note)}
+          <Item {note}
+            from="/ToDo"
+            opened={note.id == selected}
+            onclick={() => selectNote(note)}
+            hide_list={true}
+          />
+        {/if}
+      {/each}
+    </section>
   {/each}
 </div>

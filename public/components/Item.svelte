@@ -52,6 +52,15 @@
     background-color: #f6f6f6;
   }
 
+  section:has(header:focus) {
+    background-color: #ddd;
+    & > header { outline: none; }
+  }
+
+  section.open:has(header:focus) {
+    background-color: #f6f6f6;
+  }
+
   section.open {
     background-color: white;
   }
@@ -160,7 +169,7 @@
   <header
     role="button"
     tabindex="0"
-    class="{ note.task?.status }"
+    class="item { note.task?.status }"
     {onclick}
     onkeydown={(e) => handleKey(e)}
   >

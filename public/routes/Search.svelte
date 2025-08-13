@@ -4,6 +4,7 @@
   import { Note } from "../../linio/types";
   import { listNotes } from "../../linio/api";
   import { navigate } from "../../linio/navigation";
+  import { keyboardNavigation } from "../../linio/keyboard";
 
   import Item from "../components/Item.svelte";
 
@@ -135,6 +136,12 @@
     padding: .5em .8em;
   }
 
+  .search {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
   .actions {
     display: flex;
     gap: 0.2em;
@@ -142,30 +149,35 @@
   }
 </style>
 
-<div class="actions">
-  <button onclick={() => view_completed = !view_completed}>
-    <i class="{view_completed ? "fas" : "far"} fa-eye-slash"></i>
-    {view_completed ? "Hide finished" : "Show finished"}
-  </button>
+<div
+  class="search"
+  use:keyboardNavigation={{ listClasses: ['note-list'], inputClass: 'search-input' }}
+>
+  <div class="actions">
+    <button onclick={() => view_completed = !view_completed}>
+      <i class="{view_completed ? "fas" : "far"} fa-eye-slash"></i>
+      {view_completed ? "Hide finished" : "Show finished"}
+    </button>
 
-  <button onclick={() => view_shelved = !view_shelved}>
-    <i class="{view_shelved ? "fas" : "far"} fa-eye-slash"></i>
-    {view_shelved ? "Hide shelved" : "Show shelved"}
-  </button>
+    <button onclick={() => view_shelved = !view_shelved}>
+      <i class="{view_shelved ? "fas" : "far"} fa-eye-slash"></i>
+      {view_shelved ? "Hide shelved" : "Show shelved"}
+    </button>
+  </div>
+
+  <input class="search-input" placeholder="Search..." bind:value={query}>
+
+  <ul class="note-list">
+    {#each filteredNotes as note}
+      {#if isVisible(note)}
+        <li class="note-item">
+          <Item {note}
+            from="/Search"
+            opened={false}
+            onclick={() => navigate(`/${note.id}`)}
+          />
+        </li>
+      {/if}
+    {/each}
+  </ul>
 </div>
-
-<input placeholder="Search..." bind:value={query}>
-
-<ul class="note-list">
-  {#each filteredNotes as note}
-    {#if isVisible(note)}
-      <li class="note-item">
-        <Item {note}
-          from="/Search"
-          opened={false}
-          onclick={() => navigate(`/${note.id}`)}
-        />
-      </li>
-    {/if}
-  {/each}
-</ul>
