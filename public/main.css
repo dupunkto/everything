@@ -39,6 +39,44 @@
   --radius: 0.4em;
 }
 
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Basic colors */
+    --color-white: #1e2228;
+    --color-black: #ffffff;
+    --color-gray: #8b949e;
+    
+    /* Text colors */
+    --color-text-primary: #e6edf3;
+    --color-text-disabled: #7d8590;
+    --color-text-muted: #8b949e;
+    --color-text-code: #eff5fb;
+    --color-text-error: #f87171;
+    
+    /* Link colors */
+    --color-link: #58a6ff;
+    --color-link-visited: #a5a5ff;
+    
+    /* Background colors */
+    --color-bg-body: #0d1117;
+   --color-bg-surface: #161b22;
+    --color-bg-surface-alt: #1c2128;
+    --color-bg-surface-hover: #21262d;
+    --color-bg-button: #3c3f47;
+    --color-bg-input: #0d1117;
+    --color-bg-focus: #1c2128;
+    --color-bg-active: #2d3038;
+    --color-bg-code: #1e232a;
+    --color-bg-nav-hover: #d6d6d6;
+    
+    /* Border colors */
+    --color-border: #30363d;
+    --color-border-focus: #3d3d3d;
+    --color-border-disabled: #21262d;
+  }
+}
+
 body {
   font-family: 'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, avenir next,
     avenir, segoe ui, helvetica neue, Adwaita Sans, Cantarell, Ubuntu, roboto, noto,
@@ -151,7 +189,7 @@ input:focus, textarea:focus {
   outline: none;
 }
 
-input:focus-visible, textarea:focus-visible {
+input[type="checkbox"]:focus-visible {
   outline: 1px solid var(--color-link);
 }
 
