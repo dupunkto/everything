@@ -78,7 +78,7 @@
     display: flex;
     background: light-dark(black, white);
     color: light-dark(white, black);
-    &:hover { background: light-dark(#3f3f46, #e5e5e5); }
+    &:hover { background: light-dark(#e5e5e5, #3a3f47); }
     border-bottom-right-radius: var(--radius);
     border-bottom-left-radius: var(--radius);
     box-shadow: var(--shadow);

@@ -9,16 +9,16 @@ body {
   font-family: 'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, avenir next,
     avenir, segoe ui, helvetica neue, Adwaita Sans, Cantarell, Ubuntu, roboto, noto,
     helvetica, arial, sans-serif;
-  background: light-dark(#ededed, #0a0a0a);
-  color: light-dark(#333, #efefef);
+  background: light-dark(#ededed, #0d0f12);
+  color: light-dark(#333, #e1e4e8);
 }
 
 a {
-  color: light-dark(#0064c8, #1a87f5);
+  color: light-dark(#0064c8, #2188ff);
   text-decoration: none;
 
   &:hover { opacity: 0.9; text-decoration: underline; }
-  &:visited { color: light-dark(#0050a0, #0984ff); }
+  &:visited { color: light-dark(#0050a0, #1a73e8); }
 }
 
 input,
@@ -33,25 +33,25 @@ textarea {
   box-sizing: border-box;
   border-radius: 2px;
   outline: none !important;
-  background: light-dark(#e9e9e9, #111111);
-  border: 1px solid light-dark(#ccc, #151515);
+  background: light-dark(#e9e9e9, #161a1f);
+  border: 1px solid light-dark(#ccc, #2a2e33);
   border-radius: calc(var(--radius) / 2);
 
-  &:disabled { color: light-dark(#ccc, #666); }
-  &:focus { border-color: light-dark(#666, #393939); }
+  &:disabled { color: light-dark(#ccc, #6a737d); }
+  &:focus { border-color: light-dark(#666, #586069); }
 }
 
 button {
-  color: light-dark(#333, #ededed);
-  background-color: light-dark(#f4f4f4, #464646);
+  color: light-dark(#333, #e1e4e8);
+  background-color: light-dark(#f4f4f4, #2f3136);
   outline: none;
   padding: 0.4em 0.5em;
 
-  &:disabled { color: light-dark(#999, #555); }
-  &:focus { border-color: light-dark(#666, #888); }
+  &:disabled { color: light-dark(#999, #6a737d); }
+  &:focus { border-color: light-dark(#666, #586069); }
 
   &:not(:disabled):active {
-    background-color: light-dark(#ddd, #2f2f2f);
+    background-color: light-dark(#ddd, #2a2e33);
   }
 }
 
@@ -88,8 +88,8 @@ pre {
 code {
   font-size: 1em;
   font-weight: 600;
-  background: light-dark(#ddd, #333);
-  color: light-dark(#464646, #959595);
+  background: light-dark(#ddd, #2f3136);
+  color: light-dark(#464646, #8b949e);
   border-radius: calc(var(--radius) / 3);
   padding: 2px 6px;
 }
@@ -110,16 +110,16 @@ textarea {
 }
 
 input:focus, textarea:focus {
-  background: light-dark(#dddddd, #2a2a2a);
+  background: light-dark(#dddddd, #21242c);
   outline: none;
 }
 
 input[type="checkbox"]:focus-visible {
-  outline: 1px solid light-dark(#0064c8, #1a87f5);
+  outline: 1px solid light-dark(#0064c8, #2188ff);
 }
 
 blockquote {
-  border-left: 2px solid light-dark(gray, #6f6f6f);
+  border-left: 2px solid light-dark(gray, #6a737d);
   padding-left: 0.4em;
   margin-left: 0.4em;
 }
