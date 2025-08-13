@@ -28,7 +28,7 @@ const WISHES = ['WISH', 'BOUGHT', 'NVM'];
 const HUMID_PATTERN = /#([A-Z0-9]{5})/g;
 const TODO_PATTERN = /^(TODO|DONE|NVM)(?:\s+@\s*(\d{4}(?:-\d{1,2})?(?:-\d{1,2})?))?(?:\s+~(\S+))?$/i;
 const WISH_PATTERN = /^(WISH|BOUGHT|NVM)(?:\s+@\s*(\d{4}(?:-\d{1,2})?(?:-\d{1,2})?))?$/i;
-const HEADER_PATTERN = /^([A-Za-z-]+):\s*(.*)$/;
+const HEADER_PATTERN = /^([A-Za-z-]+):\s+(.*)$/;
 
 import { generateHumID } from "./linio/humid";
 import { Note, Task, Wish, Config } from "./linio/types";
@@ -243,7 +243,7 @@ async function parseNote(humid: string, md: string, stat: any): Promise<Note> {
     if (WISHES.some(wish => line.startsWith(wish))) wishLines.push(line);
     if (TODOS.some(todo => line.startsWith(todo))) taskLines.push(line);
 
-    if(TODOS.concat(WISHES).some(todo => line.startsWith(todo))) continue;
+    if(TODOS.concat(WISHES).some(mod => line.startsWith(mod))) continue;
 
     if (!note.title && line.startsWith('# ')) {
       const title = line.replace(/^#+\s*/, '');
