@@ -76,9 +76,9 @@
 
   nav menu li {
     display: flex;
-    background: black;
-    color: white;
-    &:hover { background: #3f3f46; }
+    background: light-dark(black, white);
+    color: light-dark(white, black);
+    &:hover { background: light-dark(#3f3f46, #e5e5e5); }
     border-bottom-right-radius: var(--radius);
     border-bottom-left-radius: var(--radius);
     box-shadow: var(--shadow);

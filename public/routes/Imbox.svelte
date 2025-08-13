@@ -135,7 +135,7 @@
   }
 
   .count {
-    color: #666;
+    color: light-dark(#666, #999);
     font-size: 0.9em;
     margin-top: 0.5em;
   }
