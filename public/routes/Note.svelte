@@ -144,7 +144,7 @@
 
   article {
     position: relative;
-    background: #fefefe;
+    background: var(--color-bg-surface);
     box-shadow: var(--shadow);
     border-radius: var(--radius);
     padding: 3px 3px 0 3px;
@@ -152,7 +152,7 @@
 
   .id {
     font-weight: normal;
-    color: gray;
+    color: var(--color-gray);
     font-size: 0.85em;
     margin-left: 0.2em;
   }
@@ -200,7 +200,7 @@
 
   :is(.type, .ref, .due, .completed, .shelved, .created, .modified)::before, label {
     display: block;
-    color: gray;
+    color: var(--color-gray);
   }
 
   .type, .ref, .due, .completed, .shelved, .created, .modified {
@@ -216,7 +216,7 @@
   }
 
   footer button {
-    background: #fdfdfd;
+    background: var(--color-bg-surface-alt);
     margin-bottom: 0;
     border-bottom: none;
     padding: 0.25em 0.5em;

@@ -135,7 +135,7 @@
   }
 
   .count {
-    color: #666;
+    color: var(--color-text-muted);
     font-size: 0.9em;
     margin-top: 0.5em;
   }
@@ -159,7 +159,7 @@
           from="/Imbox"
           opened={note.id == selected}
           onclick={() => selectNote(note)}
-          style="color: red"
+          style="color: var(--color-text-error)"
         />
       {/each}
       {#each thisWeek as note}

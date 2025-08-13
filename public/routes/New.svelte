@@ -68,7 +68,7 @@
 
 <style>
   textarea {
-    background: #fefefe;
+    background: var(--color-bg-surface);
     min-height: 150px;
   }
 

@@ -42,27 +42,27 @@
   section {
     position: relative;
     font-size: 1em;
-    background: #fefefe;
+    background: var(--color-bg-surface);
     border-radius: var(--radius);
     margin-bottom: 0.5em;
     box-shadow: var(--shadow);
   }
 
   section:not(.open):hover {
-    background-color: #f6f6f6;
+    background-color: var(--color-bg-surface-hover);
   }
 
   section:has(header:focus-visible) {
-    background-color: #ddd;
+    background-color: var(--color-bg-active);
     & > header { outline: none; }
   }
 
   section.open:has(header:focus-visible) {
-    background-color: #f6f6f6;
+    background-color: var(--color-bg-surface-hover);
   }
 
   section.open {
-    background-color: white;
+    background-color: var(--color-white);
   }
 
   header {
@@ -129,8 +129,8 @@
   .shelved::before { content: "Shelved at "; }
 
   .due, .completed, .shelved {
-    background: light-dark(black, white);
-    color: light-dark(white, black);
+    background: var(--color-black);
+    color: var(--color-white);
     text-transform: lowercase;
   }
 
@@ -152,7 +152,7 @@
   }
 
   footer button {
-    background: #fdfdfd;
+    background: var(--color-bg-surface-alt);
     margin-bottom: 0;
     border-bottom: none;
   }
