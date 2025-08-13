@@ -184,12 +184,16 @@ async function parseNote(humid: string, md: string, stat: any): Promise<Note> {
   
   if (!md || typeof md != 'string') return note;
 
-  const lines = md.split('\n');
+  const lines = md.trim().split('\n');
 
   const taskLines: string[] = [];
   const contentLines: string[] = [];
 
-  for (let line of lines) {    
+  for (let [i, line] of lines.entries()) {
+    if(line.trim().match("^https?://.*") && i == 0) {
+      note.type = 'bookmark';
+    }
+    
     if (TODOS.some(todo => line.startsWith(todo))) {
       note.type = 'task';
       taskLines.push(line);
