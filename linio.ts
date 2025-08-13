@@ -6,13 +6,15 @@ import { marked } from "marked";
 
 const ROOT = argv[2];
 const TODOS = ['TODO', 'DONE', 'NVM'];
+const WISHES = ['WISH', 'BOUGHT', 'NVM'];
 
 const HUMID_PATTERN = /#([A-Z0-9]{5})/g;
 const TODO_PATTERN = /^(TODO|DONE|NVM)(?:\s+@\s*(\d{4}(?:-\d{1,2})?(?:-\d{1,2})?))?(?:\s+~(\S+))?$/i;
-const HEADER_PATTERN = /^(Created|Modified):\s*(\d+)$/i;
+const WISH_PATTERN = /^(WISH|BOUGHT|NVM)(?:\s+@\s*(\d{4}(?:-\d{1,2})?(?:-\d{1,2})?))?$/i;
+const HEADER_PATTERN = /^([A-Za-z-]+):\s*(.*)$/;
 
 import { generateHumID } from "./linio/humid";
-import { Note, Task } from "./linio/types";
+import { Note, Task, Wish } from "./linio/types";
 import { normalizeDate } from "./linio/dates";
 
 import app from "./public/index.html";
@@ -177,7 +179,9 @@ async function parseNote(humid: string, md: string, stat: any): Promise<Note> {
     raw: md,
     text: "",
     html: "",
+    headers: {},
     task: null,
+    wish: null,
     created_at,
     modified_at
   };
@@ -185,39 +189,31 @@ async function parseNote(humid: string, md: string, stat: any): Promise<Note> {
   if (!md || typeof md != 'string') return note;
 
   const lines = md.trim().split('\n');
+  
+  // Parse headers first
+  const { headers, bodyStart } = parseHeaders(lines);
+  populateNoteFromHeaders(note, headers);
 
+  // Process body content
+  const bodyLines = lines.slice(bodyStart);
+  const wishLines: string[] = [];
   const taskLines: string[] = [];
   const contentLines: string[] = [];
 
-  for (let [i, line] of lines.entries()) {
+  for (let [i, line] of bodyLines.entries()) {
     if(line.trim().match("^https?://.*") && i == 0) {
       note.type = 'bookmark';
     }
+
+    // We still support old-style modifiers, along with new-style headers.
+    // Which method the frontend will write is configurable via the CLI.
+    if(line.startsWith("TODO") && note.type == 'note') note.type = 'task';
+    if(line.startsWith("WISH") && note.type == 'note') note.type = 'wish';
     
-    if (TODOS.some(todo => line.startsWith(todo))) {
-      note.type = 'task';
-      taskLines.push(line);
-      continue;
-    }
+    if (WISHES.some(wish => line.startsWith(wish))) wishLines.push(line);
+    if (TODOS.some(todo => line.startsWith(todo))) taskLines.push(line);
 
-    if(line.startsWith("WISHLIST")) {
-      note.type = 'wish';
-      continue;
-    }
-
-    if (line.match(HEADER_PATTERN)) {
-      const [, header, timestamp] = line.match(HEADER_PATTERN)!;
-      const date = normalizeDate(parseTimestamp(timestamp));
-
-      if(date) {
-        switch(header.toLowerCase()) {
-          case 'created': note.created_at = date; break;
-          case 'modified': note.modified_at = date; break;
-        }
-      }
-
-      continue;
-    }
+    if(TODOS.concat(WISHES).some(todo => line.startsWith(todo))) continue;
 
     if (!note.title && line.startsWith('# ')) {
       const title = line.replace(/^#+\s*/, '');
@@ -230,15 +226,17 @@ async function parseNote(humid: string, md: string, stat: any): Promise<Note> {
     contentLines.push(await linkOtherNotes(line));
   }
 
+  if (note.type == 'wish' && !note.wish) note.wish = parseWish(wishLines) ?? { status: 'dream' };
+  if (note.type == 'task' && !note.task) note.task = parseTask(taskLines) ?? { status: 'todo' }; 
+
   note.text = contentLines.join('\n').trim();
 
   // We do not want the title in the HTML
-  while(contentLines[0].trim() == '') contentLines.shift();
+  while(contentLines[0]?.trim() == '') contentLines.shift();
   if (contentLines.length > 0 && contentLines[0].trim().startsWith('#'))
     contentLines.shift();
 
   note.html = await marked.parse(contentLines.join('  \n'));
-  note.task = parseTask(taskLines);
 
   return note;
 }
@@ -262,28 +260,153 @@ async function linkOtherNotes(line: string): Promise<string> {
   });
 }
 
-function parseTimestamp(ts: string): string | undefined {
-  let year, dayOfYear, hour, minute;
-
-  if (ts.length == 9) { // YYJJJHHMM
-    year = parseInt('20' + ts.slice(0, 2));
-    dayOfYear = parseInt(ts.slice(2, 5));
-    hour = parseInt(ts.slice(5, 7));
-    minute = parseInt(ts.slice(7, 9));
-  }
-  else if (ts.length === 11) { // YYYYJJJHHMM
-    year = parseInt(ts.slice(0, 4));
-    dayOfYear = parseInt(ts.slice(4, 7));
-    hour = parseInt(ts.slice(7, 9));
-    minute = parseInt(ts.slice(9, 11));
-  }
-  else {
-    return undefined;
+function parseHeaders(lines: string[]): { headers: Record<string, string>, bodyStart: number } {
+  const headers: Record<string, string> = {};
+  let bodyStart = 0;
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    
+    if (line.trim() === '') {
+      bodyStart = i + 1;
+      break;
+    }
+    
+    const match = line.match(HEADER_PATTERN);
+    if (!match) {
+      bodyStart = i;
+      break;
+    }
+    
+    const [, key, value] = match;
+    headers[key] = value.trim();
   }
   
-  const date = new Date(year, 0, dayOfYear);
-  date.setHours(hour, minute, 0, 0);
-  return date.toISOString();
+  return { headers, bodyStart };
+}
+
+function populateNoteFromHeaders(note: Note, headers: Record<string, string>) {
+  for (const [key, value] of Object.entries(headers)) {
+    switch (key.toLowerCase()) {
+      case 'created':
+        const createdDate = normalizeDate(value);
+        if (createdDate) note.created_at = createdDate;
+        break;
+        
+      case 'modified':
+        const modifiedDate = normalizeDate(value);
+        if (modifiedDate) note.modified_at = modifiedDate;
+        break;
+        
+      case 'type':
+        note.type = value;
+        break;
+        
+      default:
+        switch(true) {
+          case key.startsWith('Task-'):
+            if (!note.task) note.task = { status: 'todo' };
+            populateTaskFromHeader(note.task, key.slice(5), value);
+            break;
+
+          case key.startsWith('Wish-'):
+            if (!note.wish) note.wish = { status: 'dream' };
+            populateWishFromHeader(note.wish, key.slice(5), value);
+            break;
+
+          default:
+            note.headers[key] = value;
+            break;
+        }
+        break;
+    }
+  }
+}
+
+function populateTaskFromHeader(task: Task, field: string, value: string) {
+  switch (field.toLowerCase()) {
+    case 'status':
+      if (['todo', 'done', 'nvm'].includes(value)) {
+        task.status = value as Task['status'];
+      }
+      break;
+
+    case 'deadline':
+      task.deadline = value;
+      break;
+
+    case 'list':
+      task.list = value;
+      break;
+
+    case 'completed':
+      task.completed_at = value;
+      break;
+
+    case 'shelved':
+      task.shelved_at = value;
+      break;
+  }
+}
+
+function populateWishFromHeader(wish: Wish, field: string, value: string) {
+  switch (field.toLowerCase()) {
+    case 'status':
+      if (['dream', 'bought', 'nvm'].includes(value)) {
+        wish.status = value as Wish['status'];
+      }
+      break;
+
+    case 'bought':
+      wish.bought_at = value;
+      break;
+
+    case 'shelved':
+      wish.shelved_at = value;
+      break;
+  }
+}
+
+function parseWish(lines: string[]): Wish | null {
+  if (lines.length == 0) return null;
+
+  const wish: Wish = {
+    status: 'dream',
+    bought_at: undefined,
+    shelved_at: undefined
+  };
+
+  const modifiers = lines
+    .map(line => line.match(WISH_PATTERN))
+    .filter(match => match != null)
+    .sort((a, b) => {
+      const statusA = a[1]?.toUpperCase() || '';
+      const statusB = b[1]?.toUpperCase() || '';
+
+      return WISHES.indexOf(statusA) - WISHES.indexOf(statusB);
+    });
+
+  for (const [, status, date] of modifiers) {
+    if (!status) continue;
+
+    switch (status.toLowerCase()) {
+      case 'wish':
+        wish.status = 'dream';
+        break;
+
+      case 'bought':
+        wish.status = 'bought';
+        if (date) wish.bought_at = date;
+        break;
+
+      case 'nvm':
+        wish.status = 'nvm';
+        if (date) wish.shelved_at = date;
+        break;
+    }
+  }
+
+  return wish;
 }
 
 function parseTask(lines: string[]): Task | null {
@@ -310,7 +433,7 @@ function parseTask(lines: string[]): Task | null {
   for (const [, status, date, list] of modifiers) {
     if (!status) continue;
 
-    task.status = status.toLowerCase();
+    task.status = status.toLowerCase() as Task['status'];
 
     switch (task.status) {
       case 'todo':
@@ -331,3 +454,32 @@ function parseTask(lines: string[]): Task | null {
   return task;
 }
 
+function serializeHeaders(note: Note): string {
+  const lines: string[] = [];
+  
+  if (note.type !== 'note') {
+    lines.push(`Type: ${note.type}`);
+  }
+  
+  if (note.task) {
+    lines.push(`Task-Status: ${note.task.status}`);
+    if (note.task.deadline) lines.push(`Task-Deadline: ${note.task.deadline}`);
+    if (note.task.list) lines.push(`Task-List: ${note.task.list}`);
+    if (note.task.completed_at) lines.push(`Task-Completed: ${note.task.completed_at}`);
+    if (note.task.shelved_at) lines.push(`Task-Shelved: ${note.task.shelved_at}`);
+  }
+  
+  if (note.wish) {
+    lines.push(`Wish-Status: ${note.wish.status}`);
+    if (note.wish.bought_at) lines.push(`Wish-Bought: ${note.wish.bought_at}`);
+    if (note.wish.shelved_at) lines.push(`Wish-Shelved: ${note.wish.shelved_at}`);
+  }
+  
+  for (const [key, value] of Object.entries(note.headers)) {
+    if (key.toLowerCase() !== 'created' && key.toLowerCase() !== 'modified') {
+      lines.push(`${key}: ${value}`);
+    }
+  }
+  
+  return lines.length > 0 ? lines.join('\n') + '\n\n' : '';
+}

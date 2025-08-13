@@ -117,7 +117,7 @@
       md = `${modifiers}\n${md}`;
     }
 
-    if(note.type == 'wish') md = `WISHLIST\n${md}`;
+    if(note.type == 'wish') md = `WISH\n${md}`;
 
     note = await updateNote(note, md);
     navigate(from ?? `/${note.id}?mode=view`)
