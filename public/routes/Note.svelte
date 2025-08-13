@@ -144,7 +144,7 @@
 
   article {
     position: relative;
-    background: light-dark(#fefefe, #2b2b33);
+    background: #fefefe;
     box-shadow: var(--shadow);
     border-radius: var(--radius);
     padding: 3px 3px 0 3px;

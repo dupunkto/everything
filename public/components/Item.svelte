@@ -42,14 +42,14 @@
   section {
     position: relative;
     font-size: 1em;
-    background: light-dark(#fefefe, #22222b);
+    background: #fefefe;
     border-radius: var(--radius);
     margin-bottom: 0.5em;
     box-shadow: var(--shadow);
   }
 
   section:not(.open):hover {
-    background-color: light-dark(#f6f6f6, #2b2b33);
+    background-color: #f6f6f6;
   }
 
   section:has(header:focus-visible) {
@@ -62,7 +62,7 @@
   }
 
   section.open {
-    background-color: light-dark(#ffffff, #33333c);
+    background-color: white;
   }
 
   header {

@@ -131,7 +131,7 @@
   }
 
   input {
-    background: light-dark(#fefefe, #2b2b33);
+    background: #fefefe;
     font-size: 1em;
     padding: .5em .8em;
   }
