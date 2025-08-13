@@ -1,3 +1,8 @@
+export interface Config {
+  lists: string[],
+  useHeaders: boolean
+}
+
 export interface Note {
   id: string,
   type: string, // 'note', 'task', 'wish'

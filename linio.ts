@@ -1,10 +1,27 @@
 import { argv, serve } from "bun";
+import { parseArgs } from "util";
 import * as fs from "node:fs/promises";
 import { join } from "node:path";
 import { watch } from "node:fs";
 import { marked } from "marked";
 
-const ROOT = argv[2];
+const { values, positionals } = parseArgs({
+  args: argv,
+  strict: false,
+  options: {
+    lists: { type: 'string' },
+    format: { type: 'string' },
+    h: { type: 'boolean' },
+    m: { type: 'boolean' }
+  },
+  allowPositionals: true,
+});
+
+const ROOT = positionals[2] || process.cwd();
+
+// Default in case the CLI argument is omitted.
+const LISTS = ["all", "life", "projects", "maakotheek", "qdentity", "writing"];
+
 const TODOS = ['TODO', 'DONE', 'NVM'];
 const WISHES = ['WISH', 'BOUGHT', 'NVM'];
 
@@ -14,8 +31,13 @@ const WISH_PATTERN = /^(WISH|BOUGHT|NVM)(?:\s+@\s*(\d{4}(?:-\d{1,2})?(?:-\d{1,2}
 const HEADER_PATTERN = /^([A-Za-z-]+):\s*(.*)$/;
 
 import { generateHumID } from "./linio/humid";
-import { Note, Task, Wish } from "./linio/types";
+import { Note, Task, Wish, Config } from "./linio/types";
 import { normalizeDate } from "./linio/dates";
+
+const config: Config = {
+  useHeaders: (values.h || values.format == 'headers') as boolean,
+  lists: typeof values.lists == 'string' ? values.lists.split(',') : LISTS
+};
 
 import app from "./public/index.html";
 
@@ -28,6 +50,10 @@ const server = serve({
     "/:page": app,
     
     // API endpoints
+    "/api/config": {
+      GET: getConfig,
+    },
+
     "/api/notes": {
       GET: getNotes,
       POST: newNote,
@@ -58,6 +84,10 @@ watch(ROOT, (_, filename) => {
 // HTTP handlers
 
 import { BunRequest } from "bun";
+
+async function getConfig(req: BunRequest) {
+  return Response.json(config);
+}
 
 async function getNotes(req: BunRequest) {
   return Response.json(await listNotes());

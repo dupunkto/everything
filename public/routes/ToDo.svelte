@@ -1,12 +1,11 @@
 <script lang="ts">
   import { Note } from "../../linio/types"
-  import { listNotes } from "../../linio/api";
+  import { getConfig, listNotes } from "../../linio/api";
   import { keyboardNavigation } from "../../linio/keyboard";
   
   import Item from "../components/Item.svelte";
 
-  // TODO(robin): it would be nice if this were configurable with a CLI argument.
-  const ORDER = ["all", "life", "projects", "maakotheek", "qdentity", "writing"];
+  let ORDER: string[] = $state([]);
 
   let tasks: Record<string, Note[]> = $state({all : []});
   let lists: string[] = $state([]);
@@ -25,7 +24,10 @@
     return tasks[list]?.some(note => isVisible(note)) || false;
   }
 
-  listNotes().then((notes) => {
+  Promise.all([
+    getConfig(),
+    listNotes()
+  ]).then(([config, notes]) => {
     for(const note of notes) {
       if (!note.task) continue;
       const list: string | undefined = note.task.list;
@@ -62,8 +64,8 @@
     }
 
     lists = Object.keys(tasks).sort((x, y) => {
-      const ix = ORDER.indexOf(x);
-      const iy = ORDER.indexOf(y);
+      const ix = config.lists.indexOf(x);
+      const iy = config.lists.indexOf(y);
 
       if (ix != -1 && iy != -1) return ix - iy;
       else if (ix !== -1) return -1;

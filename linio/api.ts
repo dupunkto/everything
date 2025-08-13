@@ -1,5 +1,10 @@
-import { Note } from "./types";
+import { Config, Note } from "./types";
 import { formatDate } from "./dates";
+
+export async function getConfig(): Promise<Config> {
+  const response = await fetch("/api/config");
+  return await response.json();
+}
 
 export async function fetchNote(humid: string): Promise<Note> {
   const response = await fetch(`/api/note/${humid}`);
