@@ -68,7 +68,7 @@
 
 <style>
   textarea {
-    background: #fefefe;
+    background: light-dark(#fefefe, #2b2b33);
     min-height: 150px;
   }
 

@@ -9,16 +9,16 @@ body {
   font-family: 'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, avenir next,
     avenir, segoe ui, helvetica neue, Adwaita Sans, Cantarell, Ubuntu, roboto, noto,
     helvetica, arial, sans-serif;
-  background: #ededed;
-  color: #333;
+  background: light-dark(#ededed, #15141c);
+  color: light-dark(#333, #dddddd);
 }
 
 a {
-  color: rgb(0, 100, 200);
+  color: light-dark(#0064c8, #1a87f5);
   text-decoration: none;
 
   &:hover { opacity: 0.9; text-decoration: underline; }
-  &:visited { color: rgb(0, 80, 160); }
+  &:visited { color: light-dark(#0050a0, #0984ff); }
 }
 
 input,
@@ -31,12 +31,20 @@ textarea {
   padding: 0.4em;
   margin: 0 0 0.5em 0;
   box-sizing: border-box;
-  border: 1px solid #ccc;
+  border: 1px solid light-dark(#ccc, #464646);
   border-radius: 2px;
 
   &:disabled {
-    color: #ccc;
+    color: light-dark(#ccc, #666);
   }
+}
+
+input:not(:is(:checked)) {
+  appearance: none;
+}
+
+input:active {
+  background: #272731;
 }
 
 button {
@@ -85,8 +93,8 @@ pre {
 code {
   font-size: 1em;
   font-weight: 600;
-  background: #ddd;
-  color: rgb(70, 70, 70);
+  background: light-dark(#ddd, #0f0f0f);
+  color: light-dark(#464646, #959595);
   border-radius: calc(var(--radius) / 3);
   padding: 2px 6px;
 }
@@ -102,7 +110,7 @@ ul {
 }
 
 input, select, textarea {
-  background: #e9e9e9;
+  background: light-dark(#e9e9e9, #2b2a33);
   border-radius: calc(var(--radius) / 2);
   padding: 3px;
 }
