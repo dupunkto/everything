@@ -117,6 +117,10 @@ input:focus, textarea:focus {
   outline: none;
 }
 
+input:focus-visible, textarea:focus-visible {
+  outline: 1px solid rgb(0, 100, 200);
+}
+
 blockquote {
   border-left: 2px solid gray;
   padding-left: 0.4em;
