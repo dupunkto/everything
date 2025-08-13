@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
 
   import { Note } from "../../linio/types";
-  import { fetchNote, updateNote, completeTask } from "../../linio/api";
+  import { fetchNote, updateNote, completeTask, deleteNote } from "../../linio/api";
   import { formatDate, normalizeDate } from "../../linio/dates";
   import { navigate } from "../../linio/navigation";
 
@@ -52,6 +52,18 @@
     }
 
     if(isEditable(document.activeElement)) return;
+
+    if(e.key == 'c') {
+      e.preventDefault();
+      (document.querySelector(".checkbox") as HTMLInputElement)?.click();
+      return;
+    }
+
+    if(e.key == 'd') {
+      e.preventDefault();
+      handleDelete();
+      return;
+    }
 
     if(e.key == 'e') {
       e.preventDefault();
@@ -109,6 +121,13 @@
 
     note = await updateNote(note, md);
     navigate(from ?? `/${note.id}?mode=view`)
+  }
+
+  async function handleDelete() {
+    if (!confirm('Are you sure?')) return;
+    
+    await deleteNote(note);
+    navigate(from || (note.task ? '/ToDo' : '/'));
   }
 
   function autoResize(e: Event) {
@@ -213,6 +232,7 @@
     align-items: center;
     margin-top: 1.5em;
     padding: 0 0.8em;
+    position: relative;
   }
 
   footer button {
@@ -224,6 +244,11 @@
     border-top-right-radius: calc(var(--radius) / 2);
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
+  }
+
+  .delete {
+    position: absolute;
+    right: 1em;
   }
 
   form {
@@ -387,6 +412,7 @@
         {#if mode == 'edit'}
           <button onclick={() => navigate(from ?? `/${note.id}?mode=view`)}>Cancel</button>
           <button type="submit" form="edit-form">Save</button>
+          <button class="delete" onclick={handleDelete}>Delete</button>
         {:else}
           <button onclick={() => navigate(`/${note.id}?mode=edit`)}>Edit</button>
         {/if}

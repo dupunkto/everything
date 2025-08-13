@@ -38,3 +38,7 @@ export function updateNote(note: Note, md: string): Promise<Note> {
     resolve(await response.json());
   });
 }
+
+export async function deleteNote(note: Note): Promise<void> {
+  await fetch(`/api/note/${note.id}`, { method: "DELETE" });
+}
