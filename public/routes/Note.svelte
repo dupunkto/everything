@@ -45,6 +45,12 @@
       element?.tagName === 'INPUT' || 
       element?.tagName === 'TEXTAREA';
 
+    if(e.key == 'Escape' && mode == 'edit') {
+      e.preventDefault();
+      navigate(from ?? `/${note.id}?mode=view`);
+      return;
+    }
+
     if(isEditable(document.activeElement)) return;
 
     if(e.key == 'e') {
