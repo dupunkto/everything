@@ -33,7 +33,11 @@
     
     const shortcuts = {
       '/': () => navigate('/Search?autofocus=1'),
-      'n': () => navigate('/New?autofocus=1')
+      'n': () => navigate('/New?autofocus=1'),
+      '1': () => navigate('/Imbox'),
+      '2': () => navigate('/ToDo'),
+      '3': () => navigate('/Search'),
+      '4': () => navigate('/New')
     };
 
     if(Object.keys(shortcuts).includes(e.key)) {
