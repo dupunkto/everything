@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
 
-  import { Note } from "../../linio/types";
-  import { fetchNote, updateNote, completeTask, deleteNote } from "../../linio/api";
+  import { Note, Config } from "../../linio/types";
+  import { getConfig, fetchNote, updateNote, completeNote, deleteNote } from "../../linio/api";
   import { formatDate, normalizeDate } from "../../linio/dates";
   import { navigate } from "../../linio/navigation";
 
@@ -14,9 +14,12 @@
   let from = $derived(route.result.querystring.params.from);
 
   let note: Note = $state (await fetchNote(id));
+  let config: Config = $state (await getConfig());
 
   let task = $derived(!!note.task);
-  let status = $derived(note.task?.status ?? "todo");
+  let wish = $derived(!!note.wish);
+  let taskStatus = $derived(note.task?.status ?? "todo");
+  let wishStatus = $derived(note.wish?.status ?? "dream");
 
   function date_for_status(status: string) {
     switch(status) {
@@ -32,9 +35,9 @@
     const checkbox = e.target as HTMLInputElement;
     checkbox.disabled = true;
 
-    const updated = await completeTask(note, checkbox.checked);
+    const updated = await completeNote(note, checkbox.checked);
     checkbox.disabled = false;
-    checkbox.checked = updated?.task?.status == 'done';
+    checkbox.checked = updated?.task?.status == 'done' || updated?.wish?.status == 'bought';
 
     note = updated;
   }
@@ -87,37 +90,100 @@
 
     const data = new FormData(e.target as HTMLFormElement);
 
-    let md = data.get("text") as string; // @ts-ignore
+    let md = data.get("text") as string;
     if(!md) throw `no content, got: ${JSON.stringify(Object.fromEntries(data))}`;
 
-    if(data.get('task') == 'on') {
-      let modifiers = 'TODO';
+    const isTask = data.get('task') == 'on';
+    const isWish = data.get('wish') == 'on';
 
-      const deadline = data.get('deadline') as string;
-      const list = data.get('list') as string;
-      const status = data.get('status') as string;
-      const completed_at = data.get('completed_at') as string;
-      const shelved_at = data.get('shelved_at') as string;
+    if(config.useHeaders) {
+      // Use header format
+      const headers: string[] = [];
+      
+      if(isTask) {
+        headers.push('Type: task');
+        
+        const deadline = data.get('deadline') as string;
+        const list = data.get('list') as string;
+        const status = data.get('status') as string;
+        const completed_at = data.get('completed_at') as string;
+        const shelved_at = data.get('shelved_at') as string;
 
-      if(deadline) modifiers += ` @ ${normalizeDate(deadline)}`;
-      if(list && list != 'all') modifiers += ` ~${list}`;
-
-      switch (status) {
-        case 'done':
-          modifiers += '\nDONE';
-          if(completed_at) modifiers += ` @ ${normalizeDate(completed_at)}`;
-          break;
-
-        case 'nvm':
-          modifiers += `\nNVM`;
-          if(shelved_at) modifiers += ` @ ${normalizeDate(shelved_at)}`;
-          break;
+        headers.push(`Task-Status: ${status}`);
+        if(deadline) headers.push(`Task-Deadline: ${normalizeDate(deadline)}`);
+        if(list && list != 'all') headers.push(`Task-List: ${list}`);
+        if(completed_at) headers.push(`Task-Completed: ${normalizeDate(completed_at)}`);
+        if(shelved_at) headers.push(`Task-Shelved: ${normalizeDate(shelved_at)}`);
       }
 
-      md = `${modifiers}\n${md}`;
-    }
+      if(isWish) {
+        headers.push('Type: wish');
+        
+        const status = data.get('status') as string;
+        const bought_at = data.get('bought_at') as string;
+        const shelved_at = data.get('shelved_at') as string;
 
-    if(note.type == 'wish') md = `WISH\n${md}`;
+        headers.push(`Wish-Status: ${status}`);
+        if(bought_at) headers.push(`Wish-Bought: ${normalizeDate(bought_at)}`);
+        if(shelved_at) headers.push(`Wish-Shelved: ${normalizeDate(shelved_at)}`);
+      }
+
+      if(headers.length > 0) {
+        md = headers.join('\n') + '\n\n' + md;
+      }
+    }
+    
+    // Use legacy modifier format
+    else {
+      if(isTask) {
+        let modifiers = 'TODO';
+
+        const deadline = data.get('deadline') as string;
+        const list = data.get('list') as string;
+        const status = data.get('status') as string;
+        const completed_at = data.get('completed_at') as string;
+        const shelved_at = data.get('shelved_at') as string;
+
+        if(deadline) modifiers += ` @ ${normalizeDate(deadline)}`;
+        if(list && list != 'all') modifiers += ` ~${list}`;
+
+        switch (status) {
+          case 'done':
+            modifiers += '\nDONE';
+            if(completed_at) modifiers += ` @ ${normalizeDate(completed_at)}`;
+            break;
+
+          case 'nvm':
+            modifiers += `\nNVM`;
+            if(shelved_at) modifiers += ` @ ${normalizeDate(shelved_at)}`;
+            break;
+        }
+
+        md = `${modifiers}\n${md}`;
+      }
+
+      if(isWish) {
+        let modifiers = 'WISH';
+        
+        const status = data.get('status') as string;
+        const bought_at = data.get('bought_at') as string;
+        const shelved_at = data.get('shelved_at') as string;
+
+        switch (status) {
+          case 'bought':
+            modifiers += '\nBOUGHT';
+            if(bought_at) modifiers += ` @ ${normalizeDate(bought_at)}`;
+            break;
+
+          case 'nvm':
+            modifiers += '\nNVM';
+            if(shelved_at) modifiers += ` @ ${normalizeDate(shelved_at)}`;
+            break;
+        }
+
+        md = `${modifiers}\n${md}`;
+      }
+    }
 
     note = await updateNote(note, md);
     navigate(from ?? `/${note.id}?mode=view`)
@@ -183,7 +249,7 @@
   .contents > :first-child { margin-top: 0; }
   .contents > :last-child { margin-bottom: 0; }
 
-  .list {
+  .list, .type {
     position: absolute;
     top: 0.8em;
     right: 1em;
@@ -213,17 +279,23 @@
   .ref::before { content: "Ref "; }
   .due::before { content: "Due "; }
   .completed::before { content: "Completed "; }
+  .bought::before { content: "Bought "; }
   .shelved::before { content: "Shelved "; }
   .created::before { content: "Created "; }
   .modified::before { content: "Last modified "; }
 
-  :is(.type, .ref, .due, .completed, .shelved, .created, .modified)::before, label {
+  :is(.ref, .due, .completed, .bought, .shelved, .created, .modified)::before, label {
     display: block;
     color: var(--color-gray);
   }
 
-  .type, .ref, .due, .completed, .shelved, .created, .modified {
+  .type, .ref, .due, .completed, .bought, .shelved, .created, .modified {
     text-transform: lowercase;
+  }
+
+  .type::before {
+    display: inline;
+    margin-inline-end: 0.8em;
   }
 
   footer {
@@ -281,28 +353,17 @@
   textarea {
     border: none;
   }
-
-  form .type {
-    margin-top: 0;
-    text-align: right;
-    margin-bottom: 0.6em;
-  }
-
-  form .type::before {
-    display: inline;
-    margin-inline-end: 0.8em;
-  }
 </style>
 
 {#if note}
   <div class="note">
     <aside>
-      {#if note.task}
+      {#if note.task || note.wish}
         <input
           type="checkbox"
           class="checkbox"
-          checked={note.task.status != 'todo'}
-          disabled={note.task.status == 'nvm' || mode == 'edit'}
+          checked={(note.task?.status && note.task.status != 'todo') || (note.wish?.status == 'bought')}
+          disabled={(note.task?.status == 'nvm') || (note.wish?.status == 'nvm') || mode == 'edit'}
           onclick={(e) => handleClick(e)}
         />
       {/if}
@@ -321,12 +382,15 @@
         {#if note.task?.completed_at}
           <time class="completed">{note.task.completed_at}</time>
         {/if}
+        {#if note.wish?.bought_at}
+          <time class="bought">{note.wish.bought_at}</time>
+        {/if}
+        {#if note.wish?.shelved_at}
+          <time class="shelved">{note.wish.shelved_at}</time>
+        {/if}
         <time class="created">{note.created_at}</time>
         {#if note.modified_at != note.created_at}
           <time class="modified">{note.modified_at}</time>
-        {/if}
-        {#if !(note.type == 'note' || note.type == 'task')}
-          <span class="type">{note.type}</span>
         {/if}
       </div>
     </aside>
@@ -352,7 +416,7 @@
                   {/if}
                 </tr>
                 {#if task}
-                  {#if status && status != 'todo'}
+                  {#if taskStatus && taskStatus != 'todo'}
                     <tr>
                       <td colspan="2"><label for="deadline">todo</label></td>
                       <td><label for="deadline">before</label></td>
@@ -368,26 +432,50 @@
                   <tr>
                     <td><label for="status">status</label></td>
                     <td>
-                      <select name="status" onchange={(e) => status = (e.target as HTMLInputElement).value}>
+                      <select name="status" onchange={(e) => taskStatus = (e.target as HTMLInputElement).value}>
                         <option>todo</option>
                         <option selected={note.task?.status == 'done'}>done</option>
                         <option selected={note.task?.status == 'nvm'}>nvm</option>
                       </select>
                     </td>
-                    <td><label for={date_for_status(status)}>{status == 'todo' ? 'before' : 'at'}</label></td>
+                    <td><label for={date_for_status(taskStatus)}>{taskStatus == 'todo' ? 'before' : 'at'}</label></td>
                     <td>
                       <input
                         type="date"
-                        name={date_for_status(status)}
-                        value={normalizeDate(note.task?.[date_for_status(status)]) || (status != 'todo' && formatDate(new Date()))}
+                        name={date_for_status(taskStatus)}
+                        value={normalizeDate(note.task?.[date_for_status(taskStatus)]) || (taskStatus != 'todo' && formatDate(new Date()))}
                       />
                     </td>
                   </tr>
                 {/if}
               </tbody>
             </table>
-          {:else}
-            <p class="type"><code>{note.type}</code></p>
+          {:else if note.type == 'wish'}
+            <input type="hidden" name="wish" value="on" />
+            <table>
+              <tbody>
+                <tr>
+                  <td><label for="status">status</label></td>
+                  <td>
+                    <select name="status" onchange={(e) => wishStatus = (e.target as HTMLInputElement).value}>
+                      <option selected={note.wish?.status == 'dream'}>dream</option>
+                      <option selected={note.wish?.status == 'bought'}>bought</option>
+                      <option selected={note.wish?.status == 'nvm'}>nvm</option>
+                    </select>
+                  </td>
+                  <td><label for={wishStatus == 'bought' ? 'bought_at' : 'shelved_at'}>{wishStatus == 'dream' ? '' : 'at'}</label></td>
+                  <td>
+                    {#if wishStatus != 'dream'}
+                      <input
+                        type="date"
+                        name={wishStatus == 'bought' ? 'bought_at' : 'shelved_at'}
+                        value={normalizeDate(wishStatus == 'bought' ? note.wish?.bought_at : note.wish?.shelved_at) || formatDate(new Date())}
+                      />
+                    {/if}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           {/if}
           <textarea
             name="text"
@@ -396,6 +484,9 @@
           >{note.text}</textarea>
         </form>
       {:else}
+        {#if note.type != 'note' && note.type != 'task'}
+          <span class="type"><code>{note.type}</code></span>
+        {/if}
         {#if note.task?.list}
           <span class="list">~{note.task.list}</span>
         {/if}

@@ -16,12 +16,22 @@ export async function listNotes(): Promise<Note[]> {
   return await response.json();
 }
 
-export function completeTask(note: Note, checked: boolean): Promise<Note> {
-  const md = checked ?
-    `DONE @ ${formatDate(new Date())}\n${note.raw}` :
-    note.raw.replace(/^(DONE|NVM).*$(\r?\n)?/im, '');
-
-  return updateNote(note, md);
+export function completeNote(note: Note, checked: boolean): Promise<Note> {
+  if (note.task) {
+    const md = checked ?
+      `DONE @ ${formatDate(new Date())}\n${note.raw}` :
+      note.raw.replace(/^(DONE|NVM).*$(\r?\n)?/im, '');
+    return updateNote(note, md);
+  }
+  
+  if (note.wish) {
+    const md = checked ?
+      `BOUGHT @ ${formatDate(new Date())}\n${note.raw}` :
+      note.raw.replace(/^(BOUGHT|NVM).*$(\r?\n)?/im, '');
+    return updateNote(note, md);
+  }
+  
+  return Promise.resolve(note);
 }
 
 export async function newNote(md: string): Promise<Note> {

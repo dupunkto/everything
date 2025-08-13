@@ -483,33 +483,3 @@ function parseTask(lines: string[]): Task | null {
 
   return task;
 }
-
-function serializeHeaders(note: Note): string {
-  const lines: string[] = [];
-  
-  if (note.type !== 'note') {
-    lines.push(`Type: ${note.type}`);
-  }
-  
-  if (note.task) {
-    lines.push(`Task-Status: ${note.task.status}`);
-    if (note.task.deadline) lines.push(`Task-Deadline: ${note.task.deadline}`);
-    if (note.task.list) lines.push(`Task-List: ${note.task.list}`);
-    if (note.task.completed_at) lines.push(`Task-Completed: ${note.task.completed_at}`);
-    if (note.task.shelved_at) lines.push(`Task-Shelved: ${note.task.shelved_at}`);
-  }
-  
-  if (note.wish) {
-    lines.push(`Wish-Status: ${note.wish.status}`);
-    if (note.wish.bought_at) lines.push(`Wish-Bought: ${note.wish.bought_at}`);
-    if (note.wish.shelved_at) lines.push(`Wish-Shelved: ${note.wish.shelved_at}`);
-  }
-  
-  for (const [key, value] of Object.entries(note.headers)) {
-    if (key.toLowerCase() !== 'created' && key.toLowerCase() !== 'modified') {
-      lines.push(`${key}: ${value}`);
-    }
-  }
-  
-  return lines.length > 0 ? lines.join('\n') + '\n\n' : '';
-}

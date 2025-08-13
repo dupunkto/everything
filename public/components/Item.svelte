@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { completeTask } from "../../linio/api";
+  import { completeNote } from "../../linio/api";
   import { navigate } from "../../linio/navigation";
 
   let { note, opened, onclick, from, ...props } = $props();
@@ -10,9 +10,9 @@
     const checkbox = e.target as HTMLInputElement;
     checkbox.disabled = true;
 
-    const updated = await completeTask(note, checkbox.checked);
+    const updated = await completeNote(note, checkbox.checked);
     checkbox.disabled = false;
-    checkbox.checked = updated?.task?.status == 'done';
+    checkbox.checked = updated?.task?.status == 'done' || updated?.wish?.status == 'bought';
 
     note = updated;
   }
@@ -126,9 +126,10 @@
 
   .due::before { content: "Due "; }
   .completed::before { content: "Completed at "; }
+  .bought::before { content: "Bought at "; }
   .shelved::before { content: "Shelved at "; }
 
-  .due, .completed, .shelved {
+  .due, .completed, .bought, .shelved {
     background: var(--color-black);
     color: var(--color-white);
     text-transform: lowercase;
@@ -175,12 +176,12 @@
     style={props.style}
   >
     <p class="title">
-      {#if note.task}
+      {#if note.task || note.wish}
         <input
           type="checkbox"
           class="checkbox"
-          checked={note.task.status != 'todo'}
-          disabled={note.task.status == 'nvm'}
+          checked={(note.task?.status && note.task.status != 'todo') || (note.wish?.status == 'bought')}
+          disabled={(note.task?.status == 'nvm') || (note.wish?.status == 'nvm')}
           onclick={(e) => handleClick(e)}
         >
       {:else}
@@ -226,6 +227,14 @@
           {/if}
           {#if note.task.completed_at}
             <time class="completed">{note.task.completed_at}</time>
+          {/if}
+        {/if}
+        {#if note.wish}
+          {#if note.wish.shelved_at}
+            <time class="shelved">{note.wish.shelved_at}</time>
+          {/if}
+          {#if note.wish.bought_at}
+            <time class="bought">{note.wish.bought_at}</time>
           {/if}
         {/if}
       </div>
