@@ -139,7 +139,7 @@
   }
 </style>
 
-<header class="actions">
+<header>
   <h1>ToDo</h1>
 
   <div class="actions">

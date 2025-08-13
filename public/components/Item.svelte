@@ -172,6 +172,7 @@
     class="item { note.task?.status }"
     {onclick}
     onkeydown={(e) => handleKey(e)}
+    style={props.style}
   >
     <p class="title">
       {#if note.task}
