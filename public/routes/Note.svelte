@@ -206,15 +206,12 @@
     target.style.height = `${target.scrollHeight + 2}px`;
   }
 
-  onMount(() => {
-    window.addEventListener('keydown', handleWindowKey);
-    if(mode == 'edit') resizeToFit(document.querySelector("textarea"));
-  });
-
+  onMount(() => window.addEventListener('keydown', handleWindowKey));
   onDestroy(() => window.removeEventListener('keydown', handleWindowKey));
 
   $effect(() => {
     if(autofocus) document.querySelector("textarea")?.focus();
+    if(mode == 'edit') resizeToFit(document.querySelector("textarea"));
   });
 </script>
 
