@@ -84,10 +84,11 @@
   let view_shelved = $state(false);
 
   const isVisible = (note: Note) => {
-    return note.type != 'task'
+    return !['task', 'wish'].includes(note.type)
       || note.task?.status == 'todo'
       || (note.task?.status == 'done' && view_completed)
       || (note.task?.status == 'nvm' && view_shelved)
+      || (note.wish?.status == 'bought' && view_completed)
   }
 
   let filteredNotes = $derived.by((): Note[] => {
