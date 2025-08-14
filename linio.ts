@@ -253,7 +253,7 @@ async function parseNote(humid: string, md: string, stat: any): Promise<Note> {
     if (!note.headline && line.trim() != '')
       note.headline = line;
 
-    contentLines.push(await linkOtherNotes(line));
+    contentLines.push(line);
   }
 
   if (note.type == 'wish' && !note.wish) note.wish = parseWish(wishLines) ?? { status: 'dream' };
@@ -266,14 +266,15 @@ async function parseNote(humid: string, md: string, stat: any): Promise<Note> {
   if (contentLines.length > 0 && contentLines[0].trim().startsWith('#'))
     contentLines.shift();
 
-  note.html = await marked.parse(contentLines.join('  \n'));
+  // Please excuse this monstrosity. I miss the Erlang pipe operator ok.
+  note.html = await marked.parse(await linkOtherNotes(contentLines.join('  \n')));
 
   return note;
 }
 
-async function linkOtherNotes(line: string): Promise<string> {  
-  const matches = Array.from(line.matchAll(HUMID_PATTERN));
-  if (matches.length == 0) return line;
+async function linkOtherNotes(md: string): Promise<string> {  
+  const matches = Array.from(md.matchAll(HUMID_PATTERN));
+  if (matches.length == 0) return md;
   
   const uniqueCodes = Array.from(new Set(matches.map(m => m[1])));
   const notes: Record<string, Note> = {};
@@ -283,7 +284,7 @@ async function linkOtherNotes(line: string): Promise<string> {
     if (note) notes[humid] = note;
   }));
 
-  return line.replace(/#([A-Z0-9]{5})/g, (_, humid: string) => {
+  return md.replace(/#([A-Z0-9]{5})/g, (_, humid: string) => {
     const note = notes[humid]; if (!note) return `#${humid}`;
     const { id, title, headline } = note;
     return `[**#${id}**: ${title || headline}](/${id})`;
