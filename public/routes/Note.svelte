@@ -47,8 +47,8 @@
   function handleWindowKey(e: KeyboardEvent) {  
     const isEditable = (element: Element | null) =>
       (element as HTMLElement)?.isContentEditable ||
-      element?.tagName === 'INPUT' || 
-      element?.tagName === 'TEXTAREA';
+        element?.tagName === 'INPUT' || 
+        element?.tagName === 'TEXTAREA';
 
     if(e.key == 'Escape' && mode == 'edit') {
       e.preventDefault();
