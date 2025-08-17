@@ -58,7 +58,6 @@ const server = serve({
   routes: {
     "/": app,
     "/:page": app,
-    "/Tag/:tag": app,
     
     // API endpoints
     "/api/config": {
@@ -315,7 +314,7 @@ async function processText(md: string): Promise<string> {
   }
 
   return md.replace(/\[\[([^\]]+)\]\]/g, (_, tag: string) => {
-    return `<a href="/Tag/${tag}">[[${tag}]]</a>`;
+    return `<a href="/Tag?t=${tag}">[[${tag}]]</a>`;
   });
 }
 

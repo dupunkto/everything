@@ -6,7 +6,7 @@
 
   let { route } = $props();
 
-  let tag = route.result.path.params.tag;
+  let tag = $derived(route.result.querystring.params.t);
   let notes: Note[] = $derived(await listNotesByTag(tag));
 </script>
 
@@ -35,7 +35,7 @@
       {#each notes as note}
         <li class="note-item">
           <Item {note}
-            from="/Tag/{tag}"
+            from="/Tag?t={tag}"
             opened={true}
             onclick={() => navigate(`/${note.id}`)}
           />

@@ -129,7 +129,7 @@
       { component: ToDo, path: "/ToDo" },
       { component: Search, path: "/Search" },
       { component: New, path: "/New" },
-      { component: Tag, path: "/Tag/(?<tag>[^/]+)" },
+      { component: Tag, path: "/Tag" },
       { component: Note, path: "(?<id>[0-9A-Z]{5})"}
     ]} />
     {#snippet pending()}
