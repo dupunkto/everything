@@ -198,3 +198,21 @@ blockquote {
   padding-left: 0.4em;
   margin-left: 0.4em;
 }
+
+/* EasyMDE extensions */
+
+.cm-s-easymde .cm-header-1 {
+  font-size: 1.375rem !important;
+}
+
+.cm-s-easymde .cm-header-2 {
+  font-size: 1.325rem !important;
+}
+
+.cm-s-easymde .cm-header-3 {
+  font-size: 1.3rem !important;
+}
+
+.cm-s-easymde .cm-header-4 {
+  font-size: 1.275rem !important;
+}

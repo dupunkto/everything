@@ -8,7 +8,6 @@ export DIST=dist
 export PUBLIC=public
 
 serve() {
-  p:set_import public
   bun run --define DEV=true --hot $SRC $DATA
 }
 

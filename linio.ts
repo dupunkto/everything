@@ -11,6 +11,7 @@ const { values, positionals } = parseArgs({
   options: {
     lists: { type: 'string' },
     format: { type: 'string' },
+    basic: { type: 'boolean' },
     h: { type: 'boolean' },
     m: { type: 'boolean' },
     b: { type: 'boolean' }
@@ -38,11 +39,13 @@ import { normalizeDate } from "./linio/dates";
 if(values.h) values.format = 'headers';
 if(values.m) values.format = 'modifiers';
 if(values.b) values.format = 'mixed';
+
 if(!values.format) values.format = 'mixed';
 
 const config: Config = {
   format: values.format as string,
-  lists: typeof values.lists == 'string' ? values.lists.split(',') : LISTS
+  lists: typeof values.lists == 'string' ? values.lists.split(',') : LISTS,
+  features: values.basic ? 'basic' : 'fancy',
 };
 
 import app from "./public/index.html";

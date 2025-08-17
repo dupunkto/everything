@@ -1,6 +1,7 @@
 export interface Config {
   format: string,
-  lists: string[]
+  lists: string[],
+  features: 'basic' | 'fancy'
 }
 
 export interface Note {

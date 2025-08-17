@@ -13,6 +13,7 @@
     "@types/canvas-confetti": "^1.9.0",
     "bun-plugin-svelte": "github:RobinBoers/bun-plugin-svelte",
     "canvas-confetti": "^1.9.3",
+    "easymde": "^2.20.0",
     "marked": "^16.1.1",
     "svelte": "^5.38.0"
   }

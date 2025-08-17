@@ -1,5 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
+  import EasyMDE from "easymde";
+  import "easymde/dist/easymde.min.css";
 
   import { Note, Config } from "../../linio/types";
   import { getConfig, fetchNote, updateNote, completeNote, deleteNote } from "../../linio/api";
@@ -215,8 +217,29 @@
   onDestroy(() => window.removeEventListener('keydown', handleWindowKey));
 
   $effect(() => {
-    if(autofocus) document.querySelector("textarea")?.focus();
-    if(mode == 'edit') resizeToFit(document.querySelector("textarea"));
+    if(mode == 'edit') {
+      const textarea = document.querySelector("textarea");
+
+      if(config.features == 'basic') {
+        if(autofocus) textarea?.focus();
+        resizeToFit(textarea);
+      }
+
+      if(config.features == 'fancy') {
+        const { codemirror } = new EasyMDE({
+          element: textarea,
+          spellChecker: false
+        });
+
+        if(autofocus) {
+          const line = codemirror.lineCount() - 1;
+          const ch = codemirror.getLine(line).length;
+
+          codemirror.focus();
+          codemirror.setCursor({ line, ch });
+        }
+      }
+    }
   });
 </script>
 
