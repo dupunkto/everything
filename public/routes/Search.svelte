@@ -86,9 +86,11 @@
   const isVisible = (note: Note) => {
     return !['task', 'wish'].includes(note.type)
       || note.task?.status == 'todo'
+      || note.wish?.status == 'dream'
       || (note.task?.status == 'done' && view_completed)
       || (note.task?.status == 'nvm' && view_shelved)
       || (note.wish?.status == 'bought' && view_completed)
+      || (note.wish?.status == 'nvm' && view_shelved)
   }
 
   let filteredNotes = $derived.by((): Note[] => {
