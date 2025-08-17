@@ -100,48 +100,8 @@
 
     const isTask = data.get('task') == 'on';
     const isWish = data.get('wish') == 'on';
-
-    if(config.format != 'modifiers' || includesHeaders) {
-      const headers: string[] = [];
-
-      headers.push(`Created: ${normalizeDate(note.created_at)}`);
-      headers.push(`Modified: ${normalizeDate(new Date().toISOString())}`);
-      
-      if(isTask && config.format == 'headers') {
-        headers.push('Type: task');
-        
-        const deadline = data.get('deadline') as string;
-        const list = data.get('list') as string;
-        const status = data.get('status') as string;
-        const completed_at = data.get('completed_at') as string;
-        const shelved_at = data.get('shelved_at') as string;
-
-        headers.push(`Task-Status: ${status}`);
-        if(deadline) headers.push(`Task-Deadline: ${normalizeDate(deadline)}`);
-        if(list && list != 'all') headers.push(`Task-List: ${list}`);
-        if(completed_at) headers.push(`Task-Completed: ${normalizeDate(completed_at)}`);
-        if(shelved_at) headers.push(`Task-Shelved: ${normalizeDate(shelved_at)}`);
-      }
-
-      if(isWish && config.format == 'headers') {
-        headers.push('Type: wish');
-        
-        const status = data.get('status') as string;
-        const bought_at = data.get('bought_at') as string;
-        const shelved_at = data.get('shelved_at') as string;
-
-        headers.push(`Wish-Status: ${status}`);
-        if(bought_at) headers.push(`Wish-Bought: ${normalizeDate(bought_at)}`);
-        if(shelved_at) headers.push(`Wish-Shelved: ${normalizeDate(shelved_at)}`);
-      }
-
-      if(headers.length > 0) {
-        md = headers.join('\n') + '\n\n' + md;
-      }
-    }
     
-    // Use legacy modifier format
-    else {
+    if(config.format != 'headers') {
       if(isTask) {
         let modifiers = 'TODO';
 
@@ -189,6 +149,45 @@
         }
 
         md = `${modifiers}\n${md}`;
+      }
+    }
+
+    if(config.format != 'modifiers' || includesHeaders) {
+      const headers: string[] = [];
+
+      headers.push(`Created: ${normalizeDate(note.created_at)}`);
+      headers.push(`Modified: ${normalizeDate(new Date().toISOString())}`);
+      
+      if(isTask && config.format == 'headers') {
+        headers.push('Type: task');
+        
+        const deadline = data.get('deadline') as string;
+        const list = data.get('list') as string;
+        const status = data.get('status') as string;
+        const completed_at = data.get('completed_at') as string;
+        const shelved_at = data.get('shelved_at') as string;
+
+        headers.push(`Task-Status: ${status}`);
+        if(deadline) headers.push(`Task-Deadline: ${normalizeDate(deadline)}`);
+        if(list && list != 'all') headers.push(`Task-List: ${list}`);
+        if(completed_at) headers.push(`Task-Completed: ${normalizeDate(completed_at)}`);
+        if(shelved_at) headers.push(`Task-Shelved: ${normalizeDate(shelved_at)}`);
+      }
+
+      if(isWish && config.format == 'headers') {
+        headers.push('Type: wish');
+        
+        const status = data.get('status') as string;
+        const bought_at = data.get('bought_at') as string;
+        const shelved_at = data.get('shelved_at') as string;
+
+        headers.push(`Wish-Status: ${status}`);
+        if(bought_at) headers.push(`Wish-Bought: ${normalizeDate(bought_at)}`);
+        if(shelved_at) headers.push(`Wish-Shelved: ${normalizeDate(shelved_at)}`);
+      }
+
+      if(headers.length > 0) {
+        md = headers.join('\n') + '\n\n' + md;
       }
     }
 
