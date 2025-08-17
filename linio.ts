@@ -12,7 +12,8 @@ const { values, positionals } = parseArgs({
     lists: { type: 'string' },
     format: { type: 'string' },
     h: { type: 'boolean' },
-    m: { type: 'boolean' }
+    m: { type: 'boolean' },
+    b: { type: 'boolean' }
   },
   allowPositionals: true,
 });
@@ -34,8 +35,13 @@ import { generateHumID } from "./linio/humid";
 import { Note, Task, Wish, Config } from "./linio/types";
 import { normalizeDate } from "./linio/dates";
 
+if(values.h) values.format = 'headers';
+if(values.m) values.format = 'modifiers';
+if(values.b) values.format = 'mixed';
+if(!values.format) values.format = 'mixed';
+
 const config: Config = {
-  useHeaders: (values.h || values.format == 'headers') as boolean,
+  format: values.format as string,
   lists: typeof values.lists == 'string' ? values.lists.split(',') : LISTS
 };
 

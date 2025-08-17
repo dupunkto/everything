@@ -1,6 +1,6 @@
 export interface Config {
-  lists: string[],
-  useHeaders: boolean
+  format: string,
+  lists: string[]
 }
 
 export interface Note {

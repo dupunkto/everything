@@ -16,22 +16,36 @@ export async function listNotes(): Promise<Note[]> {
   return await response.json();
 }
 
+// TODO(robin): this function should handle header format as well, and
+// write proper Task-Status: done and Task-Completed: today headers.
 export function completeNote(note: Note, checked: boolean): Promise<Note> {
   if (note.task) {
     const md = checked ?
-      `DONE @ ${formatDate(new Date())}\n${note.raw}` :
+      insert(note.raw, `DONE @ ${formatDate(new Date())}`) :
       note.raw.replace(/^(DONE|NVM).*$(\r?\n)?/im, '');
     return updateNote(note, md);
   }
   
   if (note.wish) {
     const md = checked ?
-      `BOUGHT @ ${formatDate(new Date())}\n${note.raw}` :
+      insert(note.raw, `BOUGHT @ ${formatDate(new Date())}`) :
       note.raw.replace(/^(BOUGHT|NVM).*$(\r?\n)?/im, '');
     return updateNote(note, md);
   }
   
   return Promise.resolve(note);
+}
+
+function insert(raw: string, modifier: string): string {
+  const lines = raw.split('\n');
+
+  let i = 0;
+  while (i < lines.length && /^[A-Za-z][^:]*:\s*.+/.test(lines[i].trim())) i++;
+  
+  if (i == 0) lines.splice(0, 0, modifier, '');
+  else lines.splice(i, 0, modifier);
+
+  return lines.join('\n');
 }
 
 export async function newNote(md: string): Promise<Note> {

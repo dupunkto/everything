@@ -17,7 +17,7 @@
   let config: Config = $state (await getConfig());
 
   let task = $derived(!!note.task);
-  let wish = $derived(!!note.wish);
+
   let taskStatus = $derived(note.task?.status ?? "todo");
   let wishStatus = $derived(note.wish?.status ?? "dream");
 
@@ -98,13 +98,13 @@
     const isTask = data.get('task') == 'on';
     const isWish = data.get('wish') == 'on';
 
-    if(config.useHeaders || includesHeaders) {
+    if(config.format != 'modifiers' || includesHeaders) {
       const headers: string[] = [];
 
       headers.push(`Created: ${normalizeDate(note.created_at)}`);
       headers.push(`Modified: ${normalizeDate(new Date().toISOString())}`);
       
-      if(isTask && config.useHeaders) {
+      if(isTask && config.format == 'headers') {
         headers.push('Type: task');
         
         const deadline = data.get('deadline') as string;
@@ -120,7 +120,7 @@
         if(shelved_at) headers.push(`Task-Shelved: ${normalizeDate(shelved_at)}`);
       }
 
-      if(isWish && config.useHeaders) {
+      if(isWish && config.format == 'headers') {
         headers.push('Type: wish');
         
         const status = data.get('status') as string;

@@ -1,18 +1,33 @@
 <script lang="ts">
   import { onDestroy, onMount } from 'svelte';
 
-  import { newNote } from "../../linio/api";
+  import { getConfig, newNote } from "../../linio/api";
   import { navigate } from "../../linio/navigation";
+  import { normalizeDate  } from "../../linio/dates";
 
   let { route } = $props();
 
+  let config = $state(await getConfig());
   let autofocus = $derived(route.result.querystring.params.autofocus);
 
   async function handleSubmit(e: SubmitEvent) {
     e.preventDefault();
 
     const data = new FormData(e.target as HTMLFormElement);
-    const note = await newNote(data.get("text") as string);
+
+    let today = new Date().toISOString();
+    let md = data.get("text") as string;
+
+    if(config.format != 'modifiers') {
+      const headers: string[] = [];
+
+      headers.push(`Created: ${normalizeDate(today)}`);
+      headers.push(`Modified: ${normalizeDate(today)}`);
+
+      md = headers.join('\n') + '\n\n' + md;
+    }
+
+    const note = await newNote(md);
 
     navigate(`/${note.id}`);
   }
