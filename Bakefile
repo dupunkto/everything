@@ -3,18 +3,20 @@
 SRC=linio.ts
 DATA=../data
 OUT=a.out
-PUBLIC=public
+
+export DIST=dist
+export PUBLIC=public
 
 serve() {
-  bun run build.ts
-  bun run --hot $SRC $DATA &
-  bun run build.ts --watch
+  p:set_import public
+  bun run --define DEV=true --hot $SRC $DATA
 }
 
-build() { 
-  export PUBLIC DIST
+build() {
+  p:set_import dist
   bun run build.ts
-  bun build --compile $SRC --outfile $OUT
+  bun build --define DEV=false --compile $SRC --outfile $OUT
+  p:set_import public
 }
 
 install() {
@@ -24,4 +26,15 @@ install() {
 clean() {
   rm -rf dist/*
   rm -rf $OUT
+}
+
+p:set_import() {
+  case "$1" in
+    public)
+      sed -E 's|\./dist/|\./public/|' linio.ts > linio.ts.tmp && mv -f linio.ts.tmp linio.ts
+      ;;
+    dist)
+      sed -E 's|\./public/|\./dist/|' linio.ts > linio.ts.tmp && mv -f linio.ts.tmp linio.ts
+      ;;
+  esac
 }

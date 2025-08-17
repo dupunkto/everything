@@ -39,12 +39,12 @@ const config: Config = {
   lists: typeof values.lists == 'string' ? values.lists.split(',') : LISTS
 };
 
-import app from `./dist/index.html`;
+import app from "./public/index.html";
 
 const server = serve({
   port: 9000,
   hostname: "linio",
-  development: true,
+  development: DEV,
   routes: {
     "/": app,
     "/:page": app,
