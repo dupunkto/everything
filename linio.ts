@@ -28,6 +28,7 @@ const TODOS = ['TODO', 'DONE', 'NVM'];
 const WISHES = ['WISH', 'BOUGHT', 'NVM'];
 
 const HUMID_PATTERN = /#([A-Z0-9]{5})/g;
+const TAG_PATTERN = /\[\[([^\]]+)\]\]/g;
 const TODO_PATTERN = /^(TODO|DONE|NVM)(?:\s+@\s*(\d{4}(?:-\d{1,2})?(?:-\d{1,2})?))?(?:\s+~(\S+))?$/i;
 const WISH_PATTERN = /^(WISH|BOUGHT|NVM)(?:\s+@\s*(\d{4}(?:-\d{1,2})?(?:-\d{1,2})?))?$/i;
 const HEADER_PATTERN = /^([A-Za-z-]+):\s+(.*)$/;
@@ -45,7 +46,7 @@ if(!values.format) values.format = 'mixed';
 const config: Config = {
   format: values.format as string,
   lists: typeof values.lists == 'string' ? values.lists.split(',') : LISTS,
-  features: values.basic ? 'basic' : 'fancy',
+  features: 'basic',
 };
 
 import app from "./public/index.html";
@@ -57,6 +58,7 @@ const server = serve({
   routes: {
     "/": app,
     "/:page": app,
+    "/Tag/:tag": app,
     
     // API endpoints
     "/api/config": {
@@ -99,7 +101,11 @@ async function getConfig(req: BunRequest) {
 }
 
 async function getNotes(req: BunRequest) {
-  return Response.json(await listNotes());
+  const { searchParams } = new URL(req.url);
+  const tag = searchParams.get('tag');
+  
+  if(tag) return Response.json(await listNotesByTag(tag));
+  else return Response.json(await listNotes());
 }
 
 async function getNote(req: BunRequest) {
@@ -156,6 +162,10 @@ async function listNotes(): Promise<Note[]> {
 
   const notes = await Promise.all(humids.map(id => fetchNote(id)));
   return notes.filter((note): note is Note => note != null);
+}
+
+async function listNotesByTag(tag: string): Promise<Note[]> {
+  return (await listNotes()).filter(n => n.tags.includes(tag));
 }
 
 async function fetchNote(humid: string): Promise<Note | null> {  
@@ -219,6 +229,7 @@ async function parseNote(humid: string, md: string, stat: any): Promise<Note> {
     text: "",
     html: "",
     headers: {},
+    tags: [],
     task: null,
     wish: null,
     created_at,
@@ -269,6 +280,9 @@ async function parseNote(humid: string, md: string, stat: any): Promise<Note> {
   if (note.type == 'task' && !note.task) note.task = parseTask(taskLines) ?? { status: 'todo' }; 
 
   note.text = contentLines.join('\n').trim();
+  
+  const matches = Array.from(md.matchAll(TAG_PATTERN));
+  note.tags = Array.from(new Set(matches.map(m => m[1])));
 
   // We do not want the title in the HTML
   while(contentLines[0]?.trim() == '') contentLines.shift();
@@ -276,27 +290,32 @@ async function parseNote(humid: string, md: string, stat: any): Promise<Note> {
     contentLines.shift();
 
   // Please excuse this monstrosity. I miss the Erlang pipe operator ok.
-  note.html = await marked.parse(await linkOtherNotes(contentLines.join('  \n')));
+  note.html = await marked.parse(await processText(contentLines.join('  \n')));
 
   return note;
 }
 
-async function linkOtherNotes(md: string): Promise<string> {  
+async function processText(md: string): Promise<string> {  
   const matches = Array.from(md.matchAll(HUMID_PATTERN));
-  if (matches.length == 0) return md;
-  
-  const uniqueCodes = Array.from(new Set(matches.map(m => m[1])));
   const notes: Record<string, Note> = {};
 
-  await Promise.all(uniqueCodes.map(async (humid: string) => {
-    const note = await fetchNote(humid);
-    if (note) notes[humid] = note;
-  }));
+  if (matches.length > 0) {
+    const uniqueCodes = Array.from(new Set(matches.map(m => m[1])));
 
-  return md.replace(/#([A-Z0-9]{5})/g, (_, humid: string) => {
-    const note = notes[humid]; if (!note) return `#${humid}`;
-    const { id, title, headline } = note;
-    return `[**#${id}**: ${title || headline}](/${id})`;
+    await Promise.all(uniqueCodes.map(async (humid: string) => {
+      const note = await fetchNote(humid);
+      if (note) notes[humid] = note;
+    }));
+
+    md = md.replace(/#([A-Z0-9]{5})/g, (_, humid: string) => {
+      const note = notes[humid]; if (!note) return `#${humid}`;
+      const { id, title, headline } = note;
+      return `[**#${id}**: ${title || headline}](/${id})`;
+    });
+  }
+
+  return md.replace(/\[\[([^\]]+)\]\]/g, (_, tag: string) => {
+    return `<a href="/Tag/${tag}">[[${tag}]]</a>`;
   });
 }
 

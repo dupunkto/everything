@@ -4,5 +4,5 @@ export function u(strings: TemplateStringsArray, ...values: any[]): string {
 }
 
 export function navigate(path: string) {
-  history.pushState({}, "", path);
+  history.pushState({}, "", decodeURIComponent(path));
 }

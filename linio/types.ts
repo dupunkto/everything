@@ -13,6 +13,7 @@ export interface Note {
   text: string,
   raw: string,
   headers: Record<string, string>,
+  tags: string[],
   task: Task | null,
   wish: Wish | null,
   created_at: string,

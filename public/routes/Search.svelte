@@ -24,11 +24,12 @@
     shelved?: string[];
     created?: string[];
     modified?: string[];
+    tag?: string[];
   }
 
   function parseQuery(query: string): { selectors: Selectors; terms: string[] } {
     const selectors: Selectors = {};
-    const attributes = ['type', 'status', 'list', 'due', 'completed', 'shelved', 'created', 'modified'];
+    const attributes = ['type', 'status', 'list', 'due', 'completed', 'shelved', 'created', 'modified', 'tag'];
     const matches = [...query.matchAll(/(\w+):(\S+)/g)];
     
     matches
@@ -66,13 +67,16 @@
     if (selectors.modified && !selectors.modified.some(modified => 
       note.modified_at == modified)) return false;
 
+    if (selectors.tag && !selectors.tag.some(tag => 
+      note.tags.includes(tag))) return false;
+
     return true;
   }
 
   function queryMatches(note: Note, terms: string[]): boolean {
     if (terms.length == 0) return true;
     
-    const haystack = [note.title, note.headline, note.text]
+    const haystack = [note.title, note.headline, note.text, ...note.tags]
       .filter(Boolean)
       .join(' ')
       .toLowerCase();

@@ -8,6 +8,7 @@
   import Search from "./routes/Search.svelte";
   import New from "./routes/New.svelte";
   import Note from "./routes/Note.svelte";
+  import Tag from "./routes/Tag.svelte";
 
   import { listNotes } from "../linio/api";
   import { randomOf } from "../linio/arrays";
@@ -59,6 +60,7 @@
     flex-direction: column;
     gap: 0.5em;
     align-items: flex-end;
+    z-index: 100;
   }
 
   nav p {
@@ -127,6 +129,7 @@
       { component: ToDo, path: "/ToDo" },
       { component: Search, path: "/Search" },
       { component: New, path: "/New" },
+      { component: Tag, path: "/Tag/(?<tag>[^/]+)" },
       { component: Note, path: "(?<id>[0-9A-Z]{5})"}
     ]} />
     {#snippet pending()}

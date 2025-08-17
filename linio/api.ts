@@ -16,6 +16,11 @@ export async function listNotes(): Promise<Note[]> {
   return await response.json();
 }
 
+export async function listNotesByTag(tag: string): Promise<Note[]> {
+  const response = await fetch(`/api/notes?tag=${tag}`);
+  return await response.json();
+}
+
 // TODO(robin): this function should handle header format as well, and
 // write proper Task-Status: done and Task-Completed: today headers.
 export function completeNote(note: Note, checked: boolean): Promise<Note> {
