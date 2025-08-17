@@ -39,7 +39,7 @@ const config: Config = {
   lists: typeof values.lists == 'string' ? values.lists.split(',') : LISTS
 };
 
-import app from "./public/index.html";
+import app from `./dist/index.html`;
 
 const server = serve({
   port: 9000,

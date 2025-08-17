@@ -171,5 +171,9 @@ dist
 # IntelliJ based IDEs
 .idea
 
+# Compilation artifacts
+dist
+a.out
+
 # Finder (MacOS) folder config
 .DS_Store

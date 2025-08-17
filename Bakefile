@@ -1,0 +1,27 @@
+#!/bin/bash
+
+SRC=linio.ts
+DATA=../data
+OUT=a.out
+PUBLIC=public
+
+serve() {
+  bun run build.ts
+  bun run --hot $SRC $DATA &
+  bun run build.ts --watch
+}
+
+build() { 
+  export PUBLIC DIST
+  bun run build.ts
+  bun build --compile $SRC --outfile $OUT
+}
+
+install() {
+  cp $OUT ~/bin/linio
+}
+
+clean() {
+  rm -rf dist/*
+  rm -rf $OUT
+}
