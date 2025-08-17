@@ -55,6 +55,7 @@
     }
 
     if(isEditable(document.activeElement)) return;
+    if(e.metaKey || e.ctrlKey) return;
 
     if(e.key == 'c') {
       e.preventDefault();

@@ -109,6 +109,7 @@
       element?.tagName == 'TEXTAREA';
 
     if(isEditable(document.activeElement)) return;
+    if(e.metaKey || e.ctrlKey) return;
 
     if(e.key == '/') {
       e.preventDefault();
