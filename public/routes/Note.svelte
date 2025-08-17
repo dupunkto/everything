@@ -93,14 +93,18 @@
     let md = data.get("text") as string;
     if(!md) throw `no content, got: ${JSON.stringify(Object.fromEntries(data))}`;
 
+    const includesHeaders = note.raw.includes("Created: ") || note.raw.includes("Modified: ");
+
     const isTask = data.get('task') == 'on';
     const isWish = data.get('wish') == 'on';
 
-    if(config.useHeaders) {
-      // Use header format
+    if(config.useHeaders || includesHeaders) {
       const headers: string[] = [];
+
+      headers.push(`Created: ${normalizeDate(note.created_at)}`);
+      headers.push(`Modified: ${normalizeDate(new Date().toISOString())}`);
       
-      if(isTask) {
+      if(isTask && config.useHeaders) {
         headers.push('Type: task');
         
         const deadline = data.get('deadline') as string;
@@ -116,7 +120,7 @@
         if(shelved_at) headers.push(`Task-Shelved: ${normalizeDate(shelved_at)}`);
       }
 
-      if(isWish) {
+      if(isWish && config.useHeaders) {
         headers.push('Type: wish');
         
         const status = data.get('status') as string;
