@@ -46,7 +46,7 @@ if(!values.format) values.format = 'mixed';
 const config: Config = {
   format: values.format as string,
   lists: typeof values.lists == 'string' ? values.lists.split(',') : LISTS,
-  features: 'basic',
+  features: values.basic ? 'basic' : 'fancy',
 };
 
 import app from "./public/index.html";
