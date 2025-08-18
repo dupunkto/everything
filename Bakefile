@@ -27,6 +27,12 @@ clean() {
   rm -rf $OUT
 }
 
+reinstall() {
+  clean
+  build
+  install
+}
+
 p:set_import() {
   case "$1" in
     public)
