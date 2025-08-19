@@ -28,10 +28,13 @@ clean() {
 }
 
 reinstall() {
+  systemctl --user stop linio.service
   clean
   build
   install
+  systemctl --user restart linio.service
 }
+
 
 p:set_import() {
   case "$1" in
