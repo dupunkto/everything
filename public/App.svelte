@@ -100,6 +100,7 @@
   footer {
     position: absolute;
     bottom: 0;
+    right: 0.5em;
     opacity: 0.7;
     margin-left: 1em;
   }
