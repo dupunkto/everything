@@ -28,7 +28,7 @@ clean() {
 }
 
 reinstall() {
-  if has systemctl; then
+  if command -v systemctl >/dev/null && [ -f "$HOME/.config/systemd/user/linio.service" ]; then
     systemctl --user stop linio.service
   fi
 
@@ -36,7 +36,7 @@ reinstall() {
   build
   install
 
-  if has systemctl; then
+  if command -v systemctl >/dev/null && [ -f "$HOME/.config/systemd/user/linio.service" ]; then
     systemctl --user restart linio.service
   fi
 }
