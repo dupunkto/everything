@@ -18,13 +18,14 @@ Linio uses the [Bun](https://bun.sh) runtime, so make sure you have that install
 
 ### CLI options
 
-| Option          | Description                                           |
-| --------------- | ----------------------------------------------------- |
-| `--format=type` | Output format: headers, modifiers, or mixed (default) |
-| `--basic`       | Use basic features only                               |
-| `-h`            | Use headers format (structured metadata)              |
-| `-m`            | Use modifiers format (keyword-based)                  |
-| `-b`            | Use mixed format (combines both approaches)           |
+| Option                | Description                                           |
+| --------------------- | ----------------------------------------------------- |
+| `--lists=list1,list2` | Display order for task lists in ToDo page             |
+| `--format=type`       | Output format: headers, modifiers, or mixed (default) |
+| `--basic`             | Use basic features only                               |
+| `-h`                  | Use headers format (structured metadata)              |
+| `-m`                  | Use modifiers format (keyword-based)                  |
+| `-b`                  | Use mixed format (combines both approaches)           |
 
 ## File formats
 
