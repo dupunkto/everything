@@ -35,7 +35,7 @@ reinstall() {
   clean
   build
   install
-  
+
   if has systemctl; then
     systemctl --user restart linio.service
   fi

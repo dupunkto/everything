@@ -10,6 +10,7 @@ const { values, positionals } = parseArgs({
   strict: false,
   options: {
     lists: { type: 'string' },
+    backlogs: { type: 'string' },
     format: { type: 'string' },
     basic: { type: 'boolean' },
     h: { type: 'boolean' },
@@ -22,7 +23,8 @@ const { values, positionals } = parseArgs({
 const ROOT = positionals[2] || process.cwd();
 
 // Default in case the CLI argument is omitted.
-const LISTS = ["all", "life", "projects", "maakotheek", "qdentity", "writing"];
+const LISTS = ["all", "life", "projects", "maakotheek", "qdentity", "dupunkto", "writing"];
+const BACKLOGS = ["backlog", "mk-backlog", "qd-backlog", "du-backlog", "writing"]
 
 const TODOS = ['TODO', 'DONE', 'NVM'];
 const WISHES = ['WISH', 'BOUGHT', 'NVM'];
@@ -43,9 +45,13 @@ if(values.b) values.format = 'mixed';
 
 if(!values.format) values.format = 'mixed';
 
+const parseList = (str: string | boolean | undefined, df: string[]) =>
+  typeof str == 'string' ? str.split(',') : df;
+
 const config: Config = {
   format: values.format as string,
-  lists: typeof values.lists == 'string' ? values.lists.split(',') : LISTS,
+  lists: parseList(values.lists, LISTS),
+  backlogs: parseList(values.backlogs, BACKLOGS),
   features: values.basic ? 'basic' : 'fancy',
 };
 

@@ -5,13 +5,14 @@
   
   import Item from "../components/Item.svelte";
 
-  let ORDER: string[] = $state([]);
+  let config = await getConfig();
 
   let tasks: Record<string, Note[]> = $state({all : []});
   let lists: string[] = $state([]);
 
   let view_completed = $state(false);
   let view_shelved = $state(false);
+  let view_backlog = $state(false);
 
   const isVisible = (note: Note) => {
     if(!note.task) return false;
@@ -20,14 +21,13 @@
       || (note.task.status == 'nvm' && view_shelved)
   }
 
-  const hasVisibleItems = (list: string) => {
-    return tasks[list]?.some(note => isVisible(note)) || false;
-  }
+  const isVisibleList = (list: string) =>
+    !config.backlogs.includes(list) || view_backlog
 
-  Promise.all([
-    getConfig(),
-    listNotes()
-  ]).then(([config, notes]) => {
+  const hasVisibleItems = (list: string) =>
+    tasks[list]?.some(note => isVisible(note)) || false;
+
+  listNotes().then((notes) => {
     for(const note of notes) {
       if (!note.task) continue;
       const list: string | undefined = note.task.list;
@@ -74,7 +74,7 @@
     });
   });
 
-  let visibleLists = $derived(lists.filter(hasVisibleItems));
+  let visibleLists = $derived(lists.filter(hasVisibleItems).filter(isVisibleList));
 
   let selected: string | null = $state(null);
   let selectNote = (n: Note) => selected = selected == n.id ? null : n.id;
@@ -153,6 +153,11 @@
     <button onclick={() => view_shelved = !view_shelved}>
       <i class="{view_shelved ? "fas" : "far"} fa-eye-slash"></i>
       {view_shelved ? "Hide shelved" : "Show shelved"}
+    </button>
+
+    <button onclick={() => view_backlog = !view_backlog}>
+      <i class="{view_backlog ? "fas" : "far"} fa-eye-slash"></i>
+      {view_backlog ? "Hide backlog" : "Show backlog"}
     </button>
   </div>
 </header>
