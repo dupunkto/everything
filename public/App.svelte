@@ -100,9 +100,9 @@
   footer {
     position: absolute;
     bottom: 0;
-    right: 0.5em;
+    right: 0;
     opacity: 0.7;
-    margin-left: 1em;
+    margin: 0 1em;
   }
 </style>
 

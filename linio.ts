@@ -24,7 +24,7 @@ const ROOT = positionals[2] || process.cwd();
 
 // Default in case the CLI argument is omitted.
 const LISTS = ["all", "life", "projects", "maakotheek", "qdentity", "dupunkto", "writing"];
-const BACKLOGS = ["backlog", "mk-backlog", "qd-backlog", "du-backlog", "writing"]
+const BACKLOGS = ["backlog", "writing"]
 
 const TODOS = ['TODO', 'DONE', 'NVM'];
 const WISHES = ['WISH', 'BOUGHT', 'NVM'];

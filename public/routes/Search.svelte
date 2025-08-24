@@ -84,7 +84,7 @@
     return terms.every(needle => haystack.includes(needle.toLowerCase()));
   }
 
-  let view_completed = $state(true);
+  let view_completed = $state(false);
   let view_shelved = $state(false);
 
   const isVisible = (note: Note) => {

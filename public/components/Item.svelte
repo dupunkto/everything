@@ -102,9 +102,15 @@
   }
 
   .title i,
+  .title .favicon,
   .title .checkbox {
     width: 1em;
+    height: 1em;
     margin-right: 0.5em;
+  }
+
+  .favicon {
+    color: transparent;
   }
 
   .contents {
@@ -158,7 +164,7 @@
     border-bottom: none;
   }
 
-  .checkbox {
+  .checkbox, .favicon {
     transform: scale(1.5);
     transform-origin: center;
     margin-bottom: 0;
@@ -189,7 +195,11 @@
           onclick={(e) => handleClick(e)}
         >
       {:else if note.type == 'bookmark'}
-        <img class="favicon" src={new URL("/favicon.ico", new URL(note.headline).origin).href} alt="Icon">
+        <img
+          class="favicon"
+          src={new URL("/favicon.ico", new URL(note.headline).origin).href}
+          alt="Icon"
+        />
       {:else}
         <i></i>
       {/if}
