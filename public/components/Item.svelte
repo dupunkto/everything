@@ -164,6 +164,10 @@
     margin-bottom: 0;
     aspect-ratio: 1;
   }
+
+  .list {
+    text-wrap: nowrap;
+  }
 </style>
 
 <section role="group" class="{ opened && "open" || "" }">
@@ -184,6 +188,8 @@
           disabled={(note.task?.status == 'nvm') || (note.wish?.status == 'nvm')}
           onclick={(e) => handleClick(e)}
         >
+      {:else if note.type == 'bookmark'}
+        <img class="favicon" src={new URL("/favicon.ico", new URL(note.headline).origin).href} alt="Icon">
       {:else}
         <i></i>
       {/if}

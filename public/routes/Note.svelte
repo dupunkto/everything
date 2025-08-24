@@ -274,6 +274,7 @@
   .contents > :last-child { margin-bottom: 0; }
 
   .list, .type {
+    text-wrap: nowrap;
     position: absolute;
     top: 0.8em;
     right: 1em;
