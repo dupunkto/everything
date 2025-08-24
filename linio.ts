@@ -276,7 +276,7 @@ async function parseNote(humid: string, md: string, stat: any): Promise<Note> {
     }
     
     if (!note.headline && line.trim() != '')
-      note.headline = line;
+      note.headline = line.startsWith("> ") ? line.slice(2) : line;
 
     contentLines.push(line);
   }
