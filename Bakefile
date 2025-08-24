@@ -7,6 +7,10 @@ OUT=a.out
 export DIST=dist
 export PUBLIC=public
 
+setup() {
+  bun i
+}
+
 serve() {
   bun run --define DEV=true --hot $SRC $DATA
 }
