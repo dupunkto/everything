@@ -31,8 +31,17 @@ clean() {
   rm -rf $OUT
 }
 
+
 reinstall() {
-  if command -v systemctl >/dev/null && [ -f "$HOME/.config/systemd/user/linio.service" ]; then
+  local ID=org.dupunkto.linio
+  local plist="$HOME/Library/LaunchAgents/$ID.plist"
+  local service="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user/linio.service"
+
+  # On Linux, a file being executed is marked 'busy' and cannot be modified.
+  # However, on Darwin, the binary is fully in memory so can be hot-swapped.
+  # No need to first stop the old service first--it keeps running and only
+  # needs to be restarted.
+  if has systemctl && [ -f "$service" ]; then
     systemctl --user stop linio.service
   fi
 
@@ -40,8 +49,12 @@ reinstall() {
   build
   install
 
-  if command -v systemctl >/dev/null && [ -f "$HOME/.config/systemd/user/linio.service" ]; then
+  if has systemctl && [ -f "$service" ]; then
     systemctl --user restart linio.service
+  fi
+
+  if has launchctl && [ -f "$plist" ]; then
+    launchctl kickstart -k gui/$(id -u)/$ID
   fi
 }
 

@@ -115,3 +115,57 @@ Wish-Bought: 2024-02-28
 #### Bookmarks
 
 Any note that begins with either `http://` or `https://` is automatically treated as a bookmark, making it easy to save and organize web links. At this point in time, no metadata is supported.
+
+## Daemon management
+
+It is possible to manage `linio` as a daemon using Systemd (Linux) or Launchd (Darwin) utilizing one of the following service files:
+
+### `~/.config/systemd/user/linio.service`
+
+```service
+[Unit]
+Description=Linio
+After=network.target
+
+[Service]
+ExecStart=%h/.local/bin/linio %h/zettles
+Restart=always
+WorkingDirectory=%h/zettles
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin
+
+[Install]
+WantedBy=default.target
+```
+
+### `~/Library/LaunchAgents/org.dupunkto.linio.plist`
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>org.dupunkto.linio</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/axcelott/.local/bin/linio</string>
+        <string>/Users/axcelott/zettles</string>
+    </array>
+
+    <key>KeepAlive</key>
+    <true/>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/axcelott/Library/Logs/linio.out.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/axcelott/Library/Logs/linio.err.log</string>
+</dict>
+</plist>
+```
+
+(Note: MacOS plist files do not support variable or shell expansion for `~`, `$HOME`, or `%h`. So unfortunately, you'll have to hard-code full paths.)
