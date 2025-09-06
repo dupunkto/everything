@@ -226,8 +226,9 @@
 
       if(config.features == 'fancy') {
         const { codemirror } = new EasyMDE({
-          element: textarea,
-          spellChecker: false
+          element: textarea!,
+          spellChecker: false,
+          forceSync: true, // Syncs edits back to textarea
         });
 
         if(autofocus) {
