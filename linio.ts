@@ -58,7 +58,7 @@ const config: Config = {
 import app from "./public/index.html";
 
 const server = serve({
-  port: 9000,
+  port: PORT,
   hostname: "linio",
   development: DEV,
   routes: {
