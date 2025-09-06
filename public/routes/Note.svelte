@@ -231,6 +231,11 @@
           forceSync: true, // Syncs edits back to textarea
         });
 
+        codemirror.addKeyMap({
+          "Cmd-Enter": () => textarea?.form?.requestSubmit(),
+          "Ctrl-Enter": () => textarea?.form?.requestSubmit(),
+        });
+
         if(autofocus) {
           const line = codemirror.lineCount() - 1;
           const ch = codemirror.getLine(line).length;
