@@ -50,6 +50,7 @@ reinstall() {
   install
 
   if has systemctl && [ -f "$service" ]; then
+    systemctl --user daemon-reload
     systemctl --user restart linio.service
   fi
 
