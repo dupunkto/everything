@@ -13,6 +13,7 @@ const { values, positionals } = parseArgs({
     backlogs: { type: 'string' },
     format: { type: 'string' },
     basic: { type: 'boolean' },
+    git: { type: 'boolean' },
     h: { type: 'boolean' },
     m: { type: 'boolean' },
     b: { type: 'boolean' }
@@ -57,6 +58,29 @@ const config: Config = {
 
 import app from "./public/index.html";
 
+const gitEnabled = values.git;
+
+async function gitPull(): Promise<void> {
+  if (!gitEnabled) return;
+  try {
+    console.log(ROOT)
+    await Bun.spawn(['git', 'pull'], { cwd: ROOT }).exited;
+  } catch (error) {
+    console.warn('Git pull failed:', error);
+  }
+}
+
+async function gitCommitAndPush(message: string): Promise<void> {
+  if (!gitEnabled) return;
+  try {
+    await Bun.spawn(['git', 'add', '.'], { cwd: ROOT }).exited;
+    await Bun.spawn(['git', 'commit', '-m', message], { cwd: ROOT }).exited;
+    await Bun.spawn(['git', 'push'], { cwd: ROOT }).exited;
+  } catch (error) {
+    console.warn('Git commit/push failed:', error);
+  }
+}
+
 const server = serve({
   port: PORT,
   hostname: "linio",
@@ -84,6 +108,11 @@ const server = serve({
 });
 
 console.log(`Serving '${ROOT}' on ${server.url}`);
+
+
+if (gitEnabled) {
+  gitPull().then(() => console.log('Git sync enabled: pulled latest changes'));
+}
 
 // In-memory cache
 const noteCache = new Map<string, Note>();
@@ -196,12 +225,21 @@ async function fetchNote(humid: string): Promise<Note | null> {
 
 async function putNote(humid: string, md: string): Promise<Note> {
   const path = join(ROOT, `${humid}.txt`);
+  const isNew = !await Bun.file(path).exists();
+
   await Bun.write(path, md);
-  
+
   noteCache.delete(humid);
   fileStats.delete(humid);
-  
-  return await fetchNote(humid) as Note;
+
+  const note = await fetchNote(humid) as Note;
+
+  if (gitEnabled) {
+    const action = isNew ? 'added' : 'updated';
+    gitCommitAndPush(`${action} ${humid}`);
+  }
+
+  return note;
 }
 
 async function removeNote(humid: string): Promise<Note> {
@@ -212,10 +250,14 @@ async function removeNote(humid: string): Promise<Note> {
   const file = Bun.file(path);
 
   if (await file.exists()) await fs.unlink(path);
-  
+
   noteCache.delete(humid);
   fileStats.delete(humid);
-  
+
+  if (gitEnabled) {
+    gitCommitAndPush(`removed ${humid}`);
+  }
+
   return note;
 }
 
