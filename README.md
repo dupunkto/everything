@@ -169,3 +169,16 @@ WantedBy=default.target
 ```
 
 (Note: MacOS plist files do not support variable or shell expansion for `~`, `$HOME`, or `%h`. So unfortunately, you'll have to hard-code full paths.)
+
+To enable:
+
+```shell
+launchctl bootstrap gui/$(id -u) ~/library/LaunchAgents/org.dupunkto.linio.plist   
+launchctl enable gui/$(id -u)/org.dupunkto.linio      
+```
+
+To disable:
+
+```shell
+launchctl bootout gui/$(id -u)/org.dupunkto.linio      
+```
