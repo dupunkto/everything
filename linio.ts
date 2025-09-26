@@ -202,7 +202,7 @@ async function listNotesByTag(tag: string): Promise<Note[]> {
   return (await listNotes()).filter(n => n.tags.includes(tag));
 }
 
-async function fetchNote(humid: string): Promise<Note | null> {  
+async function fetchNote(humid: string, v = new Set()): Promise<Note | null> {  
   const path = join(ROOT, `${humid}.txt`);
   const file = Bun.file(path);
   
@@ -214,8 +214,8 @@ async function fetchNote(humid: string): Promise<Note | null> {
   if (noteCache.has(humid) && cachedMod == stat.mtime.getTime())
     return noteCache.get(humid)!;
 
-  const content = await file.text();
-  const note = await parseNote(humid, content, stat);
+  const content = await file.text(); v.add(humid);
+  const note = await parseNote(humid, content, stat, v);
   
   noteCache.set(humid, note);
   fileStats.set(humid, stat.mtime.getTime());
@@ -263,7 +263,7 @@ async function removeNote(humid: string): Promise<Note> {
 
 // Note parsing (single-pass optimization)
 
-async function parseNote(humid: string, md: string, stat: any): Promise<Note> {
+async function parseNote(humid: string, md: string, stat: any, v = new Set()): Promise<Note> {
   let created_at = normalizeDate(stat.birthtime.toISOString())!;
   let modified_at = normalizeDate(stat.mtime.toISOString())!;
 
@@ -337,25 +337,27 @@ async function parseNote(humid: string, md: string, stat: any): Promise<Note> {
     contentLines.shift();
 
   // Please excuse this monstrosity. I miss the Erlang pipe operator ok.
-  note.html = await marked.parse(await processText(contentLines.join('  \n')));
+  note.html = await marked.parse(await processText(contentLines.join('  \n'), v));
 
   return note;
 }
 
-async function processText(md: string): Promise<string> {  
+async function processText(md: string, v = new Set()): Promise<string> {
   const matches = Array.from(md.matchAll(HUMID_PATTERN));
   const notes: Record<string, Note> = {};
 
   if (matches.length > 0) {
-    const uniqueCodes = Array.from(new Set(matches.map(m => m[1])));
+    const allCodes = new Set(matches.map(m => m[1]));
+    const uniqueCodes = [...allCodes.difference(v)];
 
     await Promise.all(uniqueCodes.map(async (humid: string) => {
-      const note = await fetchNote(humid);
+      const note = await fetchNote(humid, v);
       if (note) notes[humid] = note;
     }));
 
     md = md.replace(/#([A-Z0-9]{5})/g, (_, humid: string) => {
-      const note = notes[humid]; if (!note) return `#${humid}`;
+      const note = notes[humid];
+      if (v.has(humid) || !note) return `#${humid}`;
       const { id, title, headline } = note;
       return `[**#${id}**: ${title || headline}](/${id})`;
     });
