@@ -89,7 +89,7 @@ $.cwd(ROOT); // This ensures `git` uses the correct repo.
 
 if(config.git) await $`git pull`
   .then(() => console.log("Pulled latest git changes."))
-  .catch(e => console.error("Could not pull git changes: ", e));
+  .catch(e => console.warn("Could not pull git changes: ", e));
 
 // In-memory cache
 const noteCache = new Map<string, Note>();
@@ -235,7 +235,7 @@ async function removeNote(humid: string): Promise<Note> {
 
 async function commitAndPush(message: string): Promise<void> {
   await $`git add . && git commit -m ${message} && git push`.catch(e => {
-    console.error("Could not commit+push changes: ", e);
+    console.warn("Could not commit+push changes: ", e);
   });
 }
 
