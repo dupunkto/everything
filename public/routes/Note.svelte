@@ -100,6 +100,7 @@
 
     const isTask = data.get('task') == 'on';
     const isWish = data.get('wish') == 'on';
+    const hasChanged = md != note.text;
     
     if(config.format != 'headers') {
       if(isTask) {
@@ -156,8 +157,8 @@
       const headers: string[] = [];
 
       headers.push(`Created: ${normalizeDate(note.created_at)}`);
-      headers.push(`Modified: ${normalizeDate(new Date().toISOString())}`);
-      
+      headers.push(`Modified: ${normalizeDate(hasChanged ? new Date().toISOString() : note.modified_at)}`);
+
       if(isTask && config.format == 'headers') {
         headers.push('Type: task');
         
