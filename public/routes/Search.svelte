@@ -86,6 +86,7 @@
 
   let view_completed = $state(false);
   let view_shelved = $state(false);
+  let view_backlog = $state(false);
 
   const isVisible = (note: Note) => {
     return !['task', 'wish'].includes(note.type)
@@ -93,6 +94,7 @@
       || note.wish?.status == 'dream'
       || (note.task?.status == 'done' && view_completed)
       || (note.task?.status == 'nvm' && view_shelved)
+      || (note.task?.status == 'backlog' && view_backlog)
       || (note.wish?.status == 'bought' && view_completed)
       || (note.wish?.status == 'nvm' && view_shelved)
   }
@@ -170,6 +172,11 @@
     <button onclick={() => view_shelved = !view_shelved}>
       <i class="{view_shelved ? "fas" : "far"} fa-eye-slash"></i>
       {view_shelved ? "Hide shelved" : "Show shelved"}
+    </button>
+
+    <button onclick={() => view_backlog = !view_backlog}>
+      <i class="{view_backlog ? "fas" : "far"} fa-eye-slash"></i>
+      {view_backlog ? "Hide backlog" : "Show backlog"}
     </button>
   </div>
 
