@@ -23,7 +23,7 @@ const { values, positionals } = parseArgs({
 const ROOT = positionals[2] || process.cwd();
 
 // Default in case the CLI argument is omitted.
-const LISTS = ["all", "life", "university", "projects", "maakotheek", "qdentity", "dupunkto", "writing"];
+const LISTS = ["all", "life", "university", "projects", "maakotheek", "qdentity", "dupunkto"];
 
 const TODOS = ['EVERY', 'TODO', 'BACKLOG', 'DONE', 'NVM'];
 const WISHES = ['WISH', 'BOUGHT', 'NVM'];
