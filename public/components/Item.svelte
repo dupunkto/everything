@@ -190,7 +190,7 @@
         <input
           type="checkbox"
           class="checkbox"
-          checked={(note.task?.status && note.task.status != 'todo') || (note.wish?.status == 'bought')}
+          checked={(note.task?.status && !['todo', 'backlog'].includes(note.task.status)) || (note.wish?.status == 'bought')}
           disabled={(note.task?.status == 'nvm') || (note.wish?.status == 'nvm')}
           onclick={(e) => handleClick(e)}
         >

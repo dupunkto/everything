@@ -17,12 +17,10 @@
   const isVisible = (note: Note) => {
     if(!note.task) return false;
     else return note.task.status == 'todo'
+      || (note.task.status == 'backlog' && view_backlog)
       || (note.task.status == 'done' && view_completed)
       || (note.task.status == 'nvm' && view_shelved)
   }
-
-  const isVisibleList = (list: string) =>
-    !config.backlogs.includes(list) || view_backlog
 
   const hasVisibleItems = (list: string) =>
     tasks[list]?.some(note => isVisible(note)) || false;
@@ -48,17 +46,16 @@
     for(const list of Object.keys(tasks)) {
       tasks[list].sort((a: Note, b: Note) => {
         if(!a.task || !b.task) return 0;
-        
-        const statuses = ['todo', 'done', 'nvm'];
+
+        const statuses = ['todo', 'backlog', 'done', 'nvm'];
         const diff = statuses.indexOf(a.task.status) - statuses.indexOf(b.task.status);
 
         if (diff != 0) return diff;
 
         switch(a.task.status) {
-          case 'todo': return compareDates(a.task.deadline, b.task.deadline);
           case 'done': return compareDates(b.task.completed_at, a.task.completed_at);
           case 'nvm': return compareDates(b.task.shelved_at, a.task.shelved_at);
-          default: return 0;
+          default: return compareDates(a.task.deadline, b.task.deadline);
         }
       })
     }
@@ -74,7 +71,7 @@
     });
   });
 
-  let visibleLists = $derived(lists.filter(hasVisibleItems).filter(isVisibleList));
+  let visibleLists = $derived(lists.filter(hasVisibleItems));
 
   let selected: string | null = $state(null);
   let selectNote = (n: Note) => selected = selected == n.id ? null : n.id;

@@ -1,7 +1,6 @@
 export interface Config {
   format: string,
   lists: string[],
-  backlogs: string[],
   features: 'basic' | 'fancy',
   git: boolean
 }
@@ -23,7 +22,7 @@ export interface Note {
 }
 
 export interface Task {
-  status: 'todo' | 'done' | 'nvm',
+  status: 'backlog' | 'todo' | 'done' | 'nvm',
   deadline?: string,
   list?: string,
   completed_at?: string,

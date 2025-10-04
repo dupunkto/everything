@@ -10,7 +10,6 @@ const { values, positionals } = parseArgs({
   strict: false,
   options: {
     lists: { type: 'string' },
-    backlogs: { type: 'string' },
     format: { type: 'string' },
     basic: { type: 'boolean' },
     git: { type: 'boolean' },
@@ -25,14 +24,13 @@ const ROOT = positionals[2] || process.cwd();
 
 // Default in case the CLI argument is omitted.
 const LISTS = ["all", "life", "projects", "maakotheek", "qdentity", "dupunkto", "writing"];
-const BACKLOGS = ["backlog", "writing"]
 
-const TODOS = ['TODO', 'DONE', 'NVM'];
+const TODOS = ['TODO', 'BACKLOG', 'DONE', 'NVM'];
 const WISHES = ['WISH', 'BOUGHT', 'NVM'];
 
 const HUMID_PATTERN = /#([A-Z0-9]{5})/g;
 const TAG_PATTERN = /\[\[([^\]]+)\]\]/g;
-const TODO_PATTERN = /^(TODO|DONE|NVM)(?:\s+@\s*(\d{4}(?:-\d{1,2})?(?:-\d{1,2})?))?(?:\s+~(\S+))?$/i;
+const TODO_PATTERN = /^(TODO|BACKLOG|DONE|NVM)(?:\s+@\s*(\d{4}(?:-\d{1,2})?(?:-\d{1,2})?))?(?:\s+~(\S+))?$/i;
 const WISH_PATTERN = /^(WISH|BOUGHT|NVM)(?:\s+@\s*(\d{4}(?:-\d{1,2})?(?:-\d{1,2})?))?$/i;
 const HEADER_PATTERN = /^([A-Za-z-]+):\s+(.*)$/;
 
@@ -52,7 +50,6 @@ const parseList = (str: string | boolean | undefined, df: string[]) =>
 const config: Config = {
   format: values.format as string,
   lists: parseList(values.lists, LISTS),
-  backlogs: parseList(values.backlogs, BACKLOGS),
   features: values.basic ? 'basic' : 'fancy',
   git: values.git as boolean
 };
@@ -414,7 +411,7 @@ function populateNoteFromHeaders(note: Note, headers: Record<string, string>) {
 function populateTaskFromHeader(task: Task, field: string, value: string) {
   switch (field.toLowerCase()) {
     case 'status':
-      if (['todo', 'done', 'nvm'].includes(value)) {
+      if (['todo', 'backlog', 'done', 'nvm'].includes(value)) {
         task.status = value as Task['status'];
       }
       break;
@@ -527,6 +524,9 @@ function parseTask(lines: string[]): Task | null {
       case 'todo':
         if (date) task.deadline = date;
         if (list && list != 'all') task.list = list;
+        break;
+
+      case 'backlog':
         break;
 
       case 'done':

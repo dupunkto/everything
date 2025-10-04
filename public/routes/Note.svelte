@@ -116,6 +116,10 @@
         if(list && list != 'all') modifiers += ` ~${list}`;
 
         switch (status) {
+          case 'backlog':
+            modifiers += '\nBACKLOG';
+            break;
+
           case 'done':
             modifiers += '\nDONE';
             if(completed_at) modifiers += ` @ ${normalizeDate(completed_at)}`;
@@ -394,7 +398,7 @@
         <input
           type="checkbox"
           class="checkbox"
-          checked={(note.task?.status && note.task.status != 'todo') || (note.wish?.status == 'bought')}
+          checked={(note.task?.status && !['todo', 'backlog'].includes(note.task.status)) || (note.wish?.status == 'bought')}
           disabled={(note.task?.status == 'nvm') || (note.wish?.status == 'nvm') || mode == 'edit'}
           onclick={(e) => handleClick(e)}
         />
@@ -448,7 +452,7 @@
                   {/if}
                 </tr>
                 {#if task}
-                  {#if taskStatus && taskStatus != 'todo'}
+                  {#if taskStatus && !['todo', 'backlog'].includes(taskStatus)}
                     <tr>
                       <td colspan="2"><label for="deadline">todo</label></td>
                       <td><label for="deadline">before</label></td>
@@ -465,17 +469,18 @@
                     <td><label for="status">status</label></td>
                     <td>
                       <select name="status" onchange={(e) => taskStatus = (e.target as HTMLInputElement).value}>
-                        <option>todo</option>
+                        <option selected={note.task?.status == 'backlog'}>backlog</option>
+                        <option selected={note.task?.status == 'todo'}>todo</option>
                         <option selected={note.task?.status == 'done'}>done</option>
                         <option selected={note.task?.status == 'nvm'}>nvm</option>
                       </select>
                     </td>
-                    <td><label for={date_for_status(taskStatus)}>{taskStatus == 'todo' ? 'before' : 'at'}</label></td>
+                    <td><label for={date_for_status(taskStatus)}>{['todo', 'backlog'].includes(taskStatus) ? 'before' : 'at'}</label></td>
                     <td>
                       <input
                         type="date"
                         name={date_for_status(taskStatus)}
-                        value={normalizeDate(note.task?.[date_for_status(taskStatus)]) || (taskStatus != 'todo' && formatDate(new Date()))}
+                        value={normalizeDate(note.task?.[date_for_status(taskStatus)]) || (!['todo', 'backlog'].includes(taskStatus) && formatDate(new Date()))}
                       />
                     </td>
                   </tr>
