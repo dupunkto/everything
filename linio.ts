@@ -25,18 +25,19 @@ const ROOT = positionals[2] || process.cwd();
 // Default in case the CLI argument is omitted.
 const LISTS = ["all", "life", "projects", "maakotheek", "qdentity", "dupunkto", "writing"];
 
-const TODOS = ['TODO', 'BACKLOG', 'DONE', 'NVM'];
+const TODOS = ['EVERY', 'TODO', 'BACKLOG', 'DONE', 'NVM'];
 const WISHES = ['WISH', 'BOUGHT', 'NVM'];
 
 const HUMID_PATTERN = /#([A-Z0-9]{5})/g;
 const TAG_PATTERN = /\[\[([^\]]+)\]\]/g;
 const TODO_PATTERN = /^(TODO|BACKLOG|DONE|NVM)(?:\s+@\s*(\d{4}(?:-\d{1,2})?(?:-\d{1,2})?))?(?:\s+~(\S+))?$/i;
+const EVERY_PATTERN = /^(EVERY)\s+(\d+)(?:\s+~(\S+))?$/i;
 const WISH_PATTERN = /^(WISH|BOUGHT|NVM)(?:\s+@\s*(\d{4}(?:-\d{1,2})?(?:-\d{1,2})?))?$/i;
 const HEADER_PATTERN = /^([A-Za-z-]+):\s+(.*)$/;
 
 import { generateHumID } from "./linio/humid";
 import { Note, Task, Wish, Config } from "./linio/types";
-import { normalizeDate } from "./linio/dates";
+import { normalizeDate, daysSince } from "./linio/dates";
 
 if(values.h) values.format = 'headers';
 if(values.m) values.format = 'modifiers';
@@ -282,8 +283,9 @@ async function parseNote(humid: string, md: string, stat: any, v = new Set()): P
     // We still support old-style modifiers, along with new-style headers.
     // Which method the frontend will write is configurable via the CLI.
     if(line.startsWith("TODO") && note.type == 'note') note.type = 'task';
+    if(line.startsWith("EVERY") && note.type == 'note') note.type = 'task';
     if(line.startsWith("WISH") && note.type == 'note') note.type = 'wish';
-    
+
     if (WISHES.some(wish => line.startsWith(wish))) wishLines.push(line);
     if (TODOS.some(todo => line.startsWith(todo))) taskLines.push(line);
 
@@ -431,6 +433,13 @@ function populateTaskFromHeader(task: Task, field: string, value: string) {
     case 'shelved':
       task.shelved_at = value;
       break;
+
+    case 'recurrence':
+      task.status = 'todo';
+      task.recurrence = parseInt(value);
+      task = setEffectiveStatus(task);
+
+      break;
   }
 }
 
@@ -502,11 +511,12 @@ function parseTask(lines: string[]): Task | null {
     deadline: undefined,
     list: undefined,
     completed_at: undefined,
-    shelved_at: undefined
+    shelved_at: undefined,
+    recurrence: undefined
   };
 
   const modifiers = lines
-    .map(line => line.match(TODO_PATTERN))
+    .map(line => line.match(TODO_PATTERN) || line.match(EVERY_PATTERN))
     .filter(match => match != null)
     .sort((a, b) => {
       const statusA = a[1]?.toUpperCase() || '';
@@ -515,14 +525,19 @@ function parseTask(lines: string[]): Task | null {
       return TODOS.indexOf(statusA) - TODOS.indexOf(statusB);
     });
 
-  for (const [, status, date, list] of modifiers) {
-    if (!status) continue;
+  // `param` is either the date or an interval.
+  for (let [, status, param, list] of modifiers) {
+    if (!status) continue; status = status.toLowerCase();
+    if(status != 'every') task.status = status as Task['status'];
 
-    task.status = status.toLowerCase() as Task['status'];
+    switch (status) {
+      case 'every':
+        task.recurrence = parseInt(param);
+        if (list && list != 'all') task.list = list;
+        break;
 
-    switch (task.status) {
       case 'todo':
-        if (date) task.deadline = date;
+        if (param) task.deadline = param;
         if (list && list != 'all') task.list = list;
         break;
 
@@ -530,14 +545,21 @@ function parseTask(lines: string[]): Task | null {
         break;
 
       case 'done':
-        if (date) task.completed_at = date;
+        if (param) task.completed_at = param;
         break;
 
       case 'nvm':
-        if (date) task.shelved_at = date;
+        if (param) task.shelved_at = param;
         break;
     }
   }
+
+  return task.recurrence ? setEffectiveStatus(task) : task;
+}
+
+function setEffectiveStatus(task: Task) {
+  if(task.completed_at) task.status = daysSince(task.completed_at) < task.recurrence! ? 'done' : 'todo';
+  if(task.shelved_at) task.status = daysSince(task.shelved_at) < task.recurrence! ? 'nvm' : 'todo';
 
   return task;
 }

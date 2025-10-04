@@ -172,6 +172,7 @@
   }
 
   .list {
+    margin-inline-start: 0.5em;
     text-wrap: nowrap;
   }
 </style>
@@ -215,13 +216,17 @@
       {/if}
     </p>
 
-    {#if note.task?.list && !props.hide_list}
-      <span class="list">~{note.task.list}</span>
-    {/if}
-
-    {#if note.type != 'note' && note.type != 'task'}
-      <code class="type">{note.type}</code>
-    {/if}
+    <span>
+      {#if note.task?.recurrence}
+        <code class="type">recurring</code>
+      {:else if note.type != 'note' && note.type != 'task'}
+        <code class="type">{note.type}</code>
+      {/if}
+      
+      {#if note.task?.list && !props.hide_list}
+        <span class="list">~{note.task.list}</span>
+      {/if}
+    </span>
   </header>
 
   {#if opened}

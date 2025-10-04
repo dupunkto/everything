@@ -22,11 +22,12 @@ export interface Note {
 }
 
 export interface Task {
-  status: 'backlog' | 'todo' | 'done' | 'nvm',
+  status: 'todo' | 'backlog' | 'done' | 'nvm',
   deadline?: string,
   list?: string,
   completed_at?: string,
-  shelved_at?: string
+  shelved_at?: string,
+  recurrence?: number
 }
 
 export interface Wish {

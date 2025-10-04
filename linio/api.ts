@@ -25,9 +25,8 @@ export async function listNotesByTag(tag: string): Promise<Note[]> {
 // write proper Task-Status: done and Task-Completed: today headers.
 export function completeNote(note: Note, checked: boolean): Promise<Note> {
   if (note.task) {
-    const md = checked ?
-      insert(note.raw, `DONE @ ${formatDate(new Date())}`) :
-      note.raw.replace(/^(DONE|NVM).*$(\r?\n)?/im, '');
+    let md = note.raw.replaceAll(/^(DONE|NVM).*$(\r?\n)?/gim, '');
+    if(checked) md = insert(md, `DONE @ ${formatDate(new Date())}`);
     return updateNote(note, md);
   }
   

@@ -9,3 +9,7 @@ export function formatDate(d: Date): string {
 export function normalizeDate(str: string | undefined): string | undefined {
   if(str) return formatDate(new Date(str));
 }
+
+export function daysSince(d: Date | string) {
+  return Math.floor((Date.now() - new Date(d).getTime()) / (24 * 3600 * 1000));
+}

@@ -104,15 +104,16 @@
     
     if(config.format != 'headers') {
       if(isTask) {
-        let modifiers = 'TODO';
-
         const deadline = data.get('deadline') as string;
         const list = data.get('list') as string;
         const status = data.get('status') as string;
         const completed_at = data.get('completed_at') as string;
         const shelved_at = data.get('shelved_at') as string;
+        const recurrence = data.get('recurrence') as string;
 
-        if(deadline) modifiers += ` @ ${normalizeDate(deadline)}`;
+        let modifiers = recurrence ? `EVERY ${recurrence}` : 'TODO';
+
+        if(deadline && !recurrence) modifiers += ` @ ${normalizeDate(deadline)}`;
         if(list && list != 'all') modifiers += ` ~${list}`;
 
         switch (status) {
@@ -165,15 +166,20 @@
 
       if(isTask && config.format == 'headers') {
         headers.push('Type: task');
-        
+
+        const recurrence = data.get('recurrence') as string;
         const deadline = data.get('deadline') as string;
         const list = data.get('list') as string;
         const status = data.get('status') as string;
         const completed_at = data.get('completed_at') as string;
         const shelved_at = data.get('shelved_at') as string;
 
-        headers.push(`Task-Status: ${status}`);
-        if(deadline) headers.push(`Task-Deadline: ${normalizeDate(deadline)}`);
+        if(recurrence) {
+          headers.push(`Task-Recurrence: ${recurrence}`);
+        } else {
+          headers.push(`Task-Status: ${status}`);
+          if(deadline) headers.push(`Task-Deadline: ${normalizeDate(deadline)}`);
+        }
         if(list && list != 'all') headers.push(`Task-List: ${list}`);
         if(completed_at) headers.push(`Task-Completed: ${normalizeDate(completed_at)}`);
         if(shelved_at) headers.push(`Task-Shelved: ${normalizeDate(shelved_at)}`);
@@ -452,37 +458,68 @@
                   {/if}
                 </tr>
                 {#if task}
-                  {#if taskStatus && !['todo', 'backlog'].includes(taskStatus)}
-                    <tr>
-                      <td colspan="2"><label for="deadline">todo</label></td>
-                      <td><label for="deadline">before</label></td>
-                      <td>
-                        <input
-                          type="date"
-                          name="deadline"
-                          value={normalizeDate(note.task?.deadline)}
-                        />
-                      </td>
-                    </tr>
+                  {#if !['todo', 'backlog'].includes(taskStatus)}
+                    {#if note.task?.recurrence}
+                      <tr>
+                        <td colspan="2"><label for="recurrence">todo</label></td>
+                        <td><label for="recurrence">every</label></td>
+                        <td>
+                          <input
+                            type="number"
+                            name="recurrence"
+                            value={note.task.recurrence}
+                            min="1"
+                            placeholder="days"
+                          />
+                        </td>
+                      </tr>
+                    {:else}
+                      <tr>
+                        <td colspan="2"><label for="deadline">todo</label></td>
+                        <td><label for="deadline">before</label></td>
+                        <td>
+                          <input
+                            type="date"
+                            name="deadline"
+                            value={normalizeDate(note.task?.deadline)}
+                          />
+                        </td>
+                      </tr>
+                    {/if}
                   {/if}
                   <tr>
                     <td><label for="status">status</label></td>
                     <td>
                       <select name="status" onchange={(e) => taskStatus = (e.target as HTMLInputElement).value}>
-                        <option selected={note.task?.status == 'backlog'}>backlog</option>
+                        {#if !note.task?.recurrence}
+                          <option selected={note.task?.status == 'backlog'}>backlog</option>
+                        {/if}
                         <option selected={note.task?.status == 'todo'}>todo</option>
                         <option selected={note.task?.status == 'done'}>done</option>
                         <option selected={note.task?.status == 'nvm'}>nvm</option>
                       </select>
                     </td>
-                    <td><label for={date_for_status(taskStatus)}>{['todo', 'backlog'].includes(taskStatus) ? 'before' : 'at'}</label></td>
-                    <td>
-                      <input
-                        type="date"
-                        name={date_for_status(taskStatus)}
-                        value={normalizeDate(note.task?.[date_for_status(taskStatus)]) || (!['todo', 'backlog'].includes(taskStatus) && formatDate(new Date()))}
-                      />
-                    </td>
+                    {#if note.task?.recurrence && taskStatus == 'todo'}
+                      <td><label for="recurrence">every</label></td>
+                      <td>
+                        <input
+                          type="number"
+                          name="recurrence"
+                          value={note.task.recurrence}
+                          min="1"
+                          placeholder="7"
+                        />
+                      </td>
+                    {:else}
+                      <td><label for={date_for_status(taskStatus)}>{['todo', 'backlog'].includes(taskStatus) ? 'before' : 'at'}</label></td>
+                      <td>
+                        <input
+                          type="date"
+                          name={date_for_status(taskStatus)}
+                          value={normalizeDate(note.task?.[date_for_status(taskStatus)]) || (!['todo', 'backlog'].includes(taskStatus) && formatDate(new Date()))}
+                        />
+                      </td>
+                    {/if}
                   </tr>
                 {/if}
               </tbody>
