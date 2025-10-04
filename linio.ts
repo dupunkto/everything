@@ -1,4 +1,4 @@
-import { argv, serve } from "bun";
+import { $, argv, serve } from "bun";
 import { parseArgs } from "util";
 import * as fs from "node:fs/promises";
 import { join } from "node:path";
@@ -54,32 +54,10 @@ const config: Config = {
   lists: parseList(values.lists, LISTS),
   backlogs: parseList(values.backlogs, BACKLOGS),
   features: values.basic ? 'basic' : 'fancy',
+  git: values.git as boolean
 };
 
 import app from "./public/index.html";
-
-const gitEnabled = values.git;
-
-async function gitPull(): Promise<void> {
-  if (!gitEnabled) return;
-  try {
-    console.log(ROOT)
-    await Bun.spawn(['git', 'pull'], { cwd: ROOT }).exited;
-  } catch (error) {
-    console.warn('Git pull failed:', error);
-  }
-}
-
-async function gitCommitAndPush(message: string): Promise<void> {
-  if (!gitEnabled) return;
-  try {
-    await Bun.spawn(['git', 'add', '.'], { cwd: ROOT }).exited;
-    await Bun.spawn(['git', 'commit', '-m', message], { cwd: ROOT }).exited;
-    await Bun.spawn(['git', 'push'], { cwd: ROOT }).exited;
-  } catch (error) {
-    console.warn('Git commit/push failed:', error);
-  }
-}
 
 const server = serve({
   port: PORT,
@@ -109,10 +87,11 @@ const server = serve({
 
 console.log(`Serving '${ROOT}' on ${server.url}`);
 
+$.cwd(ROOT); // This ensures `git` uses the correct repo.
 
-if (gitEnabled) {
-  gitPull().then(() => console.log('Git sync enabled: pulled latest changes'));
-}
+if(config.git) await $`git pull`
+  .then(() => console.log("Pulled latest git changes."))
+  .catch(e => console.error("Could not pull git changes: ", e));
 
 // In-memory cache
 const noteCache = new Map<string, Note>();
@@ -232,14 +211,9 @@ async function putNote(humid: string, md: string): Promise<Note> {
   noteCache.delete(humid);
   fileStats.delete(humid);
 
-  const note = await fetchNote(humid) as Note;
+  if (config.git) commitAndPush(`${isNew ? 'added' : 'updated'} ${humid}`);
 
-  if (gitEnabled) {
-    const action = isNew ? 'added' : 'updated';
-    gitCommitAndPush(`${action} ${humid}`);
-  }
-
-  return note;
+  return await fetchNote(humid) as Note;
 }
 
 async function removeNote(humid: string): Promise<Note> {
@@ -254,11 +228,17 @@ async function removeNote(humid: string): Promise<Note> {
   noteCache.delete(humid);
   fileStats.delete(humid);
 
-  if (gitEnabled) {
-    gitCommitAndPush(`removed ${humid}`);
-  }
+  if (config.git) commitAndPush(`removed ${humid}`);
 
   return note;
+}
+
+// Git helpers
+
+async function commitAndPush(message: string): Promise<void> {
+  await $`git add . && git commit -m ${message} && git push`.catch(e => {
+    console.error("Could not commit+push changes: ", e);
+  });
 }
 
 // Note parsing (single-pass optimization)

@@ -2,7 +2,8 @@ export interface Config {
   format: string,
   lists: string[],
   backlogs: string[],
-  features: 'basic' | 'fancy'
+  features: 'basic' | 'fancy',
+  git: boolean
 }
 
 export interface Note {
