@@ -84,9 +84,9 @@
     return terms.every(needle => haystack.includes(needle.toLowerCase()));
   }
 
-  let view_completed = $state(false);
-  let view_shelved = $state(false);
-  let view_backlog = $state(false);
+  let view_completed = $state(true);
+  let view_shelved = $state(true);
+  let view_backlog = $state(true);
 
   const isVisible = (note: Note) => {
     return !['task', 'wish'].includes(note.type)
