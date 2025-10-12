@@ -11,22 +11,9 @@
   let tasks: Record<string, Note[]> = $state({all : []});
   let lists: string[] = $state([]);
 
-  let view_completed = $state(false);
-  let view_shelved = $state(false);
-
-  const isVisible = (note: Note) => {
-    if(!note.task) return false;
-    else return note.task.status == 'todo'
-      || (note.task.status == 'done' && view_completed)
-      || (note.task.status == 'nvm' && view_shelved)
-  }
-
-  const hasVisibleItems = (list: string) =>
-    tasks[list]?.some(note => isVisible(note)) || false;
-
   listNotes().then((notes) => {
     for(const note of notes) {
-      if (!note.task) continue;
+      if (!note.task || note.task.status != 'backlog') continue;
       const list: string | undefined = note.task.list;
 
       if(list) {
@@ -45,17 +32,7 @@
     for(const list of Object.keys(tasks)) {
       tasks[list].sort((a: Note, b: Note) => {
         if(!a.task || !b.task) return 0;
-
-        const statuses = ['todo', 'backlog', 'done', 'nvm'];
-        const diff = statuses.indexOf(a.task.status) - statuses.indexOf(b.task.status);
-
-        if (diff != 0) return diff;
-
-        switch(a.task.status) {
-          case 'done': return compareDates(b.task.completed_at, a.task.completed_at);
-          case 'nvm': return compareDates(b.task.shelved_at, a.task.shelved_at);
-          default: return compareDates(a.task.deadline, b.task.deadline);
-        }
+        return compareDates(a.task.deadline, b.task.deadline);
       })
     }
 
@@ -70,7 +47,7 @@
     });
   });
 
-  let visibleLists = $derived(lists.filter(hasVisibleItems));
+  let visibleLists = $derived(lists.filter(list => tasks[list]?.length > 0));
 
   let selected: string | null = $state(null);
   let selectNote = (n: Note) => selected = selected == n.id ? null : n.id;
@@ -108,16 +85,13 @@
     justify-content: space-between;
   }
 
-  header h1, header button {
-    margin: 0;
-  }
-
   header h1 {
+    margin: 0;
     transform: scale(2);
     transform-origin: left top;
   }
 
-  .actions button, .actions a {
+  .actions a {
     margin-bottom: 0;
   }
 
@@ -138,22 +112,12 @@
 </style>
 
 <header>
-  <h1>ToDo</h1>
+  <h1>Backlog</h1>
 
   <div class="actions">
-    <button onclick={() => view_completed = !view_completed}>
-      <i class="{view_completed ? "fas" : "far"} fa-eye-slash"></i>
-      {view_completed ? "Hide finished" : "Show finished"}
-    </button>
-
-    <button onclick={() => view_shelved = !view_shelved}>
-      <i class="{view_shelved ? "fas" : "far"} fa-eye-slash"></i>
-      {view_shelved ? "Hide shelved" : "Show shelved"}
-    </button>
-
-    <a class="button" href={u`/Backlog`}>
-      <i class="fas fa-folder-open"></i>
-      Open backlog
+    <a class="button" href={u`/ToDo`}>
+      <i class="fas fa-arrow-left"></i>
+      Back to ToDo
     </a>
   </div>
 </header>
@@ -164,14 +128,12 @@
       <h2>~{list}</h2>
 
       {#each tasks[list] as note}
-        {#if isVisible(note)}
-          <Item {note}
-            from="/ToDo"
-            opened={note.id == selected}
-            onclick={() => selectNote(note)}
-            hide_list={true}
-          />
-        {/if}
+        <Item {note}
+          from="/Backlog"
+          opened={note.id == selected}
+          onclick={() => selectNote(note)}
+          hide_list={true}
+        />
       {/each}
     </section>
   {/each}

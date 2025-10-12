@@ -96,7 +96,8 @@ a {
 input,
 button,
 select,
-textarea {
+textarea,
+.button {
   font-family: inherit;
   font-size: inherit;
   -webkit-padding: 0.4em 0;
@@ -111,16 +112,26 @@ textarea {
   }
 }
 
-button {
+button, .button {
   color: var(--color-text-primary);
   background-color: var(--color-bg-button);
   outline: none;
+  text-decoration: none;
+  cursor: default;
 
   &:disabled { color: var(--color-text-disabled); }
   &:focus { border-color: var(--color-border-focus); }
 
   &:not(:disabled):active {
     background-color: var(--color-bg-active);
+  }
+
+  &:visited {
+    color: var(--color-text-primary);
+  }
+
+  &:hover {
+    text-decoration: none;
   }
 }
 
