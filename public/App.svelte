@@ -68,7 +68,7 @@
     height: 100%;
     width: var(--sidebar-width);
     padding-top: 7em;
-    padding-right: 2em;
+    padding-right: 2.2em;
     text-align: right;
   }
 
@@ -77,6 +77,7 @@
     flex-direction: column;
     align-items: stretch;
     padding: 0;
+    gap: 0.2em;
   }
 
   aside nav menu li {
@@ -84,10 +85,12 @@
   }
 
   aside nav menu li a {
-    display: inline-block;
+    display: block;
     color: currentColor;
     text-decoration: none;
     padding: 0.5em 20px;
+    padding-left: 3em;
+    font-size: 1.2em;
     font-weight: 500;
 
     &:hover {
