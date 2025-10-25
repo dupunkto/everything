@@ -12,7 +12,7 @@
   import Note from "./routes/Note.svelte";
   import Tag from "./routes/Tag.svelte";
 
-  import { listNotes } from "../linio/api";
+  import { listNotes, getConfig } from "../linio/api";
   import { randomOf } from "../linio/arrays";
   import { u, navigate} from "../linio/navigation";
 
@@ -29,7 +29,7 @@
   function handleWindowKey(e: KeyboardEvent) {
     const isEditable = (element: Element | null) =>
       (element as HTMLElement)?.isContentEditable ||
-      element?.tagName == 'INPUT' || 
+      element?.tagName == 'INPUT' ||
       element?.tagName == 'TEXTAREA';
 
     if(isEditable(document.activeElement)) return;
@@ -49,7 +49,18 @@
     }
   }
 
-  onMount(() => window.addEventListener('keydown', handleWindowKey));
+  onMount(async () => {
+    window.addEventListener('keydown', handleWindowKey);
+
+    // Handle homepage redirect
+    if (window.location.pathname === '/') {
+      const config = await getConfig();
+      if (config.homepage) {
+        navigate(config.homepage);
+      }
+    }
+  });
+
   onDestroy(() => window.removeEventListener('keydown', handleWindowKey));
 </script>
 

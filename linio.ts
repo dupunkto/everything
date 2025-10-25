@@ -15,7 +15,8 @@ const { values, positionals } = parseArgs({
     git: { type: 'boolean' },
     h: { type: 'boolean' },
     m: { type: 'boolean' },
-    b: { type: 'boolean' }
+    b: { type: 'boolean' },
+    homepage: { type: 'string' }
   },
   allowPositionals: true,
 });
@@ -52,7 +53,8 @@ const config: Config = {
   format: values.format as string,
   lists: parseList(values.lists, LISTS),
   features: values.basic ? 'basic' : 'fancy',
-  git: values.git as boolean
+  git: values.git as boolean,
+  homepage: values.homepage as string | undefined
 };
 
 import app from "./public/index.html";

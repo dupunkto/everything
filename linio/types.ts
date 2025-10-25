@@ -2,7 +2,8 @@ export interface Config {
   format: string,
   lists: string[],
   features: 'basic' | 'fancy',
-  git: boolean
+  git: boolean,
+  homepage?: string
 }
 
 export interface Note {
