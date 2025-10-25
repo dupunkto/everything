@@ -4,7 +4,7 @@
   import "easymde/dist/easymde.min.css";
 
   import { Note, Config } from "../../linio/types";
-  import { getConfig, fetchNote, updateNote, completeNote, deleteNote } from "../../linio/api";
+  import { getConfig, fetchNote, updateNote, completeNote, deleteNote, setStatus } from "../../linio/api";
   import { formatDate, normalizeDate } from "../../linio/dates";
   import { navigate } from "../../linio/navigation";
 
@@ -71,9 +71,21 @@
       return;
     }
 
+    if(e.key == 's') {
+      e.preventDefault();
+      setStatus(note, 'nvm').then(updated => note = updated);
+      return;
+    }
+
+    if(e.key == 'b') {
+      e.preventDefault();
+      setStatus(note, 'backlog').then(updated => note = updated);
+      return;
+    }
+
     if(e.key == 'e') {
       e.preventDefault();
-      
+
       switch(mode) {
         case 'view': return navigate(`/${note.id}?mode=edit&autofocus=1`);
         case 'edit': return document.querySelector("textarea")?.focus();

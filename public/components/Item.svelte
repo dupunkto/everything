@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { completeNote } from "../../linio/api";
+  import { completeNote, setStatus } from "../../linio/api";
   import { navigate } from "../../linio/navigation";
 
   let { note, opened, onclick, from, ...props } = $props();
@@ -17,10 +17,10 @@
     note = updated;
   }
 
-  async function handleKey(e: KeyboardEvent) {
+  function handleKey(e: KeyboardEvent) {
     const focused = document.activeElement == e.target
       && document.activeElement!.tagName == "HEADER";
-    
+
     if(e.key == 'o' && (opened || focused)) {
       e.preventDefault();
       navigate(`/${note.id}?mode=view`);
@@ -34,6 +34,30 @@
     if(e.key == 'c' && (opened || focused)) {
       e.preventDefault();
       (document.activeElement?.querySelector(".checkbox") as HTMLInputElement)?.click();
+      return;
+    }
+
+    if(e.key == 's' && (opened || focused)) {
+      e.preventDefault();
+      setStatus(note, 'nvm').then(updated => note = updated);
+      return;
+    }
+
+    if(e.key == 'b' && (opened || focused)) {
+      e.preventDefault();
+      setStatus(note, 'backlog').then(updated => {
+        const section = (e.target as HTMLElement).closest('section')!;
+
+        // This is dirty, I know. The project is slowly descending
+        // into a lot of chaos and I couldn't be bothered less.
+        if(updated.task?.status != note.task.status) {
+          // @ts-ignore TypeScript doesn't understand style types.
+          section.style.opacity = section.style.opacity == 0.2 ? '' : 0.2;
+        }
+
+        note = updated;
+      });
+      return;
     }
 
     if (['Enter', ' '].includes(e.key) && focused) {

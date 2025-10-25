@@ -40,6 +40,37 @@ export function completeNote(note: Note, checked: boolean): Promise<Note> {
   return Promise.resolve(note);
 }
 
+export async function setStatus(note: Note, status: string): Promise<Note> {
+  if (note.task) {
+    if (!['todo', 'backlog', 'done', 'nvm'].includes(status)) return note;
+
+    let md = note.raw.replaceAll(/^(BACKLOG|DONE|NVM).*$(\r?\n)?/gim, '');
+
+    if (note.task.status != status) {
+      if (status == 'nvm') md = insert(md, `NVM @ ${formatDate(new Date())}`);
+      else if (status == 'backlog') md = insert(md, 'BACKLOG');
+      else if (status == 'done') md = insert(md, `DONE @ ${formatDate(new Date())}`);
+    }
+
+    return updateNote(note, md);
+  }
+
+  if (note.wish) {
+    if (!['dream', 'bought', 'nvm'].includes(status)) return note;
+
+    let md = note.raw.replaceAll(/^(BOUGHT|NVM).*$(\r?\n)?/gim, '');
+
+    if (note.wish.status != status) {
+      if (status == 'nvm') md = insert(md, `NVM @ ${formatDate(new Date())}`);
+      else if (status == 'bought') md = insert(md, `BOUGHT @ ${formatDate(new Date())}`);
+    }
+
+    return updateNote(note, md);
+  }
+
+  return note;
+}
+
 function insert(raw: string, modifier: string): string {
   const lines = raw.split('\n');
 
