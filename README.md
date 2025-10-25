@@ -26,9 +26,9 @@ This will built a standalone executable to `a.out`. The `Bakefile` provides a fe
 | CLI Option                         | Description                                                                     |
 | ---------------------------------- | ------------------------------------------------------------------------------- |
 | `--lists=life,writing,work`        | Display order for task lists in ToDo page.                                      |
-| `--backlogs=backlog,chores`        | Lists that are hidden by default.                                               |
 | `--format=type`, `-h`, `-m`, `-b`  | Output format: `mixed` (`-b`, default), `headers` (`-h`), or `modifiers` (`-m`) |
 | `--basic`                          | Disables client-side JavaScript libraries to reduce load on old hardware.       |
+| `--git`                            | Enable experimental git integration.                                            |
 
 ## Storage conventions
 
