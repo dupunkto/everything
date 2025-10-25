@@ -53,12 +53,10 @@
   onMount(async () => {
     window.addEventListener('keydown', handleWindowKey);
 
-    // Handle homepage redirect
-    if (window.location.pathname === '/') {
+    // Handle landing page redirect
+    if (window.location.pathname == '/') {
       const config = await getConfig();
-      if (config.homepage) {
-        navigate(config.homepage);
-      }
+      if (config.home) navigate(config.home);
     }
   });
 

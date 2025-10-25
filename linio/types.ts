@@ -3,7 +3,7 @@ export interface Config {
   lists: string[],
   features: 'basic' | 'fancy',
   git: boolean,
-  homepage?: string
+  home?: string
 }
 
 export interface Note {
