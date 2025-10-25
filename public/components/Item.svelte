@@ -31,6 +31,11 @@
       navigate(`/${note.id}?mode=edit&from=${from}&autofocus=1`);
     }
 
+    if(e.key == 'c' && (opened || focused)) {
+      e.preventDefault();
+      (document.activeElement?.querySelector(".checkbox") as HTMLInputElement)?.click();
+    }
+
     if (['Enter', ' '].includes(e.key) && focused) {
       e.preventDefault();
       onclick(e);
