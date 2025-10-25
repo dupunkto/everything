@@ -56,7 +56,7 @@
 <style>
   @media (min-width: 815px) {
     :global(main:has(.todos)) {
-      max-width: calc(100% - 400px);
+      max-width: calc(100% - var(--sidebar-width));
     }
   }
 
