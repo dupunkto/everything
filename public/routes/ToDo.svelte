@@ -76,12 +76,12 @@
 
 <style>
   @media (min-width: 815px) {
-    :global(main:has(.todos)) {
-      max-width: calc(100% - 400px);
+    :global(main:has(.backlog)) {
+      max-width: calc(100% - var(--sidebar-width));
     }
   }
 
-  :global(main:has(.todos)) {
+  :global(main:has(.backlog)) {
     margin: 0;
     padding: 0;
   }
@@ -92,7 +92,7 @@
     }
   }
 
-  header, .todos {
+  header, .backlog {
     padding: 0 min(3em, 3vw);
   }
 
@@ -124,7 +124,7 @@
     margin-bottom: 0;
   }
 
-  .todos {
+  .backlog {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
     grid-template-rows: masonry;
@@ -161,7 +161,7 @@
   </div>
 </header>
 
-<div class="todos" use:keyboardNavigation={{ listClasses: visibleLists }}>
+<div class="backlog" use:keyboardNavigation={{ listClasses: visibleLists }}>
   {#each visibleLists as list}
     <section class={list}>
       <h2>~{list}</h2>

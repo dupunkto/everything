@@ -85,7 +85,7 @@
 <style>
   @media (min-width: 815px) {
     :global(main:has(.imbox)) {
-      max-width: calc(100% - 400px);
+      max-width: calc(100% - var(--sidebar-width));
     }
   }
 
@@ -185,19 +185,6 @@
       {#if thisMonth.total > 15}
         <div class="count">+ {thisMonth.total - 15} more</div>
       {/if}
-    </section>
-  {/if}
-
-  {#if recents.length > 0}
-    <section class="recents">
-      <h2>Recents</h2>
-      {#each recents as note}
-        <Item {note}
-          from="/Imbox"
-          opened={note.id == selected}
-          onclick={() => selectNote(note)}
-        />
-      {/each}
     </section>
   {/if}
 </div>

@@ -64,7 +64,44 @@
 </script>
 
 <style>
-  nav {
+  aside {
+    float: right;
+    height: 100%;
+    width: var(--sidebar-width);
+    padding-top: 7em;
+    text-align: right;
+  }
+
+  :global(main) {
+    background: var(--color-bg-side);
+    border-right: 1px solid var(--color-bg-input);
+  }
+
+  aside nav menu {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0;
+  }
+
+  aside nav menu li {
+    list-style: none;
+  }
+
+  aside nav menu li a {
+    display: block;
+    color: currentColor;
+    text-decoration: none;
+    padding: 0.5em 20px;
+    font-weight: 500;
+    padding-right: 3.5em;
+
+    &:hover {
+      background-color: var(--color-bg-surface-hover);
+    }
+  }
+
+  header nav {
     position: absolute;
     right: min(3em, 3vw);
     top: 0;
@@ -75,15 +112,15 @@
     z-index: 100;
   }
 
-  nav p {
+  header nav p {
     margin: 0 0.2em;
   }
 
-  nav a {
+  header nav a {
     color: currentColor !important;
   }
 
-  nav menu {
+  header nav menu {
     display: flex;
     list-style: none;
     flex-direction: row;
@@ -92,7 +129,7 @@
     padding: 0;
   }
 
-  nav menu li {
+  header nav menu li {
     display: flex;
     background: var(--color-black);
     color: var(--color-white);
@@ -102,7 +139,7 @@
     box-shadow: var(--shadow);
   }
 
-  nav menu li a {
+  header nav menu li a {
     color: currentColor !important;
     text-decoration: none !important;
     font-size: 1.5em;
@@ -118,21 +155,40 @@
   }
 </style>
 
-<nav>
-  <menu>
-    <li><a href={u`/Imbox`}>Imbox</a></li>
-    <li><a href={u`/ToDo`}>ToDo</a></li>
-    <li><a href={u`/Search`} aria-label="Search">
-      <i class="fa fa-search"></i>
-    </a></li>
-    <li><a href={u`/New`} aria-label="New">
-      <i class="fa fa-plus"></i>
-    </a></li>
-  </menu>
-  <p>
-    Or: <a href="javascript:void(0)" onclick={lucky}>I'm feeling lucky</a>
-  </p>
-</nav>
+<header>
+  <nav>
+    <menu>
+      <li><a href={u`/`} aria-label="...">
+        <i class="fa fa-star"></i>
+      </a></li>
+      <li><a href={u`/Search`} aria-label="New">
+        <i class="fa fa-search"></i>
+      </a></li>
+      <li><a href={u`/New`} aria-label="New">
+        <i class="fa fa-plus"></i>
+      </a></li>
+    </menu>
+    <p>
+      Or: <a href="javascript:void(0)" onclick={lucky}>I'm feeling lucky</a>
+    </p>
+  </nav>
+</header>
+
+<aside>
+  <nav>
+    <menu>
+      <li><a href={u`/Imbox`}>
+        Imbox
+      </a></li>
+      <li><a href={u`/ToDo`}>
+        ToDo
+      </a></li>
+      <li><a href={u`/Wishlist`}>
+        Wishlist
+      </a></li>
+    </menu>
+  </nav>
+</aside>
 
 <main>
   <svelte:boundary>

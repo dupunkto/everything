@@ -18,7 +18,8 @@
   --color-link-visited: #0050a0;
   
   /* Background colors */
-  --color-bg-body: #ededed;
+  --color-bg-body: #f2f2f2;
+  --color-bg-side: #f8f8f8;
   --color-bg-surface: #fefefe;
   --color-bg-surface-alt: #fdfdfd;
   --color-bg-surface-hover: #f6f6f6;
@@ -37,6 +38,7 @@
   /* Layout */
   --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
   --radius: 0.4em;
+  --sidebar-width: 350px;
 }
 
 /* Dark mode */
@@ -60,7 +62,7 @@
     
     /* Background colors */
     --color-bg-body: #0d1117;
-   --color-bg-surface: #161b22;
+    --color-bg-surface: #161b22;
     --color-bg-surface-alt: #1c2128;
     --color-bg-surface-hover: #21262d;
     --color-bg-button: #3c3f47;
