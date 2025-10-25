@@ -40,8 +40,7 @@
       'n': () => navigate('/New?autofocus=1'),
       '1': () => navigate('/Imbox'),
       '2': () => navigate('/ToDo'),
-      '3': () => navigate('/Search'),
-      '4': () => navigate('/New')
+      '4': () => navigate('/Wishlist')
     };
 
     if(Object.keys(shortcuts).includes(e.key)) {
@@ -69,12 +68,8 @@
     height: 100%;
     width: var(--sidebar-width);
     padding-top: 7em;
+    padding-right: 2em;
     text-align: right;
-  }
-
-  :global(main) {
-    background: var(--color-bg-side);
-    border-right: 1px solid var(--color-bg-input);
   }
 
   aside nav menu {
@@ -89,12 +84,11 @@
   }
 
   aside nav menu li a {
-    display: block;
+    display: inline-block;
     color: currentColor;
     text-decoration: none;
     padding: 0.5em 20px;
     font-weight: 500;
-    padding-right: 3.5em;
 
     &:hover {
       background-color: var(--color-bg-surface-hover);
