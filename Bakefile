@@ -1,7 +1,6 @@
 #!/bin/bash
 
 SRC=linio.ts
-DATA=$HOME/zettles
 OUT=a.out
 
 export DIST=dist
@@ -12,7 +11,7 @@ setup() {
 }
 
 serve() {
-  bun run --define DEV=true --define PORT=9001 --hot $SRC $DATA
+  bun run --define DEV=true --define PORT=9001 --hot $SRC "${1:-.}"
 }
 
 build() {
