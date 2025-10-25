@@ -6,6 +6,7 @@
   import Imbox from "./routes/Imbox.svelte";
   import ToDo from "./routes/ToDo.svelte";
   import Backlog from "./routes/Backlog.svelte";
+  import Shelves from "./routes/Shelves.svelte";
   import Search from "./routes/Search.svelte";
   import Wishlist from "./routes/Wishlist.svelte";
   import New from "./routes/New.svelte";
@@ -142,6 +143,7 @@
       { component: Imbox, path: "/Imbox" },
       { component: ToDo, path: "/ToDo" },
       { component: Backlog, path: "/Backlog" },
+      { component: Shelves, path: "/Shelves" },
       { component: Search, path: "/Search" },
       { component: Wishlist, path: "/Wishlist" },
       { component: New, path: "/New" },
