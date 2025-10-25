@@ -29,6 +29,7 @@ This will built a standalone executable to `a.out`. The `Bakefile` provides a fe
 | `--format=type`, `-h`, `-m`, `-b`  | Output format: `mixed` (`-b`, default), `headers` (`-h`), or `modifiers` (`-m`) |
 | `--basic`                          | Disables client-side JavaScript libraries to reduce load on old hardware.       |
 | `--git`                            | Enable experimental git integration.                                            |
+| `--homepage=/page`                 | Redirect the homepage to a specific page (e.g., `/ToDo`, `/Search`, `/Imbox`).  |
 
 ## Storage conventions
 
@@ -128,9 +129,9 @@ Description=Linio
 After=network.target
 
 [Service]
-ExecStart=%h/.local/bin/linio %h/zettles
+ExecStart=%h/.local/bin/linio %h/notes
 Restart=always
-WorkingDirectory=%h/zettles
+WorkingDirectory=%h/notes
 Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin
 
 [Install]
@@ -149,8 +150,8 @@ WantedBy=default.target
 
     <key>ProgramArguments</key>
     <array>
-        <string>/Users/axcelott/.local/bin/linio</string>
-        <string>/Users/axcelott/zettles</string>
+        <string>/Users/username/.local/bin/linio</string>
+        <string>/Users/username/notes</string>
     </array>
 
     <key>KeepAlive</key>
@@ -160,10 +161,10 @@ WantedBy=default.target
     <true/>
 
     <key>StandardOutPath</key>
-    <string>/Users/axcelott/Library/Logs/linio.out.log</string>
+    <string>/Users/username/Library/Logs/linio.out.log</string>
 
     <key>StandardErrorPath</key>
-    <string>/Users/axcelott/Library/Logs/linio.err.log</string>
+    <string>/Users/username/Library/Logs/linio.err.log</string>
 </dict>
 </plist>
 ```
