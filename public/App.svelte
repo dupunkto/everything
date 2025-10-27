@@ -7,6 +7,7 @@
   import ToDo from "./routes/ToDo.svelte";
   import Backlog from "./routes/Backlog.svelte";
   import Shelves from "./routes/Shelves.svelte";
+  import Notes from "./routes/Notes.svelte";
   import Search from "./routes/Search.svelte";
   import Wishlist from "./routes/Wishlist.svelte";
   import New from "./routes/New.svelte";
@@ -40,6 +41,7 @@
       'n': () => navigate('/New?autofocus=1'),
       '1': () => navigate('/Imbox'),
       '2': () => navigate('/ToDo'),
+      '3': () => navigate('/Notes'),
       '4': () => navigate('/Wishlist')
     };
 
@@ -180,6 +182,9 @@
       <li><a href={u`/ToDo`}>
         ToDo
       </a></li>
+      <li><a href={u`/Notes`}>
+        Notes
+      </a></li>
       <li><a href={u`/Wishlist`}>
         Wishlist
       </a></li>
@@ -195,6 +200,7 @@
       { component: ToDo, path: "/ToDo" },
       { component: Backlog, path: "/Backlog" },
       { component: Shelves, path: "/Shelves" },
+      { component: Notes, path: "/Notes" },
       { component: Search, path: "/Search" },
       { component: Wishlist, path: "/Wishlist" },
       { component: New, path: "/New" },
