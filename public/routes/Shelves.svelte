@@ -129,7 +129,7 @@
 
       {#each tasks[list] as note}
         <Item {note}
-          from="/Backlog"
+          from="/Shelves"
           opened={note.id == selected}
           onclick={() => selectNote(note)}
           hide_list={true}
