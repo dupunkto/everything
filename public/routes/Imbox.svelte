@@ -11,6 +11,8 @@
 
   const now = new Date();
   const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
   const oneWeekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
   const oneMonthFromNow = new Date(now.getTime() + 31 * 24 * 60 * 60 * 1000);
 
@@ -30,12 +32,27 @@
       .slice(0, 7);
   });
 
+  const today = $derived.by(() => {
+    return notes
+      .filter(note =>
+        note.task?.status === 'todo' &&
+        note.task.deadline &&
+        new Date(note.task.deadline) >= startOfToday &&
+        new Date(note.task.deadline) < endOfToday
+      )
+      .sort((a, b) => {
+        const aDate = new Date(a.task!.deadline!).getTime();
+        const bDate = new Date(b.task!.deadline!).getTime();
+        return aDate - bDate;
+      });
+  });
+
   const thisWeek = $derived.by(() => {
     return notes
-      .filter(note => 
-        note.task?.status === 'todo' && 
+      .filter(note =>
+        note.task?.status === 'todo' &&
         note.task.deadline &&
-        new Date(note.task.deadline) >= now && 
+        new Date(note.task.deadline) >= endOfToday &&
         new Date(note.task.deadline) <= oneWeekFromNow
       )
       .sort((a, b) => {
@@ -67,10 +84,10 @@
 
   const overdue = $derived.by(() => {
     return notes
-      .filter(note => 
-        note.task?.status === 'todo' && 
+      .filter(note =>
+        note.task?.status === 'todo' &&
         note.task.deadline &&
-        new Date(note.task.deadline) < now
+        new Date(note.task.deadline) < startOfToday
       )
       .sort((a, b) => {
         const aDate = new Date(a.task!.deadline!).getTime();
@@ -79,7 +96,7 @@
       });
   });
 
-  const listClasses = ['this-week', 'this-month', 'recents'];
+  const listClasses = ['today', 'this-week', 'this-month'];
 </script>
 
 <style>
@@ -146,45 +163,52 @@
 </header>
 
 <div class="imbox" use:keyboardNavigation={{ listClasses }}>
-  {#if thisWeek.length > 0}
-    <section class="this-week">
-      <h2>
-        This week
-        {#if overdue.length > 0}
-          <small>({overdue.length} overdue)</small>
-        {/if}
-      </h2>
-      {#each overdue as note}
-        <Item {note}
-          from="/Imbox"
-          opened={note.id == selected}
-          onclick={() => selectNote(note)}
-          style="color: var(--color-text-error)"
-        />
-      {/each}
-      {#each thisWeek as note}
-        <Item {note}
-          from="/Imbox"
-          opened={note.id == selected}
-          onclick={() => selectNote(note)}
-        />
-      {/each}
-    </section>
-  {/if}
-
-  {#if thisMonth.items.length > 0}
-    <section class="this-month">
-      <h2>This month</h2>
-      {#each thisMonth.items as note}
-        <Item {note}
-          from="/Imbox"
-          opened={note.id == selected}
-          onclick={() => selectNote(note)}
-        />
-      {/each}
-      {#if thisMonth.total > 15}
-        <div class="count">+ {thisMonth.total - 15} more</div>
+  <section class="today">
+    <h2>
+      Today
+      {#if overdue.length > 0}
+        <small>({overdue.length} overdue)</small>
       {/if}
-    </section>
-  {/if}
+    </h2>
+    {#each overdue as note}
+      <Item {note}
+        from="/Imbox"
+        opened={note.id == selected}
+        onclick={() => selectNote(note)}
+        style="color: var(--color-text-error)"
+      />
+    {/each}
+    {#each today as note}
+      <Item {note}
+        from="/Imbox"
+        opened={note.id == selected}
+        onclick={() => selectNote(note)}
+      />
+    {/each}
+  </section>
+  
+  <section class="this-week">
+    <h2>This week</h2>
+    {#each thisWeek as note}
+      <Item {note}
+        from="/Imbox"
+        opened={note.id == selected}
+        onclick={() => selectNote(note)}
+      />
+    {/each}
+  </section>
+
+  <section class="this-month">
+    <h2>This month</h2>
+    {#each thisMonth.items as note}
+      <Item {note}
+        from="/Imbox"
+        opened={note.id == selected}
+        onclick={() => selectNote(note)}
+      />
+    {/each}
+    {#if thisMonth.total > 15}
+      <div class="count">+ {thisMonth.total - 15} more</div>
+    {/if}
+  </section>
 </div>
