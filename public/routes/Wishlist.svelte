@@ -8,9 +8,10 @@
   let notes: Note[] = $state(await listNotes());
 
   let view_bought = $state(false);
+  let view_shelved = $state(false);
 
   const isVisible = (note: Note) => {
-    return note.wish?.status != 'bought' || view_bought;
+    return (note.wish?.status != 'bought' || view_bought) && (!note.wish?.shelved_at || view_shelved);
   };
 
   let filteredNotes = $derived.by((): Note[] => {
@@ -77,6 +78,10 @@
   <header>
     <h1>Wishlist</h1>
     <div class="actions">
+      <button onclick={() => view_shelved = !view_shelved}>
+        <i class="{view_shelved ? "fas" : "far"} fa-eye-slash"></i>
+        {view_shelved ? "Hide shelved" : "Show shelved"}
+      </button>
       <button onclick={() => view_bought = !view_bought}>
         <i class="{view_bought ? "fas" : "far"} fa-eye-slash"></i>
         {view_bought ? "Hide bought" : "Show bought"}
