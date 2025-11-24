@@ -13,13 +13,15 @@
   import New from "./routes/New.svelte";
   import Note from "./routes/Note.svelte";
   import Tag from "./routes/Tag.svelte";
-  import Scratchpad from "./routes/Scratchpad.svelte";
+  import Scratchpad from "./components/Scratchpad.svelte";
 
   import { listNotes, getConfig } from "../linio/api";
   import { randomOf } from "../linio/arrays";
   import { u, navigate} from "../linio/navigation";
 
   import confetti from "canvas-confetti";
+
+  let scratchpadVisible = $state(false);
 
   async function lucky() {
     const notes = (await listNotes()).filter(n => {
@@ -30,13 +32,19 @@
   }
 
   function handleWindowKey(e: KeyboardEvent) {
+    if ((e.ctrlKey || e.metaKey) && e.keyCode == 192) {
+      e.preventDefault();
+      scratchpadVisible = !scratchpadVisible;
+      return;
+    }
+
     const isEditable = (element: Element | null) =>
       (element as HTMLElement)?.isContentEditable ||
       element?.tagName == 'INPUT' ||
       element?.tagName == 'TEXTAREA';
 
     if(isEditable(document.activeElement)) return;
-    
+
     const shortcuts = {
       '/': () => navigate('/Search?autofocus=1'),
       'n': () => navigate('/New?autofocus=1'),
@@ -205,7 +213,6 @@
       { component: Search, path: "/Search" },
       { component: Wishlist, path: "/Wishlist" },
       { component: New, path: "/New" },
-      { component: Scratchpad, path: "/Scratchpad" },
       { component: Tag, path: "/Tag" },
       { component: Note, path: "(?<id>[0-9A-Z]{5})"}
     ]} />
@@ -222,3 +229,5 @@
     a <a href="//dupunkto.org">&lbrace;du&rbrace;punkto</a> project.
   </p>
 </footer>
+
+<Scratchpad bind:visible={scratchpadVisible} />
