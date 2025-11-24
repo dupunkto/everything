@@ -13,6 +13,7 @@
   import New from "./routes/New.svelte";
   import Note from "./routes/Note.svelte";
   import Tag from "./routes/Tag.svelte";
+  import Scratchpad from "./routes/Scratchpad.svelte";
 
   import { listNotes, getConfig } from "../linio/api";
   import { randomOf } from "../linio/arrays";
@@ -204,6 +205,7 @@
       { component: Search, path: "/Search" },
       { component: Wishlist, path: "/Wishlist" },
       { component: New, path: "/New" },
+      { component: Scratchpad, path: "/Scratchpad" },
       { component: Tag, path: "/Tag" },
       { component: Note, path: "(?<id>[0-9A-Z]{5})"}
     ]} />

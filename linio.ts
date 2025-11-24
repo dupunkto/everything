@@ -81,6 +81,11 @@ const server = serve({
       GET: getNote,
       PUT: updateNote,
       DELETE: deleteNote,
+    },
+
+    "/api/scratchpad": {
+      GET: getScratchpad,
+      PUT: updateScratchpad,
     }
   }
 });
@@ -160,6 +165,17 @@ async function deleteNote(req: BunRequest) {
   return Response.json(await removeNote(humid));
 }
 
+async function getScratchpad(req: BunRequest) {
+  const content = await fetchScratchpad();
+  return new Response(content, { headers: { 'Content-Type': 'text/plain' } });
+}
+
+async function updateScratchpad(req: BunRequest) {
+  const body = await req.text();
+  await putScratchpad(body);
+  return new Response('OK');
+}
+
 function sendError(status: number, error: string) {
   return new Response(JSON.stringify({ error }), {
     status, headers: {'Content-Type': 'application/json'}
@@ -231,6 +247,22 @@ async function removeNote(humid: string): Promise<Note> {
   if (config.git) commitAndPush(`removed ${humid}`);
 
   return note;
+}
+
+async function fetchScratchpad(): Promise<string> {
+  const path = join(ROOT, 'scratchpad.md');
+  const file = Bun.file(path);
+
+  if (!await file.exists()) return '';
+
+  return await file.text();
+}
+
+async function putScratchpad(content: string): Promise<void> {
+  const path = join(ROOT, 'scratchpad.md');
+  await Bun.write(path, content);
+
+  if (config.git) commitAndPush('updated scratchpad');
 }
 
 // Git helpers

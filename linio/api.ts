@@ -106,3 +106,15 @@ export function updateNote(note: Note, md: string): Promise<Note> {
 export async function deleteNote(note: Note): Promise<void> {
   await fetch(`/api/note/${note.id}`, { method: "DELETE" });
 }
+
+export async function fetchScratchpad(): Promise<string> {
+  const response = await fetch("/api/scratchpad");
+  return await response.text();
+}
+
+export async function updateScratchpad(content: string): Promise<void> {
+  await fetch("/api/scratchpad", {
+    method: "PUT",
+    body: content
+  });
+}
