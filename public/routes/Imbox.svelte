@@ -12,7 +12,7 @@
   const now = new Date();
   const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  const endOfTomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2);
   const oneWeekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
   const oneMonthFromNow = new Date(now.getTime() + 31 * 24 * 60 * 60 * 1000);
 
@@ -38,7 +38,7 @@
         note.task?.status === 'todo' &&
         note.task.deadline &&
         new Date(note.task.deadline) >= startOfToday &&
-        new Date(note.task.deadline) < endOfToday
+        new Date(note.task.deadline) < endOfTomorrow
       )
       .sort((a, b) => {
         const aDate = new Date(a.task!.deadline!).getTime();
@@ -52,7 +52,7 @@
       .filter(note =>
         note.task?.status === 'todo' &&
         note.task.deadline &&
-        new Date(note.task.deadline) >= endOfToday &&
+        new Date(note.task.deadline) >= endOfTomorrow &&
         new Date(note.task.deadline) <= oneWeekFromNow
       )
       .sort((a, b) => {
