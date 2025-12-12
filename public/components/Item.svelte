@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { completeNote, setStatus } from "../../linio/api";
+  import { completeNote, setStatus, deleteNote } from "../../linio/api";
   import { navigate } from "../../linio/navigation";
 
   let { note, opened, onclick, from, ...props } = $props();
@@ -60,10 +60,29 @@
       return;
     }
 
+    if(e.key == 'd' && (opened || focused)) {
+      e.preventDefault();
+      if (!confirm('Are you sure?')) return;
+
+      deleteNote(note).then(() =>
+        (e.target as HTMLElement).closest('section')!.remove());
+
+      return;
+    }
+
     if (['Enter', ' '].includes(e.key) && focused) {
       e.preventDefault();
       onclick(e);
     }
+  }
+
+  async function handleDelete() {
+    
+
+    
+    
+    
+
   }
 </script>
 
