@@ -16,6 +16,7 @@ const { values, positionals } = parseArgs({
     h: { type: 'boolean' },
     m: { type: 'boolean' },
     b: { type: 'boolean' },
+    port: { type: 'string' },
     home: { type: 'string' }
   },
   allowPositionals: true,
@@ -60,7 +61,7 @@ const config: Config = {
 import app from "./public/index.html";
 
 const server = serve({
-  port: PORT,
+  port: values.port || PORT,
   hostname: "linio",
   development: DEV,
   routes: {
