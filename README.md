@@ -31,6 +31,14 @@ This will built a standalone executable to `a.out`. The `Bakefile` provides a fe
 | `--git`                            | Enable experimental git integration.                                            |
 | `--homepage=/page`                 | Redirect the homepage to a specific page (e.g., `/ToDo`, `/Search`, `/Imbox`).  |
 
+### Troubleshooting
+
+If you get 'port already in use' errors, add `linio` to your hostfile:
+
+```
+127.0.0.1 linio
+```
+
 ## Storage conventions
 
 Notes are stored as top-level plain-text files. Each filename is a unique 5-character ID like `ABC12.txt` (called a HumID).
