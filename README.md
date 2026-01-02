@@ -31,14 +31,6 @@ This will built a standalone executable to `a.out`. The `Bakefile` provides a fe
 | `--git`                            | Enable experimental git integration.                                            |
 | `--homepage=/page`                 | Redirect the homepage to a specific page (e.g., `/ToDo`, `/Search`, `/Imbox`).  |
 
-### Troubleshooting
-
-If you get 'port already in use' errors, add `linio` to your hostfile:
-
-```
-127.0.0.1 linio
-```
-
 ## Storage conventions
 
 Notes are stored as top-level plain-text files. Each filename is a unique 5-character ID like `ABC12.txt` (called a HumID).
@@ -190,4 +182,12 @@ To disable:
 
 ```shell
 launchctl bootout gui/$(id -u)/org.dupunkto.linio      
+```
+
+### Troubleshooting
+
+On Arch Linux specifically (but other Linux distros might be affected as well), the OS will not allow the Bun server to start on hostname `linio`, if that hostname is not aliased to `localhost`, resulting in a (perhaps quite peculiar) error message of 'port already in use'. To fix this, add `linio` to your `/etc/hosts`:
+
+```
+127.0.0.1 linio
 ```
