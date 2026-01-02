@@ -40,15 +40,16 @@ export function completeNote(note: Note, checked: boolean): Promise<Note> {
   return Promise.resolve(note);
 }
 
-export async function setStatus(note: Note, status: string): Promise<Note> {
+export async function setStatus(note: Note, status: string, reason?: string): Promise<Note> {
   if (note.task) {
-    if (!['todo', 'backlog', 'done', 'nvm'].includes(status)) return note;
+    if (!['todo', 'backlog', 'blocked', 'done', 'nvm'].includes(status)) return note;
 
-    let md = note.raw.replaceAll(/^(BACKLOG|DONE|NVM).*$(\r?\n)?/gim, '');
+    let md = note.raw.replaceAll(/^(BACKLOG|BLOCKED|DONE|NVM).*$(\r?\n)?/gim, '');
 
     if (note.task.status != status) {
       if (status == 'nvm') md = insert(md, `NVM @ ${formatDate(new Date())}`);
       else if (status == 'backlog') md = insert(md, 'BACKLOG');
+      else if (status == 'blocked') md = insert(md, reason ? `BLOCKED ${reason}` : 'BLOCKED');
       else if (status == 'done') md = insert(md, `DONE @ ${formatDate(new Date())}`);
     }
 

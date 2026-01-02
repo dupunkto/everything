@@ -16,6 +16,7 @@
   const isVisible = (note: Note) => {
     if(!note.task) return false;
     else return note.task.status == 'todo'
+      || note.task.status == 'blocked'
       || (note.task.status == 'done' && view_completed)
   }
 
@@ -44,7 +45,7 @@
       tasks[list].sort((a: Note, b: Note) => {
         if(!a.task || !b.task) return 0;
 
-        const statuses = ['todo', 'backlog', 'done', 'nvm'];
+        const statuses = ['todo', 'blocked', 'backlog', 'done', 'nvm'];
         const diff = statuses.indexOf(a.task.status) - statuses.indexOf(b.task.status);
 
         if (diff != 0) return diff;

@@ -133,6 +133,12 @@
             modifiers += '\nBACKLOG';
             break;
 
+          case 'blocked':
+            const blocked_by = data.get('blocked_by') as string;
+            modifiers += '\nBLOCKED';
+            if(blocked_by) modifiers += ` ${blocked_by}`;
+            break;
+
           case 'done':
             modifiers += '\nDONE';
             if(completed_at) modifiers += ` @ ${normalizeDate(completed_at)}`;
@@ -185,6 +191,7 @@
         const status = data.get('status') as string;
         const completed_at = data.get('completed_at') as string;
         const shelved_at = data.get('shelved_at') as string;
+        const blocked_by = data.get('blocked_by') as string;
 
         if(recurrence) {
           headers.push(`Task-Recurrence: ${recurrence}`);
@@ -195,6 +202,7 @@
         if(list && list != 'all') headers.push(`Task-List: ${list}`);
         if(completed_at) headers.push(`Task-Completed: ${normalizeDate(completed_at)}`);
         if(shelved_at) headers.push(`Task-Shelved: ${normalizeDate(shelved_at)}`);
+        if(blocked_by) headers.push(`Task-Blocked-By: ${blocked_by}`);
       }
 
       if(isWish && config.format == 'headers') {
@@ -407,6 +415,24 @@
   textarea {
     border: none;
   }
+
+  .note:has(.blocked-reason) article {
+    background: #fffbe6;
+  }
+
+  .blocked-reason {
+    font-size: 1.2em;
+    background: #fde68a;
+    color: #1d0b01;
+    padding: 10px 15px;
+    margin: 0 -17px;
+  }
+
+  .blocked-reason::before {
+    content: "[BLOCKED]";
+    font-weight: bolder;
+    margin-right: 0.25em;
+  }
 </style>
 
 {#if note}
@@ -416,7 +442,7 @@
         <input
           type="checkbox"
           class="checkbox"
-          checked={(note.task?.status && !['todo', 'backlog'].includes(note.task.status)) || (note.wish?.status == 'bought')}
+          checked={(note.task?.status && !['todo', 'backlog', 'blocked'].includes(note.task.status)) || (note.wish?.status == 'bought')}
           disabled={(note.task?.status == 'nvm') || (note.wish?.status == 'nvm') || mode == 'edit'}
           onclick={(e) => handleClick(e)}
         />
@@ -507,6 +533,7 @@
                           <option selected={note.task?.status == 'backlog'}>backlog</option>
                         {/if}
                         <option selected={note.task?.status == 'todo'}>todo</option>
+                        <option selected={note.task?.status == 'blocked'}>blocked</option>
                         <option selected={note.task?.status == 'done'}>done</option>
                         <option selected={note.task?.status == 'nvm'}>nvm</option>
                       </select>
@@ -520,6 +547,16 @@
                           value={note.task.recurrence}
                           min="1"
                           placeholder="7"
+                        />
+                      </td>
+                    {:else if taskStatus == 'blocked'}
+                      <td><label for="blocked_by">by</label></td>
+                      <td>
+                        <input
+                          type="text"
+                          name="blocked_by"
+                          value={note.task?.blocked_by || ''}
+                          placeholder="reason"
                         />
                       </td>
                     {:else}
@@ -579,6 +616,12 @@
         <div class="contents">
           {#if note.title}
             <h1>{@html note.title} <span class="id">#{note.id}</span></h1>
+          {/if}
+
+          {#if note.task?.blocked_by}
+            <p class="blocked-reason">
+              {note.task.blocked_by}
+            </p>
           {/if}
 
           {@html note.html}

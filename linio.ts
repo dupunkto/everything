@@ -27,12 +27,13 @@ const ROOT = positionals[2] || process.cwd();
 // Default in case the CLI argument is omitted.
 const LISTS = ["all", "university", "life", "projects", "maakotheek", "qdentity", "dupunkto"];
 
-const TODOS = ['EVERY', 'TODO', 'BACKLOG', 'DONE', 'NVM'];
+const TODOS = ['EVERY', 'TODO', 'BACKLOG', 'BLOCKED', 'DONE', 'NVM'];
 const WISHES = ['WISH', 'BOUGHT', 'NVM'];
 
 const HUMID_PATTERN = /#([A-Z0-9]{5})/g;
 const TAG_PATTERN = /\[\[([^\]]+)\]\]/g;
 const TODO_PATTERN = /^(TODO|BACKLOG|DONE|NVM)(?:\s+@\s*(\d{4}(?:-\d{1,2})?(?:-\d{1,2})?))?(?:\s+~(\S+))?$/i;
+const BLOCKED_PATTERN = /^BLOCKED(?:\s+(.+))?$/i;
 const EVERY_PATTERN = /^(EVERY)\s+(\d+)(?:\s+~(\S+))?$/i;
 const WISH_PATTERN = /^(WISH|BOUGHT|NVM)(?:\s+@\s*(\d{4}(?:-\d{1,2})?(?:-\d{1,2})?))?$/i;
 const HEADER_PATTERN = /^([A-Za-z-]+):\s+(.*)$/;
@@ -448,9 +449,13 @@ function populateNoteFromHeaders(note: Note, headers: Record<string, string>) {
 function populateTaskFromHeader(task: Task, field: string, value: string) {
   switch (field.toLowerCase()) {
     case 'status':
-      if (['todo', 'backlog', 'done', 'nvm'].includes(value)) {
+      if (['todo', 'backlog', 'blocked', 'done', 'nvm'].includes(value)) {
         task.status = value as Task['status'];
       }
+      break;
+
+    case 'blocked-by':
+      task.blocked_by = value;
       break;
 
     case 'deadline':
@@ -586,6 +591,17 @@ function parseTask(lines: string[]): Task | null {
       case 'nvm':
         if (param) task.shelved_at = param;
         break;
+    }
+  }
+
+  // This is a different pattern. Y'know, to keep life easy.
+  const blockedLine = lines.find(line => line.match(BLOCKED_PATTERN));
+
+  if (blockedLine) {
+    const match = blockedLine.match(BLOCKED_PATTERN);
+    if (match) {
+      task.status = 'blocked';
+      if (match[1]) task.blocked_by = match[1].trim();
     }
   }
 

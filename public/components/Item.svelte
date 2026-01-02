@@ -60,6 +60,13 @@
       return;
     }
 
+    if(e.key == 'x' && (opened || focused)) {
+      e.preventDefault();
+      const reason = prompt('Why is this task blocked? (or hit enter)');
+      setStatus(note, 'blocked', reason || undefined).then(updated => note = updated);
+      return;
+    }
+
     if(e.key == 'd' && (opened || focused)) {
       e.preventDefault();
       if (!confirm('Are you sure?')) return;
@@ -133,6 +140,10 @@
     text-decoration: line-through;
   }
 
+  .item-blocked, .open:has(.item-blocked) {
+    background: #fffbe6;
+  }
+
   .title {
     margin: 0;
     display: flex;
@@ -183,10 +194,17 @@
   .bought::before { content: "Bought at "; }
   .shelved::before { content: "Shelved at "; }
 
-  .due, .completed, .bought, .shelved {
+  .due, .completed, .bought, .shelved, .blocked {
     background: var(--color-black);
     color: var(--color-white);
     text-transform: lowercase;
+  }
+
+  .blocked {
+    text-transform: uppercase;
+    color: #1d0b01;
+    background: #fde68a;
+    font-weight: bolder;
   }
 
   footer {
@@ -198,7 +216,8 @@
   }
 
   footer time,
-  footer button {
+  footer button,
+  .blocked {
     padding: 0.25em 0.5em;
     border-top-left-radius: calc(var(--radius) / 2);
     border-top-right-radius: calc(var(--radius) / 2);
@@ -239,7 +258,7 @@
         <input
           type="checkbox"
           class="checkbox"
-          checked={(note.task?.status && !['todo', 'backlog'].includes(note.task.status)) || (note.wish?.status == 'bought')}
+          checked={(note.task?.status && !['todo', 'backlog', 'blocked'].includes(note.task.status)) || (note.wish?.status == 'bought')}
           disabled={(note.task?.status == 'nvm') || (note.wish?.status == 'nvm')}
           onclick={(e) => handleClick(e)}
         >
@@ -296,6 +315,9 @@
           {/if}
           {#if note.task.completed_at}
             <time class="completed">{note.task.completed_at}</time>
+          {/if}
+          {#if note.task.blocked_by}
+            <span class="blocked">[BLOCKED]</span>
           {/if}
         {/if}
         {#if note.wish}

@@ -23,11 +23,12 @@ export interface Note {
 }
 
 export interface Task {
-  status: 'todo' | 'backlog' | 'done' | 'nvm',
+  status: 'todo' | 'backlog' | 'blocked' | 'done' | 'nvm',
   deadline?: string,
   list?: string,
   completed_at?: string,
   shelved_at?: string,
+  blocked_by?: string,
   recurrence?: number
 }
 
