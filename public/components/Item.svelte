@@ -142,6 +142,7 @@
 
   .item-blocked, .open:has(.item-blocked) {
     background: #fffbe6;
+    color: #1d0b01;
   }
 
   .title {

@@ -418,6 +418,7 @@
 
   .note:has(.blocked-reason) article {
     background: #fffbe6;
+    color: #1d0b01;
   }
 
   .blocked-reason {
