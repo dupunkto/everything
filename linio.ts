@@ -27,7 +27,7 @@ const ROOT = positionals[2] || process.cwd();
 // Default in case the CLI argument is omitted.
 const LISTS = ["all", "university", "life", "projects", "maakotheek", "qdentity", "dupunkto"];
 
-const TODOS = ['EVERY', 'TODO', 'BACKLOG', 'BLOCKED', 'DONE', 'NVM'];
+const TODOS = ['EVERY', 'TODO', 'BACKLOG', 'BLOCKED', 'DONE', 'NVM', 'URGENT'];
 const WISHES = ['WISH', 'BOUGHT', 'NVM'];
 
 const HUMID_PATTERN = /#([A-Z0-9]{5})/g;
@@ -478,7 +478,10 @@ function populateTaskFromHeader(task: Task, field: string, value: string) {
       task.status = 'todo';
       task.recurrence = parseInt(value);
       task = setEffectiveStatus(task);
+      break;
 
+    case 'urgent':
+      task.urgent = value.toLowerCase() == 'true';
       break;
   }
 }
@@ -604,6 +607,10 @@ function parseTask(lines: string[]): Task | null {
       if (match[1]) task.blocked_by = match[1].trim();
     }
   }
+
+  // This too.
+  const urgentLine = lines.find(line => line.trim().toUpperCase() == 'URGENT');
+  if (urgentLine) task.urgent = true;
 
   return task.recurrence ? setEffectiveStatus(task) : task;
 }

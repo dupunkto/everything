@@ -173,6 +173,11 @@
     color: transparent;
   }
 
+  .urgent {
+    color: #dc2626;
+    margin: 0 0.5em;
+  }
+
   .contents {
     padding: 0 0.8em;
   }
@@ -289,6 +294,10 @@
         <code class="type">recurring</code>
       {:else if note.type != 'note' && note.type != 'task'}
         <code class="type">{note.type}</code>
+      {/if}
+
+      {#if note.task?.urgent}
+        <i class="fas fa-exclamation urgent"></i>
       {/if}
       
       {#if note.task?.list && !props.hide_list}

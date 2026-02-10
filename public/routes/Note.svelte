@@ -122,6 +122,7 @@
         const completed_at = data.get('completed_at') as string;
         const shelved_at = data.get('shelved_at') as string;
         const recurrence = data.get('recurrence') as string;
+        const urgent = data.get('urgent') == 'on';
 
         let modifiers = recurrence ? `EVERY ${recurrence}` : 'TODO';
 
@@ -149,6 +150,8 @@
             if(shelved_at) modifiers += ` @ ${normalizeDate(shelved_at)}`;
             break;
         }
+
+        if(urgent) modifiers += '\nURGENT';
 
         md = `${modifiers}\n${md}`;
       }
@@ -192,6 +195,7 @@
         const completed_at = data.get('completed_at') as string;
         const shelved_at = data.get('shelved_at') as string;
         const blocked_by = data.get('blocked_by') as string;
+        const urgent = data.get('urgent') == 'on';
 
         if(recurrence) {
           headers.push(`Task-Recurrence: ${recurrence}`);
@@ -203,6 +207,7 @@
         if(completed_at) headers.push(`Task-Completed: ${normalizeDate(completed_at)}`);
         if(shelved_at) headers.push(`Task-Shelved: ${normalizeDate(shelved_at)}`);
         if(blocked_by) headers.push(`Task-Blocked-By: ${blocked_by}`);
+        if(urgent) headers.push(`Task-Urgent: true`);
       }
 
       if(isWish && config.format == 'headers') {
@@ -570,6 +575,16 @@
                         />
                       </td>
                     {/if}
+                  </tr>
+                  <tr>
+                    <td><label for="urgent">urgent</label></td>
+                    <td>
+                      <input
+                        type="checkbox"
+                        name="urgent"
+                        checked={note.task?.urgent}
+                      />
+                    </td>
                   </tr>
                 {/if}
               </tbody>

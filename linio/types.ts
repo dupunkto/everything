@@ -29,7 +29,8 @@ export interface Task {
   completed_at?: string,
   shelved_at?: string,
   blocked_by?: string,
-  recurrence?: number
+  recurrence?: number,
+  urgent?: boolean
 }
 
 export interface Wish {
