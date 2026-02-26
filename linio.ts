@@ -208,8 +208,11 @@ async function fetchNote(humid: string, v = new Set()): Promise<Note | null> {
   const stat = await file.stat();
   const cachedMod = fileStats.get(humid);
   
-  if (noteCache.has(humid) && cachedMod == stat.mtime.getTime())
-    return noteCache.get(humid)!;
+  if (noteCache.has(humid) && cachedMod == stat.mtime.getTime()) {
+    const note = noteCache.get(humid)!;
+    if (note.task?.recurrence) setEffectiveStatus(note.task);
+    return note;
+  }
 
   const content = await file.text(); v.add(humid);
   const note = await parseNote(humid, content, stat, v);
