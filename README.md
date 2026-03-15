@@ -129,7 +129,7 @@ Description=Linio
 After=network.target
 
 [Service]
-ExecStart=%h/.local/bin/linio %h/notes
+ExecStart=%h/.local/bin/linio --git %h/notes
 Restart=always
 WorkingDirectory=%h/notes
 Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin
@@ -151,6 +151,7 @@ WantedBy=default.target
     <key>ProgramArguments</key>
     <array>
         <string>/Users/username/.local/bin/linio</string>
+        <string>--git</string>
         <string>/Users/username/notes</string>
     </array>
 
@@ -174,14 +175,14 @@ WantedBy=default.target
 To enable:
 
 ```shell
-launchctl bootstrap gui/$(id -u) ~/library/LaunchAgents/org.dupunkto.linio.plist   
-launchctl enable gui/$(id -u)/org.dupunkto.linio      
+launchctl bootstrap gui/$(id -u) ~/library/LaunchAgents/org.dupunkto.linio.plist
+launchctl enable gui/$(id -u)/org.dupunkto.linio
 ```
 
 To disable:
 
 ```shell
-launchctl bootout gui/$(id -u)/org.dupunkto.linio      
+launchctl bootout gui/$(id -u)/org.dupunkto.linio
 ```
 
 ### Troubleshooting
