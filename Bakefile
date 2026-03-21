@@ -5,9 +5,16 @@ OUT=a.out
 
 export DIST=dist
 export PUBLIC=public
+export VENDOR=public/vendor
 
 setup() {
   bun i
+  vendor
+}
+
+vendor() {
+  mkdir -p $VENDOR
+  curl -sLo $VENDOR/reset.css https://cdn.geheimesite.nl/reset.css
 }
 
 serve() {
@@ -29,7 +36,6 @@ clean() {
   rm -rf dist/*
   rm -rf $OUT
 }
-
 
 reinstall() {
   local ID=org.dupunkto.linio

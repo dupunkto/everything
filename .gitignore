@@ -177,3 +177,6 @@ a.out
 
 # Finder (MacOS) folder config
 .DS_Store
+
+# Downloaded vendor assets
+public/vendor
