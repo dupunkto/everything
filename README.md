@@ -189,6 +189,12 @@ launchctl bootout gui/$(id -u)/org.dupunkto.linio
 
 On Arch Linux specifically (but other Linux distros might be affected as well), the OS will not allow the Bun server to start on hostname `linio`, if that hostname is not aliased to `localhost`, resulting in a (perhaps quite peculiar) error message of 'port already in use'. To fix this, add `linio` to your `/etc/hosts`:
 
-```
+```hosts
 127.0.0.1 linio
+```
+
+Another common issue is Git not working properly when Linio runs as daemon, due to pinentry issues. This can be resolved by disabling GPG signing on the notes repo:
+
+```shell
+git config commit.gpgsign false
 ```
