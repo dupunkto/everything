@@ -17,7 +17,8 @@ const { values, positionals } = parseArgs({
     m: { type: 'boolean' },
     b: { type: 'boolean' },
     port: { type: 'string' },
-    home: { type: 'string' }
+    home: { type: 'string' },
+    hostname: { type: 'string' }
   },
   allowPositionals: true,
 });
@@ -63,7 +64,7 @@ import app from "./public/index.html";
 
 const server = serve({
   port: values.port || PORT,
-  hostname: "linio",
+  hostname: values.hostname || "linio",
   development: DEV,
   routes: {
     "/": app,
