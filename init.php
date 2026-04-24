@@ -1,0 +1,12 @@
+<?php
+// The contents of this file will be evaluated just
+// before the Core API loads, on every request.
+
+if(!defined('PHP_VERSION_ID') or PHP_VERSION_ID < 80000) {
+  die("The minimum required PHP version is 8.0. Please upgrade your PHP installation to continue.");
+}
+
+// Error for mismatches between CANONICAL and FORCE_HTTPS.
+if(FORCE_HTTPS and str_starts_with(CANONICAL, "http://")) {
+  die("You've set 'force_https' to true, but the 'canonical' still contains http:// (instead of https://). This can potentially cause mixed content warnings, and messes with the canonical URL of the app!");
+}
