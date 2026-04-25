@@ -139,7 +139,7 @@ if(!defined('INITIAL_RUN')) {
 // and insert seed data when initializing database.
 
 $latest_store_version = STORE_VERSION;
-$current_store_version = version();
+$current_store_version = INITIAL_RUN ? -1 : version();
 
 if($current_store_version > $latest_store_version) {
   die("Mismatched store versions: expected v" . STORE_VERSION . ", 
