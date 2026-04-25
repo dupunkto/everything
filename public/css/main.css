@@ -1,0 +1,24 @@
+@import url("https://cdn.geheimesite.nl/tools.css");
+
+body > header {
+  color: inherit;
+  background: transparent
+}
+
+main.wide {
+  max-width: 100%;
+  margin: 1em;
+}
+
+.row, .col {
+  display: flex;
+  gap: 0.5em;
+}
+
+.col {
+  flex-direction: column;
+}
+
+.empty {
+  opacity: 0.6;
+}

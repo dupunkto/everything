@@ -14,25 +14,39 @@ if(allset($_POST, ['start_date', 'start_time', 'end_date', 'end_time'])) {
 ?>
 <form id="tracker-form" x-post="/tracker/new" x-target="#tracker-listing">
   <textarea name="description" placeholder="What have you been up to?"></textarea>
-  <label>
-    Start
-    <input class="start-date" name="start_date" type="date" value="<?php echo date("Y-m-d"); ?>" />
-    <input class="start-time" name="start_time" type="time" step="1" />
-  </label>
-  <label>
-    End
-    <input name="end_date" type="date" value="<?php echo date("Y-m-d"); ?>" />
-    <input name="end_time" type="time" step="1" />
-  </label>
-  <button type="button" id="tracker-button">Sorry, the tracker could not be loaded.</button>
-  <button type="submit">Save</button>
+  <div class="col">
+    <label>
+      Start
+      <input name="start_date" type="date" value="<?php echo date("Y-m-d"); ?>" />
+      <input name="start_time" type="time" step="1" />
+    </label>
+    <label>
+      End
+      <input name="end_date" type="date" value="<?php echo date("Y-m-d"); ?>" />
+      <input name="end_time" type="time" step="1" />
+    </label>
+  </div>
+  <button type="button" id="tracker-record"">Sorry, the tracker could not be loaded.</button>
+  <button type="submit" id="tracker-submit">Save</button>
 
   <script type="module">
-    const button = document.querySelector("#tracker-button");
+    const button = document.querySelector("#tracker-record");
 
     // Auto-save whatever was typed into the description field in localStorage.
     document.querySelector("[name=description]").addEventListener("input", (e) => {
       localStorage.setItem("description", e.target.value);
+    });
+
+    document.querySelector("#tracker-form").addEventListener("input", (e) => {
+      const inputs = Array.from(e.target.form.querySelectorAll("input"));
+
+      if(inputs.every((input) => input.value)) {
+        document.querySelector("#tracker-record").style.display = "none";
+        document.querySelector("#tracker-submit").style.display = "block";
+      } else {
+        document.querySelector("#tracker-record").style.display = "block";
+        document.querySelector("#tracker-submit").style.display = "none";
+      }
     });
 
     function mountTimer() {
@@ -53,6 +67,7 @@ if(allset($_POST, ['start_date', 'start_time', 'end_date', 'end_time'])) {
 
         document.querySelector("[name=start_date]").valueAsDate = then;
         document.querySelector("[name=start_time]").value = format_time(then);
+        document.querySelector("#tracker-submit").style.display = "none";
 
         button.addEventListener("click", () => {
           button.innerText = "▶";
@@ -60,7 +75,7 @@ if(allset($_POST, ['start_date', 'start_time', 'end_date', 'end_time'])) {
           const now = new Date();
 
           document.querySelector("[name=end_date]").valueAsDate = now;
-          document.querySelector("[name=end_time]").value = format_time(then);
+          document.querySelector("[name=end_time]").value = format_time(now);
 
           // Remove start timings and clear the description on next run.
           localStorage.removeItem("description");
@@ -74,10 +89,12 @@ if(allset($_POST, ['start_date', 'start_time', 'end_date', 'end_time'])) {
       else {
         button.innerText = "▶";
 
-        document.querySelector("[name=start_date]").value = "";
+        document.querySelector("[name=start_date]").valueAsDate = new Date();
         document.querySelector("[name=start_time]").value = "";
-        document.querySelector("[name=end_date]").value = "";
+        document.querySelector("[name=end_date]").valueAsDate = new Date();
         document.querySelector("[name=end_time]").value = "";
+        document.querySelector("#tracker-record").style.display = "block";
+        document.querySelector("#tracker-submit").style.display = "none";
 
         button.addEventListener("click", () => {
           button.innerText = "⏸";

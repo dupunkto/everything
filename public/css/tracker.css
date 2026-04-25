@@ -1,0 +1,58 @@
+#tracker-form {
+  display: grid;
+  grid-template-columns: 1fr 350px 120px;
+  align-items: stretch;
+  /* background: light-dark(#f1f1f1, #2b2b33);
+  padding: 0.75em; */
+}
+
+#tracker-form textarea {
+  min-height: 0;
+  resize: none;
+}
+
+#tracker-form label {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.25em;
+}
+
+#tracker-form button {
+  font-size: 1.5em;
+}
+
+#tracker-listing ul {
+  list-style: none;
+  margin: 1em 0;
+  padding: 0;
+}
+
+#tracker-listing ul li {
+  padding: 0.7em 1em;
+  margin-bottom: 0.25em;
+  background: light-dark(#f1f1f1, #2b2b33);
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  grid-template-areas: "meta duration" "meta duration";
+  align-items: center;
+}
+
+#tracker-listing .description {
+  margin: 0;
+}
+
+#tracker-listing .times {
+  opacity: 0.8;
+  font-size: 0.7em;
+  margin: 0;
+}
+
+#tracker-listing .duration {
+  font-size: 1.5em;
+  font-weight: bold;
+  grid-area: duration;
+  grid-row-start: 1;
+  grid-row-end: 3;
+  text-align: right;
+  margin: 0.25em 1em;
+}
