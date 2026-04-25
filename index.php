@@ -25,6 +25,7 @@ if(!is_https() and FORCE_HTTPS) {
   exit;
 }
 
+if($path == "/") $path = "/index";
 $controller = path_join(__DIR__, "app", "$path.php");
 
 if(file_exists($controller)) {
