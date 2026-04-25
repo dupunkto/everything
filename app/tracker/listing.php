@@ -7,11 +7,11 @@
       <p class="times">
         From
         <time datetime="<?= esc_attr($timing['starts_at']) ?>" local>
-          <?= date("Y-m-d H:i:s", strtotime($timing['starts_at'])) ?> (UCT)
+          <?= gmdate("Y-m-d H:i:s", strtotime($timing['starts_at'])) ?> (UTC)
         </time>
         to
         <time datetime="<?= esc_attr($timing['ends_at']) ?>" local>
-          <?= date("Y-m-d H:i:s", strtotime($timing['ends_at'])) ?> (UCT)
+          <?= gmdate("Y-m-d H:i:s", strtotime($timing['ends_at'])) ?> (UTC)
         </time>
       </p>
       <p class="duration">
