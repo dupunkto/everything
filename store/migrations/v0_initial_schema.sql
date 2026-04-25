@@ -229,10 +229,10 @@ CREATE TABLE IF NOT EXISTS `appointments_tags` (
 
 CREATE TABLE IF NOT EXISTS `timings` (
   `id` text NOT NULL, -- humid
-  `task_id` text NOT NULL,
   `description` text NOT NULL,
   `starts_at` datetime NOT NULL,
   `ends_at` datetime NOT NULL,
+  `task_id` text,
   PRIMARY KEY (`id`)
 );
 

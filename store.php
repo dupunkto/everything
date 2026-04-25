@@ -18,6 +18,30 @@ switch($_DATABASE['scheme']) {
   case 'sqlite': require __DIR__ . "/store/adapter/sqlite.php"; break;
 }
 
+// Tracker
+
+function put_timing($id, $description, $starts_at, $ends_at, $task_id) {
+  if($task_id) get_task($task_id) or die("task with ID $task_id does not exist");
+
+  return exec_query('INSERT INTO `timings` (
+    `id`, 
+    `description`,
+    `starts_at`,
+    `ends_at`,
+    `task_id`
+  ) VALUES (?, ?, ?, ?, ?)', [
+    $id,
+    $description,
+    $starts_at,
+    $ends_at,
+    $task_id
+  ]);
+}
+
+function list_timings() {
+  return all('SELECT * FROM `timings` ORDER BY `starts_at` DESC');
+}
+
 // Configuration
 
 function config() {
