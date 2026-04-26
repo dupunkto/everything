@@ -1,5 +1,3 @@
--- TODO(robin): foreign keys, ON DELETE, XOR constraints, UNIQUE constraints
-
 CREATE TABLE IF NOT EXISTS `migrations` (
   `version` int(11) NOT NULL,
   `executed_at` datetime NOT NULL DEFAULT current_timestamp,
@@ -17,6 +15,7 @@ CREATE TABLE IF NOT EXISTS `tags` (
   `parent_id` int(11),
   `label` text NOT NULL,
   `color` text NOT NULL,
+  FOREIGN KEY (`parent_id`) REFERENCES `tags` (`id`) ON DELETE SET NULL,
   PRIMARY KEY (`id`)
 );
 
@@ -35,6 +34,7 @@ CREATE TABLE IF NOT EXISTS `contacts` (
   `snapchat_handle` text NOT NULL,
   `matrix_handle` text NOT NULL,
   `linkedin_handle` text NOT NULL,
+  UNIQUE (`handle`, `domain`),
   PRIMARY KEY (`id`)
 );
 
@@ -42,6 +42,9 @@ CREATE TABLE IF NOT EXISTS `contacts_tags` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `contact_id` int(11) NOT NULL,
   `tag_id` int(11) NOT NULL,
+  FOREIGN KEY (`contact_id`) REFERENCES `contacts` (`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`tag_id`) REFERENCES `tags` (`id`) ON DELETE CASCADE,
+  UNIQUE (`contact_id`, `tag_id`),
   PRIMARY KEY (`id`)
 );
 
@@ -50,6 +53,7 @@ CREATE TABLE IF NOT EXISTS `contact_orgs` (
   `contact_id` int(11) NOT NULL,
   `name` text NOT NULL,
   `function` text,
+  FOREIGN KEY (`contact_id`) REFERENCES `contacts` (`id`) ON DELETE CASCADE,
   PRIMARY KEY (`id`)
 );
 
@@ -58,6 +62,8 @@ CREATE TABLE IF NOT EXISTS `contact_urls` (
   `contact_id` int(11) NOT NULL,
   `label` text NOT NULL,
   `url` text NOT NULL,
+  FOREIGN KEY (`contact_id`) REFERENCES `contacts` (`id`) ON DELETE CASCADE,
+  UNIQUE (`contact_id`, `url`),
   PRIMARY KEY (`id`)
 );
 
@@ -66,6 +72,8 @@ CREATE TABLE IF NOT EXISTS `contact_emails` (
   `contact_id` int(11) NOT NULL,
   `label` text NOT NULL,
   `email` text NOT NULL,
+  FOREIGN KEY (`contact_id`) REFERENCES `contacts` (`id`) ON DELETE CASCADE,
+  UNIQUE (`contact_id`, `email`),
   PRIMARY KEY (`id`)
 );
 
@@ -74,14 +82,8 @@ CREATE TABLE IF NOT EXISTS `contact_phone_numbers` (
   `contact_id` int(11) NOT NULL,
   `label` text NOT NULL,
   `phone_number` text NOT NULL,
-  PRIMARY KEY (`id`)
-);
-
-CREATE TABLE IF NOT EXISTS `contact_addresses` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `contact_id` int(11) NOT NULL,
-  `label` text NOT NULL,
-  `address_id` int(11) NOT NULL,
+  FOREIGN KEY (`contact_id`) REFERENCES `contacts` (`id`) ON DELETE CASCADE,
+  UNIQUE (`contact_id`, `phone_number`),
   PRIMARY KEY (`id`)
 );
 
@@ -94,6 +96,17 @@ CREATE TABLE IF NOT EXISTS `addresses` (
   `province` text NOT NULL,
   `country` text NOT NULL,
   `timezone` text NOT NULL,
+  PRIMARY KEY (`id`)
+);
+
+CREATE TABLE IF NOT EXISTS `contact_addresses` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `contact_id` int(11) NOT NULL,
+  `label` text NOT NULL,
+  `address_id` int(11) NOT NULL,
+  FOREIGN KEY (`contact_id`) REFERENCES `contacts` (`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`address_id`) REFERENCES `addresses` (`id`) ON DELETE CASCADE,
+  UNIQUE (`contact_id`, `address_id`),
   PRIMARY KEY (`id`)
 );
 
@@ -121,6 +134,9 @@ CREATE TABLE IF NOT EXISTS `tasks_tags` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `task_id` text NOT NULL,
   `tag_id` int(11) NOT NULL,
+  FOREIGN KEY (`task_id`) REFERENCES `tasks` (`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`tag_id`) REFERENCES `tags` (`id`) ON DELETE CASCADE,
+  UNIQUE (`task_id`, `tag_id`),
   PRIMARY KEY (`id`)
 );
 
@@ -130,6 +146,7 @@ CREATE TABLE IF NOT EXISTS `task_log` (
   `date` datetime NOT NULL,
   `status` text NOT NULL, -- str<todo|backlog|blocked|done|nvm>
   `comment` text,
+  FOREIGN KEY (`task_id`) REFERENCES `tasks` (`id`) ON DELETE CASCADE,
   PRIMARY KEY (`id`)
 );
 
@@ -146,6 +163,9 @@ CREATE TABLE IF NOT EXISTS `wishes_tags` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `wish_id` text NOT NULL,
   `tag_id` int(11) NOT NULL,
+  FOREIGN KEY (`wish_id`) REFERENCES `wishes` (`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`tag_id`) REFERENCES `tags` (`id`) ON DELETE CASCADE,
+  UNIQUE (`wish_id`, `tag_id`),
   PRIMARY KEY (`id`)
 );
 
@@ -155,6 +175,7 @@ CREATE TABLE IF NOT EXISTS `wish_log` (
   `date` datetime NOT NULL,
   `status` text NOT NULL, -- str<dream|backlog|bought|nvm>
   `comment` text,
+  FOREIGN KEY (`wish_id`) REFERENCES `wishes` (`id`) ON DELETE CASCADE,
   PRIMARY KEY (`id`)
 );
 
@@ -163,6 +184,8 @@ CREATE TABLE IF NOT EXISTS `wish_urls` (
   `wish_id` text NOT NULL,
   `url` text NOT NULL,
   `price` int(11),
+  FOREIGN KEY (`wish_id`) REFERENCES `wishes` (`id`) ON DELETE CASCADE,
+  UNIQUE (`wish_id`, `url`),
   PRIMARY KEY (`id`)
 );
 
@@ -177,6 +200,8 @@ CREATE TABLE IF NOT EXISTS `habit_log` (
   `id` int(11) NOT NULL,
   `habit_id` text NOT NULL,
   `date` datetime NOT NULL DEFAULT current_timestamp,
+  FOREIGN KEY (`habit_id`) REFERENCES `habits` (`id`) ON DELETE CASCADE,
+  UNIQUE (`habit_id`, `date`),
   PRIMARY KEY (`id`)
 );
 
@@ -201,7 +226,7 @@ CREATE TABLE IF NOT EXISTS `appointments` (
   `id` text NOT NULL, -- humid
   `calendar_id` text,
   `subscription_id` text,
-  `address_id` text NOT NULL,
+  `address_id` int(11),
   `recurrence` text, -- int|cron
   `all_day` boolean NOT NULL DEFAULT false,
   `title` text NOT NULL,
@@ -210,6 +235,11 @@ CREATE TABLE IF NOT EXISTS `appointments` (
   `color` text NOT NULL,
   `starts_at` datetime NOT NULL,
   `ends_at` datetime NOT NULL,
+  FOREIGN KEY (`calendar_id`) REFERENCES `calendar` (`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`subscription_id`) REFERENCES `calendar_subscription` (`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`address_id`) REFERENCES `addresses` (`id`) ON DELETE SET NULL,
+  CHECK ((`calendar_id` IS NULL) <> (`subscription_id` IS NULL)),
+  CHECK (`ends_at` >= `starts_at`),
   PRIMARY KEY (`id`)
 );
 
@@ -217,13 +247,19 @@ CREATE TABLE IF NOT EXISTS `calendars_tags` (
   `id` text NOT NULL, -- humid
   `calendar_id` text NOT NULL,
   `tag_id` int(11) NOT NULL,
+  FOREIGN KEY (`calendar_id`) REFERENCES `calendar` (`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`tag_id`) REFERENCES `tags` (`id`) ON DELETE CASCADE,
+  UNIQUE (`calendar_id`, `tag_id`),
   PRIMARY KEY (`id`)
 );
 
 CREATE TABLE IF NOT EXISTS `appointments_tags` (
   `id` text NOT NULL, -- humid
-  `calendar_id` text NOT NULL,
+  `appointment_id` text NOT NULL,
   `tag_id` int(11) NOT NULL,
+  FOREIGN KEY (`appointment_id`) REFERENCES `appointments` (`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`tag_id`) REFERENCES `tags` (`id`) ON DELETE CASCADE,
+  UNIQUE (`appointment_id`, `tag_id`),
   PRIMARY KEY (`id`)
 );
 
@@ -233,6 +269,8 @@ CREATE TABLE IF NOT EXISTS `timings` (
   `starts_at` datetime NOT NULL,
   `ends_at` datetime NOT NULL,
   `task_id` text,
+  FOREIGN KEY (`task_id`) REFERENCES `tasks` (`id`) ON DELETE SET NULL,
+  CHECK (`ends_at` >= `starts_at`),
   PRIMARY KEY (`id`)
 );
 
@@ -240,6 +278,9 @@ CREATE TABLE IF NOT EXISTS `timings_tags` (
   `id` text NOT NULL, -- humid
   `timing_id` text NOT NULL,
   `tag_id` int(11) NOT NULL,
+  FOREIGN KEY (`timing_id`) REFERENCES `timings` (`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`tag_id`) REFERENCES `tags` (`id`) ON DELETE CASCADE,
+  UNIQUE (`timing_id`, `tag_id`),
   PRIMARY KEY (`id`)
 );
 
@@ -267,5 +308,8 @@ CREATE TABLE IF NOT EXISTS `documents_tags` (
   `id` text NOT NULL, -- humid
   `document_id` text NOT NULL,
   `tag_id` int(11) NOT NULL,
+  FOREIGN KEY (`document_id`) REFERENCES `documents` (`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`tag_id`) REFERENCES `tags` (`id`) ON DELETE CASCADE,
+  UNIQUE (`document_id`, `tag_id`),
   PRIMARY KEY (`id`)
 );
