@@ -1,6 +1,6 @@
 <ul>
   <?php foreach(\store\list_timings() as $timing): ?>
-    <li x-get="/tracker/edit?id=<?= $timing['id'] ?>" x-on="click" x-replace="outerHTML">
+    <li class="item" x-get="/tracker/edit?id=<?= $timing['id'] ?>" x-on="click" x-replace="outerHTML">
       <h3 class="description">
         <?= $timing['description'] ? esc_inner($timing['description']) : '<i class="empty">No description.</i>' ?>
       </h3>

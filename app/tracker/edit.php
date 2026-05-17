@@ -9,7 +9,7 @@
   if(!isset($_GET['id'])) fail("Timing is missing.");
   $timing = \store\get_timing($_GET['id']) or fail("Timing not found.");
 ?>
-<li>
+<li class="editor">
   <form id="tracker-editor" x-post="/tracker/edit" x-target="#tracker-listing">
     <input name="id" type="hidden" value="<?= $_GET['id'] ?>">
     <textarea name="description" placeholder="What were you up to?" autofocus><?= esc_inner($timing['description']) ?></textarea>
@@ -26,6 +26,9 @@
     <div class="col">
       <button type="submit">Save</button>
       <button x-get="/tracker/listing" x-target="#tracker-listing">Cancel</button>
+    </div>
+    <div>
+      <button x-delete="/tracker/delete?id=<?= $_GET['id'] ?>" x-target="#tracker-listing" x-confirm="Are you sure?">Delete</button>
     </div>
   </form>
 </li>

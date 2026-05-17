@@ -63,6 +63,10 @@ function get_timing($id) {
   return one('SELECT * FROM `timings` WHERE `id` = ?', [$id]);
 }
 
+function delete_timing($id) {
+  return exec_query('DELETE FROM `timings` WHERE id = ? ', [$id]);
+}
+
 // Configuration
 
 function config() {
