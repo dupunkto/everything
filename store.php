@@ -38,8 +38,29 @@ function put_timing($id, $description, $starts_at, $ends_at, $task_id) {
   ]);
 }
 
+function update_timing($id, $description, $starts_at, $ends_at, $task_id) {
+  if($task_id) get_task($task_id) or die("task with ID $task_id does not exist");
+
+  return exec_query('UPDATE `timings` SET
+    `description` = ?,
+    `starts_at` = ?,
+    `ends_at` = ?,
+    `task_id` = ?
+  WHERE id = ?', [
+    $description,
+    $starts_at,
+    $ends_at,
+    $task_id,
+    $id
+  ]);
+}
+
 function list_timings() {
   return all('SELECT * FROM `timings` ORDER BY `starts_at` DESC');
+}
+
+function get_timing($id) {
+  return one('SELECT * FROM `timings` WHERE `id` = ?', [$id]);
 }
 
 // Configuration
@@ -73,7 +94,7 @@ function migrate($from, $to) {
   $migrations = glob(__DIR__ . "/store/migrations/v*.sql") ?: [];
 
   foreach ($migrations as $path) {
-    $version = (int)substr(basename($path), 1); // The int case stops at '_'.
+    $version = (int)substr(basename($path), 1); // The int cast stops at '_'.
     if ($version > $from && $version <= $to) $pending[$version] = $path;
   }
 

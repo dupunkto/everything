@@ -14,7 +14,3 @@ function new_timing($description, $starts_at, $ends_at, $task_id = null) {
     task_id: $task_id
   );
 }
-
-function list_timings() {
-  return \store\list_timings();
-}
