@@ -48,7 +48,7 @@ function execute($path) {
   foreach ($queries as $query) {
     $query = trim($query);
     if(!empty($query)) DBH->exec($query) !== false 
-      or die("Couldn't execute query '$query'.");
+      or die("Could not execute query '$query'.");
   }
 }
 

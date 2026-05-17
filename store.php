@@ -18,6 +18,70 @@ switch($_DATABASE['scheme']) {
   case 'sqlite': require __DIR__ . "/store/adapter/sqlite.php"; break;
 }
 
+// Tags
+
+function put_tag($label, $color, $parent_id) {
+  if($parent_id) get_tag($parent_id) or die("tag with ID $parent_id does not exist");
+
+  return exec_query('INSERT INTO `tags` (
+    `label`,
+    `color`,
+    `parent_id`
+  ) VALUES (?, ?, ?)', [
+    $label,
+    $color,
+    $parent_id
+  ]);
+}
+
+function update_tag($id, $label, $color, $parent_id) {
+  if($parent_id) {
+    $cursor = $parent_id;
+    while($cursor) {
+      if($cursor == $id) die("illegal circular structure detected");
+      $tag = get_tag($cursor) or die("tag with ID $cursor does not exist");
+      $cursor = $tag['parent_id'];
+    }
+  }
+
+  return exec_query('UPDATE `tags` SET
+    `label` = ?,
+    `color` = ?,
+    `parent_id` = ?
+  WHERE id = ?', [
+    $label,
+    $color,
+    $parent_id,
+    $id
+  ]);
+}
+
+function list_tags() {
+  $tags = all('SELECT * FROM `tags` ORDER BY `id` DESC');
+
+  $children = [];
+  foreach($tags as $tag) $children[$tag['parent_id']][] = $tag;
+
+  $result = [];
+  $walk = function($parent_id) use (&$walk, &$children, &$result) {
+    foreach($children[$parent_id] ?? [] as $tag) {
+      $result[] = $tag;
+      $walk($tag['id']);
+    }
+  };
+
+  $walk(null);
+  return $result;
+}
+
+function get_tag($id) {
+  return one('SELECT * FROM `tags` WHERE `id` = ?', [$id]);
+}
+
+function delete_tag($id) {
+  return exec_query('DELETE FROM `tags` WHERE id = ? ', [$id]);
+}
+
 // Tracker
 
 function put_timing($id, $description, $starts_at, $ends_at, $task_id) {

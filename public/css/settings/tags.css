@@ -1,0 +1,23 @@
+#tags-listing ul {
+  list-style: none;
+  margin: 1em 0;
+  padding: 0;
+}
+
+#tags-listing ul li {
+  margin-bottom: 0.25em;
+}
+
+.tags-editor {
+  display: flex;
+  flex-direction: row;
+}
+
+.tags-editor select {
+  max-width: 20%;
+}
+
+.tags-editor input[type="color"] {
+  aspect-ratio: 1;
+  height: auto;
+}

@@ -15,13 +15,13 @@ if(allset($_POST, ['start_date', 'start_time', 'end_date', 'end_time'])) {
   <div class="col">
     <label>
       Start
-      <input name="start_date" type="date" value="<?= local_date("Y-m-d") ?>" />
-      <input name="start_time" type="time" step="1" />
+      <input name="start_date" type="date" value="<?= local_date("Y-m-d") ?>">
+      <input name="start_time" type="time" step="1">
     </label>
     <label>
       End
-      <input name="end_date" type="date" value="<?= local_date("Y-m-d") ?>" />
-      <input name="end_time" type="time" step="1" />
+      <input name="end_date" type="date" value="<?= local_date("Y-m-d") ?>">
+      <input name="end_time" type="time" step="1">
     </label>
   </div>
   <button type="button" id="tracker-record"">Sorry, the tracker could not be loaded.</button>

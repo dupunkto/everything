@@ -3,7 +3,7 @@
   <head>
     <?php include __DIR__ . "/shell/head.php" ?>
     <title>Time tracking</title>
-    <link rel="stylesheet" href="<?= CANONICAL ?>/css/tracker.css" />
+    <link rel="stylesheet" href="<?= CANONICAL ?>/css/tracker.css">
   </head>
   <body>
     <?php include __DIR__ . "/shell/menu.php" ?>

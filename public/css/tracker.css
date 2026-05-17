@@ -1,5 +1,5 @@
 #tracker-form,
-#tracker-editor {
+.tracker-editor {
   display: grid;
   grid-template-columns: 1fr 350px 120px;
   align-items: stretch;
@@ -10,7 +10,7 @@
 }
 
 #tracker-form textarea,
-#tracker-editor textarea {
+.tracker-editor textarea {
   min-height: 0;
   resize: none;
 }
@@ -25,16 +25,16 @@
   font-size: 1.5em;
 }
 
-#tracker-editor {
+.tracker-editor {
   grid-column: 1/3;
 }
 
-#tracker-editor .col {
+.tracker-editor .col {
   gap: 0.25em;
   justify-content: space-evenly;
 }
 
-#tracker-editor label {
+.tracker-editor label {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 0.25em;
