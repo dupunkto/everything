@@ -1,6 +1,21 @@
-<?php $tags = \store\list_tags() ?>
+<?php
+  $tags = \store\list_tags();
+
+  $children_of = [];
+  foreach($tags as $t) $children_of[$t['parent_id']][] = $t['id'];
+
+  // A tag's own subtree (itself + all descendants) can't become its parent
+  // without forming a cycle.
+  $subtree_of = function($id) use (&$subtree_of, $children_of) {
+    $set = [$id => true];
+    foreach($children_of[$id] ?? [] as $child)
+      $set += $subtree_of($child);
+    return $set;
+  };
+?>
 <ul>
   <?php foreach($tags as $tag): ?>
+    <?php $forbidden = $subtree_of($tag['id']) ?>
     <li>
       <form class="tags-editor" x-post="/settings/tags/edit" x-on="change" x-target="#tags-listing">
         <input name="id" type="hidden" value="<?= $tag['id'] ?>">
@@ -8,9 +23,9 @@
         <input name="label" type="text" value="<?= esc_attr($tag['label']) ?>">
 
         <select name="parent">
-          <option value="" <?php if(!$tag['parent_id']) echo "selected" ?>>None</option>
+          <option value="" <?php if(!$tag['parent_id']) echo "selected" ?>>[root]</option>
           <?php foreach($tags as $parent): ?>
-            <?php if($parent['id'] == $tag['id']) continue ?>
+            <?php if(isset($forbidden[$parent['id']])) continue ?>
             <option value="<?= $parent['id'] ?>"
               <?php if($parent['id'] == $tag['parent_id']) echo "selected" ?>>
               <?= esc_inner($parent['label']) ?>
