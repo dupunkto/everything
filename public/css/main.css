@@ -36,15 +36,6 @@ ul li.pending {
   opacity: 0.6;
 }
 
-ul li time {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  right: 1.25em;
-  font-size: 0.8em;
-  opacity: .8;
-}
-
 .row, .col {
   display: flex;
   gap: 0.5em;
