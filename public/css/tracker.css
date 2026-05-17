@@ -60,6 +60,10 @@
   cursor: pointer;
 }
 
+#tracker-listing ul li.item:hover {
+  opacity: .8;
+}
+
 #tracker-listing .description {
   margin: 0;
 }
