@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS `tags` (
   `label` text NOT NULL,
   `color` text NOT NULL,
   FOREIGN KEY (`parent_id`) REFERENCES `tags` (`id`) ON DELETE SET NULL,
+  UNIQUE (`label`),
   PRIMARY KEY (`id`)
 );
 
@@ -123,7 +124,7 @@ CREATE TABLE IF NOT EXISTS `tasks` (
   `content` text,
   `urgent` boolean NOT NULL,
   `recurrence` text, -- int|cron
-  `initial_date` datetime NOT NULL DEFAULT current_timestamp,
+  `open_date` datetime NOT NULL DEFAULT current_timestamp,
   `due_date` datetime,
   `expiration_date` datetime,
   -- `status` is a virtual field, derived from task_log

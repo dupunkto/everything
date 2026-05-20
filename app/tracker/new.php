@@ -3,8 +3,11 @@ if(allset($_POST, ['start_date', 'start_time', 'end_date', 'end_time'])) {
   $starts_at = cast_datetime_utc($_POST['start_date'], $_POST['start_time']);
   $ends_at = cast_datetime_utc($_POST['end_date'], $_POST['end_time']);
 
-  \core\new_timing($_POST['description'], $starts_at, $ends_at)
-    or fail("Could not save timing from $starts_at to $ends_at with description '" . $_POST['description'] . "'.");
+  \store\create_timing(
+    $_POST['description'],
+    $starts_at,
+    $ends_at
+  ) or fail("Could not save timing from $starts_at to $ends_at with description '" . $_POST['description'] . "'.");
 
   include __DIR__ . "/listing.php"; exit;
 }

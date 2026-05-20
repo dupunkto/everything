@@ -1,0 +1,28 @@
+#todo-form [name="title"] {
+  font-size: 1.5em;
+}
+
+#todo-form .meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr;
+  grid-auto-flow: column;
+  row-gap: 0.25em;
+  column-gap: 1em;
+}
+
+#todo-form .meta .field {
+  display: grid;
+  grid-template-columns: 1fr 5fr;
+  align-items: center;
+}
+
+#todo-form .meta input,
+#todo-form .meta select {
+  padding: 4px 6px;
+  margin: 0;
+}
+
+#todo-form .meta .field > div {
+  display: flex;
+}

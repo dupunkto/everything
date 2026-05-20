@@ -18,9 +18,218 @@ switch($_DATABASE['scheme']) {
   case 'sqlite': require __DIR__ . "/store/adapter/sqlite.php"; break;
 }
 
+// Tasks
+
+function create_task(
+  $title,
+  $content,
+  $urgent = false,
+  $recurrence = null,
+  $open_date = null,
+  $due_date = null,
+  $expiration_date = null
+) {
+  $open_date ??= gmdate("Y-m-d H:i:s");
+
+  return exec_query('INSERT INTO `tasks` (
+    `id`, 
+    `title`,
+    `content`,
+    `urgent`,
+    `recurrence`,
+    `open_date`,
+    `due_date`,
+    `expiration_date`
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [
+    generate_humid(),
+    $title,
+    $content,
+    $urgent,
+    $recurrence,
+    $open_date,
+    $due_date,
+    $expiration_date
+  ]);
+}
+
+function update_task(
+  $id,
+  $title,
+  $content,
+  $urgent,
+  $recurrence,
+  $open_date,
+  $due_date,
+  $expiration_date
+) {
+  return exec_query('UPDATE `tasks` SET
+    `title` = ?,
+    `content` = ?,
+    `urgent` = ?,
+    `recurrence` = ?,
+    `open_date` = ?,
+    `due_date` = ?,
+    `expiration_date` = ?
+  WHERE id = ?', [
+    $id,
+    $title,
+    $content,
+    $urgent,
+    $recurrence,
+    $open_date,
+    $due_date,
+    $expiration_date,
+    $id
+  ]);
+}
+
+define('STATUSSES', ["todo", "backlog", "blocked", "done", "nvm"]);
+
+function set_task_status($id, $status, $comment) {
+  in_array($status, STATUSSES) or die("status $status does not exist");
+
+  return exec_query('INSERT INTO `task_log` (
+    `task_id`,
+    `status`,
+    `comment`
+  ) VALUES (?, ?, ?)', [
+    $id,
+    $status,
+    $comment
+  ]);
+}
+
+function add_task_tag($id, $tag_id) {
+  return exec_query('INSERT INTO `tasks_tags` (
+    `task_id`, `tag_id`) VALUES (?, ?)', [$id, $tag_id]);
+}
+
+function remove_task_tag($id, $tag_id) {
+  return exec_query('DELETE FROM `tasks_tags`
+    WHERE `task_id` = ? AND `tag_id` = ?', [$id, $tag_id]);
+}
+
+function list_tasks($query = "") {
+  $include_statuses = [];
+  $exclude_statuses = [];
+  $selectors = [];
+
+  foreach(explode(" ", $query) as $segment) {
+    $parts = explode(":", $segment);
+    if(count($parts) != 2) continue;
+    [$selector, $value] = $parts;
+
+    if($selector == "is" && $value == 'urgent') $selectors[] = "`urgent` = true";
+    if($selector == "not" && $value == 'urgent') $selectors[] = "`urgent` = false";
+    if($key == "is" && in_array($value, STATUSES)) $include_statuses[] = "`status` = '$value'";
+    if($key == "not" && in_array($value, STATUSES)) $exclude_statuses[] = "`status` != '$value'";
+  }
+
+  if($include_statuses) $selectors[] = "(" . implode(" OR ", $include_statuses) . ")";
+  if($exclude_statuses) $selectors[] = "(" . implode(" AND ", $exclude_statuses) . ")";
+
+  $where_clause = $selectors == [] ? "" : "WHERE " . implode(" OR ", $selectors);
+
+  return all("SELECT * FROM `tasks`
+    $where_clause ORDER BY
+      `due_date` NULLS LAST, `expiration_date` NULLS LAST, `initial_date`");
+}
+
+function get_task($id) {
+  $task = one('SELECT
+    task.id,
+    task.title,
+    task.content,
+    task.urgent,
+    task.recurrence,
+    task.open_date,
+    task.due_date,
+    task.expiration_date,
+    log.status,
+    log.comment,
+    log.date as updated_date
+  FROM tasks task
+  LEFT JOIN task_log log ON log.task_id = task.id
+  WHERE task.id = ?
+  ORDER BY log.date DESC', [$id]);
+
+  if($task == null) return $task;
+
+  $tags = all('SELECT tags.label FROM `tags` WHERE `task_id` = ?', [$id]);
+
+  if($tags == null) return $tags;
+
+  $task['tags'] = array_column($tags, 'label');
+
+  return $task;
+}
+
+function delete_task($id) {
+  return exec_query('DELETE FROM `tasks` WHERE `id` = ?', [$id]);
+}
+
+// Tracker
+
+function create_timing($id, $description, $starts_at, $ends_at, $task_id) {
+  if($task_id) get_task($task_id) or die("task with ID $task_id does not exist");
+
+  return exec_query('INSERT INTO `timings` (
+    `id`, 
+    `description`,
+    `starts_at`,
+    `ends_at`,
+    `task_id`
+  ) VALUES (?, ?, ?, ?, ?)', [
+    generate_humid(),
+    $description,
+    $starts_at,
+    $ends_at,
+    $task_id
+  ]);
+}
+
+function update_timing($id, $description, $starts_at, $ends_at, $task_id) {
+  if($task_id) get_task($task_id) or die("task with ID $task_id does not exist");
+
+  return exec_query('UPDATE `timings` SET
+    `description` = ?,
+    `starts_at` = ?,
+    `ends_at` = ?,
+    `task_id` = ?
+  WHERE id = ?', [
+    $description,
+    $starts_at,
+    $ends_at,
+    $task_id,
+    $id
+  ]);
+}
+
+function add_timing_tag($id, $tag_id) {
+  return exec_query('INSERT INTO `timings_tags` (
+    `timing_id`, `tag_id`) VALUES (?, ?)', [$id, $tag_id]);
+}
+
+function remove_timing_tag($id, $tag_id) {
+  return exec_query('DELETE FROM `timings_tags`
+    WHERE `timing_id` = ? AND `tag_id` = ?', [$id, $tag_id]);
+}
+
+function list_timings() {
+  return all('SELECT * FROM `timings` ORDER BY `starts_at` DESC');
+}
+
+function get_timing($id) {
+  return one('SELECT * FROM `timings` WHERE `id` = ?', [$id]);
+}
+
+function delete_timing($id) {
+  return exec_query('DELETE FROM `timings` WHERE `id` = ?', [$id]);
+}
+
 // Tags
 
-function put_tag($label, $color, $parent_id) {
+function create_tag($label, $color, $parent_id) {
   if($parent_id) get_tag($parent_id) or die("tag with ID $parent_id does not exist");
 
   return exec_query('INSERT INTO `tags` (
@@ -78,57 +287,12 @@ function get_tag($id) {
   return one('SELECT * FROM `tags` WHERE `id` = ?', [$id]);
 }
 
+function get_tag_by_label($label) {
+  return one('SELECT * FROM `tags` WHERE `label` = ?', [$label]);
+}
+
 function delete_tag($id) {
-  return exec_query('DELETE FROM `tags` WHERE id = ? ', [$id]);
-}
-
-// Tracker
-
-function put_timing($id, $description, $starts_at, $ends_at, $task_id) {
-  if($task_id) get_task($task_id) or die("task with ID $task_id does not exist");
-
-  return exec_query('INSERT INTO `timings` (
-    `id`, 
-    `description`,
-    `starts_at`,
-    `ends_at`,
-    `task_id`
-  ) VALUES (?, ?, ?, ?, ?)', [
-    $id,
-    $description,
-    $starts_at,
-    $ends_at,
-    $task_id
-  ]);
-}
-
-function update_timing($id, $description, $starts_at, $ends_at, $task_id) {
-  if($task_id) get_task($task_id) or die("task with ID $task_id does not exist");
-
-  return exec_query('UPDATE `timings` SET
-    `description` = ?,
-    `starts_at` = ?,
-    `ends_at` = ?,
-    `task_id` = ?
-  WHERE id = ?', [
-    $description,
-    $starts_at,
-    $ends_at,
-    $task_id,
-    $id
-  ]);
-}
-
-function list_timings() {
-  return all('SELECT * FROM `timings` ORDER BY `starts_at` DESC');
-}
-
-function get_timing($id) {
-  return one('SELECT * FROM `timings` WHERE `id` = ?', [$id]);
-}
-
-function delete_timing($id) {
-  return exec_query('DELETE FROM `timings` WHERE id = ? ', [$id]);
+  return exec_query('DELETE FROM `tags` WHERE `id` = ?', [$id]);
 }
 
 // Configuration

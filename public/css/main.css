@@ -10,6 +10,11 @@ main.wide {
   margin: 1em;
 }
 
+main.semi-wide {
+  max-width: 1000px;
+  margin: 5vh auto;
+}
+
 ul {
   margin: 0;
   padding: 0;
@@ -34,6 +39,10 @@ ul li.pending {
   margin-bottom: 0.25em;
   background: light-dark(#f1f1f1, #2b2b33);
   opacity: 0.6;
+}
+
+label {
+  text-transform: lowercase;
 }
 
 .row, .col {
