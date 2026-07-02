@@ -16,7 +16,6 @@ CREATE TABLE IF NOT EXISTS `tags` (
   `label` text NOT NULL,
   `color` text NOT NULL,
   FOREIGN KEY (`parent_id`) REFERENCES `tags` (`id`) ON DELETE SET NULL,
-  UNIQUE (`label`),
   PRIMARY KEY (`id`)
 );
 
@@ -30,12 +29,18 @@ CREATE TABLE IF NOT EXISTS `contacts` (
   `infix` text NOT NULL,
   `last_name` text NOT NULL,
   `birth_day` text NOT NULL,
-  `discord_handle` text NOT NULL,
-  `instagram_handle` text NOT NULL,
-  `snapchat_handle` text NOT NULL,
-  `matrix_handle` text NOT NULL,
-  `linkedin_handle` text NOT NULL,
+  `note` text,
   UNIQUE (`handle`, `domain`),
+  PRIMARY KEY (`id`)
+);
+
+CREATE TABLE IF NOT EXISTS `organisation` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `display_name` text NOT NULL,
+  `legal_name` text,
+  `domain` text NOT NULL,
+  `note` text,
+  UNIQUE (`domain`),
   PRIMARY KEY (`id`)
 );
 
@@ -49,12 +54,39 @@ CREATE TABLE IF NOT EXISTS `contacts_tags` (
   PRIMARY KEY (`id`)
 );
 
+CREATE TABLE IF NOT EXISTS `orgs_tags` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `org_id` int(11) NOT NULL,
+  `tag_id` int(11) NOT NULL,
+  FOREIGN KEY (`org_id`) REFERENCES `organisations` (`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`tag_id`) REFERENCES `tags` (`id`) ON DELETE CASCADE,
+  UNIQUE (`org_id`, `tag_id`),
+  PRIMARY KEY (`id`)
+);
+
 CREATE TABLE IF NOT EXISTS `contact_orgs` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `contact_id` int(11) NOT NULL,
   `name` text NOT NULL,
   `function` text,
   FOREIGN KEY (`contact_id`) REFERENCES `contacts` (`id`) ON DELETE CASCADE,
+  PRIMARY KEY (`id`)
+);
+
+CREATE TABLE IF NOT EXISTS `contact_socials` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `handle` text NOT NULL,
+  `type` text NOT NULL, -- instagram|discord|snapchat|linkedin|matrix|pinterest
+                        -- twitter|youtube|facebook|activitypub|atproto
+  FOREIGN KEY (`contact_id`) REFERENCES `contacts` (`id`) ON DELETE CASCADE,
+  PRIMARY KEY (`id`)
+);
+
+CREATE TABLE IF NOT EXISTS `org_socials` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `type` text NOT NULL, -- instagram|discord|snapchat|linkedin|pinterest|youtube|facebook
+  `handle` text NOT NULL,
+  FOREIGN KEY (`org_id`) REFERENCES `organisations` (`id`) ON DELETE CASCADE,
   PRIMARY KEY (`id`)
 );
 
@@ -68,6 +100,16 @@ CREATE TABLE IF NOT EXISTS `contact_urls` (
   PRIMARY KEY (`id`)
 );
 
+CREATE TABLE IF NOT EXISTS `contact_urls` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `org_id` int(11) NOT NULL,
+  `label` text NOT NULL,
+  `url` text NOT NULL,
+  FOREIGN KEY (`org_id`) REFERENCES `organisations` (`id`) ON DELETE CASCADE,
+  UNIQUE (`org_id`, `url`),
+  PRIMARY KEY (`id`)
+);
+
 CREATE TABLE IF NOT EXISTS `contact_emails` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `contact_id` int(11) NOT NULL,
@@ -75,6 +117,16 @@ CREATE TABLE IF NOT EXISTS `contact_emails` (
   `email` text NOT NULL,
   FOREIGN KEY (`contact_id`) REFERENCES `contacts` (`id`) ON DELETE CASCADE,
   UNIQUE (`contact_id`, `email`),
+  PRIMARY KEY (`id`)
+);
+
+CREATE TABLE IF NOT EXISTS `org_emails` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `org_id` int(11) NOT NULL,
+  `label` text NOT NULL,
+  `email` text NOT NULL,
+  FOREIGN KEY (`org_id`) REFERENCES `organisations` (`id`) ON DELETE CASCADE,
+  UNIQUE (`org_id`, `email`),
   PRIMARY KEY (`id`)
 );
 
@@ -88,8 +140,19 @@ CREATE TABLE IF NOT EXISTS `contact_phone_numbers` (
   PRIMARY KEY (`id`)
 );
 
+CREATE TABLE IF NOT EXISTS `org_phone_numbers` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `org_id` int(11) NOT NULL,
+  `label` text NOT NULL,
+  `phone_number` text NOT NULL,
+  FOREIGN KEY (`org_id`) REFERENCES `organisations` (`id`) ON DELETE CASCADE,
+  UNIQUE (`org_id`, `phone_number`),
+  PRIMARY KEY (`id`)
+);
+
 CREATE TABLE IF NOT EXISTS `addresses` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
+  `label` text,
   `street_name` text NOT NULL,
   `street_number` text NOT NULL,
   `postal_code` text NOT NULL,
@@ -97,6 +160,7 @@ CREATE TABLE IF NOT EXISTS `addresses` (
   `province` text NOT NULL,
   `country` text NOT NULL,
   `timezone` text NOT NULL,
+  `note` text,
   PRIMARY KEY (`id`)
 );
 
@@ -111,7 +175,18 @@ CREATE TABLE IF NOT EXISTS `contact_addresses` (
   PRIMARY KEY (`id`)
 );
 
-CREATE TABLE IF NOT EXISTS `note` (
+CREATE TABLE IF NOT EXISTS `org_addresses` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `org_id` int(11) NOT NULL,
+  `label` text NOT NULL,
+  `address_id` int(11) NOT NULL,
+  FOREIGN KEY (`org_id`) REFERENCES `organisations` (`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`address_id`) REFERENCES `addresses` (`id`) ON DELETE CASCADE,
+  UNIQUE (`org_id`, `address_id`),
+  PRIMARY KEY (`id`)
+);
+
+CREATE TABLE IF NOT EXISTS `notes` (
   `id` text NOT NULL, -- humid
   `title` text NOT NULL,
   `content` text,
@@ -206,7 +281,7 @@ CREATE TABLE IF NOT EXISTS `habit_log` (
   PRIMARY KEY (`id`)
 );
 
-CREATE TABLE IF NOT EXISTS `calendar` (
+CREATE TABLE IF NOT EXISTS `calendars` (
   `id` text NOT NULL, -- humid
   `title` text NOT NULL,
   `subtitle` text,
@@ -214,7 +289,7 @@ CREATE TABLE IF NOT EXISTS `calendar` (
   PRIMARY KEY (`id`)
 );
 
-CREATE TABLE IF NOT EXISTS `calendar_subscription` (
+CREATE TABLE IF NOT EXISTS `subscriptions` (
   `id` text NOT NULL, -- humid
   `title` text NOT NULL,
   `subtitle` text,
@@ -224,23 +299,29 @@ CREATE TABLE IF NOT EXISTS `calendar_subscription` (
 );
 
 CREATE TABLE IF NOT EXISTS `appointments` (
-  `id` text NOT NULL, -- humid
+  `id` text NOT NULL, -- humid|external
   `calendar_id` text,
   `subscription_id` text,
   `address_id` int(11),
+  `location` text,
   `recurrence` text, -- int|cron
+  `recurrence_until` datetime,
+  `recurrence_count` int(11),
+  `going` boolean NOT NULL DEFAULT true,
   `all_day` boolean NOT NULL DEFAULT false,
+  `circled` boolean NOT NULL DEFAULT false,
   `title` text NOT NULL,
   `content` text,
   `meeting` text,
   `color` text NOT NULL,
   `starts_at` datetime NOT NULL,
   `ends_at` datetime NOT NULL,
-  FOREIGN KEY (`calendar_id`) REFERENCES `calendar` (`id`) ON DELETE CASCADE,
-  FOREIGN KEY (`subscription_id`) REFERENCES `calendar_subscription` (`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`calendar_id`) REFERENCES `calendars` (`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`subscription_id`) REFERENCES `subscriptions` (`id`) ON DELETE CASCADE,
   FOREIGN KEY (`address_id`) REFERENCES `addresses` (`id`) ON DELETE SET NULL,
   CHECK ((`calendar_id` IS NULL) <> (`subscription_id` IS NULL)),
   CHECK (`ends_at` >= `starts_at`),
+  CHECK (`recurrence_until` IS NULL OR `recurrence_count` IS NULL),
   PRIMARY KEY (`id`)
 );
 
