@@ -75,6 +75,7 @@ CREATE TABLE IF NOT EXISTS `contact_orgs` (
 
 CREATE TABLE IF NOT EXISTS `contact_socials` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
+  `contact_id` int(11) NOT NULL,
   `handle` text NOT NULL,
   `type` text NOT NULL, -- instagram|discord|snapchat|linkedin|matrix|pinterest
                         -- twitter|youtube|facebook|activitypub|atproto
@@ -84,6 +85,7 @@ CREATE TABLE IF NOT EXISTS `contact_socials` (
 
 CREATE TABLE IF NOT EXISTS `org_socials` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
+  `org_id` int(11) NOT NULL,
   `type` text NOT NULL, -- instagram|discord|snapchat|linkedin|pinterest|youtube|facebook
   `handle` text NOT NULL,
   FOREIGN KEY (`org_id`) REFERENCES `organisations` (`id`) ON DELETE CASCADE,
@@ -313,7 +315,7 @@ CREATE TABLE IF NOT EXISTS `appointments` (
   `title` text NOT NULL,
   `content` text,
   `meeting` text,
-  `color` text NOT NULL,
+  `color` text, -- inherented from calendar or subscription if unset
   `starts_at` datetime NOT NULL,
   `ends_at` datetime NOT NULL,
   FOREIGN KEY (`calendar_id`) REFERENCES `calendars` (`id`) ON DELETE CASCADE,
