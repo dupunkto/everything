@@ -10,3 +10,14 @@ export PHP_CLI_SERVER_WORKERS=2
 serve() {
   ENV=dev php -S 0.0.0.0:$PORT $ENTRYPOINT
 }
+
+# Sync iCal subscriptions. With a subscription id, syncs only that one;
+# otherwise loops over every subscription. Re-runnable, idempotent.
+sync() {
+  php -d display_errors=stderr -r '
+    require __DIR__ . "/core.php";
+    $arg = $argv[1] ?? null;
+    $results = $arg ? [$arg => \store\sync_subscription($arg)] : \store\sync_all_subscriptions();
+    foreach($results as $id => $stats) echo "$id: " . json_encode($stats) . "\n";
+  ' -- "${2:-}"
+}
