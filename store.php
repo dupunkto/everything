@@ -463,7 +463,7 @@ function update_appointment(
   ]);
 }
 
-function update_appointment_annotations($id, $color, $going, $circled) {
+function update_appointment_meta($id, $color, $going, $circled) {
   return exec_query('UPDATE `appointments` SET
     `color` = ?,
     `going` = ?,
@@ -471,7 +471,7 @@ function update_appointment_annotations($id, $color, $going, $circled) {
   WHERE id = ?', [$color, $going ? 1 : 0, $circled ? 1 : 0, $id]);
 }
 
-function list_appointments_between($from, $to) {
+function list_appointments($from, $to) {
   return all('SELECT
     a.*,
     c.title AS calendar_title,
