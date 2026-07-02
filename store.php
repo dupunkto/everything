@@ -506,66 +506,6 @@ function delete_appointment($id) {
   return exec_query('DELETE FROM `appointments` WHERE `id` = ?', [$id]);
 }
 
-// WIP
-
-// Probes an iCal URL to validate it and extract the calendar's display name
-// and (best-effort) color from VCALENDAR-level properties. Returns null on
-// invalid/unreachable feeds, otherwise ['title' => ..., 'color' => ...|null].
-//
-// NOTE(robin): the iCal sync agent will likely consolidate this with the
-// full event parser; treat this as a stopgap header probe.
-function probe_ical_feed($url) {
-  $response = \http\get($url);
-  if($response['state'] != "success" or $response['status'] >= 400) return null;
-
-  $body = $response['body'];
-  if(!str_contains($body, "BEGIN:VCALENDAR")) return null;
-
-  // RFC 5545 lets long lines be folded across multiple physical lines using
-  // a CRLF + leading whitespace. Unfold before scanning.
-  $unfolded = preg_replace("/\r?\n[ \t]/", "", $body);
-  $lines = preg_split("/\r?\n/", $unfolded);
-
-  $title = null;
-  $color = null;
-
-  foreach($lines as $line) {
-    if(str_starts_with($line, "BEGIN:VEVENT")) break; // header-only probe
-
-    // Property names can carry parameters (after ';'). Strip them.
-    [$head, $value] = explode(":", $line, 2) + [null, null];
-    if($value === null) continue;
-    $name = strtoupper(explode(";", $head)[0]);
-
-    if($name == "X-WR-CALNAME" and !$title) $title = trim($value);
-    if($name == "X-APPLE-CALENDAR-COLOR" and !$color) $color = trim($value);
-    if($name == "COLOR" and !$color) $color = css_named_to_hex(trim($value));
-  }
-
-  if(!$title) {
-    $host = parse_url($url, PHP_URL_HOST);
-    $title = $host ?: "Untitled subscription";
-  }
-
-  return ["title" => $title, "color" => $color];
-}
-
-// A tiny CSS named-color → hex map for the subset RFC 7986 expects (the
-// CSS3 extended palette). Returns null if the name is unrecognised.
-function css_named_to_hex($name) {
-  static $map = [
-    "black" => "#000000", "silver" => "#c0c0c0", "gray" => "#808080",
-    "white" => "#ffffff", "maroon" => "#800000", "red" => "#ff0000",
-    "purple" => "#800080", "fuchsia" => "#ff00ff", "green" => "#008000",
-    "lime" => "#00ff00", "olive" => "#808000", "yellow" => "#ffff00",
-    "navy" => "#000080", "blue" => "#0000ff", "teal" => "#008080",
-    "aqua" => "#00ffff", "orange" => "#ffa500", "pink" => "#ffc0cb",
-    "cyan" => "#00ffff", "magenta" => "#ff00ff", "indigo" => "#4b0082",
-    "violet" => "#ee82ee", "gold" => "#ffd700", "coral" => "#ff7f50",
-    "tomato" => "#ff6347", "salmon" => "#fa8072", "khaki" => "#f0e68c",
-  ];
-  return $map[strtolower($name)] ?? null;
-}
 
 // Configuration
 
