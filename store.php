@@ -170,7 +170,7 @@ function delete_task($id) {
 
 // Tracker
 
-function create_timing($id, $description, $starts_at, $ends_at, $task_id) {
+function create_timing($description, $starts_at, $ends_at, $task_id = null) {
   if($task_id) get_task($task_id) or die("task with ID $task_id does not exist");
 
   return exec_query('INSERT INTO `timings` (
@@ -294,6 +294,218 @@ function get_tag_by_label($label) {
 function delete_tag($id) {
   return exec_query('DELETE FROM `tags` WHERE `id` = ?', [$id]);
 }
+
+// Calendars
+
+function create_calendar($title, $subtitle, $color) {
+  return exec_query('INSERT INTO `calendars` (
+    `id`,
+    `title`,
+    `subtitle`,
+    `color`
+  ) VALUES (?, ?, ?, ?)', [
+    generate_humid(),
+    $title,
+    $subtitle,
+    $color
+  ]);
+}
+
+function update_calendar($id, $title, $subtitle, $color) {
+  return exec_query('UPDATE `calendars` SET
+    `title` = ?,
+    `subtitle` = ?,
+    `color` = ?
+  WHERE id = ?', [$title, $subtitle, $color, $id]);
+}
+
+function list_calendars() {
+  return all('SELECT * FROM `calendars` ORDER BY `title`');
+}
+
+function get_calendar($id) {
+  return one('SELECT * FROM `calendars` WHERE `id` = ?', [$id]);
+}
+
+function delete_calendar($id) {
+  return exec_query('DELETE FROM `calendars` WHERE `id` = ?', [$id]);
+}
+
+// Subscriptions
+
+function create_subscription($title, $subtitle, $url, $color) {
+  return exec_query('INSERT INTO `subscriptions` (
+    `id`,
+    `title`,
+    `subtitle`,
+    `url`,
+    `color`
+  ) VALUES (?, ?, ?, ?, ?)', [
+    generate_humid(),
+    $title,
+    $subtitle,
+    $url,
+    $color
+  ]);
+}
+
+function update_subscription($id, $title, $subtitle, $url, $color) {
+  return exec_query('UPDATE `subscriptions` SET
+    `title` = ?,
+    `subtitle` = ?,
+    `url` = ?,
+    `color` = ?
+  WHERE id = ?', [$title, $subtitle, $url, $color, $id]);
+}
+
+function list_subscriptions() {
+  return all('SELECT * FROM `subscriptions` ORDER BY `title`');
+}
+
+function get_subscription($id) {
+  return one('SELECT * FROM `subscriptions` WHERE `id` = ?', [$id]);
+}
+
+function delete_subscription($id) {
+  return exec_query('DELETE FROM `subscriptions` WHERE `id` = ?', [$id]);
+}
+
+// Appointments
+
+function create_appointment(
+  $calendar_id,
+  $title,
+  $content,
+  $starts_at,
+  $ends_at,
+  $location = null,
+  $meeting = null,
+  $recurrence = null,
+  $all_day = false,
+  $going = true,
+  $circled = false,
+  $color = null,
+) {
+  return exec_query('INSERT INTO `appointments` (
+    `id`,
+    `calendar_id`,
+    `subscription_id`,
+    `title`,
+    `content`,
+    `starts_at`,
+    `ends_at`,
+    `location`,
+    `meeting`,
+    `recurrence`,
+    `all_day`,
+    `going`,
+    `circled`,
+    `color`
+  ) VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+    generate_humid(),
+    $calendar_id,
+    $title,
+    $content,
+    $starts_at,
+    $ends_at,
+    $location,
+    $meeting,
+    $recurrence,
+    $all_day ? 1 : 0,
+    $going ? 1 : 0,
+    $circled ? 1 : 0,
+    $color
+  ]);
+}
+
+function update_appointment(
+  $id,
+  $title,
+  $content,
+  $starts_at,
+  $ends_at,
+  $location = null,
+  $meeting = null,
+  $recurrence = null,
+  $all_day = false,
+  $going = true,
+  $circled = false,
+  $color = null,
+) {
+  // Subscription-owned events should only flip the user-managed annotation
+  // fields (color, going, circled). Mirroring fields like title/starts_at
+  // belongs to the sync agent, which overwrites them on every poll.
+  return exec_query('UPDATE `appointments` SET
+    `title` = ?,
+    `content` = ?,
+    `starts_at` = ?,
+    `ends_at` = ?,
+    `location` = ?,
+    `meeting` = ?,
+    `recurrence` = ?,
+    `all_day` = ?,
+    `going` = ?,
+    `circled` = ?,
+    `color` = ?
+  WHERE id = ?', [
+    $title,
+    $content,
+    $starts_at,
+    $ends_at,
+    $location,
+    $meeting,
+    $recurrence,
+    $all_day ? 1 : 0,
+    $going ? 1 : 0,
+    $circled ? 1 : 0,
+    $color,
+    $id
+  ]);
+}
+
+function update_appointment_annotations($id, $color, $going, $circled) {
+  return exec_query('UPDATE `appointments` SET
+    `color` = ?,
+    `going` = ?,
+    `circled` = ?
+  WHERE id = ?', [$color, $going ? 1 : 0, $circled ? 1 : 0, $id]);
+}
+
+function list_appointments_between($from, $to) {
+  return all('SELECT
+    a.*,
+    c.title AS calendar_title,
+    c.subtitle AS calendar_subtitle,
+    c.color AS calendar_color,
+    s.title AS subscription_title,
+    s.subtitle AS subscription_subtitle,
+    s.color AS subscription_color
+  FROM `appointments` a
+  LEFT JOIN `calendars` c ON c.id = a.calendar_id
+  LEFT JOIN `subscriptions` s ON s.id = a.subscription_id
+  WHERE a.starts_at < ? AND a.ends_at > ?
+  ORDER BY a.starts_at', [$to, $from]);
+}
+
+function get_appointment($id) {
+  return one('SELECT
+    a.*,
+    c.title AS calendar_title,
+    c.subtitle AS calendar_subtitle,
+    c.color AS calendar_color,
+    s.title AS subscription_title,
+    s.subtitle AS subscription_subtitle,
+    s.color AS subscription_color
+  FROM `appointments` a
+  LEFT JOIN `calendars` c ON c.id = a.calendar_id
+  LEFT JOIN `subscriptions` s ON s.id = a.subscription_id
+  WHERE a.id = ?', [$id]);
+}
+
+function delete_appointment($id) {
+  return exec_query('DELETE FROM `appointments` WHERE `id` = ?', [$id]);
+}
+
 
 // Configuration
 

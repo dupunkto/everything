@@ -1,24 +1,24 @@
-#tags-listing ul {
+#calendars-listing ul {
   list-style: none;
   margin: 1em 0;
   padding: 0;
 }
 
-#tags-listing ul li {
+#calendars-listing ul li {
   margin-bottom: 0.25em;
 }
 
-.tags-editor {
+.calendars-editor {
   display: flex;
   flex-direction: row;
   gap: 0.25em;
 }
 
-.tags-editor select {
-  max-width: 20%;
+.calendars-editor input[type="text"] {
+  flex: 1;
 }
 
-.tags-editor input[type="color"] {
+.calendars-editor input[type="color"] {
   aspect-ratio: 1;
   width: auto;
   height: 2em;
