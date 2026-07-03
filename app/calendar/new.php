@@ -17,7 +17,7 @@
 
     $all_day = !empty($_POST['all_day']);
     $going = !empty($_POST['going']);
-    $circled = !empty($_POST['circled']);
+    $urgent = !empty($_POST['urgent']);
 
     \store\create_appointment(
       $_POST['calendar_id'],
@@ -30,7 +30,7 @@
       $recurrence,
       $all_day,
       $going,
-      $circled,
+      $urgent,
       $color
     ) or fail("Could not create appointment.");
 
@@ -92,7 +92,7 @@
     <input name="recurrence" type="text" placeholder="cron or number of days">
   </div>
 
-  <label class="check"><input type="checkbox" name="circled"> Circled</label>
+  <label class="check"><input type="checkbox" name="urgent"> Circled</label>
   <label class="check"><input type="checkbox" name="going" checked> Going</label>
 
   <button type="submit">Save</button>

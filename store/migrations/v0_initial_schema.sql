@@ -77,8 +77,8 @@ CREATE TABLE IF NOT EXISTS `contact_socials` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `contact_id` int(11) NOT NULL,
   `handle` text NOT NULL,
-  `type` text NOT NULL, -- instagram|discord|snapchat|linkedin|matrix|pinterest
-                        -- twitter|youtube|facebook|activitypub|atproto
+  `type` text NOT NULL, -- str<instagram|discord|snapchat|linkedin|matrix|pinterest
+                        -- twitter|youtube|facebook|activitypub|atproto>
   FOREIGN KEY (`contact_id`) REFERENCES `contacts` (`id`) ON DELETE CASCADE,
   PRIMARY KEY (`id`)
 );
@@ -221,7 +221,7 @@ CREATE TABLE IF NOT EXISTS `tasks_tags` (
 CREATE TABLE IF NOT EXISTS `task_log` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `task_id` text NOT NULL,
-  `date` datetime NOT NULL,
+  `date` datetime NOT NULL DEFAULT current_timestamp,
   `status` text NOT NULL, -- str<todo|backlog|blocked|done|nvm>
   `comment` text,
   FOREIGN KEY (`task_id`) REFERENCES `tasks` (`id`) ON DELETE CASCADE,
@@ -311,7 +311,7 @@ CREATE TABLE IF NOT EXISTS `appointments` (
   `recurrence_count` int(11),
   `going` boolean NOT NULL DEFAULT true,
   `all_day` boolean NOT NULL DEFAULT false,
-  `circled` boolean NOT NULL DEFAULT false,
+  `urgent` boolean NOT NULL DEFAULT false,
   `title` text NOT NULL,
   `content` text,
   `meeting` text,
@@ -376,7 +376,7 @@ CREATE TABLE IF NOT EXISTS `imap_connections` (
   `password` text,
   `hostname` text NOT NULL,
   `port` int(11) NOT NULL,
-  `ssl_mode` text NOT NULL, -- plain|tls|ssl
+  `ssl_mode` text NOT NULL, -- str<plain|tls|ssl>
   PRIMARY KEY (`id`)
 );
 

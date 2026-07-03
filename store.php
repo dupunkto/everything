@@ -20,19 +20,27 @@ switch($_DATABASE['scheme']) {
 
 // Tasks
 
+define('ENUM_TASK_STATUS', ['todo', 'backlog', 'blocked', 'done', 'nvm']);
+define('ENUM_WISH_STATUS', ['dream', 'backlog', 'bought', 'nvm']);
+
 function create_task(
   $title,
   $content,
+  $status,
   $urgent = false,
   $recurrence = null,
   $open_date = null,
   $due_date = null,
-  $expiration_date = null
+  $expiration_date = null,
+  $comment = null
 ) {
+  in_array($status, ENUM_TASK_STATUS) or die("status $status does not exist");
+
+  $id = generate_humid();
   $open_date ??= gmdate("Y-m-d H:i:s");
 
-  return exec_query('INSERT INTO `tasks` (
-    `id`, 
+  $ok = exec_query('INSERT INTO `tasks` (
+    `id`,
     `title`,
     `content`,
     `urgent`,
@@ -41,15 +49,20 @@ function create_task(
     `due_date`,
     `expiration_date`
   ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [
-    generate_humid(),
-    $title,
-    $content,
-    $urgent,
-    $recurrence,
-    $open_date,
-    $due_date,
-    $expiration_date
+    $id, $title, $content, $urgent, $recurrence, $open_date, $due_date, $expiration_date
   ]);
+
+  if(!$ok) return $ok;
+
+  $ok = exec_query('INSERT INTO `task_log` (
+    `task_id`,
+    `status`,
+    `comment`
+  ) VALUES (?, ?, ?)', [
+    $id, $status, $comment
+  ]);
+
+  return $ok;
 }
 
 function update_task(
@@ -83,10 +96,8 @@ function update_task(
   ]);
 }
 
-define('STATUSSES', ["todo", "backlog", "blocked", "done", "nvm"]);
-
-function set_task_status($id, $status, $comment) {
-  in_array($status, STATUSSES) or die("status $status does not exist");
+function set_task_status($id, $status, $comment = "") {
+  in_array($status, ENUM_TASK_STATUS) or die("status $status does not exist");
 
   return exec_query('INSERT INTO `task_log` (
     `task_id`,
@@ -109,30 +120,63 @@ function remove_task_tag($id, $tag_id) {
     WHERE `task_id` = ? AND `tag_id` = ?', [$id, $tag_id]);
 }
 
-function list_tasks($query = "") {
+function list_tasks($query = "", $override = []) {
   $include_statuses = [];
   $exclude_statuses = [];
-  $selectors = [];
+
+  $override_selectors = [];
+  $status_selectors = [];
 
   foreach(explode(" ", $query) as $segment) {
     $parts = explode(":", $segment);
     if(count($parts) != 2) continue;
     [$selector, $value] = $parts;
 
-    if($selector == "is" && $value == 'urgent') $selectors[] = "`urgent` = true";
-    if($selector == "not" && $value == 'urgent') $selectors[] = "`urgent` = false";
-    if($key == "is" && in_array($value, STATUSES)) $include_statuses[] = "`status` = '$value'";
-    if($key == "not" && in_array($value, STATUSES)) $exclude_statuses[] = "`status` != '$value'";
+    if($selector == "is" && $value == 'urgent') $status_selectors[] = "`urgent` = true";
+    if($selector == "not" && $value == 'urgent') $status_selectors[] = "`urgent` = false";
+    if($selector == "is" && in_array($value, ENUM_TASK_STATUS)) $include_statuses[] = "log.status = '$value'";
+    if($selector == "not" && in_array($value, ENUM_TASK_STATUS)) $exclude_statuses[] = "log.status != '$value'";
   }
 
-  if($include_statuses) $selectors[] = "(" . implode(" OR ", $include_statuses) . ")";
-  if($exclude_statuses) $selectors[] = "(" . implode(" AND ", $exclude_statuses) . ")";
+  foreach($override ?? [] as $id) $override_selectors[] = "tasks.id = '$id'";
 
-  $where_clause = $selectors == [] ? "" : "WHERE " . implode(" OR ", $selectors);
+  if($include_statuses) $status_selectors[] = "(" . implode(" OR ", $include_statuses) . ")";
+  if($exclude_statuses) $status_selectors[] = "(" . implode(" AND ", $exclude_statuses) . ")";
 
-  return all("SELECT * FROM `tasks`
-    $where_clause ORDER BY
-      `due_date` NULLS LAST, `expiration_date` NULLS LAST, `initial_date`");
+  $selectors = [];
+
+  if($status_selectors) $selectors[] = "(" . implode(" AND ", $status_selectors) . ")";
+  if($override_selectors) $selectors[] = "(" . implode(" OR ", $override_selectors) . ")";
+
+  $where_clause = $status_selectors == [] ? "" : "WHERE " . implode(" OR ", $selectors);
+
+  $rows = all("SELECT
+      tasks.*,
+      tags.id as tag_id,
+      tags.label as tag_label,
+      tags.color as tag_color,
+      tags.parent_id as tag_parent_id,
+      log.status,
+      log.comment,
+      log.date as updated_date
+    FROM `tasks`
+    LEFT JOIN `task_log` log
+      ON log.id = (
+        SELECT ranked.id
+        FROM `task_log` ranked
+        WHERE ranked.task_id = tasks.id
+        ORDER BY ranked.date DESC, ranked.id DESC
+        LIMIT 1
+      )
+    LEFT JOIN `tasks_tags` tt ON tt.task_id = tasks.id
+    LEFT JOIN `tags` ON tags.id = tt.tag_id
+    $where_clause
+    ORDER BY
+      `due_date` NULLS LAST,
+      `expiration_date` NULLS LAST,
+      `open_date`");
+
+  return $rows ? collect_by($rows, 'tag', 'tags') : $rows;
 }
 
 function get_task($id) {
@@ -148,8 +192,8 @@ function get_task($id) {
     log.status,
     log.comment,
     log.date as updated_date
-  FROM tasks task
-  LEFT JOIN task_log log ON log.task_id = task.id
+  FROM `tasks` task
+  LEFT JOIN `task_log` log ON log.task_id = task.id
   WHERE task.id = ?
   ORDER BY log.date DESC', [$id]);
 
@@ -174,7 +218,7 @@ function create_timing($description, $starts_at, $ends_at, $task_id = null) {
   if($task_id) get_task($task_id) or die("task with ID $task_id does not exist");
 
   return exec_query('INSERT INTO `timings` (
-    `id`, 
+    `id`,
     `description`,
     `starts_at`,
     `ends_at`,
@@ -383,7 +427,7 @@ function create_appointment(
   $recurrence = null,
   $all_day = false,
   $going = true,
-  $circled = false,
+  $urgent = false,
   $color = null,
 ) {
   return exec_query('INSERT INTO `appointments` (
@@ -399,7 +443,7 @@ function create_appointment(
     `recurrence`,
     `all_day`,
     `going`,
-    `circled`,
+    `urgent`,
     `color`
   ) VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
     generate_humid(),
@@ -411,9 +455,9 @@ function create_appointment(
     $location,
     $meeting,
     $recurrence,
-    $all_day ? 1 : 0,
-    $going ? 1 : 0,
-    $circled ? 1 : 0,
+    $all_day,
+    $going,
+    $urgent,
     $color
   ]);
 }
@@ -429,12 +473,9 @@ function update_appointment(
   $recurrence = null,
   $all_day = false,
   $going = true,
-  $circled = false,
+  $urgent = false,
   $color = null,
 ) {
-  // Subscription-owned events should only flip the user-managed annotation
-  // fields (color, going, circled). Mirroring fields like title/starts_at
-  // belongs to the sync agent, which overwrites them on every poll.
   return exec_query('UPDATE `appointments` SET
     `title` = ?,
     `content` = ?,
@@ -445,7 +486,7 @@ function update_appointment(
     `recurrence` = ?,
     `all_day` = ?,
     `going` = ?,
-    `circled` = ?,
+    `urgent` = ?,
     `color` = ?
   WHERE id = ?', [
     $title,
@@ -455,20 +496,22 @@ function update_appointment(
     $location,
     $meeting,
     $recurrence,
-    $all_day ? 1 : 0,
-    $going ? 1 : 0,
-    $circled ? 1 : 0,
+    $all_day,
+    $going,
+    $urgent,
     $color,
     $id
   ]);
 }
 
-function update_appointment_meta($id, $color, $going, $circled) {
+// The regular `update_appointment` updates appointments managed by
+// a calendar. This function updates appointments managed by a subscription.
+function update_appointment_meta($id, $color, $going, $urgent) {
   return exec_query('UPDATE `appointments` SET
     `color` = ?,
     `going` = ?,
-    `circled` = ?
-  WHERE id = ?', [$color, $going ? 1 : 0, $circled ? 1 : 0, $id]);
+    `urgent` = ?
+  WHERE id = ?', [$color, $going, $urgent, $id]);
 }
 
 function list_appointments($from, $to) {
@@ -506,6 +549,8 @@ function delete_appointment($id) {
   return exec_query('DELETE FROM `appointments` WHERE `id` = ?', [$id]);
 }
 
+define('ENUM_SSL_MODE', ['plain', 'tls', 'ssl']);
+define('ENUM_SOCIAL_TYPE', ['instagram', 'discord', 'snapchat', 'linkedin', 'matrix', 'pinterest', 'twitter', 'youtube', 'facebook', 'activitypub', 'atproto']);
 
 // Configuration
 

@@ -9,10 +9,10 @@
     <?php include __DIR__ . "/shell/menu.php" ?>
     <main class="wide">
       <header class="bar">
-        <input name="q" x-get="/todo/listing" x-on="input" x-target="#todo-listing" placeholder="Search query...">
+        <input id="todo-search" name="q" placeholder="Search query..." value="is:todo" x-get="/todo/listing" x-on="input" x-target="#todo-listing">
       </header>
 
-      <section id="todo-listing" x-get="/todo/listing"></section>
+      <section id="todo-listing" x-get="/todo/listing" x-data="#todo-search"></section>
     </main>
   </body>
 </html>

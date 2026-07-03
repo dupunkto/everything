@@ -10,6 +10,6 @@
   }
 ?>
 <form class="subscription-new-form" x-post="/settings/subscriptions/new" x-target="#subscriptions-listing">
-  <input name="url" type="url" placeholder="iCal URL" required autofocus>
+  <input name="url" type="url" placeholder="iCalendar URL" required autofocus>
   <button type="submit">Find</button>
 </form>

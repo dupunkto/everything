@@ -3,14 +3,17 @@ if(allset($_POST, ["status", "recurrence", "urgent", "open_date", "due_date", "e
   \store\create_task(
     $_POST['title'],
     $_POST['content'],
+    $_POST['status'],
     $_POST['urgent'],
     $_POST['recurrence'],
     $_POST['open_date'],
     $_POST['due_date'],
-    $_POST['expiration_date']
+    $_POST['expiration_date'],
+    $_POST['comment']
   ) or fail("Could not save task '" . $_POST['title'] . "'.");
 
-  header("Location: /todo/listing"); exit;
+  http_response_code(303);
+  header("Location: /todo"); exit;
 }
 ?>
 <!DOCTYPE html>
@@ -33,11 +36,11 @@ if(allset($_POST, ["status", "recurrence", "urgent", "open_date", "due_date", "e
 
           <div class="field">
             <label for="recurrence">Repeat</label>
-            <input type="text" id="recurrence" name="recurrence" placeholder="* * * * *">
+            <input type="text" id="recurrence" name="recurrence" placeholder="cron or number of days">
           </div>
 
           <div class="field">
-            <label for="urgent">Urgent</label>
+            <label for="urgent">Circled</label>
             <div>
               <input type="hidden" name="urgent" value="false">
               <input type="checkbox" id="urgent" name="urgent" value="true">
@@ -62,6 +65,11 @@ if(allset($_POST, ["status", "recurrence", "urgent", "open_date", "due_date", "e
 
         <input name="title" type="text" placeholder="Title">
         <textarea name="content" placeholder="What to do...?"></textarea>
+
+        <div id="todo-form-comment" class="field">
+          <label for="comment">Comment</label>
+          <input type="text" name="comment" placeholder="Why is this task blocked?">
+        </div>
 
         <button>Save</button>
       </form>
