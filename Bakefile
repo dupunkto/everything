@@ -2,6 +2,7 @@
 
 PORT=4000
 ENTRYPOINT="index.php"
+DATABASE="data.db"
 
 # Configure the PHP server to start two
 # concurrent threads.
@@ -9,4 +10,8 @@ export PHP_CLI_SERVER_WORKERS=2
 
 serve() {
   ENV=dev php -S 0.0.0.0:$PORT $ENTRYPOINT
+}
+
+clean() {
+  rm -rf $DATABASE
 }
