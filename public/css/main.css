@@ -73,3 +73,12 @@ label {
   padding: 0;
   border: none;
 }
+
+.humid {
+  font-family: monospace;
+  font-size: 0.95em;
+  font-weight: bold;
+}
+.humid::before {
+  content: "#";
+}

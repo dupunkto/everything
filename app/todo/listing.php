@@ -14,7 +14,7 @@ $include = $include ? explode(",", $include) : [];
 $tasks = \store\list_tasks($query, $include);
 $tags = \store\list_tags();
 
-$query_tags = extract_match($query, '/\btag:(\S+)/');
+$query_tags = extract_match($query, '/(?:^|\s)\+(\S+)/');
 $root_tags = array_filter($tags, fn($tag) => !$tag['parent_id']);
 
 foreach($tasks as $task) {
@@ -47,12 +47,13 @@ function overlap($array_a, $array_b) {
     <ul>
       <?php foreach($tasks as $task): ?>
         <?php if($query_tags == [] || overlap(array_column($task['tags'], 'label'), $query_tags) >= 1): ?>
-          <li>
+          <li tabindex="0" data-id="<?= $task['id'] ?>">
             <form x-post="/todo/status" x-target="#todo-listing" x-on="change">
               <input type="hidden" name="id" value="<?= $task['id'] ?>">
               <input type="hidden" name="status" value="todo" />
               <input type="hidden" name="q" value="<?= esc_attr($query) ?>" />
               <input type="hidden" name="i" value="<?= esc_attr(join(",", array_unique([...$include, $task['id']]))) ?>" />
+
               <input
                 type="checkbox"
                 class="checkbox"
@@ -62,7 +63,12 @@ function overlap($array_a, $array_b) {
                 <?php if($task['status'] == "nvm") echo "disabled" ?>
               >
             </form>
-            <h4 class="title"><span class="humid"><?= $task['id'] ?></span> <?= esc_inner($task['title']) ?> </h4>
+            <h4 class="title">
+              <span class="humid"><?= $task['id'] ?></span>
+              <a href="/todo/edit?id=<?= $task['id'] ?>" tabindex="-1">
+                <?= esc_inner($task['title']) ?>
+              </a>
+            </h4>
           </li>
         <?php endif; ?>
       <?php endforeach; ?>

@@ -68,7 +68,7 @@ if(allset($_POST, ["status", "recurrence", "urgent", "open_date", "due_date", "e
 
         <div id="todo-form-comment" class="field">
           <label for="comment">Comment</label>
-          <input type="text" name="comment" placeholder="Why is this task blocked?">
+          <input type="text" name="comment" placeholder="Why is this task blocked or backlogged?">
         </div>
 
         <button>Save</button>

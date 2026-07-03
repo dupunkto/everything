@@ -1,13 +1,15 @@
 <?php
-  if(allset($_POST, ["id", "description", "starts_at", "ends_at"])) {
-    \store\update_timing($_POST['id'], $_POST['description'], $_POST['starts_at'], $_POST['ends_at'], null)
-      or fail("Could not save timing " . $_POST['id'] . " from " . $_POST['starts_at'] . " to " . $_POST['ends_at'] . " with description '" . $_POST['description'] . "'.");
 
-    include __DIR__ . "/listing.php"; exit;
-  }
+if(allset($_POST, ["id", "description", "starts_at", "ends_at"])) {
+  \store\update_timing($_POST['id'], $_POST['description'], $_POST['starts_at'], $_POST['ends_at'], null)
+    or fail("Could not save timing " . $_POST['id'] . " from " . $_POST['starts_at'] . " to " . $_POST['ends_at'] . " with description '" . $_POST['description'] . "'.");
 
-  if(!isset($_GET['id'])) fail("Timing is missing.", status: 400);
-  $timing = \store\get_timing($_GET['id']) or fail("Timing not found.", status: 404);
+  include __DIR__ . "/listing.php"; exit;
+}
+
+if(!isset($_GET['id'])) fail("Timing is missing.", status: 400);
+$timing = \store\get_timing($_GET['id']) or fail("Timing not found.", status: 404);
+
 ?>
 <li class="editor">
   <form class="tracker-editor" x-post="/tracker/edit" x-target="#tracker-listing">
