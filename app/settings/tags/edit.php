@@ -8,4 +8,3 @@
   else {
     fail("Could not complete request: missing POST data.", status: 400);
   }
-?>

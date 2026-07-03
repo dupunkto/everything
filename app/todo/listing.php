@@ -1,41 +1,41 @@
 <?php
 
-$lists = [];
+  $lists = [];
 
-$query = @$_GET['q'] ?? @$_POST['q'];
-$include = @$_GET['i'] ?? @$_POST['i'];
+  $query = @$_GET['q'] ?? @$_POST['q'];
+  $include = @$_GET['i'] ?? @$_POST['i'];
 
-// This array includes IDs of items that have just been clicked.
-// We do not want to have them disappear from under the users cursor,
-// that is a very bad UX. So this 'skips' them from the query that
-// is currently active.
-$include = $include ? explode(",", $include) : [];
+  // This array includes IDs of items that have just been clicked.
+  // We do not want to have them disappear from under the users cursor,
+  // that is a very bad UX. So this 'skips' them from the query that
+  // is currently active.
+  $include = $include ? explode(",", $include) : [];
 
-$tasks = \store\list_tasks($query, $include);
-$tags = \store\list_tags();
+  $tasks = \store\list_tasks($query, $include);
+  $tags = \store\list_tags();
 
-$query_tags = extract_match($query, '/(?:^|\s)\+(\S+)/');
-$root_tags = array_filter($tags, fn($tag) => !$tag['parent_id']);
+  $query_tags = extract_match($query, '/(?:^|\s)\+(\S+)/');
+  $root_tags = array_filter($tags, fn($tag) => !$tag['parent_id']);
 
-foreach($tasks as $task) {
-  $found = false;
+  foreach($tasks as $task) {
+    $found = false;
 
-  foreach($root_tags as $tag) {
-    if(in_array($tag['label'], array_column($task['tags'], 'label'))) {
-      $found = true;
-      $lists[$tag['label']][] = $task;
-      break;
+    foreach($root_tags as $tag) {
+      if(in_array($tag['label'], array_column($task['tags'], 'label'))) {
+        $found = true;
+        $lists[$tag['label']][] = $task;
+        break;
+      }
+    }
+
+    if(!$found) {
+      $lists['all'][] = $task;
     }
   }
-
-  if(!$found) {
-    $lists['all'][] = $task;
+    
+  function overlap($array_a, $array_b) {
+    return count(array_intersect($array_a, $array_b));
   }
-}
-  
-function overlap($array_a, $array_b) {
-  return count(array_intersect($array_a, $array_b));
-}
 
 ?>
 <?php foreach($lists as $list => $tasks): ?>

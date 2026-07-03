@@ -65,15 +65,20 @@
               focused.querySelector("input[type=checkbox][name=status]").checked = false;
               focused.querySelector("form").dispatchEvent(new Event("change", { bubbles: true }));
             }
-            else if (e.key === 'd') {
+            else if (e.key == 'd') {
               e.preventDefault();
               if (!confirm('Delete this task?')) return;
               // TODO(robin): implement this!
             }
-            else if (e.key === 'e' || e.key === 'o') {
+            else if (e.key == 'e' || e.key == 'o') {
               e.preventDefault();
               window.location.href = `/todo/edit?id=${id}`;
             }
+          }
+
+          if (e.key == 'n') {
+            e.preventDefault();
+            window.location.href = `/todo/new`;
           }
         });
       </script>

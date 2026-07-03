@@ -1,6 +1,5 @@
 <?php
 
-if(allset($_POST, ["id"])) {
-  \store\delete_task($_POST["id"]) or fail("Could not delete task.");
-  include "listing.php"; exit;
-}
+  if(!isset($_GET['id'])) fail("Task is missing.", status: 400);
+  \store\delete_task($_GET["id"]) or fail("Could not delete task.");
+  include "listing.php";

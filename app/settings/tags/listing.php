@@ -1,4 +1,5 @@
 <?php
+
   $tags = \store\list_tags();
 
   $children_of = [];
@@ -12,6 +13,7 @@
       $set += $subtree_of($child);
     return $set;
   };
+
 ?>
 <ul>
   <?php foreach($tags as $tag): ?>
