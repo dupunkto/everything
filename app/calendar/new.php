@@ -1,5 +1,5 @@
 <?php
-  if(allset($_POST, ["calendar_id", "title", "start_date", "start_time", "end_date", "end_time"])) {
+  if(isset($_POST["calendar_id"], $_POST["title"], $_POST["start_date"], $_POST["start_time"], $_POST["end_date"], $_POST["end_time"])) {
     $calendar = \store\get_calendar($_POST['calendar_id'])
       or fail("Calendar not found.", status: 404);
     

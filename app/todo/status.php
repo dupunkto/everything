@@ -1,6 +1,6 @@
 <?php
 
-  if(allset($_POST, ["id", "status"])) {
+  if(isset($_POST["id"], $_POST["status"])) {
     \store\set_task_status(
       $_POST["id"],
       $_POST["status"],

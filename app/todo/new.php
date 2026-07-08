@@ -1,6 +1,6 @@
 <?php
 
-  if(allset($_POST, ["status", "recurrence", "urgent", "open_date", "due_date", "expiration_date"])) {
+  if(isset($_POST["status"], $_POST["recurrence"], $_POST["urgent"], $_POST["open_date"], $_POST["due_date"], $_POST["expiration_date"])) {
     \store\create_task(
       $_POST['title'],
       $_POST['content'],

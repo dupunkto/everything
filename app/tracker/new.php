@@ -1,6 +1,6 @@
 <?php
 
-  if(allset($_POST, ['start_date', 'start_time', 'end_date', 'end_time'])) {
+  if(isset($_POST['start_date'], $_POST['start_time'], $_POST['end_date'], $_POST['end_time'])) {
     $starts_at = cast_datetime_utc($_POST['start_date'], $_POST['start_time']);
     $ends_at = cast_datetime_utc($_POST['end_date'], $_POST['end_time']);
 

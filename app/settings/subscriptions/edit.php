@@ -1,6 +1,6 @@
 <?php
 
-  if(allset($_POST, ["id", "color", "title", "url"])) {
+  if(isset($_POST["id"], $_POST["color"], $_POST["title"], $_POST["url"])) {
     \store\update_subscription($_POST['id'], $_POST['title'], $_POST['subtitle'] ?? '', $_POST['url'], $_POST['color'])
       or fail("Could not save subscription #" . $_POST['id'] . ".");
 
