@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 PORT=4000
-ENTRYPOINT="index.php"
-DATABASE="data.db"
+ENTRYPOINT=index.php
+STORE=data.db
 
 # Configure the PHP server to start two
 # concurrent threads.
@@ -13,5 +13,5 @@ serve() {
 }
 
 clean() {
-  rm -rf $DATABASE
+  rm -rf $STORE
 }

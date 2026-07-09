@@ -69,7 +69,8 @@
   z-index: 1;
 }
 
-#todo-form [name="title"] {
+#todo-form [name="title"],
+#todo-editor [name="title"] {
   font-size: 1.5em;
 }
 
@@ -96,4 +97,68 @@
 
 #todo-form .meta .field > div {
   display: flex;
+}
+
+#todo-editor {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 15px;
+}
+
+#todo-editor h2 {
+  font-size: 1.2em;
+  border-bottom: none;
+  padding: 0;
+  margin: 5px 0;
+}
+
+#todo-editor section,
+#todo-editor aside {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#todo-editor aside .field {
+  display: grid;
+  grid-template-columns: 1fr 3fr;
+  align-items: center;
+}
+
+#todo-editor [name="status"] {
+  font-size: 1.4em;
+}
+
+#todo-editor .next {
+  margin-top: -0.5em;
+  text-align: right;
+}
+
+#todo-editor time {
+  opacity: 0.5;
+  float: right;
+  margin-right: 1em;
+}
+
+#todo-editor .status.comment .message {
+  margin-top: 0.5em;
+}
+
+#todo-editor .message {
+  background-color: light-dark(#f1f1f1, #2b2b33);
+  padding: 10px 0;
+}
+
+#todo-editor .message p {
+  margin-top: 0;
+  margin-left: 15px;
+}
+
+#todo-editor .message p:last-of-type {
+  margin-bottom: 0;
+}
+
+#todo-editor .actions {
+  display: flex;
+  justify-content: space-between;
 }

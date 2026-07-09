@@ -84,7 +84,6 @@ function update_task(
     `due_date` = ?,
     `expiration_date` = ?
   WHERE id = ?', [
-    $id,
     $title,
     $content,
     $urgent,
@@ -197,15 +196,21 @@ function get_task($id) {
   WHERE task.id = ?
   ORDER BY log.date DESC', [$id]);
 
-  if($task == null) return $task;
+  if($task === null) return $task;
 
-  $tags = all('SELECT tags.label FROM `tags` WHERE `task_id` = ?', [$id]);
+  $tags = all('SELECT tags.label FROM `tags`
+    JOIN `tasks_tags` tt ON tt.tag_id = tags.id
+    WHERE tt.task_id = ?', [$id]);
 
-  if($tags == null) return $tags;
+  if($tags === null) return $tags;
 
   $task['tags'] = array_column($tags, 'label');
 
   return $task;
+}
+
+function get_task_log($id) {
+  return all('SELECT * FROM `task_log` WHERE `task_id` = ? ORDER BY `date` ASC', [$id]) ?? [];
 }
 
 function delete_task($id) {
