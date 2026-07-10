@@ -1,5 +1,11 @@
 @import url("https://cdn.geheimesite.nl/tools.css");
 
+:root {
+  --sidebar-padding: 10px;
+  --sidebar-collapsed: 4rem;
+  --sidebar-hover: 250px;
+}
+
 body > header {
   color: inherit;
   background: transparent
@@ -8,6 +14,7 @@ body > header {
 main.wide {
   max-width: 100%;
   margin: 1em;
+  margin-left: calc(var(--sidebar-collapsed) + 2 * var(--sidebar-padding));
 }
 
 main.semi-wide {
@@ -81,4 +88,51 @@ label {
 }
 .humid::before {
   content: "#";
+}
+
+body > nav {
+  position: absolute;
+  left: var(--sidebar-padding);
+  font-size: 1.1em;
+  top: 4rem;
+  width: var(--sidebar-collapsed);
+  text-wrap: nowrap;
+  overflow: hidden;
+  transition: width 0.3s ease;
+  z-index: 100;
+}
+
+body > nav:hover,
+body > nav.expanded {
+  width: var(--sidebar-hover);
+}
+
+body {
+  overflow-x: hidden;
+}
+
+body > main.wide {
+  transition: transform 0.3s ease;
+}
+
+body:has(> nav:hover) > main.wide,
+body:has(> nav.expanded) > main.wide {
+  transform: translateX(calc(var(--sidebar-hover) - var(--sidebar-collapsed)));
+}
+
+body > nav span {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+body > nav:hover span,
+body > nav.expanded span {
+  opacity: 1;
+}
+
+/* Suppress the sidebar animation when restoring expanded state across a
+   navigation, so it doesn't replay on every page load. */
+.no-anim,
+.no-anim * {
+  transition: none !important;
 }
