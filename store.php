@@ -519,6 +519,105 @@ function update_appointment_meta($id, $color, $going, $urgent) {
   WHERE id = ?', [$color, $going, $urgent, $id]);
 }
 
+function update_appointment_body(
+  $id,
+  $title,
+  $content,
+  $starts_at,
+  $ends_at,
+  $location,
+  $meeting,
+  $all_day,
+  $recurrence,
+  $recurrence_until,
+  $recurrence_count
+) {
+  return exec_query('UPDATE `appointments` SET
+    `title` = ?,
+    `content` = ?,
+    `starts_at` = ?,
+    `ends_at` = ?,
+    `location` = ?,
+    `meeting` = ?,
+    `all_day` = ?,
+    `recurrence` = ?,
+    `recurrence_until` = ?,
+    `recurrence_count` = ?
+  WHERE id = ?', [
+    $title,
+    $content,
+    $starts_at,
+    $ends_at,
+    $location,
+    $meeting,
+    $all_day,
+    $recurrence,
+    $recurrence_until,
+    $recurrence_count,
+    $id
+  ]);
+}
+
+// `going`, `urgent` and `color` take their schema defaults; they are user
+// annotations, not managed by the feed. A NULL color inherits the
+// subscription color in the calendar views.
+function create_subscription_appointment(
+  $id,
+  $subscription_id,
+  $title,
+  $content,
+  $starts_at,
+  $ends_at,
+  $location,
+  $meeting,
+  $all_day,
+  $recurrence,
+  $recurrence_until,
+  $recurrence_count
+) {
+  return exec_query('INSERT INTO `appointments` (
+    `id`,
+    `subscription_id`,
+    `title`,
+    `content`,
+    `starts_at`,
+    `ends_at`,
+    `location`,
+    `meeting`,
+    `all_day`,
+    `recurrence`,
+    `recurrence_until`,
+    `recurrence_count`
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+    $id,
+    $subscription_id,
+    $title,
+    $content,
+    $starts_at,
+    $ends_at,
+    $location,
+    $meeting,
+    $all_day,
+    $recurrence,
+    $recurrence_until,
+    $recurrence_count
+  ]);
+}
+
+function list_subscription_appointments($subscription_id) {
+  return all('SELECT * FROM `appointments`
+    WHERE `subscription_id` = ?', [$subscription_id]);
+}
+
+// Stops a recurring appointment at the given moment without deleting it,
+// preserving its past occurrences.
+function end_appointment_recurrence($id, $moment) {
+  return exec_query('UPDATE `appointments` SET
+    `recurrence_until` = ?,
+    `recurrence_count` = NULL
+  WHERE id = ?', [$moment, $id]);
+}
+
 function list_appointments($from, $to) {
   return all('SELECT
     a.*,
