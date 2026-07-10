@@ -22,3 +22,44 @@ function local_date($format, $timestamp = "now", $timezone = null) {
   $datetime = new DateTimeImmutable($timestamp, new DateTimeZone($timezone));
   return $datetime->format($format);
 }
+
+function describe_recurrence($recurrence) {
+  if($recurrence === null || $recurrence === "") return null;
+
+  if(ctype_digit((string)$recurrence)) {
+    return $recurrence == 1 ? "Every day" : "Every $recurrence days";
+  }
+
+  $fields = preg_split('/\s+/', trim($recurrence));
+  if(count($fields) != 5) return $recurrence;
+
+  [$minute, $hour, $dom, $month, $dow] = $fields;
+
+  if(preg_match('/[^\d,*]/', implode("", $fields))) return $recurrence;
+  if(!ctype_digit($minute) || !ctype_digit($hour)) return $recurrence;
+
+  $time = sprintf("%02d:%02d", $hour, $minute);
+
+  $list = fn($items) => count($items) > 1
+    ? implode(", ", array_slice($items, 0, -1)) . " and " . end($items)
+    : $items[0];
+
+  if($dow != "*") {
+    $weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    $names = array_map(fn($day) => $weekdays[$day % 7], explode(",", $dow));
+    return "Every " . $list($names) . " at $time";
+  }
+
+  if($dom != "*" && $month != "*") {
+    if(!ctype_digit($dom) || !ctype_digit($month) || $month < 1 || $month > 12) return $recurrence;
+    $months = ["January", "February", "March", "April", "May", "June",
+               "July", "August", "September", "October", "November", "December"];
+    return "Every year on $dom " . $months[$month - 1] . " at $time";
+  }
+
+  if($dom != "*") {
+    return "Every month on day " . $list(explode(",", $dom)) . " at $time";
+  }
+
+  return "Every day at $time";
+}

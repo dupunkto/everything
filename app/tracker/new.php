@@ -51,7 +51,7 @@
       }
     });
 
-    function mountTimer() {
+    const mountTimer = () => {
       const description = localStorage.getItem("description");
       const start_timing = localStorage.getItem("start_timing");
 
@@ -112,7 +112,7 @@
           mountTimer(); // Remount to attach the onclick handler for stopping the tracker.
         }, { once: true })
       }
-    }
+    };
 
     // When the page has finished loading, mount the tracker component.
     mountTimer();

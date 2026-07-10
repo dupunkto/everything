@@ -4,7 +4,6 @@
 $timezone = getenv("TIMEZONE") ?: "Europe/Amsterdam";
 
 $from = (new DateTime($_GET['date'], new DateTimeZone($timezone)))->modify('monday this week')->setTime(0, 0, 0);
-$week_end = (clone $from)->modify('+6 days'); // last calendar day of the week (Sunday)
 $to = (clone $from)->modify('+7 days'); // exclusive upper bound for the query (next Monday)
 
 $now = new DateTime('now', new DateTimeZone($timezone));
@@ -33,14 +32,21 @@ $timed_appointments = array_values(array_filter($appointments, fn($a) => !$a['al
 
 $days = [1 => [], 2 => [], 3 => [], 4 => [], 5 => [], 6 => [], 7 => []];
 
+// Week bounds in the same (timezone-naive) wall-clock space as the localised
+// appointment times, so they can be compared and clamped against each other.
+$week_start = new DateTime($from->format("Y-m-d\TH:i:s"));
+$week_stop = new DateTime($to->format("Y-m-d\TH:i:s"));
+
 foreach($timed_appointments as $appointment) {
   $start_dt = new DateTime($appointment['starts_at']);
-  $end_dt = new DateTime($appointment['ends_at']);
+  $end_dt = min(new DateTime($appointment['ends_at']), $week_stop);
 
   // Appointments crossing midnight are split into one segment per day, each
   // clipped to that day's boundaries, so every day only lays out the portion
-  // of the appointment that actually falls within it.
-  $day_cursor = (clone $start_dt)->setTime(0, 0, 0);
+  // of the appointment that actually falls within it. The cursor is clamped
+  // to the displayed week; days of an appointment stretching into adjacent
+  // weeks would otherwise wrap around into this week's columns.
+  $day_cursor = max((clone $start_dt)->setTime(0, 0, 0), $week_start);
 
   while($day_cursor < $end_dt) {
     $day_end = (clone $day_cursor)->modify('+1 day');
@@ -59,7 +65,7 @@ foreach($timed_appointments as $appointment) {
       $segment['starts_at'] = $segment_start->format("Y-m-d H:i:s");
       $segment['ends_at'] = $segment_end->format("Y-m-d H:i:s");
       $segment['day_number'] = $day_number;
-      $segment['layout_end'] = $layout_end;
+      $segment['layout_end'] = $layout_end->format("Y-m-d H:i:s");
       $days[$day_number][] = $segment;
     }
 
@@ -74,6 +80,11 @@ foreach($days as $f => $day) {
     ?: ($a['subscription_id'] <=> $b['subscription_id'])
     ?: strcmp($a['id'], $b['id']));
 
+  // Appointments marked 'not going' don't participate in the column layout;
+  // they are drawn over whatever else is there, see below.
+  $skipped = array_filter($day, fn($a) => !$a['going']);
+  $day = array_filter($day, fn($a) => $a['going']);
+
   $columns = [];
 
   foreach($day as $appointment) {
@@ -84,54 +95,123 @@ foreach($days as $f => $day) {
 
       if($last_appointment['layout_end'] <= $appointment['starts_at']) {
         $found = true;
-        $columns[$h] = $appointment;
+        $columns[$h][] = $appointment;
+        break;
       }
     }
 
     if(!$found) {
       $columns[] = [$appointment];
     }
+  }
 
-    $total_columns = $columns ? count($columns) : 1;
+  $total_columns = $columns ? count($columns) : 1;
+  $days[$f] = [];
 
-    foreach($columns as $i => $column) {
-      foreach($column as $j => &$appointment) {
-        $span = 1;
+  foreach($columns as $i => $column) {
+    foreach($column as $appointment) {
+      $span = 1;
 
-        for ($k = $i + 1; $k < $total_columns; $k++) {
-          if (array_any($columns[$k], fn($other) =>
-              $appointment['starts_at'] < $other['layout_end'] &&
-              $appointment['layout_end'] > $other['starts_at']
-          )) break;
+      for ($k = $i + 1; $k < $total_columns; $k++) {
+        if (array_any($columns[$k], fn($other) =>
+            $appointment['starts_at'] < $other['layout_end'] &&
+            $appointment['layout_end'] > $other['starts_at']
+        )) break;
 
-          $span++;
-        }
-
-        $column_index = $i;
-        $column_span = $span;
-
-        $start_dt = new DateTimeImmutable($appointment['starts_at']);
-        $end_dt = new DateTimeImmutable($appointment['ends_at']);
-
-        $day_start = $start_dt->setTime(0, 0, 0);
-        $day_end = $day_start->modify('+1 day');
-
-        $total_minutes = ($day_end->getTimestamp() - $day_start->getTimestamp()) / 60;
-        $start_minutes = ($start_dt->getTimestamp() - $day_start->getTimestamp()) / 60;
-        $duration_minutes = ($end_dt->getTimestamp() - $start_dt->getTimestamp()) / 60;
-
-        $appointment['layout'] = [
-          "top" => $start_minutes / $total_minutes * 100,
-          "height" => $duration_minutes / $total_minutes * 100,
-          "width" => $column_span / $total_columns * 100,
-          "left" => $column_index / $total_columns * 100
-        ];
-
-        $days[$appointment['day_number']][] = $appointment;
+        $span++;
       }
+
+      $column_index = $i;
+      $column_span = $span;
+
+      $start_dt = new DateTimeImmutable($appointment['starts_at']);
+      $end_dt = new DateTimeImmutable($appointment['ends_at']);
+
+      $day_start = $start_dt->setTime(0, 0, 0);
+      $day_end = $day_start->modify('+1 day');
+
+      $total_minutes = ($day_end->getTimestamp() - $day_start->getTimestamp()) / 60;
+      $start_minutes = ($start_dt->getTimestamp() - $day_start->getTimestamp()) / 60;
+      $duration_minutes = ($end_dt->getTimestamp() - $start_dt->getTimestamp()) / 60;
+
+      $appointment['layout'] = [
+        "top" => $start_minutes / $total_minutes * 100,
+        "height" => $duration_minutes / $total_minutes * 100,
+        "width" => $column_span / $total_columns * 100,
+        "left" => $column_index / $total_columns * 100
+      ];
+
+      $days[$f][] = $appointment;
     }
   }
+
+  // 'Not going' appointments overlay the laid-out ones at (almost) full
+  // width. Each is inset a little further per appointment it overlaps, so
+  // the left borders of everything underneath stay visible. Rendering
+  // after the placed appointments puts them on top.
+  foreach($skipped as $appointment) {
+    $overlapping = fn($other) =>
+      $appointment['starts_at'] < $other['layout_end'] &&
+      $appointment['layout_end'] > $other['starts_at'];
+
+    $level = count(array_filter($days[$f], $overlapping));
+
+    $start_dt = new DateTimeImmutable($appointment['starts_at']);
+    $end_dt = new DateTimeImmutable($appointment['ends_at']);
+
+    $day_start = $start_dt->setTime(0, 0, 0);
+    $day_end = $day_start->modify('+1 day');
+
+    $total_minutes = ($day_end->getTimestamp() - $day_start->getTimestamp()) / 60;
+    $start_minutes = ($start_dt->getTimestamp() - $day_start->getTimestamp()) / 60;
+    $duration_minutes = ($end_dt->getTimestamp() - $start_dt->getTimestamp()) / 60;
+
+    $appointment['layout'] = [
+      "top" => $start_minutes / $total_minutes * 100,
+      "height" => $duration_minutes / $total_minutes * 100,
+      "inset" => $level * 5
+    ];
+
+    $days[$f][] = $appointment;
+  }
 }
+
+// The all-day bar uses the same greedy packing, but rotated: appointments
+// occupy horizontal lanes, and each lands in the first lane that is still
+// free on its starting day.
+usort($all_day_appointments, fn($a, $b) =>
+  strcmp($a['starts_at'], $b['starts_at'])
+  ?: ($a['calendar_id'] <=> $b['calendar_id'])
+  ?: ($a['subscription_id'] <=> $b['subscription_id'])
+  ?: strcmp($a['id'], $b['id']));
+
+$week_last_day = (clone $week_start)->modify('+6 days');
+
+$lanes = []; // last occupied column per lane
+$placed = [];
+
+foreach($all_day_appointments as $appointment) {
+  $start_dt = max($week_start, (new DateTime($appointment['starts_at']))->setTime(0, 0, 0));
+
+  // An all-day appointment ending at midnight ends on the day before.
+  $end_dt = new DateTime($appointment['ends_at']);
+  $end_dt = $end_dt->format("H:i:s") === "00:00:00" ? $end_dt->modify('-1 day') : $end_dt;
+  $end_dt = min($week_last_day, $end_dt->setTime(0, 0, 0));
+
+  if($end_dt < $start_dt) continue;
+
+  $column = $week_start->diff($start_dt)->days + 1;
+  $span = $start_dt->diff($end_dt)->days + 1;
+
+  $row = 1;
+  while(($lanes[$row] ?? 0) >= $column) $row++;
+  $lanes[$row] = $column + $span - 1;
+
+  $appointment['layout'] = ["column" => $column, "span" => $span, "row" => $row];
+  $placed[] = $appointment;
+}
+
+$all_day_appointments = $placed;
 
 ?>
 <div class="calendar-week__header">
@@ -157,20 +237,9 @@ foreach($days as $f => $day) {
   <?php if($all_day_appointments): ?>
   <div class="calendar-week__all-day">
     <?php foreach($all_day_appointments as $appointment): ?>
-      <?php
-        $start_dt = max($from, (new DateTime($appointment['starts_at']))->setTime(0, 0, 0));
-
-        $end_dt = new DateTime($appointment['ends_at']);
-        $end_dt = $end_dt->format("H:i:s") === "00:00:00" ? $end_dt->modify('-1 day') : $end_dt;
-        $end_dt = min($week_end, $end_dt->setTime(0, 0, 0));
-
-        if($end_dt < $start_dt) continue;
-
-        $column = $from->diff($start_dt)->days + 1;
-        $span = $start_dt->diff($end_dt)->days + 1;
-      ?>
-      <article class="appointment appointment--all-day"
-                style="--appointment-column: <?= $column ?>; --appointment-span: <?= $span ?>;
+      <article class="appointment appointment--all-day<?= $appointment['going'] ? "" : " appointment--not-going" ?>"
+                style="--appointment-column: <?= $appointment['layout']['column'] ?>; --appointment-span: <?= $appointment['layout']['span'] ?>;
+                      --appointment-row: <?= $appointment['layout']['row'] ?>;
                       --appointment-color: <?= esc_attr($appointment['calendar_color'] ?? $appointment['subscription_color'] ?? '#cccccc') ?>">
         <h3 class="appointment__title">
           <?= $appointment['title'] ?>
@@ -178,7 +247,7 @@ foreach($days as $f => $day) {
 
         <?php if($appointment['recurrence'] || $appointment['meeting']): ?>
           <span class="appointment__icons">
-            <?php if($appointment['recurrence']): ?><i class="fa-solid fa-repeat"></i><?php endif; ?>
+            <?php if($appointment['recurrence']): ?><i class="fa-solid fa-repeat" title="<?= esc_attr(describe_recurrence($appointment['recurrence'])) ?>"></i><?php endif; ?>
             <?php if($appointment['meeting']): ?><i class="fa-solid fa-video"></i><?php endif; ?>
           </span>
         <?php endif; ?>
@@ -200,18 +269,14 @@ foreach($days as $f => $day) {
           <div class="calendar-week__now" style="--now-top: <?= $now_top ?>"></div>
         <?php endif; ?>
 
-        <?php
-          // Filter out non-layouted appointments (leftovers from Python algorithm
-          // that heavily used mutation by reference, for which semantics in PHP differ).
-          $day = array_filter($day, fn($appointment) => array_key_exists('layout', $appointment));
-        ?>
-
         <?php foreach($day as $appointment): ?>
-          <article class="appointment"
-                    style="--appointment-top: <?= $appointment['layout']['top'] ?>;
-                          --appointment-height: <?= $appointment['layout']['height'] ?>;
-                          --appointment-width: <?= $appointment['layout']['width'] ?>;
-                          --appointment-left: <?= $appointment['layout']['left'] ?>;
+          <?php $layout = $appointment['layout']; ?>
+          <article class="appointment<?= $appointment['going'] ? "" : " appointment--not-going" ?>"
+                    style="--appointment-top: <?= $layout['top'] ?>;
+                          --appointment-height: <?= $layout['height'] ?>;
+                          <?= $appointment['going']
+                            ? "--appointment-width: {$layout['width']}; --appointment-left: {$layout['left']};"
+                            : "--appointment-inset: {$layout['inset']};" ?>
                           --appointment-color: <?= esc_attr($appointment['calendar_color'] ?? $appointment['subscription_color'] ?? '#cccccc') ?>">
             <h3 class="appointment__title">
               <?= $appointment['title'] ?>
@@ -229,7 +294,7 @@ foreach($days as $f => $day) {
 
             <?php if($appointment['recurrence'] || $appointment['meeting']): ?>
               <span class="appointment__icons">
-                <?php if($appointment['recurrence']): ?><i class="fa-solid fa-repeat"></i><?php endif; ?>
+                <?php if($appointment['recurrence']): ?><i class="fa-solid fa-repeat" title="<?= esc_attr(describe_recurrence($appointment['recurrence'])) ?>"></i><?php endif; ?>
                 <?php if($appointment['meeting']): ?><i class="fa-solid fa-video"></i><?php endif; ?>
               </span>
             <?php endif; ?>
