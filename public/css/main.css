@@ -132,7 +132,7 @@ body > nav.expanded span {
 
 /* Suppress the sidebar animation when restoring expanded state across a
    navigation, so it doesn't replay on every page load. */
-.no-anim,
-.no-anim * {
+.no-animation,
+.no-animation * {
   transition: none !important;
 }
