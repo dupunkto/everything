@@ -10,15 +10,13 @@
 
     <?php
       $timezone = new DateTimeZone(getenv("TIMEZONE") ?: "Europe/Amsterdam");
-
-      $start = new DateTime('monday this week', $timezone);
-      $end = new DateTime('monday next week', $timezone);
+      $today = new DateTime('today', $timezone);
     ?>
 
-    <main class="wide">
-      <section id="calendar-new" x-get="/calendar/new"></section>
+    <main class="wide calendar-page">
+      <!-- <section id="calendar-new" x-get="/calendar/new"></section> -->
       <section id="calendar-week"
-        x-get="/calendar/week?from=<?= $start->setTime(0, 0, 0)->format("Y-m-d H:i:s") ?>&to=<?= $end->setTime(0, 0, 0)->format("Y-m-d H:i:s") ?>"></section>
+        x-get="/calendar/week?date=<?= $today->format("Y-m-d") ?>"></section>
     </main>
   </body>
 </html>

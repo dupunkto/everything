@@ -34,11 +34,7 @@
       $color
     ) or fail("Could not create appointment.");
 
-    $timezone = new DateTimeZone(getenv("TIMEZONE") ?: "Europe/Amsterdam");
-    $start = new DateTimeImmutable($_POST['start_date'], $timezone);
-
-    $_GET['from'] = $start->modify("monday this week")->format("Y-m-d");
-    $_GET['to'] = $start->modify("monday next week")->format("Y-m-d");
+    $_GET['date'] = $_POST['start_date'];
 
     include __DIR__ . "/week.php"; exit;
   }
@@ -54,7 +50,7 @@
     <select name="calendar_id" required>
       <?php foreach($calendars as $c): ?>
         <option value="<?= esc_attr($c['id']) ?>" data-color="<?= esc_attr($c['color']) ?>">
-          <?= esc_inner($c['title']) ?><?php if($c['subtitle']) echo " &mdash; " . esc_inner($c['subtitle']) ?>
+          <?= esc_inner($c['title']) ?><?php if($c['subtitle']) echo " (" . esc_inner($c['subtitle']) . ")" ?>
         </option>
       <?php endforeach ?>
     </select>
@@ -92,7 +88,7 @@
     <input name="recurrence" type="text" placeholder="cron or number of days">
   </div>
 
-  <label class="check"><input type="checkbox" name="urgent"> Circled</label>
+  <label class="check"><input type="checkbox" name="urgent"> Circle</label>
   <label class="check"><input type="checkbox" name="going" checked> Going</label>
 
   <button type="submit">Save</button>
@@ -101,14 +97,13 @@
     // dingen om aan zhtml toe te voegen
     //   - z-toggle op toggle om ander element visibility te togglen
     //   - z-mirror op input om value naar andere input te copyen
-  
-    (() => {
+    (() =>{
       const form = document.currentScript.closest("form");
 
       for(const trigger of form.querySelectorAll("input[type=checkbox][z-toggle]")) {
-        const target = form.querySelector(trigger.getAttribute("z-toggle"));
-        if(!target) continue;
-        trigger.addEventListener("change", () => target.hidden = !trigger.checked);
+        form.querySelectorAll(trigger.getAttribute("z-toggle")).forEach(target => {
+          trigger.addEventListener("change", () => target.hidden = !target.hidden);
+        });
       }
 
       const select = form.querySelector("select[name=calendar_id]");

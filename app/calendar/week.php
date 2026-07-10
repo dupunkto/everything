@@ -1,26 +1,70 @@
 <?php
 // The calendar week view.
 
-$appointments = \store\list_appointments($_GET['from'], $_GET['to']);
+$timezone = getenv("TIMEZONE") ?: "Europe/Amsterdam";
+
+$from = (new DateTime($_GET['date'], new DateTimeZone($timezone)))->modify('monday this week')->setTime(0, 0, 0);
+$week_end = (clone $from)->modify('+6 days'); // last calendar day of the week (Sunday)
+$to = (clone $from)->modify('+7 days'); // exclusive upper bound for the query (next Monday)
+
+$now = new DateTime('now', new DateTimeZone($timezone));
+$now_day_number = ($now >= $from && $now < $to) ? (int) $now->format('N') : null;
+$now_top = ((int) $now->format('H') * 60 + (int) $now->format('i')) / 1440 * 100;
+
+// Appointments are stored in UTC (see cast_datetime_utc); the query bounds
+// need to be in UTC too, and the fetched rows need converting back to local
+// wall-clock time before any of the day-layout math below runs on them.
+$appointments = \store\list_appointments(
+  cast_datetime_utc($from->format('Y-m-d'), $from->format('H:i:s'), $timezone),
+  cast_datetime_utc($to->format('Y-m-d'), $to->format('H:i:s'), $timezone)
+);
+
+foreach($appointments as &$appointment) {
+  $appointment['starts_at'] = cast_datetime_local($appointment['starts_at'], $timezone);
+  $appointment['ends_at'] = cast_datetime_local($appointment['ends_at'], $timezone);
+}
+unset($appointment);
+
+$all_day_appointments = array_values(array_filter($appointments, fn($a) => $a['all_day']));
+$timed_appointments = array_values(array_filter($appointments, fn($a) => !$a['all_day']));
 
 // Credits to @m1kadev for implementing this in Python originally, for
 // a project that shall not be named on legal grounds. Happily stolen:)
 
-$days = [[], [], [], [], [], [], []];
+$days = [1 => [], 2 => [], 3 => [], 4 => [], 5 => [], 6 => [], 7 => []];
 
-foreach($appointments as $appointment) {
+foreach($timed_appointments as $appointment) {
   $start_dt = new DateTime($appointment['starts_at']);
   $end_dt = new DateTime($appointment['ends_at']);
 
-  $day_number = $start_dt->format("N");
+  // Appointments crossing midnight are split into one segment per day, each
+  // clipped to that day's boundaries, so every day only lays out the portion
+  // of the appointment that actually falls within it.
+  $day_cursor = (clone $start_dt)->setTime(0, 0, 0);
 
-  // This enforces a minumum appointment length in the rendering.
-  $start_dt->modify('+30 minutes');
-  $layout_end = max($end_dt, $start_dt);
+  while($day_cursor < $end_dt) {
+    $day_end = (clone $day_cursor)->modify('+1 day');
+    $day_number = (int) $day_cursor->format("N");
 
-  $appointment['day_number'] = $day_number;
-  $appointment['layout_end'] = $layout_end;
-  $days[$day_number][] = $appointment;
+    if(isset($days[$day_number])) {
+      $segment_start = max($start_dt, $day_cursor);
+      $segment_end = min($end_dt, $day_end);
+
+      // This enforces a minumum appointment length in the rendering.
+      $layout_end = clone $segment_start;
+      $layout_end->modify('+30 minutes');
+      $layout_end = max($segment_end, $layout_end);
+
+      $segment = $appointment;
+      $segment['starts_at'] = $segment_start->format("Y-m-d H:i:s");
+      $segment['ends_at'] = $segment_end->format("Y-m-d H:i:s");
+      $segment['day_number'] = $day_number;
+      $segment['layout_end'] = $layout_end;
+      $days[$day_number][] = $segment;
+    }
+
+    $day_cursor = $day_end;
+  }
 }
 
 foreach($days as $f => $day) {
@@ -70,7 +114,7 @@ foreach($days as $f => $day) {
         $end_dt = new DateTimeImmutable($appointment['ends_at']);
 
         $day_start = $start_dt->setTime(0, 0, 0);
-        $day_end = $start_dt->modify('+1 day');
+        $day_end = $day_start->modify('+1 day');
 
         $total_minutes = ($day_end->getTimestamp() - $day_start->getTimestamp()) / 60;
         $start_minutes = ($start_dt->getTimestamp() - $day_start->getTimestamp()) / 60;
@@ -89,34 +133,128 @@ foreach($days as $f => $day) {
   }
 }
 
-foreach($days as $day): ?>
-  <section class="day">
-    <?php
-      // Filter out non-layouted appointments (leftovers from Python algorithm
-      // that heavily used mutation by reference, for which semantics in PHP differ).
-      $day = array_filter($day, fn($appointment) => array_key_exists('layout', $appointment));
-    ?>
+?>
+<div class="calendar-week__header">
+  <h1 class="calendar-week__title"><strong><?= $from->format('F') ?></strong> <?= $from->format('Y') ?></h1>
 
-    <?php foreach($day as $appointment): ?>
-      <article class="appointment"
-                style="--appointment-top: <?= $appointment['layout']['top'] ?>;
-                      --appointment-height: <?= $appointment['layout']['height'] ?>;
-                      --appointment-width: <?= $appointment['layout']['width'] ?>;
-                      --appointment-left: <?= $appointment['layout']['left'] ?>">
-        <h2 class="appointment__title">
+  <div class="calendar-week__nav">
+    <button type="button" title="Previous week" x-get="/calendar/week?date=<?= (clone $from)->modify('-7 days')->format('Y-m-d') ?>" x-target="#calendar-week">&larr;</button>
+    <button type="button" x-get="/calendar/week?date=<?= (new DateTime('today', new DateTimeZone($timezone)))->format('Y-m-d') ?>" x-target="#calendar-week">Today</button>
+    <button type="button" title="Next week" x-get="/calendar/week?date=<?= (clone $from)->modify('+7 days')->format('Y-m-d') ?>" x-target="#calendar-week">&rarr;</button>
+  </div>
+</div>
+<div class="calendar-week">
+  <div class="calendar-week__labels">
+    <?php for($day_number = 1; $day_number <= 7; $day_number++): ?>
+      <h2 class="calendar-week__label">
+        <?= (clone $from)->modify('+' . ($day_number - 1) . ' days')->format('l') ?>
+        <span class="calendar-week__label-day<?= $day_number === $now_day_number ? ' calendar-week__label-day--today' : '' ?>">
+          <?= (clone $from)->modify('+' . ($day_number - 1) . ' days')->format('j') ?>
+        </span>
+      </h2>
+    <?php endfor; ?>
+  </div>
+  <?php if($all_day_appointments): ?>
+  <div class="calendar-week__all-day">
+    <?php foreach($all_day_appointments as $appointment): ?>
+      <?php
+        $start_dt = max($from, (new DateTime($appointment['starts_at']))->setTime(0, 0, 0));
+
+        $end_dt = new DateTime($appointment['ends_at']);
+        $end_dt = $end_dt->format("H:i:s") === "00:00:00" ? $end_dt->modify('-1 day') : $end_dt;
+        $end_dt = min($week_end, $end_dt->setTime(0, 0, 0));
+
+        if($end_dt < $start_dt) continue;
+
+        $column = $from->diff($start_dt)->days + 1;
+        $span = $start_dt->diff($end_dt)->days + 1;
+      ?>
+      <article class="appointment appointment--all-day"
+                style="--appointment-column: <?= $column ?>; --appointment-span: <?= $span ?>;
+                      --appointment-color: <?= esc_attr($appointment['calendar_color'] ?? $appointment['subscription_color'] ?? '#cccccc') ?>">
+        <h3 class="appointment__title">
           <?= $appointment['title'] ?>
-        </h2>
+        </h3>
 
-        $appointment['calendar_color'] ?? $appointment['subscription_color'] ?? "#cccccc";
-
-        <span class="appointment__location">
-          <?= $appointment['location'] ?>
-        </span>
-        
-        <span class="appointment__duration">
-          <time class="appointment__start" datetime="<?= $appointment['starts_at'] ?>"><?= date("H:i", strtotime($appointment['starts_at'])) ?></time> - <time class="appointment_end" datetime="<?= $appointment['ends_at'] ?>"><?= $appointment['ends_at'] ?></time>
-        </span>
+        <?php if($appointment['recurrence'] || $appointment['meeting']): ?>
+          <span class="appointment__icons">
+            <?php if($appointment['recurrence']): ?><i class="fa-solid fa-repeat"></i><?php endif; ?>
+            <?php if($appointment['meeting']): ?><i class="fa-solid fa-video"></i><?php endif; ?>
+          </span>
+        <?php endif; ?>
       </article>
     <?php endforeach; ?>
-  </section>
-<?php endforeach; ?>
+  </div>
+  <?php endif; ?>
+  <div class="calendar-week__days">
+    <div class="calendar-week__hours">
+      <?php for($hour = 0; $hour < 24; $hour++): ?>
+        <span class="calendar-week__hour" style="--hour-index: <?= $hour ?>">
+          <?= sprintf('%02d:00', $hour) ?>
+        </span>
+      <?php endfor; ?>
+    </div>
+    <?php foreach($days as $day_number => $day): ?>
+      <section class="day">
+        <?php if($day_number === $now_day_number): ?>
+          <div class="calendar-week__now" style="--now-top: <?= $now_top ?>"></div>
+        <?php endif; ?>
+
+        <?php
+          // Filter out non-layouted appointments (leftovers from Python algorithm
+          // that heavily used mutation by reference, for which semantics in PHP differ).
+          $day = array_filter($day, fn($appointment) => array_key_exists('layout', $appointment));
+        ?>
+
+        <?php foreach($day as $appointment): ?>
+          <article class="appointment"
+                    style="--appointment-top: <?= $appointment['layout']['top'] ?>;
+                          --appointment-height: <?= $appointment['layout']['height'] ?>;
+                          --appointment-width: <?= $appointment['layout']['width'] ?>;
+                          --appointment-left: <?= $appointment['layout']['left'] ?>;
+                          --appointment-color: <?= esc_attr($appointment['calendar_color'] ?? $appointment['subscription_color'] ?? '#cccccc') ?>">
+            <h3 class="appointment__title">
+              <?= $appointment['title'] ?>
+            </h3>
+
+            <?php if($appointment['location']): ?>
+              <span class="appointment__location">
+                <?= $appointment['location'] ?>
+              </span>
+            <?php endif; ?>
+
+            <span class="appointment__duration">
+              <time class="appointment__start" datetime="<?= $appointment['starts_at'] ?>"><?= date("H:i", strtotime($appointment['starts_at'])) ?></time> – <time class="appointment__end" datetime="<?= $appointment['ends_at'] ?>"><?= date("H:i", strtotime($appointment['ends_at'])) ?></time>
+            </span>
+
+            <?php if($appointment['recurrence'] || $appointment['meeting']): ?>
+              <span class="appointment__icons">
+                <?php if($appointment['recurrence']): ?><i class="fa-solid fa-repeat"></i><?php endif; ?>
+                <?php if($appointment['meeting']): ?><i class="fa-solid fa-video"></i><?php endif; ?>
+              </span>
+            <?php endif; ?>
+          </article>
+        <?php endforeach; ?>
+      </section>
+    <?php endforeach; ?>
+  </div>
+</div>
+
+<script>
+  (() => {
+    const root = document.currentScript.closest("#calendar-week");
+    const container = root.querySelector(".calendar-week__days");
+    const day = container.querySelector(".day");
+
+    if(root.dataset.scrollTop !== undefined) {
+      container.scrollTop = parseFloat(root.dataset.scrollTop);
+    } else if(day) {
+      container.scrollTop = day.offsetHeight / 24 * 6.5;
+    }
+
+    // Saved continuously (rather than on a single "unload" instant) since the
+    // swap library gives no hook to run right before this content is
+    // replaced, and reading scrollTop off an already-detached node is unreliable.
+    container.addEventListener("scroll", () => root.dataset.scrollTop = container.scrollTop);
+  })();
+</script>
