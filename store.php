@@ -434,6 +434,8 @@ function create_appointment(
   $going = true,
   $urgent = false,
   $color = null,
+  $travel_before = 0,
+  $travel_after = 0,
 ) {
   return exec_query('INSERT INTO `appointments` (
     `id`,
@@ -449,8 +451,10 @@ function create_appointment(
     `all_day`,
     `going`,
     `urgent`,
-    `color`
-  ) VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+    `color`,
+    `travel_before`,
+    `travel_after`
+  ) VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
     generate_humid(),
     $calendar_id,
     $title,
@@ -463,7 +467,9 @@ function create_appointment(
     $all_day,
     $going,
     $urgent,
-    $color
+    $color,
+    $travel_before,
+    $travel_after
   ]);
 }
 
@@ -480,6 +486,8 @@ function update_appointment(
   $going = true,
   $urgent = false,
   $color = null,
+  $travel_before = 0,
+  $travel_after = 0,
 ) {
   return exec_query('UPDATE `appointments` SET
     `title` = ?,
@@ -492,7 +500,9 @@ function update_appointment(
     `all_day` = ?,
     `going` = ?,
     `urgent` = ?,
-    `color` = ?
+    `color` = ?,
+    `travel_before` = ?,
+    `travel_after` = ?
   WHERE id = ?', [
     $title,
     $content,
@@ -505,18 +515,22 @@ function update_appointment(
     $going,
     $urgent,
     $color,
+    $travel_before,
+    $travel_after,
     $id
   ]);
 }
 
 // The regular `update_appointment` updates appointments managed by
 // a calendar. This function updates appointments managed by a subscription.
-function update_appointment_meta($id, $color, $going, $urgent) {
+function update_appointment_meta($id, $color, $going, $urgent, $travel_before = 0, $travel_after = 0) {
   return exec_query('UPDATE `appointments` SET
     `color` = ?,
     `going` = ?,
-    `urgent` = ?
-  WHERE id = ?', [$color, $going, $urgent, $id]);
+    `urgent` = ?,
+    `travel_before` = ?,
+    `travel_after` = ?
+  WHERE id = ?', [$color, $going, $urgent, $travel_before, $travel_after, $id]);
 }
 
 function update_appointment_body(

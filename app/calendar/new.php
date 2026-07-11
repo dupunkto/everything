@@ -19,6 +19,13 @@
     $going = !empty($_POST['going']);
     $urgent = !empty($_POST['urgent']);
 
+    // Travel time is only stored when the toggle is on; the minute inputs are
+    // optional, an empty one means no band on that side. Clamped to >= 0 to
+    // satisfy the schema constraint.
+    $travel = !empty($_POST['travel']);
+    $travel_before = $travel ? max(0, (int) ($_POST['travel_before'] ?? 0)) : 0;
+    $travel_after = $travel ? max(0, (int) ($_POST['travel_after'] ?? 0)) : 0;
+
     \store\create_appointment(
       $_POST['calendar_id'],
       $_POST['title'],
@@ -31,7 +38,9 @@
       $all_day,
       $going,
       $urgent,
-      $color
+      $color,
+      $travel_before,
+      $travel_after
     ) or fail("Could not create appointment.");
 
     $_GET['date'] = $_POST['start_date'];
@@ -86,6 +95,22 @@
 
   <div id="calendar-new-recurrence" hidden>
     <input name="recurrence" type="text" placeholder="cron or number of days">
+  </div>
+
+  <label class="check">
+    <input type="checkbox" name="travel" z-toggle="#calendar-new-travel">
+    Travel time
+  </label>
+
+  <div id="calendar-new-travel" hidden>
+    <label class="field">
+      Before
+      <input name="travel_before" type="number" min="0" step="5" placeholder="minutes">
+    </label>
+    <label class="field">
+      After
+      <input name="travel_after" type="number" min="0" step="5" placeholder="minutes">
+    </label>
   </div>
 
   <label class="check"><input type="checkbox" name="urgent"> Circle</label>

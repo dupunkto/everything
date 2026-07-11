@@ -316,6 +316,8 @@ CREATE TABLE IF NOT EXISTS `appointments` (
   `content` text,
   `meeting` text,
   `color` text, -- inherented from calendar or subscription if unset
+  `travel_before` int(11) NOT NULL DEFAULT 0, -- minutes
+  `travel_after` int(11) NOT NULL DEFAULT 0, -- minutes
   `starts_at` datetime NOT NULL,
   `ends_at` datetime NOT NULL,
   FOREIGN KEY (`calendar_id`) REFERENCES `calendars` (`id`) ON DELETE CASCADE,
@@ -324,6 +326,7 @@ CREATE TABLE IF NOT EXISTS `appointments` (
   CHECK ((`calendar_id` IS NULL) <> (`subscription_id` IS NULL)),
   CHECK (`ends_at` >= `starts_at`),
   CHECK (`recurrence_until` IS NULL OR `recurrence_count` IS NULL),
+  CHECK (`travel_before` >= 0 AND `travel_after` >= 0),
   PRIMARY KEY (`id`)
 );
 
