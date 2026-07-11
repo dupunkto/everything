@@ -16,6 +16,10 @@
   font-size: 0.9em;
 }
 
+.calendar-week__nav [data-sync] {
+  margin-inline-start: 0.6em;
+}
+
 body:has(.calendar-page) {
   height: 100vh;
   overflow: hidden;
@@ -24,23 +28,102 @@ body:has(.calendar-page) {
 }
 
 .calendar-page {
+  /* Lives here (not on .calendar-week) because the week is swapped out on
+     every fetch; a value set here cascades into each fresh fragment and
+     survives the JS-driven zoom override. */
+  --hour-height: 3rem;
+
   flex: 1;
   min-height: 0;
   overflow: hidden;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
 }
 
 .calendar-page #calendar-week {
   flex: 1;
+  min-width: 0;
   min-height: 0;
   display: flex;
   flex-direction: column;
 }
 
-.calendar-week {
-  --hour-height: 3rem;
+.calendar-sidebar {
+  flex: 0 0 auto;
+  width: 0;
+  overflow: hidden;
+  border-left: 1px solid light-dark(#eee, #3a3a42);
+  transition: width 0.3s ease;
+}
 
+.calendar-page.sidebar-open .calendar-sidebar {
+  width: 16rem;
+}
+
+/* Fixed width keeps the contents from squishing while the aside animates. */
+.calendar-sidebar__filters {
+  box-sizing: border-box;
+  width: 16rem;
+  height: 100%;
+  padding: 0 1rem;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.calendar-page.sidebar-open .calendar-sidebar__filters {
+  opacity: 1;
+}
+
+.calendar-sidebar__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.calendar-sidebar__footer {
+  flex: 0 0 auto;
+  padding: 0.75rem 0 0;
+  border-top: 1px solid light-dark(#eee, #3a3a42);
+}
+
+.calendar-sidebar__group + .calendar-sidebar__group {
+  margin-top: 1.5rem;
+}
+
+.calendar-sidebar__heading {
+  margin: 0 0 0.5rem;
+  font-size: 1em;
+}
+
+.calendar-sidebar__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.calendar-sidebar__item {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.2rem 0;
+  cursor: pointer;
+  text-transform: none;
+}
+
+.calendar-sidebar__item input {
+  width: 1.15rem;
+  height: 1.15rem;
+  cursor: pointer;
+}
+
+.calendar-sidebar__zoom {
+  width: 100%;
+  cursor: pointer;
+}
+
+.calendar-week {
   flex: 1;
   min-height: 0;
   display: grid;
@@ -68,6 +151,9 @@ body:has(.calendar-page) {
 .calendar-week .day {
   position: relative;
   height: calc(var(--hour-height) * 24);
+  /* Day delimiter: a 1px line in the gap on the day's left edge. Drawn as a
+     shadow so it doesn't tint the transparent hour gutter or header. */
+  box-shadow: -1px 0 0 light-dark(#e5e5e5, #3a3a42);
   background-color: light-dark(#fff, #1e1e24);
   background-image: repeating-linear-gradient(
     to bottom,
@@ -152,11 +238,24 @@ body:has(.calendar-page) {
   align-content: start;
 }
 
+/* Travel-time bands sit behind the appointments (earlier in the DOM, no
+   z-index) purely as a visual hint; pointer-events off so they never
+   interfere with the appointments layered on top. */
+.calendar-week .day__travel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--travel-top) * 1%);
+  height: calc(var(--travel-height) * 1%);
+  background: light-dark(#ececec, #34343d);
+  pointer-events: none;
+}
+
 .calendar-week .appointment--not-going {
   opacity: 0.3;
   background: repeating-linear-gradient(
     -45deg,
-    gray 0 4px,
+    color-mix(in srgb, var(--appointment-color) 70%, gray) 0 4px,
     transparent 4px 8px
   );
 }
@@ -206,9 +305,11 @@ body:has(.calendar-page) {
 }
 
 .calendar-week__label-day {
-  display: inline-block;
-  min-width: 1.5em;
-  padding: 0.1em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6em;
+  height: 1.6em;
   border-radius: 50%;
 }
 
