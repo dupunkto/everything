@@ -1,6 +1,46 @@
-#todo-search {
+.todo-header {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+}
+
+.todo-title {
+  flex: 1;
+  margin: 0;
   font-size: 1.5em;
-  width: 100%;
+  font-weight: normal;
+  white-space: nowrap;
+}
+
+#todo-search {
+  flex: 0 1 30em;
+}
+
+.todo-nav {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.2em;
+  font-size: 0.9em;
+  white-space: nowrap;
+}
+
+.todo-nav__default {
+  display: flex;
+  gap: 0.2em;
+}
+
+
+.todo-nav__back {
+  display: none;
+}
+
+.todo-nav:not([data-view="todo"]) .todo-nav__default {
+  display: none;
+}
+
+.todo-nav:not([data-view="todo"]) .todo-nav__back {
+  display: inline-block;
 }
 
 #todo-listing h3 {

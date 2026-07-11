@@ -17,6 +17,13 @@ fallback('prefered-proto', FORCE_HTTPS ? "https" : "http");
 fallback('secure', PREFERED_PROTO == "https");
 fallback('canonical', PREFERED_PROTO . "://" . HOST);
 
+// Days before a recurring task's next deadline that it surfaces in listings.
+fallback('todo-horizon', 3);
+
+// Calendar that drag-created events land on; defaults to the oldest calendar.
+// Guarded so the fallback query only runs when it's actually unset.
+if(!is_set('default-calendar')) fallback('default-calendar', \store\first_calendar_id());
+
 function required($key) {
   if(!defined(normalize_key($key))) {
     die("Missing required key '$key' in config.");

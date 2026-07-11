@@ -1,6 +1,8 @@
 <?php
 // The calendar week view.
 
+const TASK_DEADLINE_COLOR = "#e06c75";
+
 $timezone = getenv("TIMEZONE") ?: "Europe/Amsterdam";
 
 $from = (new DateTime($_GET['date'], new DateTimeZone($timezone)))->modify('monday this week')->setTime(0, 0, 0);
@@ -22,9 +24,48 @@ foreach($appointments as &$appointment) {
 
 unset($appointment); // gotta love in place mutation lol
 
+// Recurring appointments aren't stored per occurrence; expand them across the
+// visible week so each firing lands in the grid. Recurrences are expressed in
+// local wall time (that's how the sync derives them), so the master is
+// localised first and enumeration happens in the same space. Occurrences join
+// the plain appointment pool below, inheriting its filtering and layout.
+$window_from = new DateTimeImmutable($from->format("Y-m-d\TH:i:s"));
+$window_to = new DateTimeImmutable($to->format("Y-m-d\TH:i:s"));
+
+foreach(\store\list_recurring_appointments(
+  cast_datetime_utc($from->format('Y-m-d'), $from->format('H:i:s'), $timezone),
+  cast_datetime_utc($to->format('Y-m-d'), $to->format('H:i:s'), $timezone)
+) ?: [] as $series) {
+  $base = new DateTimeImmutable(cast_datetime_local($series['starts_at'], $timezone));
+  $duration = (new DateTimeImmutable(cast_datetime_local($series['ends_at'], $timezone)))->getTimestamp() - $base->getTimestamp();
+
+  $until = $series['recurrence_until']
+    ? new DateTimeImmutable(cast_datetime_local($series['recurrence_until'], $timezone)) : null;
+  $count = $series['recurrence_count'] !== null ? (int) $series['recurrence_count'] : null;
+
+  // Widen the lower bound by the duration so occurrences starting just before
+  // the week but spilling into it aren't dropped; the upper bound stays
+  // exclusive so an occurrence at next Monday 00:00 belongs to the next week.
+  $occurrences = \recurrence\occurrences(
+    $series['recurrence'], $base,
+    $window_from->modify("-$duration seconds"),
+    $window_to->modify('-1 second'),
+    $until, $count
+  );
+
+  foreach($occurrences as $occ) {
+    $occurrence = $series;
+    $occurrence['starts_at'] = $occ->format("Y-m-d H:i:s");
+    $occurrence['ends_at'] = $occ->modify("+$duration seconds")->format("Y-m-d H:i:s");
+    $appointments[] = $occurrence;
+  }
+}
+
 $hidden = array_filter(explode(",", $_GET['hidden'] ?? ""));
 $hide_not_going = ($_GET['not_going'] ?? "") === "1";
 $hide_travel = ($_GET['hide_travel'] ?? "") === "1";
+$hide_tasks = ($_GET['no_tasks'] ?? "") === "1";
+$hide_timings = ($_GET['no_timings'] ?? "") === "1";
 
 $appointments = array_filter($appointments, function($a) use ($hidden, $hide_not_going) {
   if($hide_not_going && !$a['going']) return false;
@@ -43,6 +84,88 @@ $days = [1 => [], 2 => [], 3 => [], 4 => [], 5 => [], 6 => [], 7 => []];
 // appointment times, so they can be compared and clamped against each other.
 $week_start = new DateTime($from->format("Y-m-d\TH:i:s"));
 $week_stop = new DateTime($to->format("Y-m-d\TH:i:s"));
+
+// Task deadlines ride along as one-hour appointments ending at the due date,
+// so the week view shows when things are actually due. Due dates are stored in
+// local wall time already, matching the localised appointment times above.
+if(!$hide_tasks) {
+  // Horizon is ignored here: a deadline should stay visible on the week it
+  // falls in, even if it's further out than the todo listing would surface.
+  foreach(\store\list_tasks("not:done not:nvm", [], respect_horizon: false) ?: [] as $task) {
+    if(!$task['next']) continue;
+
+    $due = new DateTime($task['next']);
+    if($due <= $week_start || $due > $week_stop) continue;
+
+    $timed_appointments[] = [
+      'id' => $task['id'],
+      'title' => esc_inner($task['title']),
+      'starts_at' => (clone $due)->modify('-1 hour')->format("Y-m-d H:i:s"),
+      'ends_at' => $due->format("Y-m-d H:i:s"),
+      'all_day' => false,
+      'going' => true,
+      'calendar_id' => null,
+      'subscription_id' => null,
+      'calendar_color' => TASK_DEADLINE_COLOR,
+      'location' => null,
+      'recurrence' => null,
+      'meeting' => false,
+      'travel_before' => 0,
+      'travel_after' => 0,
+      'is_task' => true,
+    ];
+  }
+}
+
+// Tracked timings render as thin coloured lines down the left gutter of each
+// day rather than as appointments, so they annotate the day without competing
+// with real events for column space. Coloured by their first tag's root (grey
+// when untagged), split across midnight like travel bands.
+$timings = [1 => [], 2 => [], 3 => [], 4 => [], 5 => [], 6 => [], 7 => []];
+
+if(!$hide_timings) {
+  $tags_by_id = [];
+  foreach(\store\list_tags() ?: [] as $tag) $tags_by_id[$tag['id']] = $tag;
+
+  // Climb parent_id to the root tag and hand back its colour.
+  $root_color = function($id) use ($tags_by_id) {
+    $tag = $tags_by_id[$id] ?? null;
+    while($tag && $tag['parent_id']) $tag = $tags_by_id[$tag['parent_id']] ?? null;
+    return @$tag['color'];
+  };
+
+  foreach(\store\list_timings_between(
+    cast_datetime_utc($from->format('Y-m-d'), $from->format('H:i:s'), $timezone),
+    cast_datetime_utc($to->format('Y-m-d'), $to->format('H:i:s'), $timezone)
+  ) ?: [] as $timing) {
+    $start = max(new DateTime(cast_datetime_local($timing['starts_at'], $timezone)), $week_start);
+    $end = min(new DateTime(cast_datetime_local($timing['ends_at'], $timezone)), $week_stop);
+
+    $color = $root_color($timing['first_tag_id']) ?: '#cccccc';
+    $title = $timing['description'] ?: "No description";
+
+    $day_cursor = (clone $start)->setTime(0, 0, 0);
+
+    while($day_cursor < $end) {
+      $day_end = (clone $day_cursor)->modify('+1 day');
+      $day_number = (int) $day_cursor->format('N');
+
+      if(isset($timings[$day_number])) {
+        $segment_start = max($start, $day_cursor);
+        $segment_end = min($end, $day_end);
+
+        $timings[$day_number][] = [
+          'top' => ($segment_start->getTimestamp() - $day_cursor->getTimestamp()) / 60 / 1440 * 100,
+          'height' => ($segment_end->getTimestamp() - $segment_start->getTimestamp()) / 60 / 1440 * 100,
+          'color' => $color,
+          'title' => $title,
+        ];
+      }
+
+      $day_cursor = $day_end;
+    }
+  }
+}
 
 foreach($timed_appointments as $appointment) {
   $start_dt = new DateTime($appointment['starts_at']);
@@ -73,6 +196,17 @@ foreach($timed_appointments as $appointment) {
       $segment['ends_at'] = $segment_end->format("Y-m-d H:i:s");
       $segment['day_number'] = $day_number;
       $segment['layout_end'] = $layout_end->format("Y-m-d H:i:s");
+
+      // Drag-resizable when calendar-owned (not a subscription feed or task
+      // deadline), non-recurring, and wholly within this one day so a dragged
+      // edge maps cleanly onto a single start/end. Everything else is
+      // edited through the full editor.
+      $segment['editable'] = empty($appointment['subscription_id'])
+        && empty($appointment['is_task'])
+        && empty($appointment['recurrence'])
+        && $segment_start == $start_dt
+        && $segment_end == $end_dt;
+
       $days[$day_number][] = $segment;
     }
 
@@ -87,6 +221,8 @@ foreach($timed_appointments as $appointment) {
 $travel = [1 => [], 2 => [], 3 => [], 4 => [], 5 => [], 6 => [], 7 => []];
 
 foreach($hide_travel ? [] : $timed_appointments as $appointment) {
+  if(!$appointment['going']) continue;
+
   $bands = [];
 
   if($before = (int) $appointment['travel_before']) {
@@ -303,6 +439,7 @@ $all_day_appointments = $placed;
   <div class="calendar-week__all-day">
     <?php foreach($all_day_appointments as $appointment): ?>
       <article class="appointment appointment--all-day<?= $appointment['going'] ? "" : " appointment--not-going" ?>"
+                data-id="<?= esc_attr($appointment['id']) ?>"
                 style="--appointment-column: <?= $appointment['layout']['column'] ?>; --appointment-span: <?= $appointment['layout']['span'] ?>;
                       --appointment-row: <?= $appointment['layout']['row'] ?>;
                       --appointment-color: <?= esc_attr($appointment['calendar_color'] ?? $appointment['subscription_color'] ?? '#cccccc') ?>">
@@ -329,7 +466,7 @@ $all_day_appointments = $placed;
       <?php endfor; ?>
     </div>
     <?php foreach($days as $day_number => $day): ?>
-      <section class="day">
+      <section class="day" data-date="<?= (clone $from)->modify('+' . ($day_number - 1) . ' days')->format('Y-m-d') ?>">
         <?php if($day_number === $now_day_number): ?>
           <div class="calendar-week__now" style="--now-top: <?= $now_top ?>"></div>
         <?php endif; ?>
@@ -338,9 +475,18 @@ $all_day_appointments = $placed;
           <div class="day__travel" style="--travel-top: <?= $travel_start / 1440 * 100 ?>; --travel-height: <?= ($travel_end - $travel_start) / 1440 * 100 ?>"></div>
         <?php endforeach; ?>
 
+        <?php foreach($timings[$day_number] as $timing): ?>
+          <div class="day__timing" title="<?= esc_attr($timing['title']) ?>"
+            style="--timing-top: <?= $timing['top'] ?>; --timing-height: <?= $timing['height'] ?>; --timing-color: <?= esc_attr($timing['color']) ?>">
+            <span class="day__timing-dot day__timing-dot--start"><i class="fa-solid fa-clock"></i></span>
+            <span class="day__timing-dot day__timing-dot--end"></span>
+          </div>
+        <?php endforeach; ?>
+
         <?php foreach($day as $appointment): ?>
           <?php $layout = $appointment['layout']; ?>
-          <article class="appointment<?= $appointment['going'] ? "" : " appointment--not-going" ?>"
+          <article class="appointment<?= $appointment['going'] ? "" : " appointment--not-going" ?><?= empty($appointment['is_task']) ? "" : " appointment--task" ?>"
+                    <?= empty($appointment['is_task']) ? 'data-id="' . esc_attr($appointment['id']) . '"' : '' ?>
                     style="--appointment-top: <?= $layout['top'] ?>;
                           --appointment-height: <?= $layout['height'] ?>;
                           <?= $appointment['going']
@@ -361,11 +507,17 @@ $all_day_appointments = $placed;
               <time class="appointment__start" datetime="<?= $appointment['starts_at'] ?>"><?= date("H:i", strtotime($appointment['starts_at'])) ?></time> – <time class="appointment__end" datetime="<?= $appointment['ends_at'] ?>"><?= date("H:i", strtotime($appointment['ends_at'])) ?></time>
             </span>
 
-            <?php if($appointment['recurrence'] || $appointment['meeting']): ?>
+            <?php if($appointment['recurrence'] || $appointment['meeting'] || !empty($appointment['is_task'])): ?>
               <span class="appointment__icons">
+                <?php if(!empty($appointment['is_task'])): ?><i class="fa-solid fa-flag"></i><?php endif; ?>
                 <?php if($appointment['recurrence']): ?><i class="fa-solid fa-repeat" title="<?= esc_attr(describe_recurrence($appointment['recurrence'])) ?>"></i><?php endif; ?>
                 <?php if($appointment['meeting']): ?><i class="fa-solid fa-video"></i><?php endif; ?>
               </span>
+            <?php endif; ?>
+
+            <?php if(!empty($appointment['editable'])): ?>
+              <span class="appointment__handle appointment__handle--top"></span>
+              <span class="appointment__handle appointment__handle--bottom"></span>
             <?php endif; ?>
           </article>
         <?php endforeach; ?>

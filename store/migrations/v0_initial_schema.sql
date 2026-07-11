@@ -315,7 +315,6 @@ CREATE TABLE IF NOT EXISTS `appointments` (
   `title` text NOT NULL,
   `content` text,
   `meeting` text,
-  `color` text, -- inherented from calendar or subscription if unset
   `travel_before` int(11) NOT NULL DEFAULT 0, -- minutes
   `travel_after` int(11) NOT NULL DEFAULT 0, -- minutes
   `starts_at` datetime NOT NULL,

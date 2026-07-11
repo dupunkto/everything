@@ -167,6 +167,7 @@ body:has(.calendar-page) {
 .calendar-week .appointment {
   box-sizing: border-box;
   overflow: hidden;
+  user-select: none;
   padding: 4px 8px;
   border-radius: 4px;
   border-left: 3px solid var(--appointment-color);
@@ -177,6 +178,12 @@ body:has(.calendar-page) {
   align-items: baseline;
   gap: 0 0.5em;
 }
+
+/* Task deadlines aren't real events; a dashed edge sets them apart. */
+.calendar-week .appointment--task {
+  border-left-style: dashed;
+}
+
 
 .calendar-week .appointment__title {
   margin: 0;
@@ -238,6 +245,21 @@ body:has(.calendar-page) {
   align-content: start;
 }
 
+/* Preview block shown while dragging out a new appointment, before it exists
+   server-side. Mirrors a real appointment (tinted by the default calendar's
+   colour) but spans the full column. */
+.calendar-week .day__ghost {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--appointment-top) * 1%);
+  height: calc(var(--appointment-height) * 1%);
+  border-radius: 4px;
+  border-left: 3px solid var(--appointment-color);
+  background: color-mix(in srgb, var(--appointment-color) 30%, transparent);
+  pointer-events: none;
+}
+
 /* Travel-time bands sit behind the appointments (earlier in the DOM, no
    z-index) purely as a visual hint; pointer-events off so they never
    interfere with the appointments layered on top. */
@@ -249,6 +271,68 @@ body:has(.calendar-page) {
   height: calc(var(--travel-height) * 1%);
   background: light-dark(#ececec, #34343d);
   pointer-events: none;
+}
+
+/* Tracked timings are thin lines pinned to the day's left gutter, coloured by
+   their tag. They carry a title for hover but no text of their own. */
+.calendar-week .day__timing {
+  position: absolute;
+  left: 0;
+  width: 3px;
+  top: calc(var(--timing-top) * 1%);
+  height: calc(var(--timing-height) * 1%);
+  background: var(--timing-color);
+  border-radius: 2px;
+}
+
+/* Little dots cap either end of the timing line; the start one holds a tiny
+   clock. They straddle the 3px line and its ends. */
+.calendar-week .day__timing-dot {
+  position: absolute;
+  left: 50%;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--timing-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.calendar-week .day__timing-dot--start {
+  top: 0;
+  width: 14px;
+  height: 14px;
+  transform: translate(-50%, -50%);
+}
+
+.calendar-week .day__timing-dot--end {
+  bottom: 0;
+  transform: translate(-50%, 50%);
+}
+
+.calendar-week .day__timing-dot i {
+  font-size: 9px;
+  color: white;
+}
+
+/* Thin grab zones on the top/bottom edge of a resizable appointment. Sit
+   above the body content so the edges stay grabbable even on short events. */
+.calendar-week .appointment__handle {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 7px;
+  cursor: ns-resize;
+  z-index: 1;
+}
+
+.calendar-week .appointment__handle--top {
+  top: 0;
+}
+
+.calendar-week .appointment__handle--bottom {
+  bottom: 0;
 }
 
 .calendar-week .appointment--not-going {
@@ -340,4 +424,78 @@ body:has(.calendar-page) {
 .calendar-week__all-day .appointment {
   grid-column: var(--appointment-column) / span var(--appointment-span);
   grid-row: var(--appointment-row);
+}
+
+/* Appointment editor: a plain floating box next to the clicked appointment. */
+.calendar-editor {
+  position: fixed;
+  z-index: 200;
+  box-sizing: border-box;
+  width: 18rem;
+  padding: 0.75rem;
+  background: light-dark(#fff, #23232a);
+  border: 1px solid light-dark(#ddd, #3a3a42);
+}
+
+.calendar-editor[hidden] {
+  display: none;
+}
+
+.calendar-editor form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.calendar-editor input,
+.calendar-editor textarea,
+.calendar-editor button {
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.calendar-editor__head {
+  position: relative;
+}
+
+.calendar-editor__head input[name=title] {
+  padding-right: 2.5rem;
+  font-size: 1.3em;
+}
+
+/* Sits on top of the title's trailing edge rather than above it. Read-only:
+   it just mirrors the event's calendar colour, so it takes no interaction. */
+.calendar-editor__head input[type=color] {
+  position: absolute;
+  top: 50%;
+  right: 0.35rem;
+  transform: translateY(-50%);
+  width: 1.8rem;
+  height: 1.8rem;
+  padding: 0;
+  pointer-events: none;
+}
+
+.calendar-editor .field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  text-transform: none;
+}
+
+.calendar-editor .datetime-pair {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.calendar-editor .check {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4rem;
+  text-transform: none;
+}
+
+.calendar-editor .check input {
+  width: auto;
 }

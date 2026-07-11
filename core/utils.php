@@ -5,6 +5,13 @@ function generate_humid($length = 5, $base = 36) {
   return substr(str_pad(strtoupper(base_convert(unpack('N', random_bytes(4))[1], 10, $base)), $length, '0', STR_PAD_LEFT), -$length);
 }
 
+// A native color input can't be blanked, so white is the sentinel for "no
+// color": it resets the stored value to null (inherit / default).
+function normalize_color($color) {
+  if($color === null || $color === "") return null;
+  return strcasecmp($color, "#ffffff") == 0 ? null : $color;
+}
+
 function cast_datetime_utc($date, $time, $timezone = null) {
   $timezone = $timezone ?? getenv("TIMEZONE") ?: "Europe/Amsterdam";
   $datetime = new DateTime("$date $time", new DateTimeZone($timezone));

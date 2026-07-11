@@ -109,8 +109,8 @@
             <input type="text" id="recurrence" name="recurrence" placeholder="cron or number of days" value="<?= esc_attr($task['recurrence'] ?? '') ?>">
           </div>
 
-          <?php if($task['recurrence']): ?>
-            <p class="next"><small>Next occurence at ...</small></p>
+          <?php if($task['recurrence'] && $task['next']): ?>
+            <p class="next"><small>Next occurrence <?= esc_inner((new DateTime($task['next']))->format("l j M, H:i")) ?></small></p>
           <?php endif ?>
         </aside>
       </form>

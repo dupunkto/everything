@@ -81,6 +81,13 @@ label {
   border: none;
 }
 
+button,
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
 .humid {
   font-family: monospace;
   font-size: 0.95em;

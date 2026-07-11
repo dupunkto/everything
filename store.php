@@ -119,35 +119,26 @@ function remove_task_tag($id, $tag_id) {
     WHERE `task_id` = ? AND `tag_id` = ?', [$id, $tag_id]);
 }
 
-function list_tasks($query = "", $override = []) {
-  $include_statuses = [];
-  $exclude_statuses = [];
-
-  $override_selectors = [];
-  $status_selectors = [];
+// Status is derived from the log (see \recurrence\task_state) and a recurring
+// task's effective status can differ from its latest log row, so filtering
+// happens in PHP rather than SQL. $override lists ids that bypass the filter
+// entirely (freshly clicked tasks that shouldn't vanish under the cursor).
+// $respect_horizon hides recurring tasks outside their visibility window; the
+// calendar passes false to keep future deadlines addressable.
+function list_tasks($query = "", $override = [], $respect_horizon = true) {
+  $include = [];
+  $exclude = [];
+  $urgent = null;
 
   foreach(explode(" ", $query) as $segment) {
     $parts = explode(":", $segment);
     if(count($parts) != 2) continue;
     [$selector, $value] = $parts;
 
-    if($selector == "is" && $value == 'urgent') $status_selectors[] = "`urgent` = true";
-    if($selector == "not" && $value == 'urgent') $status_selectors[] = "`urgent` = false";
-    if($selector == "is" && in_array($value, ENUM_TASK_STATUS)) $include_statuses[] = "log.status = '$value'";
-    if($selector == "not" && in_array($value, ENUM_TASK_STATUS)) $exclude_statuses[] = "log.status != '$value'";
+    if($value == 'urgent') $urgent = $selector == "is";
+    elseif($selector == "is" && in_array($value, ENUM_TASK_STATUS)) $include[] = $value;
+    elseif($selector == "not" && in_array($value, ENUM_TASK_STATUS)) $exclude[] = $value;
   }
-
-  foreach($override ?? [] as $id) $override_selectors[] = "tasks.id = '$id'";
-
-  if($include_statuses) $status_selectors[] = "(" . implode(" OR ", $include_statuses) . ")";
-  if($exclude_statuses) $status_selectors[] = "(" . implode(" AND ", $exclude_statuses) . ")";
-
-  $selectors = [];
-
-  if($status_selectors) $selectors[] = "(" . implode(" AND ", $status_selectors) . ")";
-  if($override_selectors) $selectors[] = "(" . implode(" OR ", $override_selectors) . ")";
-
-  $where_clause = $status_selectors == [] ? "" : "WHERE " . implode(" OR ", $selectors);
 
   $rows = all("SELECT
       tasks.*,
@@ -157,7 +148,10 @@ function list_tasks($query = "", $override = []) {
       tags.parent_id as tag_parent_id,
       log.status,
       log.comment,
-      log.date as updated_date
+      log.date as updated_date,
+      (SELECT done.date FROM `task_log` done
+        WHERE done.task_id = tasks.id AND done.status = 'done'
+        ORDER BY done.date DESC, done.id DESC LIMIT 1) AS last_done
     FROM `tasks`
     LEFT JOIN `task_log` log
       ON log.id = (
@@ -169,13 +163,31 @@ function list_tasks($query = "", $override = []) {
       )
     LEFT JOIN `tasks_tags` tt ON tt.task_id = tasks.id
     LEFT JOIN `tags` ON tags.id = tt.tag_id
-    $where_clause
     ORDER BY
       `due_date` NULLS LAST,
       `expiration_date` NULLS LAST,
       `open_date`");
 
-  return $rows ? collect_by($rows, 'tag', 'tags') : $rows;
+  if(!$rows) return $rows;
+
+  $override = $override ?? [];
+  $result = [];
+
+  foreach(collect_by($rows, 'tag', 'tags') as $task) {
+    $state = \recurrence\task_state($task);
+    $task = array_merge($task, $state);
+
+    if(in_array($task['id'], $override, true)) { $result[] = $task; continue; }
+
+    if($respect_horizon && !$state['visible']) continue;
+    if($urgent !== null && filter_var($task['urgent'], FILTER_VALIDATE_BOOLEAN) != $urgent) continue;
+    if($include && !in_array($state['status'], $include)) continue;
+    if($exclude && in_array($state['status'], $exclude)) continue;
+
+    $result[] = $task;
+  }
+
+  return $result;
 }
 
 function get_task($id) {
@@ -190,13 +202,18 @@ function get_task($id) {
     task.expiration_date,
     log.status,
     log.comment,
-    log.date as updated_date
+    log.date as updated_date,
+    (SELECT done.date FROM `task_log` done
+      WHERE done.task_id = task.id AND done.status = \'done\'
+      ORDER BY done.date DESC, done.id DESC LIMIT 1) AS last_done
   FROM `tasks` task
   LEFT JOIN `task_log` log ON log.task_id = task.id
   WHERE task.id = ?
   ORDER BY log.date DESC', [$id]);
 
   if($task === null) return $task;
+
+  $task = array_merge($task, \recurrence\task_state($task));
 
   $tags = all('SELECT tags.label FROM `tags`
     JOIN `tasks_tags` tt ON tt.tag_id = tags.id
@@ -268,6 +285,20 @@ function list_timings() {
   return all('SELECT * FROM `timings` ORDER BY `starts_at` DESC');
 }
 
+// Timings overlapping [$from, $to), each carrying its first tag (lowest id).
+// The caller resolves that tag to its root to pick a colour; keeping it a bare
+// id keeps this query portable across the SQL engines we target.
+function list_timings_between($from, $to) {
+  return all('SELECT
+    t.*,
+    (SELECT tt.tag_id FROM `timings_tags` tt
+      WHERE tt.timing_id = t.id
+      ORDER BY tt.tag_id ASC LIMIT 1) AS first_tag_id
+  FROM `timings` t
+  WHERE t.starts_at < ? AND t.ends_at > ?
+  ORDER BY t.starts_at', [$to, $from]);
+}
+
 function get_timing($id) {
   return one('SELECT * FROM `timings` WHERE `id` = ?', [$id]);
 }
@@ -280,6 +311,8 @@ function delete_timing($id) {
 
 function create_tag($label, $color, $parent_id) {
   if($parent_id) get_tag($parent_id) or die("tag with ID $parent_id does not exist");
+
+  $color = normalize_color($color);
 
   return exec_query('INSERT INTO `tags` (
     `label`,
@@ -301,6 +334,8 @@ function update_tag($id, $label, $color, $parent_id) {
       $cursor = $tag['parent_id'];
     }
   }
+
+  $color = normalize_color($color);
 
   return exec_query('UPDATE `tags` SET
     `label` = ?,
@@ -347,6 +382,8 @@ function delete_tag($id) {
 // Calendars
 
 function create_calendar($title, $subtitle, $color) {
+  $color = normalize_color($color);
+
   return exec_query('INSERT INTO `calendars` (
     `id`,
     `title`,
@@ -361,6 +398,8 @@ function create_calendar($title, $subtitle, $color) {
 }
 
 function update_calendar($id, $title, $subtitle, $color) {
+  $color = normalize_color($color);
+
   return exec_query('UPDATE `calendars` SET
     `title` = ?,
     `subtitle` = ?,
@@ -376,6 +415,12 @@ function get_calendar($id) {
   return one('SELECT * FROM `calendars` WHERE `id` = ?', [$id]);
 }
 
+// The oldest calendar, by insertion order. Backs the default-calendar config
+// fallback so a fresh install still has somewhere to drop new events.
+function first_calendar_id() {
+  return @one('SELECT `id` FROM `calendars` ORDER BY `rowid`')['id'];
+}
+
 function delete_calendar($id) {
   return exec_query('DELETE FROM `calendars` WHERE `id` = ?', [$id]);
 }
@@ -383,6 +428,8 @@ function delete_calendar($id) {
 // Subscriptions
 
 function create_subscription($title, $subtitle, $url, $color) {
+  $color = normalize_color($color);
+
   return exec_query('INSERT INTO `subscriptions` (
     `id`,
     `title`,
@@ -399,6 +446,8 @@ function create_subscription($title, $subtitle, $url, $color) {
 }
 
 function update_subscription($id, $title, $subtitle, $url, $color) {
+  $color = normalize_color($color);
+
   return exec_query('UPDATE `subscriptions` SET
     `title` = ?,
     `subtitle` = ?,
@@ -433,7 +482,6 @@ function create_appointment(
   $all_day = false,
   $going = true,
   $urgent = false,
-  $color = null,
   $travel_before = 0,
   $travel_after = 0,
 ) {
@@ -451,11 +499,10 @@ function create_appointment(
     `all_day`,
     `going`,
     `urgent`,
-    `color`,
     `travel_before`,
     `travel_after`
-  ) VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
-    generate_humid(),
+  ) VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+    $id = generate_humid(),
     $calendar_id,
     $title,
     $content,
@@ -467,10 +514,9 @@ function create_appointment(
     $all_day,
     $going,
     $urgent,
-    $color,
     $travel_before,
     $travel_after
-  ]);
+  ]) ? $id : null;
 }
 
 function update_appointment(
@@ -485,11 +531,14 @@ function update_appointment(
   $all_day = false,
   $going = true,
   $urgent = false,
-  $color = null,
   $travel_before = 0,
   $travel_after = 0,
+  $calendar_id = null,
 ) {
+  // calendar_id is COALESCEd so callers that don't touch it (passing null)
+  // leave the appointment on its current calendar.
   return exec_query('UPDATE `appointments` SET
+    `calendar_id` = COALESCE(?, `calendar_id`),
     `title` = ?,
     `content` = ?,
     `starts_at` = ?,
@@ -500,10 +549,10 @@ function update_appointment(
     `all_day` = ?,
     `going` = ?,
     `urgent` = ?,
-    `color` = ?,
     `travel_before` = ?,
     `travel_after` = ?
   WHERE id = ?', [
+    $calendar_id,
     $title,
     $content,
     $starts_at,
@@ -514,23 +563,30 @@ function update_appointment(
     $all_day,
     $going,
     $urgent,
-    $color,
     $travel_before,
     $travel_after,
     $id
   ]);
 }
 
+// Rewrites just the start/end of an appointment, leaving every other field
+// untouched. Backs the calendar's drag-to-resize, which only ever moves edges.
+function update_appointment_times($id, $starts_at, $ends_at) {
+  return exec_query('UPDATE `appointments` SET
+    `starts_at` = ?,
+    `ends_at` = ?
+  WHERE id = ?', [$starts_at, $ends_at, $id]);
+}
+
 // The regular `update_appointment` updates appointments managed by
 // a calendar. This function updates appointments managed by a subscription.
-function update_appointment_meta($id, $color, $going, $urgent, $travel_before = 0, $travel_after = 0) {
+function update_appointment_meta($id, $going, $urgent, $travel_before = 0, $travel_after = 0) {
   return exec_query('UPDATE `appointments` SET
-    `color` = ?,
     `going` = ?,
     `urgent` = ?,
     `travel_before` = ?,
     `travel_after` = ?
-  WHERE id = ?', [$color, $going, $urgent, $travel_before, $travel_after, $id]);
+  WHERE id = ?', [$going, $urgent, $travel_before, $travel_after, $id]);
 }
 
 function update_appointment_body(
@@ -632,6 +688,9 @@ function end_appointment_recurrence($id, $moment) {
   WHERE id = ?', [$moment, $id]);
 }
 
+// Non-recurring appointments overlapping [$from, $to). Recurring ones are
+// fetched separately and expanded per occurrence by the caller, so excluding
+// them here avoids rendering the master twice.
 function list_appointments($from, $to) {
   return all('SELECT
     a.*,
@@ -644,7 +703,28 @@ function list_appointments($from, $to) {
   FROM `appointments` a
   LEFT JOIN `calendars` c ON c.id = a.calendar_id
   LEFT JOIN `subscriptions` s ON s.id = a.subscription_id
-  WHERE a.starts_at < ? AND a.ends_at > ?
+  WHERE a.recurrence IS NULL AND a.starts_at < ? AND a.ends_at > ?
+  ORDER BY a.starts_at', [$to, $from]);
+}
+
+// Recurring appointments whose series could yield an occurrence in [$from, $to):
+// the series must have begun before the window ends and not have ended before
+// it starts. Count-limited series are left to the caller to bound precisely.
+function list_recurring_appointments($from, $to) {
+  return all('SELECT
+    a.*,
+    c.title AS calendar_title,
+    c.subtitle AS calendar_subtitle,
+    c.color AS calendar_color,
+    s.title AS subscription_title,
+    s.subtitle AS subscription_subtitle,
+    s.color AS subscription_color
+  FROM `appointments` a
+  LEFT JOIN `calendars` c ON c.id = a.calendar_id
+  LEFT JOIN `subscriptions` s ON s.id = a.subscription_id
+  WHERE a.recurrence IS NOT NULL
+    AND a.starts_at < ?
+    AND (a.recurrence_until IS NULL OR a.recurrence_until >= ?)
   ORDER BY a.starts_at', [$to, $from]);
 }
 

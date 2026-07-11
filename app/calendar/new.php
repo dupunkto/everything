@@ -6,12 +6,6 @@
     $starts_at = cast_datetime_utc($_POST['start_date'], $_POST['start_time']);
     $ends_at = cast_datetime_utc($_POST['end_date'], $_POST['end_time']);
 
-    // The color input is always populated (no way to "blank" a native color
-    // picker). We treat "same as calendar" as NULL.
-    $picked = @$_POST['color'];
-    $same_as_calendar = $picked and strcasecmp($picked, $calendar['color']) == 0;
-    $color = $same_as_calendar ? null : $picked;
-
     $recurrence = !empty($_POST['repeating'])
       && !empty($_POST['recurrence']) ? $_POST['recurrence'] : null;
 
@@ -38,7 +32,6 @@
       $all_day,
       $going,
       $urgent,
-      $color,
       $travel_before,
       $travel_after
     ) or fail("Could not create appointment.");
@@ -53,7 +46,7 @@
 ?>
 <form id="calendar-form" x-post="/calendar/new" x-target="#calendar-week">
   <input type="text" name="title" placeholder="Title" required autofocus>
-  <input type="color" name="color" value="<?= $default_color ?>">
+  <input type="color" value="<?= $default_color ?>" tabindex="-1" readonly>
 
   <?php if(count($calendars) > 1): ?>
     <select name="calendar_id" required>

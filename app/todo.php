@@ -8,17 +8,69 @@
   <body>
     <?php include __DIR__ . "/shell/menu.php" ?>
     <main class="wide">
-      <input
-        id="todo-search"
-        name="q"
-        placeholder="is:todo +qdentity"
-        value="is:todo"
-        x-get="/todo/listing"
-        x-on="input"
-        x-target="#todo-listing"
-      >
+      <div class="todo-header">
+        <h1 class="todo-title"><strong id="todo-title">ToDo</strong></h1>
+
+        <input
+          id="todo-search"
+          name="q"
+          placeholder="is:todo +qdentity"
+          value="is:todo"
+          x-get="/todo/listing"
+          x-on="input"
+          x-target="#todo-listing"
+        >
+
+        <div class="todo-nav" data-view="todo">
+          <div class="todo-nav__default">
+            <button type="button" data-toggle-finished><i class="fa-regular fa-eye-slash"></i> Show finished</button>
+            <button type="button" data-view="shelves"><i class="fa-regular fa-box-archive"></i> Shelves</button>
+            <button type="button" data-view="backlog"><i class="fa-regular fa-folder-open"></i> Backlog</button>
+          </div>
+          <button type="button" class="todo-nav__back" data-view="todo">&larr; Back to todo</button>
+        </div>
+      </div>
 
       <section id="todo-listing" x-get="/todo/listing" x-data="#todo-search"></section>
+
+      <script type="module">
+        const search = document.querySelector('#todo-search');
+        const title = document.querySelector('#todo-title');
+        const nav = document.querySelector('.todo-nav');
+
+        const VIEWS = {
+          todo:    { label: 'ToDo',    query: 'is:todo' },
+          backlog: { label: 'Backlog', query: 'is:backlog' },
+          shelves: { label: 'Shelves', query: 'is:nvm' },
+        };
+
+        let view = 'todo';
+        let finished = false;
+
+        const apply = () => {
+          let query = VIEWS[view].query;
+          if(view === 'todo' && finished) query += ' is:done';
+
+          title.textContent = VIEWS[view].label;
+          nav.dataset.view = view;
+          nav.querySelector('[data-toggle-finished]').innerHTML = finished
+            ? '<i class="fa-regular fa-eye"></i> Hide finished'
+            : '<i class="fa-regular fa-eye-slash"></i> Show finished';
+
+          search.value = query;
+          search.dispatchEvent(new Event('input', { bubbles: true }));
+        };
+
+        nav.addEventListener('click', (event) => {
+          const button = event.target.closest('button');
+          if(!button) return;
+
+          if(button.dataset.toggleFinished !== undefined) finished = !finished;
+          else if(button.dataset.view) view = button.dataset.view;
+
+          apply();
+        });
+      </script>
 
       <script type="module">
         document.addEventListener('keydown', (e) => {
@@ -50,6 +102,9 @@
 
             return;
           }
+
+          // Letter shortcuts must not hijack typing in the search field.
+          if (focused == search) return;
 
           // Edit shortcuts
 
