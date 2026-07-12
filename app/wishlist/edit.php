@@ -36,7 +36,10 @@
         <input type="hidden" name="id" value="<?= esc_attr($wish['id']) ?>">
 
         <div class="title-row">
-          <input name="title" type="text" placeholder="Title" value="<?= esc_attr($wish['title']) ?>">
+          <span class="circled-field">
+            <?php if(cast_boolean($wish['urgent'])) circle() ?>
+            <input name="title" type="text" placeholder="Title" value="<?= esc_attr($wish['title']) ?>">
+          </span>
           <?php \forms\options("status",
             ["dream", "bought", "nvm"], selected: $wish['status'], capitalize: false) ?>
         </div>
@@ -48,7 +51,7 @@
 
           <label class="check">
             <input type="hidden" name="urgent" value="false">
-            <input type="checkbox" id="urgent" name="urgent" value="true" <?php if(filter_var($wish['urgent'], FILTER_VALIDATE_BOOLEAN)) echo "checked" ?>> circle
+            <input type="checkbox" id="urgent" name="urgent" value="true" <?php if(filter_var($wish['urgent'], FILTER_VALIDATE_BOOLEAN)) echo "checked" ?>> Circle
           </label>
         </div>
       </form>

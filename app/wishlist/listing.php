@@ -20,6 +20,7 @@
 ?>
 <?php foreach($wishes as $wish): ?>
   <li class="listing__item" tabindex="0" data-id="<?= $wish['id'] ?>" data-status="<?= esc_attr($wish['status']) ?>">
+    <?php if(cast_boolean($wish['urgent'])) circle() ?>
     <form x-post="/wishlist/status" x-target="#wishlist-listing" x-on="change">
       <input type="hidden" name="id" value="<?= $wish['id'] ?>">
       <input type="hidden" name="status" value="dream" />

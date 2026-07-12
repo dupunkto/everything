@@ -1,4 +1,51 @@
-// Shortcuts for ToDo and wishlist.
+// This file contains shortcuts and hardcoded behaviour for
+// the ToDo and wishlist applications, which could not be easily
+// expressed declaratively using xhtml and zhtml.
+
+const gauge = document.createElement("canvas").getContext("2d");
+
+function fit_circle(field) {
+  const input = field.querySelector("input");
+  const ring = field.querySelector(".circle");
+  if(!input || !ring) return;
+
+  const style = getComputedStyle(input);
+  gauge.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+  const text = input.value || input.placeholder || "";
+  const width = gauge.measureText(text).width;
+  const origin = parseFloat(style.paddingLeft) + parseFloat(style.borderLeftWidth);
+
+  // The ellipse tapers to points at its ends, so wide text needs proportionally
+  // more horizontal room to stay inside the ring; the vertical margin is fixed.
+  const pad_x = Math.max(18, width * 0.16), pad_y = 7;
+  ring.style.left = `${origin - pad_x}px`;
+  ring.style.width = `${width + pad_x * 2}px`;
+  ring.style.top = `${-pad_y}px`;
+  ring.style.height = `${input.offsetHeight + pad_y * 2}px`;
+}
+
+function fit_circles() {
+  for(const field of document.querySelectorAll(".circled-field")) {
+    fit_circle(field);
+    if(!field.dataset.circleBound) {
+      field.dataset.circleBound = "1";
+      field.querySelector("input")?.addEventListener("input", () => fit_circle(field));
+    }
+  }
+}
+
+fit_circles();
+
+// The editor re-renders by swapping the whole document (e.g. ticking 'Circle'),
+// which drops our inline sizing. Observing the document refits the fresh ring.
+if(!window.__circle_observer) {
+  window.__circle_observer = new MutationObserver(() => {
+    if(window.__circle_pending) return;
+    window.__circle_pending = true;
+    requestAnimationFrame(() => { window.__circle_pending = false; fit_circles(); });
+  });
+  window.__circle_observer.observe(document, { childList: true, subtree: true });
+}
 
 const editors = [
   { form: "todo-editor",   statuses: { b: "backlog", c: "done", u: "todo", s: "nvm" }, revert: "todo",  back: "/todo" },

@@ -4,6 +4,50 @@
   --sidebar-padding: 10px;
   --sidebar-collapsed: 4rem;
   --sidebar-expanded: 250px;
+  --circle-color: #e23b3b;
+}
+
+.circle {
+  position: absolute;
+  top: -0.35em;
+  left: -0.6em;
+  width: calc(100% + 1.2em);
+  height: calc(100% + 0.7em);
+  overflow: visible;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.circle path {
+  fill: none;
+  stroke: var(--circle-color);
+  stroke-width: 2.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  opacity: 0.9;
+}
+
+.circle .circle__ghost {
+  stroke-width: 1.5;
+  opacity: 0.5;
+}
+
+.circle--tight {
+  top: -0.2em;
+  left: -0.4em;
+  width: calc(100% + 0.8em);
+  height: calc(100% + 0.4em);
+}
+
+.circled-field {
+  position: relative;
+  display: flex;
+}
+
+.circled-field > input {
+  flex: 1;
+  width: 100%;
 }
 
 .main {
@@ -199,7 +243,7 @@ button,
   text-transform: none;
 }
 
-.check input {
+.check input[type=checkbox] {
   width: auto;
 }
 

@@ -31,7 +31,7 @@
 
         <label class="check">
           <input type="hidden" name="urgent" value="false">
-          <input type="checkbox" id="urgent" name="urgent" value="true"> circle
+          <input type="checkbox" id="urgent" name="urgent" value="true"> Circle
         </label>
 
         <button>Save</button>

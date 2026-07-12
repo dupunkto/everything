@@ -18,6 +18,26 @@
   const pad = (n) => String(n).padStart(2, "0");
   const hhmm = (min) => `${pad(Math.floor(min / 60) % 24)}:${pad(min % 60)}`;
 
+  const fit_circles = () => {
+    for(const ring of view.querySelectorAll(".appointment__title .circle")) {
+      const title = ring.parentElement;
+
+      const range = document.createRange();
+      range.setStart(title, 0);
+      range.setEndBefore(ring);
+      const text = range.getBoundingClientRect();
+      const base = title.getBoundingClientRect();
+
+      const pad_x = Math.max(12, text.width * 0.14);
+      const pad_y = Math.max(8, text.height * 0.22);
+
+      ring.style.left = `${text.left - base.left - pad_x}px`;
+      ring.style.top = `${text.top - base.top - pad_y}px`;
+      ring.style.width = `${text.width + pad_x * 2}px`;
+      ring.style.height = `${text.height + pad_y * 2}px`;
+    }
+  };
+
   const minute_at = (day, y) => {
     const rect = day.getBoundingClientRect();
     const min = (y - rect.top) / rect.height * DAY;
@@ -63,10 +83,6 @@
     editing = null;
   };
 
-  // Floats next to the appointment, vertically centred but clamped inside the
-  // viewport and below the day headers; the top clamp wins when the editor is
-  // taller than the space. Re-run on scroll and after every fragment swap,
-  // since the anchor node is replaced each time.
   const position_editor = () => {
     const target = anchor();
     if(!target) return;
@@ -222,6 +238,8 @@
   });
 
   view.addEventListener("x-swap", () => {
+    fit_circles();
+
     const days = view.querySelector(".calendar-week__days");
 
     if(days) {

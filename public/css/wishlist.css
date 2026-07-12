@@ -9,7 +9,7 @@
   align-items: center;
 }
 
-.title-row [name="title"] {
+.title-row .circled-field {
   flex: 2;
 }
 

@@ -42,7 +42,10 @@
         <input type="hidden" name="id" value="<?= esc_attr($task['id']) ?>">
 
         <section>
-          <input name="title" type="text" placeholder="Title" value="<?= esc_attr($task['title']) ?>">
+          <span class="circled-field">
+            <?php if(cast_boolean($task['urgent'])) circle() ?>
+            <input name="title" type="text" placeholder="Title" value="<?= esc_attr($task['title']) ?>">
+          </span>
           <textarea name="content" placeholder="What to do...?"><?= esc_inner($task['content']) ?></textarea>
 
           <?php if($log): ?>

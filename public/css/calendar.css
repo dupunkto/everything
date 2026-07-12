@@ -194,6 +194,7 @@ body:has(.calendar-page) {
 }
 
 .calendar-week .appointment__title {
+  position: relative;
   margin: 0;
   padding: 0;
   font-size: 0.9rem;
