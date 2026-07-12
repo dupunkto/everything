@@ -1,12 +1,12 @@
 <?php
-  // Drag-to-resize target for the week view: rewrites an appointment's start
-  // and end from the dragged edges, nothing else.
+  // Drag-to-resize target for the week view.
+
   $appointment = \store\get_appointment(@$_POST['id'])
     or fail("Appointment not found.", status: 404);
 
-  // Only calendar-owned, non-recurring appointments are resizable this way.
-  // Subscription events belong to their feed, and resizing one occurrence of a
-  // series would shift the whole master; both go through the full editor.
+  // Subscription appointments cannot be resized. We also make the decision to not make
+  // repeating events resizable, because that would shift the entire series. Forcing the
+  // editor in that case would make it more explicit that the user is editing the full series.
   if(!empty($appointment['subscription_id']) || !empty($appointment['recurrence']))
     fail("This appointment can't be resized.", status: 403);
 
@@ -16,5 +16,4 @@
   \store\update_appointment_times($appointment['id'], $starts_at, $ends_at)
     or fail("Could not resize appointment.");
 
-  // The caller re-fetches the week itself; nothing to render back.
   http_response_code(204); exit;

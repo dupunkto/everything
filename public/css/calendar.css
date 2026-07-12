@@ -1,3 +1,7 @@
+:root {
+  --hour-height: 3rem;
+}
+
 .calendar-week__header {
   display: flex;
   align-items: center;
@@ -20,6 +24,10 @@
   margin-inline-start: 0.6em;
 }
 
+#calendar-view[x-loading] [data-sync] i {
+  animation: fa-spin 1s linear infinite;
+}
+
 body:has(.calendar-page) {
   height: 100vh;
   overflow: hidden;
@@ -28,11 +36,6 @@ body:has(.calendar-page) {
 }
 
 .calendar-page {
-  /* Lives here (not on .calendar-week) because the week is swapped out on
-     every fetch; a value set here cascades into each fresh fragment and
-     survives the JS-driven zoom override. */
-  --hour-height: 3rem;
-
   flex: 1;
   min-height: 0;
   overflow: hidden;
@@ -40,7 +43,7 @@ body:has(.calendar-page) {
   flex-direction: row;
 }
 
-.calendar-page #calendar-week {
+.calendar-page #calendar-view {
   flex: 1;
   min-width: 0;
   min-height: 0;
@@ -56,7 +59,7 @@ body:has(.calendar-page) {
   transition: width 0.3s ease;
 }
 
-.calendar-page.sidebar-open .calendar-sidebar {
+.calendar-page:has([name=sidebar]:checked) .calendar-sidebar {
   width: 16rem;
 }
 
@@ -72,7 +75,7 @@ body:has(.calendar-page) {
   transition: opacity 0.3s ease;
 }
 
-.calendar-page.sidebar-open .calendar-sidebar__filters {
+.calendar-page:has([name=sidebar]:checked) .calendar-sidebar__filters {
   opacity: 1;
 }
 
@@ -151,8 +154,6 @@ body:has(.calendar-page) {
 .calendar-week .day {
   position: relative;
   height: calc(var(--hour-height) * 24);
-  /* Day delimiter: a 1px line in the gap on the day's left edge. Drawn as a
-     shadow so it doesn't tint the transparent hour gutter or header. */
   box-shadow: -1px 0 0 light-dark(#e5e5e5, #3a3a42);
   background-color: light-dark(#fff, #1e1e24);
   background-image: repeating-linear-gradient(
@@ -199,10 +200,6 @@ body:has(.calendar-page) {
   order: 1;
 }
 
-/* Inside the day grid the duration is pinned to the top-right corner
-   (like the icons are to the bottom-right); flex placement would push it
-   halfway down on tall appointments. The title padding keeps its first
-   line from running underneath. */
 .calendar-week .day .appointment__duration {
   position: absolute;
   top: 4px;
@@ -245,9 +242,6 @@ body:has(.calendar-page) {
   align-content: start;
 }
 
-/* Preview block shown while dragging out a new appointment, before it exists
-   server-side. Mirrors a real appointment (tinted by the default calendar's
-   colour) but spans the full column. */
 .calendar-week .day__ghost {
   position: absolute;
   left: 0;
@@ -255,14 +249,11 @@ body:has(.calendar-page) {
   top: calc(var(--appointment-top) * 1%);
   height: calc(var(--appointment-height) * 1%);
   border-radius: 4px;
-  border-left: 3px solid var(--appointment-color);
-  background: color-mix(in srgb, var(--appointment-color) 30%, transparent);
+  border-left: 3px solid var(--ghost-color);
+  background: color-mix(in srgb, var(--ghost-color) 30%, transparent);
   pointer-events: none;
 }
 
-/* Travel-time bands sit behind the appointments (earlier in the DOM, no
-   z-index) purely as a visual hint; pointer-events off so they never
-   interfere with the appointments layered on top. */
 .calendar-week .day__travel {
   position: absolute;
   left: 0;
@@ -273,8 +264,6 @@ body:has(.calendar-page) {
   pointer-events: none;
 }
 
-/* Tracked timings are thin lines pinned to the day's left gutter, coloured by
-   their tag. They carry a title for hover but no text of their own. */
 .calendar-week .day__timing {
   position: absolute;
   left: 0;
@@ -285,8 +274,6 @@ body:has(.calendar-page) {
   border-radius: 2px;
 }
 
-/* Little dots cap either end of the timing line; the start one holds a tiny
-   clock. They straddle the 3px line and its ends. */
 .calendar-week .day__timing-dot {
   position: absolute;
   left: 50%;
@@ -316,8 +303,6 @@ body:has(.calendar-page) {
   color: white;
 }
 
-/* Thin grab zones on the top/bottom edge of a resizable appointment. Sit
-   above the body content so the edges stay grabbable even on short events. */
 .calendar-week .appointment__handle {
   position: absolute;
   left: 0;
@@ -344,8 +329,6 @@ body:has(.calendar-page) {
   );
 }
 
-/* 'Not going' appointments lie over the regular layout at full width,
-   inset per underlying appointment so those keep a visible left border. */
 .calendar-week .day .appointment--not-going {
   left: calc(var(--appointment-inset) * 1px);
   width: calc(100% - var(--appointment-inset) * 1px);
@@ -426,7 +409,6 @@ body:has(.calendar-page) {
   grid-row: var(--appointment-row);
 }
 
-/* Appointment editor: a plain floating box next to the clicked appointment. */
 .calendar-editor {
   position: fixed;
   z-index: 200;
@@ -463,8 +445,6 @@ body:has(.calendar-page) {
   font-size: 1.3em;
 }
 
-/* Sits on top of the title's trailing edge rather than above it. Read-only:
-   it just mirrors the event's calendar colour, so it takes no interaction. */
 .calendar-editor__head input[type=color] {
   position: absolute;
   top: 50%;

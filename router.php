@@ -53,8 +53,12 @@ function serve_error($code) {
     500 => "everything crashed :["
   ];
 
-  http_response_code($code);
+  fail($mapping[$code], $code);
+}
+
+function fail($message, $status = 500) {
+  http_response_code($status);
   header("Content-Type: text/plain");
-  echo $mapping[$code];
+  echo $message;
   exit;
 }
