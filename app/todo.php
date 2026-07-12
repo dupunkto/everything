@@ -7,12 +7,13 @@
   </head>
   <body>
     <?php include __DIR__ . "/shell/menu.php" ?>
-    <main class="wide">
-      <div class="todo-header">
-        <h1 class="todo-title"><strong id="todo-title">ToDo</strong></h1>
+    <main class="main main--wide">
+      <div class="page-header">
+        <h1 class="page-header__title"><strong id="todo-title">ToDo</strong></h1>
 
         <input
           id="todo-search"
+          class="page-header__search"
           name="q"
           placeholder="is:todo +qdentity"
           value="is:todo"
@@ -21,22 +22,22 @@
           x-target="#todo-listing"
         >
 
-        <div class="todo-nav" data-view="todo">
-          <div class="todo-nav__default">
+        <div class="view-nav view-nav--home">
+          <div class="view-nav__default">
             <button type="button" data-toggle-finished><i class="fa-regular fa-eye-slash"></i> Show finished</button>
             <button type="button" data-view="shelves"><i class="fa-regular fa-box-archive"></i> Shelves</button>
             <button type="button" data-view="backlog"><i class="fa-regular fa-folder-open"></i> Backlog</button>
           </div>
-          <button type="button" class="todo-nav__back" data-view="todo">&larr; Back to todo</button>
+          <button type="button" class="view-nav__back" data-view="todo">&larr; Back to todo</button>
         </div>
       </div>
 
-      <section id="todo-listing" x-get="/todo/listing" x-data="#todo-search"></section>
+      <section id="todo-listing" class="listing listing--masonry" x-get="/todo/listing" x-data="#todo-search"></section>
 
       <script type="module">
         const search = document.querySelector('#todo-search');
         const title = document.querySelector('#todo-title');
-        const nav = document.querySelector('.todo-nav');
+        const nav = document.querySelector('.view-nav');
 
         const VIEWS = {
           todo:    { label: 'ToDo',    query: 'is:todo' },
@@ -52,7 +53,7 @@
           if(view === 'todo' && finished) query += ' is:done';
 
           title.textContent = VIEWS[view].label;
-          nav.dataset.view = view;
+          nav.classList.toggle('view-nav--home', view === 'todo');
           nav.querySelector('[data-toggle-finished]').innerHTML = finished
             ? '<i class="fa-regular fa-eye"></i> Hide finished'
             : '<i class="fa-regular fa-eye-slash"></i> Show finished';

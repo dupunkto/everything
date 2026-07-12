@@ -1,4 +1,4 @@
-<nav>
+<nav class="nav">
   <ul>
     <li><a href="/mail"><i class="fa-regular fa-inbox"></i> <span>Mail</span></a></li>
     <li><a href="/calendar"><i class="fa-regular fa-calendar"></i> <span>Calendar</span></a></li>

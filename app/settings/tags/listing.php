@@ -15,11 +15,11 @@
   };
 
 ?>
-<ul>
+<ul class="settings-listing">
   <?php foreach($tags as $tag): ?>
     <?php $forbidden = $subtree_of($tag['id']) ?>
     <li>
-      <form class="tags-editor" x-post="/settings/tags/edit" x-on="change" x-target="#tags-listing">
+      <form class="settings-editor" x-post="/settings/tags/edit" x-on="change" x-target="#tags-listing">
         <input name="id" type="hidden" value="<?= $tag['id'] ?>">
         <input name="color" type="color" value="<?= esc_attr($tag['color']) ?>">
         <input name="label" type="text" value="<?= esc_attr($tag['label']) ?>">

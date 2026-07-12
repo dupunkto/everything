@@ -7,16 +7,16 @@
   </head>
   <body>
     <?php include __DIR__ . "/shell/menu.php" ?>
-    <main>
-      <div class="wishlist-header">
-        <h1 class="wishlist-title"><strong>Wishlist</strong></h1>
+    <main class="main">
+      <div class="page-header">
+        <h1 class="page-header__title"><strong>Wishlist</strong></h1>
 
-        <div class="wishlist-nav" data-view="dream">
-          <div class="wishlist-nav__default">
+        <div class="view-nav view-nav--home">
+          <div class="view-nav__default">
             <button type="button" data-toggle-bought><i class="fa-regular fa-eye-slash"></i> Show bought</button>
             <button type="button" data-view="shelves"><i class="fa-regular fa-box-archive"></i> Shelves</button>
           </div>
-          <button type="button" class="wishlist-nav__back" data-view="dream">&larr; Back to wishlist</button>
+          <button type="button" class="view-nav__back" data-view="dream">&larr; Back to wishlist</button>
         </div>
       </div>
 
@@ -30,17 +30,17 @@
         x-target="#wishlist-listing"
       >
 
-      <ul id="wishlist-listing" x-get="/wishlist/listing" x-data="#wishlist-filter"></ul>
+      <ul id="wishlist-listing" class="listing" x-get="/wishlist/listing" x-data="#wishlist-filter"></ul>
 
       <script type="module">
         const filter = document.querySelector('#wishlist-filter');
-        const nav = document.querySelector('.wishlist-nav');
+        const nav = document.querySelector('.view-nav');
 
         let view = 'dream';   // 'dream' or 'shelves'
         let bought = false;
 
         const apply = () => {
-          nav.dataset.view = view;
+          nav.classList.toggle('view-nav--home', view === 'dream');
           nav.querySelector('[data-toggle-bought]').innerHTML = bought
             ? '<i class="fa-regular fa-eye"></i> Hide bought'
             : '<i class="fa-regular fa-eye-slash"></i> Show bought';

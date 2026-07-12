@@ -27,9 +27,9 @@
   </head>
   <body>
     <?php include __DIR__ . "/../shell/menu.php" ?>
-    <main class="semi-wide">
-      <form id="todo-form" x-post="/todo/new">
-        <div class="meta">
+    <main class="main main--semi-wide">
+      <form id="todo-form" class="todo-form" x-post="/todo/new">
+        <div class="todo-form__meta">
           <div class="field">
             <label for="status">Status</label>
             <?php \forms\options("status",

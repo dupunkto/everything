@@ -1,7 +1,7 @@
-<ul>
+<ul class="settings-listing">
   <?php foreach(\store\list_subscriptions() as $sub): ?>
     <li>
-      <form class="subscriptions-editor" x-post="/settings/subscriptions/edit" x-on="change" x-target="#subscriptions-listing">
+      <form class="settings-editor" x-post="/settings/subscriptions/edit" x-on="change" x-target="#subscriptions-listing">
         <input name="id" type="hidden" value="<?= $sub['id'] ?>">
         <input name="color" type="color" value="<?= esc_attr($sub['color']) ?>">
         <input name="title" type="text" value="<?= esc_attr($sub['title']) ?>" placeholder="Title">

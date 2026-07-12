@@ -1,120 +1,9 @@
-.todo-header {
-  display: flex;
-  align-items: center;
-  gap: 1em;
-}
-
-.todo-title {
-  flex: 1;
-  margin: 0;
-  font-size: 1.5em;
-  font-weight: normal;
-  white-space: nowrap;
-}
-
-#todo-search {
-  flex: 0 1 30em;
-}
-
-.todo-nav {
-  flex: 1;
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.2em;
-  font-size: 0.9em;
-  white-space: nowrap;
-}
-
-.todo-nav__default {
-  display: flex;
-  gap: 0.2em;
-}
-
-
-.todo-nav__back {
-  display: none;
-}
-
-.todo-nav:not([data-view="todo"]) .todo-nav__default {
-  display: none;
-}
-
-.todo-nav:not([data-view="todo"]) .todo-nav__back {
-  display: inline-block;
-}
-
-#todo-listing h3 {
-  text-align: right;
-  margin-bottom: 0.3em;
-}
-
-#todo-listing {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(435px, 1fr));
-  grid-template-rows: masonry;
-  overflow-y: auto;
-  column-gap: 1em;
-}
-
-#todo-listing li {
-  display: flex;
-  position: relative;
-  background: light-dark(#f1f1f1, #2b2b33);
-  padding: 0.5em;
-  gap: 0.5em;
-  align-items: center;
-  margin-bottom: 0.25em;
-}
-
-#todo-listing li:hover {
-  opacity: .8;
-}
-
-#todo-listing li:focus-visible {
-  outline: 2px solid light-dark(#0066cc, #4da6ff);
-  outline-offset: -2px;
-}
-
-/* Reset styles from tools.css */
-#todo-listing a {
-  display: inline;
-  padding: 0;
-  margin: 0;
-  opacity: 1;
-}
-
-#todo-listing a::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-}
-
-#todo-listing h4 {
-  margin: 0;
-  font-weight: normal;
-  text-wrap: nowrap;
-  text-overflow: ellipsis;
-  overflow: hidden;
-}
-
-#todo-listing h4 .humid {
-  margin-right: 0.2em;
-}
-
-#todo-listing input[type="checkbox"] {
-  width: 1.3em;
-  height: 1.3em;
-  margin: 0;
-  position: relative;
-  z-index: 1;
-}
-
-#todo-form [name="title"],
-#todo-editor [name="title"] {
+.todo-form [name="title"],
+.todo-editor [name="title"] {
   font-size: 1.5em;
 }
 
-#todo-form .meta {
+.todo-form__meta {
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr 1fr;
@@ -123,82 +12,77 @@
   column-gap: 1em;
 }
 
-#todo-form .meta .field {
+.todo-form__meta .field {
   display: grid;
   grid-template-columns: 1fr 5fr;
   align-items: center;
 }
 
-#todo-form .meta input,
-#todo-form .meta select {
+.todo-form__meta input,
+.todo-form__meta select {
   padding: 4px 6px;
   margin: 0;
 }
 
-#todo-form .meta .field > div {
+.todo-form__meta .field > div {
   display: flex;
 }
 
-#todo-editor {
+.todo-editor {
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 15px;
 }
 
-#todo-editor h2 {
+.todo-editor h2 {
   font-size: 1.2em;
   border-bottom: none;
   padding: 0;
   margin: 5px 0;
 }
 
-#todo-editor section,
-#todo-editor aside {
+.todo-editor section,
+.todo-editor aside {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-#todo-editor aside .field {
+.todo-editor aside .field {
   display: grid;
   grid-template-columns: 1fr 3fr;
   align-items: center;
 }
 
-#todo-editor [name="status"] {
+.todo-editor [name="status"] {
   font-size: 1.4em;
 }
 
-#todo-editor .next {
+.todo-editor__next {
   margin-top: -0.5em;
   text-align: right;
 }
 
-#todo-editor time {
+.todo-editor time {
   opacity: 0.5;
   float: right;
   margin-right: 1em;
 }
 
-#todo-editor .status.comment .message {
+.log-entry--status.log-entry--comment .log-entry__message {
   margin-top: 0.5em;
 }
 
-#todo-editor .message {
+.log-entry__message {
   background-color: light-dark(#f1f1f1, #2b2b33);
   padding: 10px 0;
 }
 
-#todo-editor .message p {
+.log-entry__message p {
   margin-top: 0;
   margin-left: 15px;
 }
 
-#todo-editor .message p:last-of-type {
+.log-entry__message p:last-of-type {
   margin-bottom: 0;
-}
-
-#todo-editor .actions {
-  display: flex;
-  justify-content: space-between;
 }

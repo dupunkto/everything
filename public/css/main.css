@@ -6,16 +6,16 @@
   --sidebar-expanded: 250px;
 }
 
-main {
+.main {
   max-width: 750px;
 }
 
-main.wide {
+.main--wide {
   max-width: 100%;
   margin: 1em;
 }
 
-main.semi-wide {
+.main--semi-wide {
   max-width: 1000px;
   margin: 5vh auto;
 }
@@ -38,45 +38,12 @@ ul li a {
   background: light-dark(#f1f1f1, #2b2b33);
 }
 
-ul li.pending {
-  display: block;
-  padding: 0.7em 1em;
-  margin-bottom: 0.25em;
-  background: light-dark(#f1f1f1, #2b2b33);
-  opacity: 0.6;
-}
-
 label {
   text-transform: lowercase;
 }
 
-.row, .col {
-  display: flex;
-  gap: 0.5em;
-}
-
-.col {
-  flex-direction: column;
-}
-
 .empty {
   opacity: 0.6;
-}
-
-.bar {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1em;
-  gap: 0.25em;
-}
-
-.bar h2,
-.bar h3 {
-  margin: 0;
-  padding: 0;
-  border: none;
 }
 
 button,
@@ -95,7 +62,148 @@ button,
   content: "#";
 }
 
-body > nav {
+.page-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1em;
+  gap: 1em;
+}
+
+.page-header h2,
+.page-header h3 {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.page-header__title {
+  flex: 1;
+  margin: 0;
+  font-size: 1.5em;
+  font-weight: normal;
+  white-space: nowrap;
+}
+
+.page-header__search {
+  flex: 0 1 30em;
+}
+
+.view-nav {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.2em;
+  font-size: 0.9em;
+  white-space: nowrap;
+}
+
+.view-nav__default {
+  display: flex;
+  gap: 0.2em;
+}
+
+.view-nav__back {
+  display: none;
+}
+
+.view-nav:not(.view-nav--home) .view-nav__default {
+  display: none;
+}
+
+.view-nav:not(.view-nav--home) .view-nav__back {
+  display: inline-block;
+}
+
+.listing {
+  overflow-y: auto;
+}
+
+.listing--masonry {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(435px, 1fr));
+  grid-template-rows: masonry;
+  column-gap: 1em;
+}
+
+.listing__heading {
+  text-align: right;
+  margin-bottom: 0.3em;
+}
+
+.listing__item {
+  display: flex;
+  position: relative;
+  background: light-dark(#f1f1f1, #2b2b33);
+  padding: 0.5em;
+  gap: 0.5em;
+  align-items: center;
+  margin-bottom: 0.25em;
+}
+
+.listing__item:hover {
+  opacity: .8;
+}
+
+.listing__item:focus-visible {
+  outline: 2px solid light-dark(#0066cc, #4da6ff);
+  outline-offset: -2px;
+}
+
+.listing__check {
+  width: 1.3em;
+  height: 1.3em;
+  margin: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.listing__title {
+  margin: 0;
+  font-weight: normal;
+  text-wrap: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.listing__title .humid {
+  margin-right: 0.2em;
+}
+
+.listing__link {
+  display: inline;
+  padding: 0;
+  margin: 0;
+  opacity: 1;
+}
+
+.listing__link::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.check {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4em;
+  width: max-content;
+  text-transform: none;
+}
+
+.check input {
+  width: auto;
+}
+
+.nav {
   position: fixed;
   right: var(--sidebar-padding);
   top: 4.5em;
@@ -110,11 +218,11 @@ body > nav {
   z-index: 100;
 }
 
-.nav--expanded body > nav {
+.nav--expanded .nav {
   width: var(--sidebar-expanded);
 }
 
-body > nav ul li a {
+.nav ul li a {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -122,11 +230,11 @@ body > nav ul li a {
   padding-block: 0.9em;
 }
 
-.nav--expanded body > nav ul li a {
+.nav--expanded .nav ul li a {
   justify-content: flex-start;
 }
 
-body > nav ul li a span {
+.nav ul li a span {
   position: absolute;
   right: 1em;
   top: 50%;
@@ -146,7 +254,7 @@ body > nav ul li a span {
   transition: transform 0.3s ease;
 }
 
-.nav--expanded body .nav__toggle i {
+.nav--expanded .nav__toggle i {
   transform: rotate(180deg);
 }
 
@@ -160,11 +268,11 @@ body {
   padding-right: calc(var(--sidebar-expanded) + 2 * var(--sidebar-padding));
 }
 
-body > nav span {
+.nav span {
   opacity: 0;
   transition: opacity 0.3s ease;
 }
 
-.nav--expanded body > nav span {
+.nav--expanded .nav span {
   opacity: 1;
 }

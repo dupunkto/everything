@@ -2,21 +2,8 @@
   --hour-height: 3rem;
 }
 
-main.wide {
+.calendar-page {
   margin-left: 0;
-}
-
-.calendar-week__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1em;
-}
-
-.calendar-week__title {
-  margin: 0;
-  font-size: 1.5em;
-  font-weight: normal;
 }
 
 .calendar-week__lead {
@@ -80,7 +67,6 @@ body:has(.calendar-page) {
   width: 16rem;
 }
 
-/* Fixed width keeps the contents from squishing while the aside animates. */
 .calendar-sidebar__filters {
   box-sizing: border-box;
   width: 16rem;
@@ -137,7 +123,6 @@ body:has(.calendar-page) {
   width: 1em;
   height: 1em;
   cursor: pointer;
-  /* margin-left: -1em; */
 }
 
 .calendar-sidebar__zoom {
@@ -204,11 +189,9 @@ body:has(.calendar-page) {
   gap: 0 0.5em;
 }
 
-/* Task deadlines aren't real events; a dashed edge sets them apart. */
 .calendar-week .appointment--task {
   border-left-style: dashed;
 }
-
 
 .calendar-week .appointment__title {
   margin: 0;
@@ -490,16 +473,4 @@ body:has(.calendar-page) {
 .calendar-editor .datetime-pair {
   display: flex;
   gap: 0.4rem;
-}
-
-.calendar-editor .check {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 0.4rem;
-  text-transform: none;
-}
-
-.calendar-editor .check input {
-  width: auto;
 }

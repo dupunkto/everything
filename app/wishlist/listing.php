@@ -19,7 +19,7 @@
 
 ?>
 <?php foreach($wishes as $wish): ?>
-  <li tabindex="0" data-id="<?= $wish['id'] ?>" data-status="<?= esc_attr($wish['status']) ?>">
+  <li class="listing__item" tabindex="0" data-id="<?= $wish['id'] ?>" data-status="<?= esc_attr($wish['status']) ?>">
     <form x-post="/wishlist/status" x-target="#wishlist-listing" x-on="change">
       <input type="hidden" name="id" value="<?= $wish['id'] ?>">
       <input type="hidden" name="status" value="dream" />
@@ -28,7 +28,7 @@
 
       <input
         type="checkbox"
-        class="checkbox"
+        class="listing__check"
         name="status"
         value="bought"
         <?php if(in_array($wish['status'], ['bought', 'nvm'])) echo "checked" ?>
@@ -36,9 +36,9 @@
       >
     </form>
 
-    <h4 class="title">
+    <h4 class="listing__title">
       <span class="humid"><?= $wish['id'] ?></span>
-      <a href="/wishlist/edit?id=<?= $wish['id'] ?>" tabindex="-1">
+      <a class="listing__link" href="/wishlist/edit?id=<?= $wish['id'] ?>" tabindex="-1">
         <?= esc_inner($wish['title']) ?>
       </a>
     </h4>

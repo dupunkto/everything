@@ -40,14 +40,14 @@
 ?>
 <?php foreach($lists as $list => $tasks): ?>
   <section>
-    <h3>~<?= $list ?></h3>
+    <h3 class="listing__heading">~<?= $list ?></h3>
 
     <?php $tag = find_by($tags, 'label', $list) ?>
 
     <ul>
       <?php foreach($tasks as $task): ?>
         <?php if($query_tags == [] || overlap(array_column($task['tags'], 'label'), $query_tags) >= 1): ?>
-          <li tabindex="0" data-id="<?= $task['id'] ?>" data-status="<?= esc_attr($task['status']) ?>">
+          <li class="listing__item" tabindex="0" data-id="<?= $task['id'] ?>" data-status="<?= esc_attr($task['status']) ?>">
             <form x-post="/todo/status" x-target="#todo-listing" x-on="change">
               <input type="hidden" name="id" value="<?= $task['id'] ?>">
               <input type="hidden" name="status" value="todo" />
@@ -56,16 +56,16 @@
 
               <input
                 type="checkbox"
-                class="checkbox"
+                class="listing__check"
                 name="status"
                 value="done"
                 <?php if(in_array($task['status'], ['done', 'nvm'])) echo "checked" ?>
                 <?php if($task['status'] == "nvm") echo "disabled" ?>
               >
             </form>
-            <h4 class="title">
+            <h4 class="listing__title">
               <span class="humid"><?= $task['id'] ?></span>
-              <a href="/todo/edit?id=<?= $task['id'] ?>" tabindex="-1">
+              <a class="listing__link" href="/todo/edit?id=<?= $task['id'] ?>" tabindex="-1">
                 <?= esc_inner($task['title']) ?>
               </a>
             </h4>

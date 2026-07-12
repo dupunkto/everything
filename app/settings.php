@@ -7,8 +7,8 @@
   </head>
   <body>
     <?php include __DIR__ . "/shell/menu.php" ?>
-    <main>
-      <header class="bar">
+    <main class="main">
+      <header class="page-header">
         <h2>Settings</h2>
       </header>
 

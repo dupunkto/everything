@@ -1,0 +1,39 @@
+.settings-listing {
+  margin: 1em 0;
+}
+
+.settings-listing li {
+  margin-bottom: 0.25em;
+}
+
+.settings-editor {
+  display: flex;
+  flex-direction: row;
+  gap: 0.25em;
+}
+
+.settings-editor input[type="text"],
+.settings-editor input[type="url"] {
+  flex: 1;
+}
+
+.settings-editor select {
+  max-width: 20%;
+}
+
+.settings-editor input[type="color"] {
+  aspect-ratio: 1;
+  width: auto;
+  height: 2em;
+}
+
+.subscription-new-form {
+  display: flex;
+  flex-direction: row;
+  gap: 0.25em;
+  margin-bottom: 0.5em;
+}
+
+.subscription-new-form input[type="url"] {
+  flex: 1;
+}

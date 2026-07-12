@@ -4,12 +4,11 @@
     <?php include __DIR__ . "/../shell/head.php" ?>
     <title>Settings</title>
     <link rel="stylesheet" href="<?= CANONICAL ?>/css/settings.css">
-    <link rel="stylesheet" href="<?= CANONICAL ?>/css/settings/calendars.css">
   </head>
   <body>
     <?php include __DIR__ . "/../shell/menu.php" ?>
-    <main>
-      <header class="bar">
+    <main class="main">
+      <header class="page-header">
         <h2>Calendars</h2>
         <a class="button" x-post="/settings/calendars/new" x-target="#calendars-listing">Add calendar</a>
       </header>

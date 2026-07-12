@@ -14,9 +14,9 @@
   }
 
 ?>
-<form id="tracker-form" x-post="/tracker/new" x-target="#tracker-listing">
+<form id="tracker-form" class="tracker-form" x-post="/tracker/new" x-target="#tracker-listing">
   <textarea name="description" placeholder="What have you been up to?" autofocus></textarea>
-  <div class="col">
+  <div class="tracker-form__col">
     <label>
       Start
       <input name="start_date" type="date" value="<?= local_date("Y-m-d") ?>">

@@ -22,7 +22,7 @@
       usort($sources, fn($a, $b) => strcasecmp($a['title'], $b['title']));
     ?>
 
-    <main class="wide calendar-page" style="--ghost-color: <?= esc_attr($ghost_color) ?>">
+    <main class="main main--wide calendar-page" style="--ghost-color: <?= esc_attr($ghost_color) ?>">
       <aside class="calendar-sidebar">
         <form id="calendar-filters" class="calendar-sidebar__filters" z-persist>
           <input type="checkbox" id="calendar-sidebar" name="sidebar" hidden>

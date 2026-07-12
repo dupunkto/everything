@@ -37,8 +37,8 @@
   </head>
   <body>
     <?php include __DIR__ . "/../shell/menu.php" ?>
-    <main class="semi-wide">
-      <form id="todo-editor" x-post="/todo/edit" x-on="change" x-target="@document">
+    <main class="main main--semi-wide">
+      <form id="todo-editor" class="todo-editor" x-post="/todo/edit" x-on="change" x-target="@document">
         <input type="hidden" name="id" value="<?= esc_attr($task['id']) ?>">
 
         <section>
@@ -51,13 +51,13 @@
               <?php $change = $entry['status'] !== $previous ?>
               <?php $previous = $entry['status'] ?>
 
-              <div class="log-entry <?php if($change) echo "status" ?> <?php if($entry['comment']) echo "comment" ?>">
+              <div class="log-entry <?php if($change) echo "log-entry--status" ?> <?php if($entry['comment']) echo "log-entry--comment" ?>">
                 <?php if($change): ?>
                   Status is <b><?= esc_inner($entry['status']) ?></b><?php if($entry['comment']) echo ", with comment:" ?>
                   <time><?= esc_attr(local_date("Y-m-d H:i", $entry['date'])) ?></time>
                 <?php endif ?>
                 <?php if($entry['comment']): ?>
-                  <div class="message">
+                  <div class="log-entry__message">
                     <?php if(!$change): ?>
                       <time><?= esc_attr(local_date("Y-m-d H:i", $entry['date'])) ?></time>
                     <?php endif; ?>
@@ -111,7 +111,7 @@
           </div>
 
           <?php if($task['recurrence'] && $task['next']): ?>
-            <p class="next"><small>Next occurrence <?= esc_inner((new DateTime($task['next']))->format("l j M, H:i")) ?></small></p>
+            <p class="todo-editor__next"><small>Next occurrence <?= esc_inner((new DateTime($task['next']))->format("l j M, H:i")) ?></small></p>
           <?php endif ?>
         </aside>
       </form>

@@ -31,8 +31,8 @@
   </head>
   <body>
     <?php include __DIR__ . "/../shell/menu.php" ?>
-    <main class="semi-wide">
-      <form id="wishlist-editor" x-post="/wishlist/edit" x-on="change" x-target="@document">
+    <main class="main main--semi-wide">
+      <form id="wishlist-editor" class="wishlist-editor" x-post="/wishlist/edit" x-on="change" x-target="@document">
         <input type="hidden" name="id" value="<?= esc_attr($wish['id']) ?>">
 
         <div class="title-row">
@@ -46,7 +46,7 @@
         <div class="actions">
           <a class="button" href="/wishlist/delete?id=<?= esc_attr($wish['id']) ?>" z-confirm="Delete this wish?">Delete</a>
 
-          <label class="inline">
+          <label class="check">
             <input type="hidden" name="urgent" value="false">
             <input type="checkbox" id="urgent" name="urgent" value="true" <?php if(filter_var($wish['urgent'], FILTER_VALIDATE_BOOLEAN)) echo "checked" ?>> circle
           </label>

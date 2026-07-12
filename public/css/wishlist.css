@@ -1,140 +1,25 @@
-.wishlist-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5em;
-}
-
-.wishlist-title {
-  flex: 1;
-  margin: 0;
-  font-size: 1.5em;
-  font-weight: normal;
-  white-space: nowrap;
-}
-
-.wishlist-nav {
-  flex: 1;
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.2em;
-  font-size: 0.9em;
-  white-space: nowrap;
-}
-
-.wishlist-nav__default {
-  display: flex;
-  gap: 0.2em;
-}
-
-.wishlist-nav__back {
-  display: none;
-}
-
-.wishlist-nav:not([data-view="dream"]) .wishlist-nav__default {
-  display: none;
-}
-
-.wishlist-nav:not([data-view="dream"]) .wishlist-nav__back {
-  display: inline-block;
-}
-
-#wishlist-listing {
-  overflow-y: auto;
-  margin-top: 0.25em;
-}
-
-#wishlist-listing li {
-  display: flex;
-  position: relative;
-  background: light-dark(#f1f1f1, #2b2b33);
-  padding: 0.5em;
-  gap: 0.5em;
-  align-items: center;
-  margin-bottom: 0.25em;
-}
-
-#wishlist-listing input[type="checkbox"] {
-  width: 1.3em;
-  height: 1.3em;
-  margin: 0;
-  position: relative;
-  z-index: 1;
-}
-
-#wishlist-listing li:hover {
-  opacity: .8;
-}
-
-#wishlist-listing li:focus-visible {
-  outline: 2px solid light-dark(#0066cc, #4da6ff);
-  outline-offset: -2px;
-}
-
-#wishlist-listing h4 {
-  margin: 0;
-  font-weight: normal;
-  text-wrap: nowrap;
-  text-overflow: ellipsis;
-  overflow: hidden;
-}
-
-#wishlist-listing h4 .humid {
-  margin-right: 0.2em;
-}
-
-/* Reset styles from tools.css, and let the title link cover the whole item. */
-#wishlist-listing a {
-  display: inline;
-  padding: 0;
-  margin: 0;
-  opacity: 1;
-}
-
-#wishlist-listing a::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-}
-
-#wishlist-form [name="title"],
-#wishlist-editor [name="title"] {
+.wishlist-form [name="title"],
+.wishlist-editor [name="title"] {
   font-size: 1.5em;
 }
 
-#wishlist-form .title-row,
-#wishlist-editor .title-row {
+.title-row {
   display: flex;
   gap: 15px;
   align-items: center;
 }
 
-#wishlist-form .title-row [name="title"],
-#wishlist-editor .title-row [name="title"] {
+.title-row [name="title"] {
   flex: 2;
 }
 
-#wishlist-form [name="status"],
-#wishlist-editor [name="status"] {
+.wishlist-form [name="status"],
+.wishlist-editor [name="status"] {
   flex: 1;
   max-width: 300px;
   font-size: 1.4em;
 }
 
-#wishlist-form .inline,
-#wishlist-editor .inline {
-  display: flex;
-  align-items: center;
-  gap: 0.4em;
-  width: max-content;
-}
-
-#wishlist-form .actions,
-#wishlist-editor .actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-#wishlist-editor .inline {
+.wishlist-editor .check {
   margin-right: 1em;
 }

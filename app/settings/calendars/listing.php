@@ -1,7 +1,7 @@
-<ul>
+<ul class="settings-listing">
   <?php foreach(\store\list_calendars() as $calendar): ?>
     <li>
-      <form class="calendars-editor" x-post="/settings/calendars/edit" x-on="change" x-target="#calendars-listing">
+      <form class="settings-editor" x-post="/settings/calendars/edit" x-on="change" x-target="#calendars-listing">
         <input name="id" type="hidden" value="<?= $calendar['id'] ?>">
         <input name="color" type="color" value="<?= esc_attr($calendar['color']) ?>">
         <input name="title" type="text" value="<?= esc_attr($calendar['title']) ?>" placeholder="Title">

@@ -11,11 +11,11 @@
   $timing = \store\get_timing($_GET['id']) or fail("Timing not found.", status: 404);
 
 ?>
-<li class="editor">
+<li class="tracker-list__item tracker-list__item--editing">
   <form class="tracker-editor" x-post="/tracker/edit" x-target="#tracker-listing">
     <input name="id" type="hidden" value="<?= $_GET['id'] ?>">
     <textarea name="description" placeholder="What were you up to?" autofocus><?= esc_inner($timing['description']) ?></textarea>
-    <div class="col">
+    <div class="tracker-editor__col">
       <label>
         Start
         <input name="starts_at" type="datetime-local" step="1" value="<?= cast_datetime_local($timing['starts_at']) ?>">
@@ -25,7 +25,7 @@
         <input name="ends_at" type="datetime-local" step="1" value="<?= cast_datetime_local($timing['ends_at']) ?>">
       </label>
     </div>
-    <div class="col">
+    <div class="tracker-editor__col">
       <button type="submit">Save</button>
       <button x-get="/tracker/listing" x-target="#tracker-listing">Cancel</button>
     </div>

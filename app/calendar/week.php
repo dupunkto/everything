@@ -39,12 +39,12 @@ $now_top = ((int) $now->format('H') * 60 + (int) $now->format('i')) / 1440 * 100
 
 $color = fn($a) => esc_attr($a['calendar_color'] ?? $a['subscription_color'] ?? '#cccccc');
 ?>
-<div class="calendar-week__header">
+<div class="page-header">
   <div class="calendar-week__lead">
     <div class="calendar-week__tools">
       <button type="button" title="Filters" data-sidebar><i class="fa-regular fa-sidebar-flip"></i></button>
     </div>
-    <h1 class="calendar-week__title"><strong><?= $from->format('F') ?></strong> <?= $from->format('Y') ?></h1>
+    <h1 class="page-header__title"><strong><?= $from->format('F') ?></strong> <?= $from->format('Y') ?></h1>
   </div>
 
   <input type="hidden" name="date" value="<?= $from->format('Y-m-d') ?>" form="calendar-filters">
