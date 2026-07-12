@@ -133,7 +133,6 @@ body:has(.calendar-page) {
   grid-template-columns: 3.5em repeat(7, 1fr);
   grid-template-rows: auto auto 1fr;
   gap: 1px;
-  border: 1px solid light-dark(#fbfbfb, #3a3a42);
 }
 
 .calendar-week__hours {
@@ -171,9 +170,15 @@ body:has(.calendar-page) {
   user-select: none;
   padding: 4px 8px;
   border-radius: 4px;
-  border-left: 3px solid var(--appointment-color);
+  border-left: 3px solid light-dark(
+    var(--appointment-color),
+    color-mix(in srgb, var(--appointment-color) 40%, white)
+  );
   background: color-mix(in srgb, var(--appointment-color) 30%, transparent);
-  color: color-mix(in srgb, var(--appointment-color) 25%, black);
+  color: light-dark(
+    color-mix(in srgb, var(--appointment-color) 25%, black),
+    color-mix(in srgb, var(--appointment-color) 40%, white)
+  );
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -368,7 +373,7 @@ body:has(.calendar-page) {
   font-weight: normal;
   text-align: center;
   border-bottom: none;
-  opacity: 0.7;
+  color: color-mix(in srgb, currentcolor 70%, transparent);
 }
 
 .calendar-week__label-day {
