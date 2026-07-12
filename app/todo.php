@@ -116,14 +116,21 @@
 
             if (e.key in statuses) {
               e.preventDefault();
-              focused.querySelector("input[type=hidden][name=status]").value = statuses[e.key];
+
+              // Pressing a status shortcut on a task already in that status
+              // reverts it to plain 'todo' ('s' unshelves, 'c' uncompletes,
+              // 'b' unbacklogs).
+              let target = statuses[e.key];
+              if (focused.dataset.status == target) target = 'todo';
+
+              focused.querySelector("input[type=hidden][name=status]").value = target;
               focused.querySelector("input[type=checkbox][name=status]").checked = false;
               focused.querySelector("form").dispatchEvent(new Event("change", { bubbles: true }));
             }
             else if (e.key == 'd') {
               e.preventDefault();
               if (!confirm('Delete this task?')) return;
-              // TODO(robin): implement this!
+              window.location.href = `/todo/delete?id=${id}`;
             }
             else if (e.key == 'e' || e.key == 'o') {
               e.preventDefault();

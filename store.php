@@ -21,7 +21,7 @@ switch($_DATABASE['scheme']) {
 // Tasks
 
 define('ENUM_TASK_STATUS', ['todo', 'backlog', 'blocked', 'done', 'nvm']);
-define('ENUM_WISH_STATUS', ['dream', 'backlog', 'bought', 'nvm']);
+define('ENUM_WISH_STATUS', ['dream', 'bought', 'nvm']);
 
 function create_task(
   $title,
@@ -97,6 +97,14 @@ function update_task(
 
 function set_task_status($id, $status, $comment = "") {
   in_array($status, ENUM_TASK_STATUS) or die("status $status does not exist");
+
+  // Skip redundant transitions: if the latest entry already has this status and
+  // no comment is being added, there is nothing new to record. This stops rapid
+  // toggles from the listing (which race the async re-render) from stacking up
+  // empty log events.
+  $latest = one('SELECT `status` FROM `task_log`
+    WHERE `task_id` = ? ORDER BY `date` DESC, `id` DESC', [$id]);
+  if($latest && $latest['status'] === $status && !$comment) return true;
 
   return exec_query('INSERT INTO `task_log` (
     `task_id`,
@@ -232,6 +240,105 @@ function get_task_log($id) {
 
 function delete_task($id) {
   return exec_query('DELETE FROM `tasks` WHERE `id` = ?', [$id]);
+}
+
+// Wishes
+
+function create_wish($title, $content, $status, $urgent = false) {
+  in_array($status, ENUM_WISH_STATUS) or die("status $status does not exist");
+
+  $id = generate_humid();
+
+  $ok = exec_query('INSERT INTO `wishes` (
+    `id`,
+    `title`,
+    `content`,
+    `urgent`
+  ) VALUES (?, ?, ?, ?)', [$id, $title, $content, $urgent]);
+
+  if(!$ok) return $ok;
+
+  return exec_query('INSERT INTO `wish_log` (
+    `wish_id`,
+    `status`
+  ) VALUES (?, ?)', [$id, $status]);
+}
+
+function set_wish_status($id, $status, $comment = "") {
+  in_array($status, ENUM_WISH_STATUS) or die("status $status does not exist");
+
+  // Skip redundant transitions (see set_task_status): the wish listing has the
+  // same toggle, so rapid clicks would otherwise stack up empty log events.
+  $latest = one('SELECT `status` FROM `wish_log`
+    WHERE `wish_id` = ? ORDER BY `date` DESC, `id` DESC', [$id]);
+  if($latest && $latest['status'] === $status && !$comment) return true;
+
+  return exec_query('INSERT INTO `wish_log` (
+    `wish_id`,
+    `status`,
+    `comment`
+  ) VALUES (?, ?, ?)', [$id, $status, $comment]);
+}
+
+function update_wish($id, $title, $content, $urgent) {
+  return exec_query('UPDATE `wishes` SET
+    `title` = ?,
+    `content` = ?,
+    `urgent` = ?
+  WHERE id = ?', [$title, $content, $urgent, $id]);
+}
+
+function get_wish($id) {
+  return one('SELECT
+    wishes.*,
+    log.status,
+    log.comment,
+    log.date as updated_date
+  FROM `wishes`
+  LEFT JOIN `wish_log` log
+    ON log.id = (
+      SELECT ranked.id
+      FROM `wish_log` ranked
+      WHERE ranked.wish_id = wishes.id
+      ORDER BY ranked.date DESC, ranked.id DESC
+      LIMIT 1
+    )
+  WHERE wishes.id = ?', [$id]);
+}
+
+function list_wishes($statuses = [], $override = []) {
+  $rows = all("SELECT
+      wishes.*,
+      log.status,
+      log.comment,
+      log.date as updated_date
+    FROM `wishes`
+    LEFT JOIN `wish_log` log
+      ON log.id = (
+        SELECT ranked.id
+        FROM `wish_log` ranked
+        WHERE ranked.wish_id = wishes.id
+        ORDER BY ranked.date DESC, ranked.id DESC
+        LIMIT 1
+      )
+    ORDER BY `title`");
+
+  if(!$rows) return $rows;
+
+  $result = [];
+
+  foreach($rows as $wish) {
+    if(in_array($wish['id'], $override, true)) { $result[] = $wish; continue; }
+    if($statuses && !in_array($wish['status'], $statuses)) continue;
+
+    $result[] = $wish;
+  }
+
+  return $result;
+}
+
+function delete_wish($id) {
+  return exec_query('DELETE FROM `wishes` WHERE `id` = ?', [$id]);
 }
 
 // Tracker

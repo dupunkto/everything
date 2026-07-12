@@ -47,7 +47,7 @@
     <ul>
       <?php foreach($tasks as $task): ?>
         <?php if($query_tags == [] || overlap(array_column($task['tags'], 'label'), $query_tags) >= 1): ?>
-          <li tabindex="0" data-id="<?= $task['id'] ?>">
+          <li tabindex="0" data-id="<?= $task['id'] ?>" data-status="<?= esc_attr($task['status']) ?>">
             <form x-post="/todo/status" x-target="#todo-listing" x-on="change">
               <input type="hidden" name="id" value="<?= $task['id'] ?>">
               <input type="hidden" name="status" value="todo" />

@@ -250,8 +250,8 @@ CREATE TABLE IF NOT EXISTS `wishes_tags` (
 CREATE TABLE IF NOT EXISTS `wish_log` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `wish_id` text NOT NULL,
-  `date` datetime NOT NULL,
-  `status` text NOT NULL, -- str<dream|backlog|bought|nvm>
+  `date` datetime NOT NULL DEFAULT current_timestamp,
+  `status` text NOT NULL, -- str<dream|bought|nvm>
   `comment` text,
   FOREIGN KEY (`wish_id`) REFERENCES `wishes` (`id`) ON DELETE CASCADE,
   PRIMARY KEY (`id`)
