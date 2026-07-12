@@ -25,7 +25,7 @@
         <div class="view-nav view-nav--home">
           <div class="view-nav__default">
             <button type="button" data-toggle-finished><i class="fa-regular fa-eye-slash"></i> Show finished</button>
-            <button type="button" data-view="archive"><i class="fa-regular fa-box-archive"></i> Archive</button>
+            <button type="button" data-view="shelves"><i class="fa-regular fa-box-archive"></i> Shelves</button>
             <button type="button" data-view="backlog"><i class="fa-regular fa-folder-open"></i> Backlog</button>
           </div>
           <button type="button" class="view-nav__back" data-view="todo">&larr; Back to todo</button>
@@ -42,7 +42,7 @@
         const VIEWS = {
           todo:    { label: 'ToDo',    query: 'is:todo' },
           backlog: { label: 'Backlog', query: 'is:backlog' },
-          archive: { label: 'Archive', query: 'is:nvm' },
+          shelves: { label: 'Shelves', query: 'is:nvm' },
         };
 
         let view = 'todo';
@@ -119,7 +119,7 @@
               e.preventDefault();
 
               // Pressing a status shortcut on a task already in that status
-              // reverts it to plain 'todo' ('s' unarchive, 'c' uncompletes,
+              // reverts it to plain 'todo' ('s' unshelves, 'c' uncompletes,
               // 'b' unbacklogs).
               let target = statuses[e.key];
               if (focused.dataset.status == target) target = 'todo';
