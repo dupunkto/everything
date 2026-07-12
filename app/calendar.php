@@ -4,7 +4,7 @@
     <?php include __DIR__ . "/shell/head.php" ?>
     <title>Calendar</title>
     <link rel="stylesheet" href="<?= CANONICAL ?>/css/calendar.css">
-    <script src="<?= CANONICAL ?>/js/calendar.js" defer></script>
+    <script src="<?= CANONICAL ?>/client/calendar.js" defer></script>
   </head>
   <body>
     <?php include __DIR__ . "/shell/menu.php" ?>
@@ -23,8 +23,6 @@
     ?>
 
     <main class="wide calendar-page" style="--ghost-color: <?= esc_attr($ghost_color) ?>">
-      <section id="calendar-view" x-get="/calendar/week" x-data="#calendar-filters"></section>
-
       <aside class="calendar-sidebar">
         <form id="calendar-filters" class="calendar-sidebar__filters" z-persist>
           <input type="checkbox" id="calendar-sidebar" name="sidebar" hidden>
@@ -76,6 +74,8 @@
           </section>
         </form>
       </aside>
+
+      <section id="calendar-view" x-get="/calendar/week" x-data="#calendar-filters"></section>
 
       <div class="calendar-editor" hidden></div>
     </main>

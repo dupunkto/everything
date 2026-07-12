@@ -33,7 +33,7 @@
     <?php include __DIR__ . "/../shell/head.php" ?>
     <title>ToDo</title>
     <link rel="stylesheet" href="<?= CANONICAL ?>/css/todo.css">
-    <script src="<?= CANONICAL ?>/js/list.js" type="module"></script>
+    <script src="<?= CANONICAL ?>/client/list.js" type="module"></script>
   </head>
   <body>
     <?php include __DIR__ . "/../shell/menu.php" ?>

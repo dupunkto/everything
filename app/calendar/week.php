@@ -40,19 +40,24 @@ $now_top = ((int) $now->format('H') * 60 + (int) $now->format('i')) / 1440 * 100
 $color = fn($a) => esc_attr($a['calendar_color'] ?? $a['subscription_color'] ?? '#cccccc');
 ?>
 <div class="calendar-week__header">
-  <h1 class="calendar-week__title"><strong><?= $from->format('F') ?></strong> <?= $from->format('Y') ?></h1>
+  <div class="calendar-week__lead">
+    <div class="calendar-week__tools">
+      <button type="button" title="Filters" data-sidebar><i class="fa-regular fa-sidebar-flip"></i></button>
+    </div>
+    <h1 class="calendar-week__title"><strong><?= $from->format('F') ?></strong> <?= $from->format('Y') ?></h1>
+  </div>
+
   <input type="hidden" name="date" value="<?= $from->format('Y-m-d') ?>" form="calendar-filters">
 
   <div class="calendar-week__nav">
+    <button type="button" title="Sync calendars" data-sync x-get="/calendar/sync"
+      x-target="#calendar-view" x-data="#calendar-filters"><i class="fa-solid fa-rotate"></i></button>
     <button type="button" title="Previous week" x-get="/calendar/week?date=<?= (clone $from)->modify('-7 days')->format('Y-m-d') ?>"
       x-target="#calendar-view" x-data="#calendar-filters">&larr;</button>
     <button type="button" data-today x-get="/calendar/week?date=<?= $today->format('Y-m-d') ?>"
       x-target="#calendar-view" x-data="#calendar-filters">Today</button>
     <button type="button" title="Next week" x-get="/calendar/week?date=<?= (clone $from)->modify('+7 days')->format('Y-m-d') ?>"
       x-target="#calendar-view" x-data="#calendar-filters">&rarr;</button>
-    <button type="button" title="Sync calendars" data-sync x-get="/calendar/sync"
-      x-target="#calendar-view" x-data="#calendar-filters"><i class="fa-solid fa-rotate"></i></button>
-    <button type="button" title="Filters" data-sidebar><i class="fa-regular fa-sidebar-flip"></i></button>
   </div>
 </div>
 <div class="calendar-week">

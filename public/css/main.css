@@ -3,18 +3,16 @@
 :root {
   --sidebar-padding: 10px;
   --sidebar-collapsed: 4rem;
-  --sidebar-hover: 250px;
+  --sidebar-expanded: 250px;
 }
 
-body > header {
-  color: inherit;
-  background: transparent
+main {
+  max-width: 750px;
 }
 
 main.wide {
   max-width: 100%;
   margin: 1em;
-  margin-left: calc(var(--sidebar-collapsed) + 2 * var(--sidebar-padding));
 }
 
 main.semi-wide {
@@ -98,33 +96,68 @@ button,
 }
 
 body > nav {
-  position: absolute;
-  left: var(--sidebar-padding);
+  position: fixed;
+  right: var(--sidebar-padding);
+  top: 4.5em;
+  bottom: var(--sidebar-padding);
   font-size: 1.1em;
-  top: 4rem;
   width: var(--sidebar-collapsed);
+  display: flex;
+  flex-direction: column;
   text-wrap: nowrap;
   overflow: hidden;
   transition: width 0.3s ease;
   z-index: 100;
 }
 
-body > nav:hover,
-body > nav.expanded {
-  width: var(--sidebar-hover);
+.nav--expanded body > nav {
+  width: var(--sidebar-expanded);
+}
+
+body > nav ul li a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding-block: 0.9em;
+}
+
+.nav--expanded body > nav ul li a {
+  justify-content: flex-start;
+}
+
+body > nav ul li a span {
+  position: absolute;
+  right: 1em;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.nav__toggle {
+  margin-top: auto;
+  padding: 0.7em 1em;
+  justify-content: flex-end;
+  cursor: pointer;
+  background: none;
+  color: currentColor;
+}
+
+.nav__toggle i {
+  transition: transform 0.3s ease;
+}
+
+.nav--expanded body .nav__toggle i {
+  transform: rotate(180deg);
 }
 
 body {
   overflow-x: hidden;
+  padding-right: calc(var(--sidebar-collapsed) + 2 * var(--sidebar-padding));
+  transition: padding-right 0.3s ease;
 }
 
-body > main.wide {
-  transition: transform 0.3s ease;
-}
-
-body:has(> nav:hover) > main.wide,
-body:has(> nav.expanded) > main.wide {
-  transform: translateX(calc(var(--sidebar-hover) - var(--sidebar-collapsed)));
+.nav--expanded body {
+  padding-right: calc(var(--sidebar-expanded) + 2 * var(--sidebar-padding));
 }
 
 body > nav span {
@@ -132,14 +165,6 @@ body > nav span {
   transition: opacity 0.3s ease;
 }
 
-body > nav:hover span,
-body > nav.expanded span {
+.nav--expanded body > nav span {
   opacity: 1;
-}
-
-/* Suppress the sidebar animation when restoring expanded state across a
-   navigation, so it doesn't replay on every page load. */
-.no-animation,
-.no-animation * {
-  transition: none !important;
 }
