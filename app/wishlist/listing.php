@@ -10,7 +10,7 @@
   $include = $include ? explode(",", $include) : [];
 
   $statuses = match($show) {
-    'shelves' => ['nvm'],
+    'archive' => ['nvm'],
     'bought'  => ['dream', 'bought'],
     default   => ['dream'],
   };

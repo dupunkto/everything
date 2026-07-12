@@ -14,7 +14,7 @@
         <div class="view-nav view-nav--home">
           <div class="view-nav__default">
             <button type="button" data-toggle-bought><i class="fa-regular fa-eye-slash"></i> Show bought</button>
-            <button type="button" data-view="shelves"><i class="fa-regular fa-box-archive"></i> Shelves</button>
+            <button type="button" data-view="archive"><i class="fa-regular fa-box-archive"></i> Archive</button>
           </div>
           <button type="button" class="view-nav__back" data-view="dream">&larr; Back to wishlist</button>
         </div>
@@ -36,7 +36,7 @@
         const filter = document.querySelector('#wishlist-filter');
         const nav = document.querySelector('.view-nav');
 
-        let view = 'dream';   // 'dream' or 'shelves'
+        let view = 'dream';   // 'dream' or 'archive'
         let bought = false;
 
         const apply = () => {
@@ -45,7 +45,7 @@
             ? '<i class="fa-regular fa-eye"></i> Hide bought'
             : '<i class="fa-regular fa-eye-slash"></i> Show bought';
 
-          filter.value = view === 'shelves' ? 'shelves' : (bought ? 'bought' : 'dream');
+          filter.value = view === 'archive' ? 'archive' : (bought ? 'bought' : 'dream');
           filter.dispatchEvent(new Event('input', { bubbles: true }));
         };
 
@@ -84,7 +84,7 @@
               event.preventDefault();
 
               // Pressing the shortcut again reverts to 'dream', so 's'
-              // unshelves and 'c' un-buys.
+              // unarchive and 'c' unbought.
               const target = focused.dataset.status == statuses[event.key] ? 'dream' : statuses[event.key];
 
               focused.querySelector('input[type=hidden][name=status]').value = target;
