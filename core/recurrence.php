@@ -1,6 +1,9 @@
 <?php
-// Recurrence math shared by tasks and the calendar.
-//
+// Recurrence logic for calendar and todo applications.
+// This file was lovingly written by Claude.
+
+namespace recurrence;
+
 // A recurrence is stored as one of two shapes (see the `recurrence` columns):
 //   - an interval: a bare positive integer N, meaning "every N days";
 //   - a cron expression: five fields `m h dom mon dow`.
@@ -9,8 +12,6 @@
 // `*/s` / `a-b/s` steps. Day-of-week is 0-6 (Sunday 0), with 7 also Sunday.
 // When both day-of-month and day-of-week are restricted, they OR together —
 // standard cron semantics.
-
-namespace recurrence;
 
 function is_interval($recurrence) {
   return $recurrence !== null && $recurrence !== "" && ctype_digit((string)$recurrence);
@@ -165,15 +166,15 @@ function cron_occurrences($cron, $base, $from, $to, $until, $count) {
 
 // Resolves a task's effective state from its raw log fields. A recurring task
 // resets to 'todo' once its current period elapses; 'blocked' is sticky and
-// ignores periods. The task only surfaces in listings within TODO_HORIZON days
-// of its next deadline.
+// ignores periods. The task only surfaces in listings within
+// TODO_RECURRENCE_HORIZON days of its next deadline.
 //
 // Expects the store-shaped row: recurrence, status + updated_date (latest log,
 // UTC), last_done (UTC, nullable), due_date + open_date (local wall time).
 // Returns ['status', 'next', 'previous', 'visible']; 'next'/'previous' are
 // local wall-time strings (or null).
 function task_state($task) {
-  $tz = new \DateTimeZone(getenv("TIMEZONE") ?: "Europe/Amsterdam");
+  $tz = new \DateTimeZone(TIMEZONE);
   $utc = new \DateTimeZone("UTC");
 
   $from_utc = fn($v) => $v ? (new \DateTimeImmutable($v, $utc))->setTimezone($tz) : null;
@@ -212,7 +213,7 @@ function task_state($task) {
     $status = 'todo';
   }
 
-  $horizon = (int) \TODO_HORIZON;
+  $horizon = (int) \TODO_RECURRENCE_HORIZON;
   $visible = $status == 'blocked'
     || ($next && $now >= $next->modify("-$horizon days"));
 

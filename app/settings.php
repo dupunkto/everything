@@ -13,9 +13,12 @@
       </header>
 
       <ul>
+        <li><a href="<?= CANONICAL ?>/settings/general">General</a></li>
         <li><a href="<?= CANONICAL ?>/settings/tags">Tags</a></li>
         <li><a href="<?= CANONICAL ?>/settings/calendars">Calendars</a></li>
         <li><a href="<?= CANONICAL ?>/settings/subscriptions">Subscriptions</a></li>
+        <li><a href="<?= CANONICAL ?>/settings/todo">ToDo</a></li>
+        <li><a href="<?= CANONICAL ?>/settings/contacts">Contacts</a></li>
       </ul>
     </main>
   </body>

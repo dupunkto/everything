@@ -45,7 +45,7 @@ function subscription($id) {
     $upstream[$event['uid']] = normalize_feed_event($event);
   }
 
-  $existing = \store\list_subscription_appointments($id) ?: [];
+  $existing = \store\list_appointments_by_subscription($id) ?: [];
 
   $now = gmdate('Y-m-d\TH:i:sP');
   $stats = ['inserted' => 0, 'updated' => 0, 'deleted' => 0, 'ended' => 0, 'kept' => 0, 'errors' => 0];
@@ -178,7 +178,7 @@ function translate_rrule($rrule, $starts_unix, $uid) {
   }
 
   // Local time, so the cron matches what the user sees in their calendar.
-  $timezone = new \DateTimeZone(getenv("TIMEZONE") ?: "Europe/Amsterdam");
+  $timezone = new \DateTimeZone(TIMEZONE);
   $local = (new \DateTime("@$starts_unix"))->setTimezone($timezone);
   $mm    = (int)$local->format('i');
   $hh    = (int)$local->format('H');
@@ -263,7 +263,7 @@ function rrule_until_to_iso($value) {
   }
 
   // Floating local time — assume app timezone.
-  $timezone = new \DateTimeZone(getenv("TIMEZONE") ?: "Europe/Amsterdam");
+  $timezone = new \DateTimeZone(TIMEZONE);
   $datetime = \DateTime::createFromFormat('Ymd\THis', $value, $timezone);
   if(!$datetime) return null;
 

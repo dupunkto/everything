@@ -12,7 +12,7 @@
     <?php
       // The color of the drag-to-create ghost should match the event color,
       // which is the color of the default calendar.
-      $ghost_color = @\store\get_calendar(DEFAULT_CALENDAR)['color'] ?: '#cccccc';
+      $ghost_color = @\store\get_calendar(CALENDAR_DEFAULT_CALENDAR)['color'] ?: '#cccccc';
 
       $sources = array_merge(
         \store\list_calendars() ?: [],
@@ -52,6 +52,10 @@
               <label class="calendar-sidebar__item">
                 <input type="checkbox" name="travel" checked>
                 <span class="calendar-sidebar__label">Travel time</span>
+              </label>
+              <label class="calendar-sidebar__item">
+                <input type="checkbox" name="birthdays" checked>
+                <span class="calendar-sidebar__label">Birthdays</span>
               </label>
               <label class="calendar-sidebar__item">
                 <input type="checkbox" name="tasks" checked>

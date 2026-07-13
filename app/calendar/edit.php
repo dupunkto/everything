@@ -1,4 +1,5 @@
 <?php
+  // Appointment edit popup.
 
   $appointment = \store\get_appointment(@$_POST['id'] ?? @$_GET['id'])
     or fail("Appointment not found.", status: 404);

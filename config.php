@@ -16,13 +16,15 @@ fallback('force-https', false);
 fallback('prefered-proto', FORCE_HTTPS ? "https" : "http");
 fallback('secure', PREFERED_PROTO == "https");
 fallback('canonical', PREFERED_PROTO . "://" . HOST);
+fallback('timezone', getenv("TIMEZONE") ?: "Europe/Amsterdam");
 
-// Days before a recurring task's next deadline that it surfaces in listings.
-fallback('todo-horizon', 3);
+fallback('calendar.default_calendar', \store\first_calendar_id());
 
-// Calendar that drag-created events land on; defaults to the oldest calendar.
-// Guarded so the fallback query only runs when it's actually unset.
-if(!is_set('default-calendar')) fallback('default-calendar', \store\first_calendar_id());
+fallback('todo.recurrence-horizon', 3);
+
+fallback('contacts.display-format', "first_last");
+fallback('contacts.sort-order', "first");
+fallback('map-provider', "google_maps");
 
 function required($key) {
   if(!defined(normalize_key($key))) {
@@ -80,4 +82,14 @@ function normalize_value($value) {
     "false", "off", "no" => false,
     default => $value
   };
+}
+
+function value($key) {
+  $stored = \store\config()[$key] ?? null;
+  return $stored === null ? constant(normalize_key($key)) : normalize_value($stored);
+}
+
+function canonical_value($key) {
+  $stored = \store\config()[$key] ?? null;
+  return $stored === null ? null : normalize_value($stored);
 }

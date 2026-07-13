@@ -21,8 +21,6 @@ CREATE TABLE IF NOT EXISTS `tags` (
 
 CREATE TABLE IF NOT EXISTS `contacts` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `handle` text NOT NULL,
-  `domain` text NOT NULL,
   `display_name` text NOT NULL,
   `first_name` text NOT NULL,
   `middle_name` text NOT NULL,
@@ -30,17 +28,16 @@ CREATE TABLE IF NOT EXISTS `contacts` (
   `last_name` text NOT NULL,
   `birth_day` text NOT NULL,
   `note` text,
-  UNIQUE (`handle`, `domain`),
   PRIMARY KEY (`id`)
 );
 
-CREATE TABLE IF NOT EXISTS `organisation` (
+CREATE TABLE IF NOT EXISTS `organisations` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `display_name` text NOT NULL,
   `legal_name` text,
-  `domain` text NOT NULL,
+  `registration_number` text,
+  `vat_number` text,
   `note` text,
-  UNIQUE (`domain`),
   PRIMARY KEY (`id`)
 );
 
@@ -64,7 +61,7 @@ CREATE TABLE IF NOT EXISTS `orgs_tags` (
   PRIMARY KEY (`id`)
 );
 
-CREATE TABLE IF NOT EXISTS `contact_orgs` (
+CREATE TABLE IF NOT EXISTS `contact_roles` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `contact_id` int(11) NOT NULL,
   `name` text NOT NULL,
@@ -102,7 +99,7 @@ CREATE TABLE IF NOT EXISTS `contact_urls` (
   PRIMARY KEY (`id`)
 );
 
-CREATE TABLE IF NOT EXISTS `contact_urls` (
+CREATE TABLE IF NOT EXISTS `org_urls` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `org_id` int(11) NOT NULL,
   `label` text NOT NULL,
@@ -333,7 +330,7 @@ CREATE TABLE IF NOT EXISTS `calendars_tags` (
   `id` text NOT NULL, -- humid
   `calendar_id` text NOT NULL,
   `tag_id` int(11) NOT NULL,
-  FOREIGN KEY (`calendar_id`) REFERENCES `calendar` (`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`calendar_id`) REFERENCES `calendars` (`id`) ON DELETE CASCADE,
   FOREIGN KEY (`tag_id`) REFERENCES `tags` (`id`) ON DELETE CASCADE,
   UNIQUE (`calendar_id`, `tag_id`),
   PRIMARY KEY (`id`)

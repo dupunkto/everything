@@ -1,7 +1,5 @@
 <?php
-  // Delete target for the week view's editor popup. Only calendar-owned
-  // appointments can be removed here; subscription events belong to their feed
-  // and would just resync back.
+
   $appointment = \store\get_appointment(@$_POST['id'])
     or fail("Appointment not found.", status: 404);
 
@@ -11,5 +9,5 @@
   \store\delete_appointment($appointment['id'])
     or fail("Could not delete appointment.");
 
-  // The caller re-fetches the week itself; nothing to render back.
+  // The caller re-fetches the week itself, nothing to render here.
   http_response_code(204); exit;

@@ -577,7 +577,7 @@ function delete_subscription($id) {
 
 // Appointments
 
-function create_appointment(
+function create_calendar_appointment(
   $calendar_id,
   $title,
   $content,
@@ -624,6 +624,49 @@ function create_appointment(
     $travel_before,
     $travel_after
   ]) ? $id : null;
+}
+
+function create_subscription_appointment(
+  $id,
+  $subscription_id,
+  $title,
+  $content,
+  $starts_at,
+  $ends_at,
+  $location,
+  $meeting,
+  $all_day,
+  $recurrence,
+  $recurrence_until,
+  $recurrence_count
+) {
+  return exec_query('INSERT INTO `appointments` (
+    `id`,
+    `subscription_id`,
+    `title`,
+    `content`,
+    `starts_at`,
+    `ends_at`,
+    `location`,
+    `meeting`,
+    `all_day`,
+    `recurrence`,
+    `recurrence_until`,
+    `recurrence_count`
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+    $id,
+    $subscription_id,
+    $title,
+    $content,
+    $starts_at,
+    $ends_at,
+    $location,
+    $meeting,
+    $all_day,
+    $recurrence,
+    $recurrence_until,
+    $recurrence_count
+  ]);
 }
 
 function update_appointment(
@@ -676,8 +719,6 @@ function update_appointment(
   ]);
 }
 
-// Rewrites just the start/end of an appointment, leaving every other field
-// untouched. Backs the calendar's drag-to-resize, which only ever moves edges.
 function update_appointment_times($id, $starts_at, $ends_at) {
   return exec_query('UPDATE `appointments` SET
     `starts_at` = ?,
@@ -685,8 +726,6 @@ function update_appointment_times($id, $starts_at, $ends_at) {
   WHERE id = ?', [$starts_at, $ends_at, $id]);
 }
 
-// The regular `update_appointment` updates appointments managed by
-// a calendar. This function updates appointments managed by a subscription.
 function update_appointment_meta($id, $going, $urgent, $travel_before = 0, $travel_after = 0) {
   return exec_query('UPDATE `appointments` SET
     `going` = ?,
@@ -735,57 +774,6 @@ function update_appointment_body(
   ]);
 }
 
-// `going`, `urgent` and `color` take their schema defaults; they are user
-// annotations, not managed by the feed. A NULL color inherits the
-// subscription color in the calendar views.
-function create_subscription_appointment(
-  $id,
-  $subscription_id,
-  $title,
-  $content,
-  $starts_at,
-  $ends_at,
-  $location,
-  $meeting,
-  $all_day,
-  $recurrence,
-  $recurrence_until,
-  $recurrence_count
-) {
-  return exec_query('INSERT INTO `appointments` (
-    `id`,
-    `subscription_id`,
-    `title`,
-    `content`,
-    `starts_at`,
-    `ends_at`,
-    `location`,
-    `meeting`,
-    `all_day`,
-    `recurrence`,
-    `recurrence_until`,
-    `recurrence_count`
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
-    $id,
-    $subscription_id,
-    $title,
-    $content,
-    $starts_at,
-    $ends_at,
-    $location,
-    $meeting,
-    $all_day,
-    $recurrence,
-    $recurrence_until,
-    $recurrence_count
-  ]);
-}
-
-function list_subscription_appointments($subscription_id) {
-  return all('SELECT * FROM `appointments`
-    WHERE `subscription_id` = ?', [$subscription_id]);
-}
-
 // Stops a recurring appointment at the given moment without deleting it,
 // preserving its past occurrences.
 function end_appointment_recurrence($id, $moment) {
@@ -814,9 +802,11 @@ function list_appointments($from, $to) {
   ORDER BY a.starts_at', [$to, $from]);
 }
 
-// Recurring appointments whose series could yield an occurrence in [$from, $to):
-// the series must have begun before the window ends and not have ended before
-// it starts. Count-limited series are left to the caller to bound precisely.
+function list_appointments_by_subscription($subscription_id) {
+  return all('SELECT * FROM `appointments`
+    WHERE `subscription_id` = ?', [$subscription_id]);
+}
+
 function list_recurring_appointments($from, $to) {
   return all('SELECT
     a.*,
@@ -855,7 +845,261 @@ function delete_appointment($id) {
 }
 
 define('ENUM_SSL_MODE', ['plain', 'tls', 'ssl']);
-define('ENUM_SOCIAL_TYPE', ['instagram', 'discord', 'snapchat', 'linkedin', 'matrix', 'pinterest', 'twitter', 'youtube', 'facebook', 'activitypub', 'atproto']);
+
+// Contacts
+
+define('ENUM_SOCIAL_TYPE', ['instagram', 'discord', 'snapchat', 'github', 'linkedin', 'matrix', 'pinterest', 'twitter', 'youtube', 'facebook', 'activitypub', 'atproto']);
+
+function set_children($table, $fk, $id, $rows) {
+  exec_query("DELETE FROM `$table` WHERE `$fk` = ?", [$id]);
+
+  foreach($rows as $row) {
+    $cols = array_keys($row);
+    $names = implode(", ", array_map(fn($c) => "`$c`", [$fk, ...$cols]));
+    $marks = implode(", ", array_fill(0, count($cols) + 1, "?"));
+    exec_query("INSERT INTO `$table` ($names) VALUES ($marks)", [$id, ...array_values($row)]);
+  }
+}
+
+function list_contacts() {
+  return all("SELECT contacts.*,
+    (SELECT GROUP_CONCAT(tags.label, ' ')
+      FROM tags
+      JOIN contacts_tags ON contacts_tags.tag_id = tags.id
+      WHERE contacts_tags.contact_id = contacts.id
+    ) AS tag_labels,
+    (SELECT GROUP_CONCAT(contact_emails.email, ' ')
+      FROM contact_emails
+      WHERE contact_emails.contact_id = contacts.id
+    ) AS emails,
+    (SELECT GROUP_CONCAT(contact_phone_numbers.phone_number, ' ')
+      FROM contact_phone_numbers
+      WHERE contact_phone_numbers.contact_id = contacts.id
+    ) AS phones,
+    (SELECT GROUP_CONCAT(contact_roles.name, ' ')
+      FROM contact_roles
+      WHERE contact_roles.contact_id = contacts.id
+    ) AS org_names FROM contacts") ?? [];
+}
+
+function get_contact($id) {
+  $contact = one('SELECT * FROM `contacts` WHERE id = ?', [$id]);
+
+  if(!$contact) return $c;
+
+  $contact['emails'] = list_contact_emails($id);
+  $contact['phones'] = list_contact_phone_numbers($id);
+  $contact['urls'] = list_contact_urls($id);
+  $contact['socials'] = list_contact_socials($id);
+  $contact['roles'] = list_contact_roles($id);
+  $contact['addresses'] = list_contact_addresses($id);
+  $contact['tags'] = list_contact_tags($id);
+
+  return $contact;
+}
+
+function list_contact_emails($id) {
+  return all('SELECT * FROM `contact_emails` WHERE contact_id = ?', [$id]);
+}
+
+function list_contact_phone_numbers($id) {
+  return all('SELECT * FROM `contact_phone_numbers` WHERE contact_id = ?', [$id]);
+}
+
+function list_contact_urls($id) {
+  return all('SELECT * FROM `contact_urls` WHERE contact_id = ?', [$id]);
+}
+
+function list_contact_socials($id) {
+  return all('SELECT * FROM `contact_socials` WHERE contact_id = ?', [$id]);
+}
+
+function list_contact_roles($id) {
+  return all('SELECT * FROM `contact_roles` WHERE contact_id = ?', [$id]);
+}
+
+function list_contact_addresses($id) {
+  return all('SELECT a.*, ca.label AS link_label FROM `contact_addresses` ca
+    JOIN `addresses` a ON a.id = ca.address_id WHERE ca.contact_id = ?', [$id]);
+}
+
+function list_contact_tags($id) {
+  return all('SELECT t.* FROM `tags` t
+    JOIN `contacts_tags` ct ON ct.tag_id = t.id WHERE ct.contact_id = ?', [$id]);
+}
+
+function create_contact(
+  $display_name,
+  $first_name,
+  $middle_name,
+  $infix,
+  $last_name,
+  $birth_day,
+  $note
+) {
+  $ok = exec_query('INSERT INTO `contacts`
+    (`display_name`, `first_name`, `middle_name`, `infix`, `last_name`, `birth_day`, `note`)
+    VALUES (?, ?, ?, ?, ?, ?, ?)',
+    [$display_name, $first_name, $middle_name, $infix, $last_name, $birth_day, $note]);
+
+  return $ok ? DBH->lastInsertId() : null;
+}
+
+function update_contact(
+  $id,
+  $display_name,
+  $first_name,
+  $middle_name,
+  $infix,
+  $last_name,
+  $birth_day,
+  $note
+) {
+  return exec_query('UPDATE `contacts` SET
+    `display_name` = ?, `first_name` = ?, `middle_name` = ?,
+    `infix` = ?, `last_name` = ?, `birth_day` = ?, `note` = ? WHERE id = ?',
+    [$display_name, $first_name, $middle_name, $infix, $last_name, $birth_day, $note, $id]);
+}
+
+function update_contact_note($id, $note) {
+  return exec_query('UPDATE `contacts` SET `note` = ? WHERE id = ?', [$note, $id]);
+}
+
+function delete_contact($id) {
+  return exec_query('DELETE FROM `contacts` WHERE id = ?', [$id]);
+}
+
+function list_organisations() {
+  return all("SELECT organisations.*,
+    (SELECT GROUP_CONCAT(tags.label, ' ')
+      FROM tags
+      JOIN orgs_tags ON orgs_tags.tag_id = tags.id
+      WHERE orgs_tags.org_id = organisations.id
+    ) AS tag_labels,
+    (SELECT GROUP_CONCAT(org_emails.email, ' ')
+      FROM org_emails
+      WHERE org_emails.org_id = organisations.id
+    ) AS emails,
+    (SELECT GROUP_CONCAT(org_phone_numbers.phone_number, ' ')
+      FROM org_phone_numbers
+      WHERE org_phone_numbers.org_id = organisations.id
+    ) AS phones FROM organisations") ?? [];
+}
+
+function get_organisation($id) {
+  $organisation = one('SELECT * FROM `organisations` WHERE id = ?', [$id]);
+
+  if(!$organisation) return $organisation;
+
+  $organisation['emails'] = list_organisation_emails($id);
+  $organisation['phones'] = list_organisation_phone_numbers($id);
+  $organisation['urls'] = list_organisation_urls($id);
+  $organisation['socials'] = list_organisation_socials($id);
+  $organisation['addresses'] = list_organisation_addresses($id);
+  $organisation['tags'] = list_organisation_tags($id);
+
+  return $organisation;
+}
+
+function list_organisation_emails($id) {
+  return all('SELECT * FROM `org_emails` WHERE org_id = ?', [$id]);
+}
+
+function list_organisation_phone_numbers($id) {
+  return all('SELECT * FROM `org_phone_numbers` WHERE org_id = ?', [$id]);
+}
+
+function list_organisation_urls($id) {
+  return all('SELECT * FROM `org_urls` WHERE org_id = ?', [$id]);
+}
+
+function list_organisation_socials($id) {
+  return all('SELECT * FROM `org_socials` WHERE org_id = ?', [$id]);
+}
+
+function list_organisation_addresses($id) {
+  return all('SELECT a.*, oa.label AS link_label FROM `org_addresses` oa
+    JOIN `addresses` a ON a.id = oa.address_id WHERE oa.org_id = ?', [$id]);
+}
+
+function list_organisation_tags($id) {
+  return all('SELECT t.* FROM `tags` t
+    JOIN `orgs_tags` ot ON ot.tag_id = t.id WHERE ot.org_id = ?', [$id]);
+}
+
+function create_organisation($display_name, $legal_name, $registration_number, $vat_number, $note) {
+  $ok = exec_query('INSERT INTO `organisations`
+    (`display_name`, `legal_name`, `registration_number`, `vat_number`, `note`)
+    VALUES (?, ?, ?, ?, ?)',
+    [$display_name, $legal_name, $registration_number, $vat_number, $note]);
+
+  return $ok ? DBH->lastInsertId() : null;
+}
+
+function update_organisation($id, $display_name, $legal_name, $registration_number, $vat_number, $note) {
+  return exec_query('UPDATE `organisations` SET
+    `display_name` = ?,
+    `legal_name` = ?,
+    `registration_number` = ?,
+    `vat_number` = ?,
+    `note` = ? WHERE id = ?',
+    [$display_name, $legal_name, $registration_number, $vat_number, $note, $id]);
+}
+
+function update_organisation_note($id, $note) {
+  return exec_query('UPDATE `organisations` SET `note` = ? WHERE id = ?', [$note, $id]);
+}
+
+function delete_organisation($id) {
+  return exec_query('DELETE FROM `organisations` WHERE id = ?', [$id]);
+}
+
+// Addresses
+
+function list_addresses() {
+  return all('SELECT * FROM `addresses` ORDER BY `city`, `street_name`') ?? [];
+}
+
+function create_address($f) {
+  // If an address already exists verbatim, we reuse the existing address row.
+  // This keeps the database free of duplicates.
+
+  $get = fn($k) => $f[$k] ?? '';
+
+  $existing = one('SELECT id FROM `addresses`
+    WHERE street_name = ? AND street_number = ? AND postal_code = ? AND city = ? AND country = ?',
+    [$get('street_name'), $get('street_number'), $get('postal_code'), $get('city'), $get('country')]);
+
+  if($existing) return $existing['id'];
+
+  exec_query('INSERT INTO `addresses`
+    (`label`, `street_name`, `street_number`, `postal_code`, `city`, `province`, `country`, `timezone`, `note`)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [$get('label'), $get('street_name'), $get('street_number'), $get('postal_code'),
+     $get('city'), $get('province'), $get('country'), $get('timezone'), $get('note')]);
+
+  return DBH->lastInsertId();
+}
+
+function set_contact_addresses($id, $rows) {
+  exec_query('DELETE FROM `contact_addresses` WHERE contact_id = ?', [$id]);
+
+  foreach($rows as $row) {
+    $address_id = create_address($row);
+    exec_query('INSERT INTO `contact_addresses` (contact_id, label, address_id) VALUES (?, ?, ?)',
+      [$id, $row['label'] ?? '', $address_id]);
+  }
+}
+
+function set_organisation_addresses($id, $rows) {
+  exec_query('DELETE FROM `org_addresses` WHERE org_id = ?', [$id]);
+
+  foreach($rows as $row) {
+    $address_id = create_address($row);
+    exec_query('INSERT INTO `org_addresses` (org_id, label, address_id) VALUES (?, ?, ?)',
+      [$id, $row['label'] ?? '', $address_id]);
+  }
+}
 
 // Configuration
 
@@ -867,6 +1111,15 @@ function config() {
     $map[$row['property']] = $row['value'];
 
   return $map;
+}
+
+function update_config($property, $value) {
+  // We delete first, because otherwise we need to differentiate on adapter to
+  // use different syntax (ON CONFLICT, ON DUPLICATE KEY etc.) and that is a headache.
+  // We also don't care if this first query succeeds (bc yk it might not exist).
+
+  exec_query('DELETE FROM `config` WHERE `property` = ?', [$property]);
+  return exec_query('INSERT INTO `config` (`property`, `value`) VALUES (?, ?)', [$property, $value]);
 }
 
 // Migrations

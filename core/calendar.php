@@ -1,5 +1,6 @@
 <?php
 // Layouting engine for calender views.
+// This file was lovingly written by Claude.
 
 namespace calendar;
 
@@ -7,7 +8,8 @@ namespace calendar;
 // so instants order and compare as plain strings. Day collections are keyed
 // by "Y-m-d" date, so views of any length share the same shapes.
 
-const TASK_COLOR = "#e06c75";
+define('TASK_COLOR', "#e06c75");
+define('BIRTHDAY_COLOR', "#cccccc");
 
 function wall($utc) {
   return str_replace("T", " ", \cast_datetime_local($utc));
@@ -104,6 +106,51 @@ function task_deadlines($from, $to) {
   }
 
   return $deadlines;
+}
+
+// Contact birthdays as annually-recurring all-day appointments within
+// [$from, $to). Titled with the turning age when the birth year is known,
+// a plain birthday otherwise (year absent, or a "MM-DD" birth_day).
+function birthdays($from, $to) {
+  $ordinal = function($n) {
+    $tens = $n % 100;
+    $suffix = $tens >= 11 && $tens <= 13 ? 'th' : (['th', 'st', 'nd', 'rd'][$n % 10] ?? 'th');
+    return "$n$suffix";
+  };
+
+  $birthdays = [];
+
+  foreach(\store\list_contacts() as $contact) {
+    if(!preg_match('/^(?:(\d{4})-)?(\d{2})-(\d{2})$/', trim($contact['birth_day']), $m)) continue;
+    [, $birth_year, $month, $day] = $m;
+
+    for($year = (int) $from->format('Y'); $year <= (int) $to->format('Y'); $year++) {
+      $date = \DateTime::createFromFormat('!Y-m-d', sprintf('%04d-%s-%s', $year, $month, $day));
+      if(!$date || $date < $from || $date >= $to) continue;
+
+      $age = $birth_year !== '' ? $year - (int) $birth_year : null;
+      $name = \esc_inner($contact['display_name'] ?: $contact['first_name']);
+
+      $birthdays[] = [
+        'id' => "birthday-{$contact['id']}-$year",
+        'title' => $age >= 1 ? "$name's {$ordinal($age)} birthday" : "$name's birthday",
+        'starts_at' => $date->format("Y-m-d 00:00:00"),
+        'ends_at' => (clone $date)->modify('+1 day')->format("Y-m-d 00:00:00"),
+        'all_day' => true,
+        'going' => true,
+        'calendar_id' => null,
+        'subscription_id' => null,
+        'calendar_color' => BIRTHDAY_COLOR,
+        'location' => null,
+        'recurrence' => null,
+        'meeting' => false,
+        'urgent' => false,
+        'is_birthday' => true,
+      ];
+    }
+  }
+
+  return $birthdays;
 }
 
 // Splits appointments over the days they touch, clipped to [$from, $to), into

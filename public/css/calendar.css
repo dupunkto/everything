@@ -116,7 +116,6 @@ body:has(.calendar-page) {
   gap: 0.5em;
   padding: 0.2rem 0;
   cursor: pointer;
-  text-transform: none;
 }
 
 .calendar-sidebar__item input {
@@ -191,6 +190,10 @@ body:has(.calendar-page) {
 
 .calendar-week .appointment--task {
   border-left-style: dashed;
+}
+
+.calendar-week .appointment--birthday .fa-cake-candles {
+  color: #e06c75;
 }
 
 .calendar-week .appointment__title {
@@ -468,7 +471,6 @@ body:has(.calendar-page) {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
-  text-transform: none;
 }
 
 .calendar-editor .datetime-pair {

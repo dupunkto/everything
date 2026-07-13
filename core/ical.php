@@ -1,6 +1,6 @@
 <?php
 // Minimal iCalendar (RFC 5545) parser.
-// Written by Claude, don't judge me ok.
+// This file was lovingly written by Claude.
 
 namespace ical;
 
@@ -151,7 +151,7 @@ function normalize_event($props) {
 // calendar views treat all-day appointments.
 function resolve_datetime($prop) {
   $value = trim($prop['value']);
-  $local = new \DateTimeZone(getenv("TIMEZONE") ?: "Europe/Amsterdam");
+  $local = new \DateTimeZone(TIMEZONE);
 
   if(($prop['params']['VALUE'] ?? "") == 'DATE' || preg_match('/^\d{8}$/', $value)) {
     $datetime = \DateTime::createFromFormat('!Ymd', $value, $local);

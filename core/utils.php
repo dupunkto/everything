@@ -26,21 +26,51 @@ function circle($class = "") {
 }
 
 function cast_datetime_utc($date, $time, $timezone = null) {
-  $timezone = $timezone ?? getenv("TIMEZONE") ?: "Europe/Amsterdam";
+  $timezone = $timezone ?? TIMEZONE;
   $datetime = new DateTime("$date $time", new DateTimeZone($timezone));
   return $datetime->setTimezone(new DateTimeZone("UTC"))->format('c');
 }
 
 function cast_datetime_local($datetime, $timezone = null) {
-  $timezone = $timezone ?? getenv("TIMEZONE") ?: "Europe/Amsterdam";
+  $timezone = $timezone ?? TIMEZONE;
   $datetime = new DateTimeImmutable($datetime);
   return $datetime->setTimezone(new DateTimeZone($timezone))->format('Y-m-d\TH:i:s');
 }
 
 function local_date($format, $timestamp = "now", $timezone = null) {
-  $timezone = $timezone ?? getenv("TIMEZONE") ?: "Europe/Amsterdam";
+  $timezone = $timezone ?? TIMEZONE;
   $datetime = new DateTimeImmutable($timestamp, new DateTimeZone($timezone));
   return $datetime->format($format);
+}
+
+function address_line($a) {
+  $parts = [
+    trim(($a['street_name'] ?? '') . " " . ($a['street_number'] ?? '')),
+    trim(($a['postal_code'] ?? '') . " " . ($a['city'] ?? '')),
+    $a['province'] ?? '',
+    $a['country'] ?? '',
+  ];
+
+  return str_join(", ", $parts);
+}
+
+function maps_url($provider, $destination) {
+  $to = rawurlencode($destination);
+
+  return match($provider) {
+    'google_maps' => "https://www.google.com/maps/dir/?api=1&destination=$to",
+    'apple_maps' => "https://maps.apple.com/?daddr=$to",
+    'openstreetmap' => "https://www.openstreetmap.org/directions?to=$to",
+    default => null,
+  };
+}
+
+function star_sign($month, $day) {
+  $signs = ['Capricorn', 'Aquarius', 'Pisces', 'Aries', 'Taurus', 'Gemini',
+            'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn'];
+  // Last day the earlier sign still runs, per month (Capricorn wraps Dec -> Jan).
+  $cutoff = [19, 18, 20, 19, 20, 20, 22, 22, 21, 22, 21, 20];
+  return $day <= $cutoff[$month - 1] ? $signs[$month - 1] : $signs[$month];
 }
 
 function describe_recurrence($recurrence) {

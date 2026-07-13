@@ -6,10 +6,11 @@
 // visible[] is the calendars to show
 // travel? is whether to show travel time
 // tasks? is whether to show task deadlines
+// birthdays? is whether to show contact birthdays
 // timings? is whether to show timings
 // declined? is whether to show events marked as 'not going'
 
-$tz = new DateTimeZone(getenv("TIMEZONE") ?: "Europe/Amsterdam");
+$tz = new DateTimeZone(TIMEZONE);
 $today = new DateTime('today', $tz);
 $now = new DateTime('now', $tz);
 
@@ -29,7 +30,9 @@ $appointments = array_filter(\calendar\appointments($from, $to), function($a) us
 $timed = array_filter($appointments, fn($a) => !$a['all_day']);
 if($show('tasks')) $timed = array_merge($timed, \calendar\task_deadlines($from, $to));
 
-$all_day = \calendar\all_day_lanes(array_filter($appointments, fn($a) => $a['all_day']), $from);
+$all_day_appointments = array_filter($appointments, fn($a) => $a['all_day']);
+if($show('birthdays')) $all_day_appointments = array_merge($all_day_appointments, \calendar\birthdays($from, $to));
+$all_day = \calendar\all_day_lanes($all_day_appointments, $from);
 $days = array_map('\calendar\layout', \calendar\day_segments($timed, $from, $to));
 $travel = $show('travel') ? \calendar\travel_bands($timed, $from, $to) : [];
 $timings = $show('timings') ? \calendar\timing_lines($from, $to) : [];
@@ -75,15 +78,16 @@ $color = fn($a) => esc_attr($a['calendar_color'] ?? $a['subscription_color'] ?? 
   <?php if($all_day): ?>
     <div class="calendar-week__all-day">
       <?php foreach($all_day as $appointment): ?>
-        <article class="appointment appointment--all-day<?= $appointment['going'] ? "" : " appointment--not-going" ?>"
-                 data-id="<?= esc_attr($appointment['id']) ?>"
+        <article class="appointment appointment--all-day<?= $appointment['going'] ? "" : " appointment--not-going" ?><?= empty($appointment['is_birthday']) ? "" : " appointment--birthday" ?>"
+                 <?= empty($appointment['is_birthday']) ? 'data-id="' . esc_attr($appointment['id']) . '"' : '' ?>
                  style="--appointment-column: <?= $appointment['layout']['column'] ?>; --appointment-span: <?= $appointment['layout']['span'] ?>;
                         --appointment-row: <?= $appointment['layout']['row'] ?>;
                         --appointment-color: <?= $color($appointment) ?>">
-          <h3 class="appointment__title"><?= $appointment['title'] ?></h3>
+          <h3 class="appointment__title"><?= $appointment['title'] ?><?php if(!empty($appointment['urgent'])) circle("circle--tight") ?></h3>
 
-          <?php if($appointment['recurrence'] || $appointment['meeting']): ?>
+          <?php if($appointment['recurrence'] || $appointment['meeting'] || !empty($appointment['is_birthday'])): ?>
             <span class="appointment__icons">
+              <?php if(!empty($appointment['is_birthday'])): ?><i class="fa-solid fa-cake-candles"></i><?php endif ?>
               <?php if($appointment['recurrence']): ?><i class="fa-solid fa-repeat" title="<?= esc_attr(describe_recurrence($appointment['recurrence'])) ?>"></i><?php endif ?>
               <?php if($appointment['meeting']): ?><i class="fa-solid fa-video"></i><?php endif ?>
             </span>
@@ -127,7 +131,7 @@ $color = fn($a) => esc_attr($a['calendar_color'] ?? $a['subscription_color'] ?? 
                             ? "--appointment-width: {$layout['width']}; --appointment-left: {$layout['left']};"
                             : "--appointment-inset: {$layout['inset']};" ?>
                           --appointment-color: <?= $color($appointment) ?>">
-            <h3 class="appointment__title"><?= $appointment['title'] ?></h3>
+            <h3 class="appointment__title"><?= $appointment['title'] ?><?php if(!empty($appointment['urgent'])) circle("circle--tight") ?></h3>
 
             <?php if($appointment['location']): ?>
               <span class="appointment__location"><?= $appointment['location'] ?></span>
