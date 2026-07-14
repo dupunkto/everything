@@ -5,10 +5,14 @@ if (localStorage.getItem("nav-expanded")) {
   document.documentElement.classList.add("nav--expanded");
 }
 
-// The toggle button is rendered later in the body, so bind once it exists.
-addEventListener("DOMContentLoaded", () => {
-  document.querySelector(".nav__toggle").addEventListener("click", () => {
+// The toggle button is rendered later in the body, so bind a generic event for the click handler.
+if (!window.nav_bound) {
+  window.nav_bound = true;
+
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".nav__toggle")) return;
+
     if (document.documentElement.classList.toggle("nav--expanded")) localStorage.setItem("nav-expanded", "1");
     else localStorage.removeItem("nav-expanded");
   });
-});
+}

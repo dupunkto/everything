@@ -984,8 +984,7 @@ function set_contact_addresses($id, $rows) {
       city: $row['city'],
       province: $row['province'],
       country: $row['country'],
-      timezone: $row['timezone'],
-      note: null
+      timezone: $row['timezone']
     );
 
     exec_query('INSERT INTO `contact_addresses` (contact_id, label, address_id) VALUES (?, ?, ?)',
@@ -1106,8 +1105,7 @@ function set_organisation_addresses($id, $rows) {
       city: $row['city'],
       province: $row['province'],
       country: $row['country'],
-      timezone: $row['timezone'],
-      note: null
+      timezone: $row['timezone']
     );
 
     exec_query('INSERT INTO `org_addresses` (org_id, label, address_id) VALUES (?, ?, ?)',
@@ -1137,6 +1135,10 @@ function list_addresses() {
     ORDER BY CASE WHEN `label` IS NULL OR `label` = '' THEN 1 ELSE 0 END, `city`, `street_name`");
 }
 
+function get_address($id) {
+  return one("SELECT * FROM `addresses` WHERE id = ?", [$id]);
+}
+
 function create_address(
   $label,
   $street_name,
@@ -1145,8 +1147,7 @@ function create_address(
   $city,
   $province,
   $country,
-  $timezone,
-  $note
+  $timezone
 ) {
   // If an address already exists verbatim, we reuse the existing address row.
   // This keeps the database free of duplicates.
@@ -1165,9 +1166,8 @@ function create_address(
     `city`,
     `province`,
     `country`,
-    `timezone`,
-    `note`
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+    `timezone`
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [
     $label,
     $street_name,
     $street_number,
@@ -1175,8 +1175,7 @@ function create_address(
     $city,
     $province,
     $country,
-    $timezone,
-    $note
+    $timezone
   ]);
 
   return DBH->lastInsertId();
@@ -1191,8 +1190,7 @@ function update_address(
   $city,
   $province,
   $country,
-  $timezone,
-  $note
+  $timezone
 ) {
   return exec_query('UPDATE `addresses` SET
     `label` = ?,
@@ -1202,8 +1200,7 @@ function update_address(
     `city` = ?,
     `province` = ?,
     `country` = ?,
-    `timezone` = ?,
-    `note` = ?
+    `timezone` = ?
   WHERE id = ?', [
     $label,
     $street_name,
@@ -1213,7 +1210,6 @@ function update_address(
     $province,
     $country,
     $timezone,
-    $note,
     $id
   ]);
 }

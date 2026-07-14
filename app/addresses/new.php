@@ -10,35 +10,13 @@
       'province' => cast_string(@$_POST['addr_province']),
       'country' => cast_string(@$_POST['addr_country']),
       'timezone' => cast_string(@$_POST['addr_timezone']),
-      'note' => cast_string(@$_POST['addr_note']),
     ];
 
     if(@$_POST['addr_id']) {
-      \store\update_address(
-        $_POST['addr_id'],
-        $fields['label'],
-        $fields['street_name'],
-        $fields['street_number'],
-        $fields['postal_code'],
-        $fields['city'],
-        $fields['province'],
-        $fields['country'],
-        $fields['timezone'],
-        $fields['note']
-      );
+      \store\update_address($_POST['addr_id'], ...$fields);
     }
     else {
-      \store\create_address(
-        $fields['label'],
-        $fields['street_name'],
-        $fields['street_number'],
-        $fields['postal_code'],
-        $fields['city'],
-        $fields['province'],
-        $fields['country'],
-        $fields['timezone'],
-        $fields['note']
-      );
+      \store\create_address(...$fields);
     }
   }
 

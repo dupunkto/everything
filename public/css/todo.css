@@ -1,3 +1,38 @@
+
+.todo {
+  display: grid;
+  grid-template-columns: 1fr minmax(0, 30em) 1fr;
+  grid-template-rows: auto 1fr;
+  align-items: center;
+  gap: 1em;
+}
+
+#todo-listing {
+  display: contents;
+}
+
+.todo .page-header__search {
+  grid-row: 1;
+  grid-column: 2;
+  width: 100%;
+}
+
+.todo .page-header__title {
+  grid-row: 1;
+  grid-column: 1;
+}
+
+.todo .view-nav {
+  grid-row: 1;
+  grid-column: 3;
+}
+
+.todo .listing {
+  grid-row: 2;
+  grid-column: 1 / -1;
+  align-self: start;
+}
+
 .todo-form [name="title"],
 .todo-editor [name="title"] {
   font-size: 1.5em;

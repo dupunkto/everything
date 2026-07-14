@@ -43,7 +43,9 @@
     </div>
   </div>
   <div class="actions">
-    <button type="button" data-edit x-get="/contacts/edit?kind=<?= $kind ?>&id=<?= $item['id'] ?>" x-target="#contacts-panel">Edit</button>
+    <button type="button" data-edit z-key="e" x-get="/contacts/edit?kind=<?= $kind ?>&id=<?= $item['id'] ?>" x-target="#contacts-panel">Edit</button>
+    <!-- Deselects: a detail request without an id renders nothing. -->
+    <button type="button" z-key="escape" x-get="/contacts/detail" x-target="#contacts-panel" hidden></button>
   </div>
 </header>
 

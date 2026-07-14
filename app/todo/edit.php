@@ -14,6 +14,11 @@
 
     \store\set_task_status($_POST['id'], $_POST['status'], @$_POST['comment'])
       or fail("Could not update task status.");
+
+    if(isset($_POST['close'])) {
+      http_response_code(303);
+      header("Location: /todo"); exit;
+    }
   }
 
   $task = \store\get_task(@$_GET['id'] ?? @$_POST['id'])
@@ -28,7 +33,8 @@
     <?php include __DIR__ . "/../shell/head.php" ?>
     <title>ToDo</title>
     <link rel="stylesheet" href="<?= CANONICAL ?>/css/todo.css">
-    <script src="<?= CANONICAL ?>/client/list.js" type="module"></script>
+    <script src="<?= CANONICAL ?>/client/circle.js" type="module"></script>
+    <script src="<?= CANONICAL ?>/client/todo.js" type="module"></script>
   </head>
   <body>
     <?php include __DIR__ . "/../shell/menu.php" ?>
@@ -36,8 +42,15 @@
       <form id="todo-editor" class="todo-editor" x-post="/todo/edit" x-on="change" x-target="@document">
         <input type="hidden" name="id" value="<?= esc_attr($task['id']) ?>">
 
+        <?php $status_for = fn($target) => $task['status'] == $target ? "todo" : $target ?>
+        <button type="button" z-key="b" z-set=".todo-editor [name=status]" value="<?= $status_for('backlog') ?>" hidden></button>
+        <button type="button" z-key="c" z-set=".todo-editor [name=status]" value="<?= $status_for('done') ?>" hidden></button>
+        <button type="button" z-key="u" z-set=".todo-editor [name=status]" value="todo" hidden></button>
+        <button type="button" z-key="s" z-set=".todo-editor [name=status]" value="<?= $status_for('nvm') ?>" hidden></button>
+        <button type="submit" name="close" value="1" z-key="escape mod+enter" hidden></button>
+
         <section>
-          <span class="circled-field">
+          <span class="circled-field" z-circle>
             <?php if(cast_boolean($task['urgent'])) circle() ?>
             <input name="title" type="text" placeholder="Title" value="<?= esc_attr($task['title']) ?>">
           </span>
@@ -113,32 +126,6 @@
           <?php endif ?>
         </aside>
       </form>
-
-      <script type="module">
-        const form = document.getElementById('todo-editor');
-        const select = form?.querySelector('[name="status"]');
-        const comment = form?.querySelector('[name="comment"]');
-
-        if(form && select && comment) {
-          comment.addEventListener('change', (e) => e.stopPropagation());
-
-          select.addEventListener('focus', () => { select.dataset.prior = select.value; });
-          select.addEventListener('change', (e) => {
-            const status = select.value;
-            if(status !== 'blocked' && status !== 'backlog') return;
-
-            e.stopPropagation();
-
-            const msg = status === 'blocked' ? 'Why was this task blocked?' : 'Why was this task backlogged?';
-            const reason = prompt(msg);
-
-            if(reason === null) { select.value = select.dataset.prior; return; }
-
-            comment.value = reason;
-            form.dispatchEvent(new Event('change'));
-          });
-        }
-      </script>
     </main>
   </body>
 </html>

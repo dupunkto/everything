@@ -98,15 +98,15 @@
   $address_map = [];
   foreach($addresses as $a) $address_map[address_line($a)] = $a;
 
-  $repeat = function($legend, $rows, $render, $extra = null) { ?>
-    <fieldset class="repeat" data-repeat>
+  $repeat = function($legend, $rows, $render, $extra = null, $confirm = "Are you sure?") { ?>
+    <fieldset class="repeat" z-repeat="<?= esc_attr($confirm) ?>">
       <legend><?= esc_inner($legend) ?></legend>
       <div class="repeat__rows">
         <?php foreach($rows as $row): ?>
-          <div class="repeat__row"><?php $render($row) ?><button type="button" data-remove data-repeat-kind="<?= esc_attr($legend) ?>">&times;</button></div>
+          <div class="repeat__row"><?php $render($row) ?><button type="button" data-remove>&times;</button></div>
         <?php endforeach ?>
       </div>
-      <template class="repeat__template"><div class="repeat__row"><?php $render([]) ?><button type="button" data-remove data-repeat-kind="<?= esc_attr($legend) ?>">&times;</button></div></template>
+      <template><div class="repeat__row"><?php $render([]) ?><button type="button" data-remove>&times;</button></div></template>
       <button type="button" data-add>+ <?= esc_inner($legend) ?></button>
       <?php if($extra) $extra() ?>
     </fieldset>
@@ -151,7 +151,8 @@
   <input type="hidden" name="id" value="<?= esc_attr(@$item['id']) ?>">
 
   <div class="actions">
-    <button type="button" data-cancel x-get="/contacts/detail?kind=<?= $kind ?>&id=<?= @$item['id'] ?>" x-target="#contacts-panel">Cancel</button>
+    <button type="button" z-key="escape" z-discard="Discard unsaved changes?"
+      x-get="/contacts/detail?kind=<?= $kind ?>&id=<?= @$item['id'] ?>" x-target="#contacts-panel">Cancel</button>
     <button>Save</button>
   </div>
 
@@ -185,11 +186,11 @@
 
   <?php $repeat("Email", @$item['emails'] ?: [], $generic_field('email', 'email', 'email')) ?>
   <?php $repeat("Phone", @$item['phone_numbers'] ?: [], $generic_field('phone', 'phone_number', 'phone')) ?>
-  <?php $repeat("Address", @$item['addresses'] ?: [], $address_field, function() { ?>
+  <?php $repeat("Address", @$item['addresses'] ?: [], $address_field, confirm: "", extra: function() { ?>
     <button type="button" data-address-search-toggle>+ Existing address</button>
     <div class="address-search" data-address-search hidden>
-      <input class="repeat__wide" type="search" placeholder="find existing address…" data-address-search-input>
-      <ul class="listing address-search__results" data-address-search-results></ul>
+      <input class="repeat__wide" type="search" placeholder="find existing address…">
+      <ul class="listing address-search__results"></ul>
     </div>
   <?php }) ?>
   <?php $repeat("Socials", @$item['socials'] ?: [], $social_field) ?>

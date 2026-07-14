@@ -141,23 +141,6 @@ button,
   white-space: nowrap;
 }
 
-.view-nav__default {
-  display: flex;
-  gap: 0.2em;
-}
-
-.view-nav__back {
-  display: none;
-}
-
-.view-nav:not(.view-nav--home) .view-nav__default {
-  display: none;
-}
-
-.view-nav:not(.view-nav--home) .view-nav__back {
-  display: inline-block;
-}
-
 .listing {
   overflow-y: auto;
 }

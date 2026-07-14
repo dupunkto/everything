@@ -82,7 +82,24 @@
     strcasecmp($a['sort'], $b['sort']) ?:
     strcasecmp($a['display'], $b['display']));
 
+  // A tab replaces the is: filters with its own, keeping the rest of the
+  // query (tags, free text) intact.
+  $canned = fn($kind) => join(" ", ["is:$kind", ...array_filter(str_explode($query),
+    fn($token) => $token != "is:person" && $token != "is:org")]);
+
 ?>
+<nav class="contacts__tabs">
+  <button type="button" <?php if(isset($kinds['person'])) echo 'class="is-active"' ?>
+    z-set=".contacts__search" value="<?= esc_attr($canned('person')) ?>">
+    <i class="fa-solid fa-people-group"></i> People
+  </button>
+  <button type="button" <?php if(isset($kinds['org'])) echo 'class="is-active"' ?>
+    z-set=".contacts__search" value="<?= esc_attr($canned('org')) ?>">
+    <i class="fa-solid fa-building-columns"></i> Organisations
+  </button>
+</nav>
+
+<div class="contacts__list">
 <?php $letter = null ?>
 <?php foreach($rows as $row): ?>
   <?php $initial = mb_strtoupper(mb_substr($row['sort'], 0, 1)) ?: "#" ?>
@@ -102,3 +119,4 @@
 <?php if(!$rows): ?>
   <p class="placeholder">Nothing here.</p>
 <?php endif ?>
+</div>

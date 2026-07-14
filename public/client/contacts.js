@@ -1,32 +1,24 @@
-// Repeatable form rows and existing-address search for the contacts app.
+// Contact behaviour that keeps state on the client: the existing-address
+// picker in the edit form, and clearing the panel when the open contact
+// drops out of a re-filtered listing.
 
-const address_data = () => {
-  try { return JSON.parse(document.getElementById("addresses-data")?.textContent || "{}"); }
-  catch { return {}; }
-};
+const addresses = () =>
+  JSON.parse(document.getElementById("addresses-data")?.textContent || "{}");
 
-const address_text = (line, address) => `${line} ${address.label ?? ""}`.toLowerCase();
-
-const fill_address_row = (row, address) => {
-  for(const [key, value] of Object.entries(address)) {
-    if(key == "label") continue;
-
-    const input = row.querySelector(`[name="address_${key}[]"]`);
-    if(input) input.value = value ?? "";
-  }
-};
-
-const add_address_row = (repeat, address = null) => {
-  const template = repeat.querySelector(".repeat__template");
+const add_row = (repeat, address) => {
   const rows = repeat.querySelector(".repeat__rows");
-  rows.append(template.content.cloneNode(true));
+  rows.append(repeat.querySelector("template").content.cloneNode(true));
 
   const row = rows.lastElementChild;
-  if(address) fill_address_row(row, address);
-  return row;
+  for(const [key, value] of Object.entries(address)) {
+    const input = row.querySelector(`[name="address_${key}[]"]`);
+    if(input && key != "label") input.value = value ?? "";
+  }
+
+  repeat.dispatchEvent(new Event("input", { bubbles: true }));
 };
 
-const address_item = (line, address) => {
+const item_for = (line, address) => {
   const item = document.createElement("li");
   item.className = "listing__item address-item";
   item.dataset.line = line;
@@ -41,59 +33,43 @@ const address_item = (line, address) => {
   return item;
 };
 
-const render_address_search = (search) => {
-  const input = search.querySelector("[data-address-search-input]");
-  const results = search.querySelector("[data-address-search-results]");
-  const query = input.value.trim().toLowerCase();
+document.addEventListener("input", (e) => {
+  const search = e.target.closest?.("[data-address-search]");
+  if(!search || e.target != search.querySelector("input")) return;
 
-  results.replaceChildren();
-  if(query == "") return;
+  const query = e.target.value.trim().toLowerCase();
 
-  Object.entries(address_data())
-    .filter(([line, address]) => address_text(line, address).includes(query))
-    .forEach(([line, address]) => results.append(address_item(line, address)));
-};
+  search.querySelector("ul").replaceChildren(...Object.entries(addresses())
+    .filter(([line, a]) => query && `${line} ${a.label ?? ""}`.toLowerCase().includes(query))
+    .map(([line, a]) => item_for(line, a)));
+});
 
 document.addEventListener("click", (e) => {
-  const add = e.target.closest("[data-add]");
-  if(add) {
-    add_address_row(add.closest("[data-repeat]"));
-    return;
-  }
-
-  const toggle = e.target.closest("[data-address-search-toggle]");
+  const toggle = e.target.closest?.("[data-address-search-toggle]");
   if(toggle) {
-    const search = toggle.closest("[data-repeat]").querySelector("[data-address-search]");
-    const input = search.querySelector("[data-address-search-input]");
-    const results = search.querySelector("[data-address-search-results]");
-
+    const search = toggle.closest("fieldset").querySelector("[data-address-search]");
     search.hidden = !search.hidden;
-    input.value = "";
-    results.replaceChildren();
-    if(!search.hidden) input.focus();
-    return;
+    search.querySelector("input").value = "";
+    search.querySelector("ul").replaceChildren();
+    if(!search.hidden) search.querySelector("input").focus();
   }
 
-  const address = e.target.closest("[data-address-search-results] .address-item");
-  if(address) {
-    const repeat = address.closest("[data-repeat]");
-    add_address_row(repeat, address_data()[address.dataset.line]);
-    address.closest("[data-address-search]").hidden = true;
-    return;
-  }
-
-  const remove = e.target.closest("[data-remove]");
-  if(remove) {
-    const row = remove.closest(".repeat__row");
-    // Only confirm when the row's value field actually holds something.
-    if(remove.dataset.repeatKind != "Address" && row.querySelector("[data-value]")?.value.trim() && !confirm("Are you sure?")) return;
-    row.remove();
+  const pick = e.target.closest?.("[data-address-search] .address-item");
+  if(pick) {
+    add_row(pick.closest("fieldset"), addresses()[pick.dataset.line]);
+    pick.closest("[data-address-search]").hidden = true;
   }
 });
 
-document.addEventListener("input", (e) => {
-  const input = e.target.closest("[data-address-search-input]");
-  if(!input) return;
+// Deselect the open contact once it drops out of the re-filtered list,
+// but only in view mode — never yank it out from under an edit.
+document.addEventListener("x-swap", (e) => {
+  if(e.target.id != "contacts-list") return;
 
-  render_address_search(input.closest("[data-address-search]"));
+  const open = document.querySelector("#contacts-panel [data-edit]");
+  if(!open) return;
+
+  const url = new URL(open.getAttribute("x-get"), location.href);
+  const item = `.contact-item[data-id="${url.searchParams.get("id")}"][data-kind="${url.searchParams.get("kind")}"]`;
+  if(!e.target.querySelector(item)) document.getElementById("contacts-panel").replaceChildren();
 });

@@ -1,4 +1,4 @@
-#address-editor > div:not(.actions) {
+#address-editor form > div:not(.actions) {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 0.25em;

@@ -14,7 +14,7 @@
   }
 
 ?>
-<form id="tracker-form" class="tracker-form" x-post="/tracker/new" x-target="#tracker-listing">
+<form id="tracker-form" class="tracker-form" x-post="/tracker/new" x-target="#tracker-listing" z-timer>
   <textarea name="description" placeholder="What have you been up to?" autofocus></textarea>
   <div class="tracker-form__col">
     <label>
@@ -28,93 +28,6 @@
       <input name="end_time" type="time" step="1">
     </label>
   </div>
-  <button type="button" id="tracker-record"">Sorry, the tracker could not be loaded.</button>
-  <button type="submit" id="tracker-submit">Save</button>
-
-  <script type="module">
-    const button = document.querySelector("#tracker-record");
-
-    // Auto-save whatever was typed into the description field in localStorage.
-    document.querySelector("[name=description]").addEventListener("input", (e) => {
-      localStorage.setItem("description", e.target.value);
-    });
-
-    document.querySelector("#tracker-form").addEventListener("input", (e) => {
-      const inputs = Array.from(e.target.form.querySelectorAll("input"));
-
-      if(inputs.every((input) => input.value)) {
-        document.querySelector("#tracker-record").style.display = "none";
-        document.querySelector("#tracker-submit").style.display = "block";
-      } else {
-        document.querySelector("#tracker-record").style.display = "block";
-        document.querySelector("#tracker-submit").style.display = "none";
-      }
-    });
-
-    const mountTimer = () => {
-      const description = localStorage.getItem("description");
-      const start_timing = localStorage.getItem("start_timing");
-
-      const format_date = (dt) => {
-        const year = dt.getFullYear();
-        const month = String(dt.getMonth() + 1).padStart(2, "0");
-        const day = String(dt.getDate()).padStart(2, "0");
-
-        return `${year}-${month}-${day}`;
-      };
-
-      const format_time = (dt) => dt.toTimeString().slice(0, 8);
-
-      // Restore any autosaved value for description from localStorage.
-      document.querySelector("[name=description]").value = description;
-
-      if(start_timing) {
-        button.innerText = "⏸";
-
-        const then = new Date(start_timing);
-
-        document.querySelector("[name=start_date]").value = format_date(then);
-        document.querySelector("[name=start_time]").value = format_time(then);
-        document.querySelector("#tracker-submit").style.display = "none";
-
-        button.addEventListener("click", () => {
-          button.innerText = "▶";
-
-          const now = new Date();
-
-          document.querySelector("[name=end_date]").value = format_date(now);
-          document.querySelector("[name=end_time]").value = format_time(now);
-
-          // Remove start timings and clear the description on next run.
-          localStorage.removeItem("description");
-          localStorage.removeItem("start_timing");
-
-          // Trigger the form submit.
-          document.querySelector("#tracker-form").requestSubmit();
-          mountTimer(); // Remount to reset component state.
-        }, { once: true });
-      }
-      else {
-        button.innerText = "▶";
-
-        const today = new Date();
-
-        document.querySelector("[name=start_date]").value = format_date(today);
-        document.querySelector("[name=start_time]").value = "";
-        document.querySelector("[name=end_date]").value = format_date(today);
-        document.querySelector("[name=end_time]").value = "";
-        document.querySelector("#tracker-record").style.display = "block";
-        document.querySelector("#tracker-submit").style.display = "none";
-
-        button.addEventListener("click", () => {
-          button.innerText = "⏸";
-          localStorage.setItem("start_timing", new Date().toISOString());
-          mountTimer(); // Remount to attach the onclick handler for stopping the tracker.
-        }, { once: true })
-      }
-    };
-
-    // When the page has finished loading, mount the tracker component.
-    mountTimer();
-  </script>
+  <button type="button" data-record>Sorry, the tracker could not be loaded.</button>
+  <button type="submit" data-save hidden>Save</button>
 </form>

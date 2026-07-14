@@ -159,7 +159,6 @@ CREATE TABLE IF NOT EXISTS `addresses` (
   `province` text NOT NULL,
   `country` text NOT NULL,
   `timezone` text NOT NULL,
-  `note` text,
   PRIMARY KEY (`id`)
 );
 
