@@ -2,9 +2,7 @@
 // iCal subscription sync.
 // Written by Claude, don't judge me ok.
 
-namespace sync;
-
-require_once __DIR__ . "/ical.php";
+namespace subscription;
 
 // Pulls a subscription's iCal feed, mirrors its events into appointments,
 // and translates RRULEs into the native (int|cron) recurrence column plus
@@ -32,7 +30,7 @@ require_once __DIR__ . "/ical.php";
 // and a warning is logged. Modified occurrences (RECURRENCE-ID) aren't
 // representable either; the master event wins.
 
-function subscription($id) {
+function sync($id) {
   $subscription = \store\get_subscription($id);
   if(!$subscription) return ['error' => "subscription not found"];
 

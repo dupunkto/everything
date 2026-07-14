@@ -10,9 +10,15 @@ require __DIR__ . "/init.php";
 
 require __DIR__ . "/core/core.php";
 require __DIR__ . "/core/neuro.php";
-require __DIR__ . "/core/forms.php";
 require __DIR__ . "/core/cast.php";
-require __DIR__ . "/core/sync.php";
-require __DIR__ . "/core/recurrence.php";
-require __DIR__ . "/core/calendar.php";
+require __DIR__ . "/core/ui.php";
+require __DIR__ . "/core/forms.php";
+require __DIR__ . "/core/dates.php";
+require __DIR__ . "/core/geo.php";
+require __DIR__ . "/core/astro.php";
+require __DIR__ . "/core/ical.php";
 require __DIR__ . "/core/utils.php";
+
+require __DIR__ . "/core/logic/recurrence.php";
+require __DIR__ . "/core/logic/calendar.php";
+require __DIR__ . "/core/logic/subscription.php";

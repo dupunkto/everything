@@ -7,7 +7,7 @@ $ids = empty($_GET['id'])
   : [$_GET['id']];
 
 foreach($ids as $id) {
-  $result = \sync\subscription($id);
+  $result = \subscription\sync($id);
 
   if(isset($result['error'])) {
     fail("Could not sync subscription #$id: " . $result['error']);

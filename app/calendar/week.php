@@ -88,7 +88,7 @@ $color = fn($a) => esc_attr($a['calendar_color'] ?? $a['subscription_color'] ?? 
           <?php if($appointment['recurrence'] || $appointment['meeting'] || !empty($appointment['is_birthday'])): ?>
             <span class="appointment__icons">
               <?php if(!empty($appointment['is_birthday'])): ?><i class="fa-solid fa-cake-candles"></i><?php endif ?>
-              <?php if($appointment['recurrence']): ?><i class="fa-solid fa-repeat" title="<?= esc_attr(describe_recurrence($appointment['recurrence'])) ?>"></i><?php endif ?>
+              <?php if($appointment['recurrence']): ?><i class="fa-solid fa-repeat" title="<?= esc_attr(\recurrence\describe($appointment['recurrence'])) ?>"></i><?php endif ?>
               <?php if($appointment['meeting']): ?><i class="fa-solid fa-video"></i><?php endif ?>
             </span>
           <?php endif ?>
@@ -144,7 +144,7 @@ $color = fn($a) => esc_attr($a['calendar_color'] ?? $a['subscription_color'] ?? 
             <?php if($appointment['recurrence'] || $appointment['meeting'] || !empty($appointment['is_task'])): ?>
               <span class="appointment__icons">
                 <?php if(!empty($appointment['is_task'])): ?><i class="fa-solid fa-flag"></i><?php endif ?>
-                <?php if($appointment['recurrence']): ?><i class="fa-solid fa-repeat" title="<?= esc_attr(describe_recurrence($appointment['recurrence'])) ?>"></i><?php endif ?>
+                <?php if($appointment['recurrence']): ?><i class="fa-solid fa-repeat" title="<?= esc_attr(\recurrence\describe($appointment['recurrence'])) ?>"></i><?php endif ?>
                 <?php if($appointment['meeting']): ?><i class="fa-solid fa-video"></i><?php endif ?>
               </span>
             <?php endif ?>
