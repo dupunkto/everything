@@ -83,6 +83,11 @@ body:has(.calendar-page) {
   opacity: 1;
 }
 
+.calendar-page:not(.calendar-page--ready) .calendar-sidebar,
+.calendar-page:not(.calendar-page--ready) .calendar-sidebar__filters {
+  transition: none;
+}
+
 .calendar-sidebar__scroll {
   flex: 1;
   min-height: 0;

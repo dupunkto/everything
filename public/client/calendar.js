@@ -10,6 +10,10 @@
 (() => {
   const view = document.getElementById("calendar-view");
   const editor = document.querySelector(".calendar-editor");
+  const page = document.querySelector(".calendar-page");
+
+  addEventListener("DOMContentLoaded", () =>
+    requestAnimationFrame(() => page.classList.add("calendar-page--ready")));
 
   const DAY = 1440, SNAP = 10;
 
