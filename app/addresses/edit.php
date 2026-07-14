@@ -6,9 +6,8 @@
     $a = \store\get_address($_GET['id']) or fail("Address not found.", status: 404);
   }
 
-  $maps = $a ? maps_url(address_line($a)) : null;
 ?>
-<form x-post="/addresses/new" x-target="#addresses-list" x-refresh="#address-editor">
+<form x-post="/addresses/new" x-target="#addresses-list" x-refresh="#address-editor" x-data="#address-search">
   <input name="addr_id" type="hidden" value="<?= esc_attr(@$a['id']) ?>">
   <div>
     <input name="addr_label" placeholder="label" value="<?= esc_attr(@$a['label']) ?>">
@@ -27,10 +26,12 @@
       <?php if($a): ?>
         <button type="button" z-key="escape" x-get="/addresses/edit" x-target="#address-editor">Cancel</button>
       <?php endif ?>
-      <button><?= $a ? "Save address" : "Add address" ?></button>
+      <button><?= $a ? "Save" : "Add address" ?></button>
     </div>
-    <?php if($maps): ?>
-      <a class="button" href="<?= esc_attr($maps) ?>">Directions &rarr;</a>
-    <?php endif ?>
+    <div>
+      <?php if($a): ?>
+        <button type="button" x-delete="/addresses/delete?id=<?= esc_attr($a['id']) ?>" x-target="#addresses-list" x-refresh="#address-editor" x-data="#address-search" x-confirm="Delete this address and remove it from all contacts and organisations?">Delete</button>
+      <?php endif ?>
+    </div>
   </div>
 </form>
