@@ -19,6 +19,7 @@
     data-country="<?= esc_attr(@$a['country']) ?>"
     data-timezone="<?= esc_attr(@$a['timezone']) ?>"
     data-note="<?= esc_attr(@$a['note']) ?>"
+    data-maps-url="<?= esc_attr(maps_url(address_line($a))) ?>"
   >
     <?php if($a['label']): ?><strong><?= esc_inner($a['label']) ?></strong> — <?php endif ?>
     <?= esc_inner(address_line($a)) ?>

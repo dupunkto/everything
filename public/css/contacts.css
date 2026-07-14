@@ -347,3 +347,19 @@
 .repeat__wide {
   flex-basis: 100%;
 }
+
+.repeat__row:has([name="address_street_name[]"]) {
+  display: flex;
+  align-items: flex-start;
+}
+
+.address-row__fields {
+  display: grid;
+  flex: 1;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.25em;
+}
+
+.address-row__fields input {
+  min-width: 0;
+}

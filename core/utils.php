@@ -31,10 +31,10 @@ function address_line($a) {
   return str_implode(", ", $parts);
 }
 
-function maps_url($provider, $destination) {
+function maps_url($destination) {
   $to = rawurlencode($destination);
 
-  return match($provider) {
+  return match(MAP_PROVIDER) {
     'google_maps' => "https://www.google.com/maps/dir/?api=1&destination=$to",
     'apple_maps' => "https://maps.apple.com/?daddr=$to",
     'openstreetmap' => "https://www.openstreetmap.org/directions?to=$to",

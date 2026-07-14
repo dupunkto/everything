@@ -9,8 +9,8 @@
   font-size: 1.3em;
 }
 
-#address-editor .actions {
-  justify-content: flex-start;
+#address-editor .actions > div {
+  display: flex;
   gap: 0.25em;
 }
 

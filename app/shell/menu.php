@@ -8,6 +8,7 @@
     <li><a href="/wishlist"><i class="fa-regular fa-book-heart"></i> <span>Wishlist</span></a></li>
     <li><a href="/habits"><i class="fa-regular fa-spiral"></i> <span>Habits</span></a></li>
     <li><a href="/contacts"><i class="fa-regular fa-address-book"></i> <span>Contacts</span></a></li>
+    <li><a href="/addresses"><i class="fa-regular fa-location-arrow"></i> <span>Addresses</span></a></li>
     <li><a href="/settings"><i class="fa-regular fa-gear"></i> <span>Settings</span></a></li>
   </ul>
 

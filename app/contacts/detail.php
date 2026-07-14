@@ -109,7 +109,7 @@
             <span class="detail__address-label"><?= esc_inner($address['link_label']) ?></span>
             <?php endif ?>
             <p class="detail__address-lines"><?= esc_inner(str_implode("\n", $lines)) ?></p>
-            <?php if($maps = maps_url(MAP_PROVIDER, address_line($address))): ?>
+            <?php if($maps = maps_url(address_line($address))): ?>
             <a class="button detail__direction" href="<?= esc_attr($maps) ?>">Directions &rarr;</a>
             <?php endif ?>
           </div>

@@ -27,8 +27,11 @@
           <input name="addr_timezone" placeholder="timezone" required>
         </div>
         <div class="actions">
-          <button type="button" data-address-cancel hidden>Cancel</button>
-          <button data-address-submit>Add address</button>
+          <div>
+            <button type="button" data-address-cancel hidden>Cancel</button>
+            <button data-address-submit>Add address</button>
+          </div>
+          <a class="button" data-address-directions hidden>Directions &rarr;</a>
         </div>
       </form>
 

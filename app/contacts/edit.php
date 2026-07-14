@@ -124,14 +124,16 @@
   <?php };
 
   $address_field = function($row) { ?>
-    <input name="address_label[]" placeholder="label" value="<?= esc_attr(@$row['link_label']) ?>">
-    <input name="address_street_name[]" placeholder="street" value="<?= esc_attr(@$row['street_name']) ?>" required data-value>
-    <input name="address_street_number[]" placeholder="number" value="<?= esc_attr(@$row['street_number']) ?>" required>
-    <input name="address_postal_code[]" placeholder="postal code" value="<?= esc_attr(@$row['postal_code']) ?>" required>
-    <input name="address_city[]" placeholder="city" value="<?= esc_attr(@$row['city']) ?>" required>
-    <input name="address_province[]" placeholder="province" value="<?= esc_attr(@$row['province']) ?>" required>
-    <input name="address_country[]" placeholder="country" value="<?= esc_attr(@$row['country']) ?>" required>
-    <input name="address_timezone[]" placeholder="timezone" value="<?= esc_attr(@$row['timezone']) ?>" required>
+    <div class="address-row__fields">
+      <input name="address_label[]" placeholder="label" value="<?= esc_attr(@$row['link_label']) ?>">
+      <input name="address_street_name[]" placeholder="street" value="<?= esc_attr(@$row['street_name']) ?>" required data-value>
+      <input name="address_street_number[]" placeholder="number" value="<?= esc_attr(@$row['street_number']) ?>" required>
+      <input name="address_postal_code[]" placeholder="postal code" value="<?= esc_attr(@$row['postal_code']) ?>" required>
+      <input name="address_city[]" placeholder="city" value="<?= esc_attr(@$row['city']) ?>" required>
+      <input name="address_province[]" placeholder="province" value="<?= esc_attr(@$row['province']) ?>" required>
+      <input name="address_country[]" placeholder="country" value="<?= esc_attr(@$row['country']) ?>" required>
+      <input name="address_timezone[]" placeholder="timezone" value="<?= esc_attr(@$row['timezone']) ?>" required>
+    </div>
   <?php };
 
   $social_field = function($row) { ?>
