@@ -1,8 +1,5 @@
 <?php
 
-  $wish = \store\get_wish(@$_GET['id'] ?? @$_POST['id'])
-    or fail("Wish not found.", status: 404);
-
   if(isset($_POST['id'])) {
     \store\update_wish(
       $_POST['id'],
@@ -11,14 +8,12 @@
       $_POST['urgent']
     ) or fail("Could not update wish.");
 
-    if($_POST['status'] !== $wish['status']) {
-      \store\set_wish_status($_POST['id'], $_POST['status'])
-        or fail("Could not update wish status.");
-    }
-
-    $wish = \store\get_wish($_POST['id'])
-      or fail("Wish not found.", status: 404);
+    \store\set_wish_status($_POST['id'], $_POST['status'])
+      or fail("Could not update wish status.");
   }
+
+  $wish = \store\get_wish(@$_GET['id'] ?? @$_POST['id'])
+    or fail("Wish not found.", status: 404);
 
 ?>
 <!DOCTYPE html>

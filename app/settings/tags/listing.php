@@ -21,8 +21,8 @@
     <li>
       <form class="settings-editor" x-post="/settings/tags/edit" x-on="change" x-target="#tags-listing">
         <input name="id" type="hidden" value="<?= $tag['id'] ?>">
-        <input name="color" type="color" value="<?= esc_attr($tag['color']) ?>">
-        <input name="label" type="text" value="<?= esc_attr($tag['label']) ?>">
+        <input name="color" type="color" required value="<?= esc_attr($tag['color']) ?>">
+        <input name="label" type="text" required value="<?= esc_attr($tag['label']) ?>">
 
         <select name="parent">
           <option value="" <?php if(!$tag['parent_id']) echo "selected" ?>>[root]</option>

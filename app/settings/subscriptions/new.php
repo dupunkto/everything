@@ -1,14 +1,13 @@
 <?php
 
   if(isset($_POST['url'])) {
-    $feed = \ical\fetch_feed($_POST['url'])
-      or fail("Could not read iCal feed from " . $_POST['url'] . ".", status: 400);
+    $url = cast_string(@$_POST['url']);
+    $feed = \ical\fetch_feed($url)
+      or fail("Could not read iCal feed from " . $url . ".", status: 400);
 
-    $title = $feed['title']
-      ?? parse_url($_POST['url'], PHP_URL_HOST)
-      ?? "Untitled subscription";
+    $title = cast_string($feed['title'] ?? parse_url($url, PHP_URL_HOST) ?? "Untitled subscription");
 
-    \store\create_subscription($title, null, $_POST['url'], $feed['color'] ?? "#efefef")
+    \store\create_subscription($title, null, $url, cast_color($feed['color'] ?? "#efefef"))
       or fail("Could not create new subscription.");
 
     include __DIR__ . "/listing.php"; exit;

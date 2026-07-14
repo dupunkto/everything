@@ -5,17 +5,6 @@ function generate_humid($length = 5, $base = 36) {
   return substr(str_pad(strtoupper(base_convert(unpack('N', random_bytes(4))[1], 10, $base)), $length, '0', STR_PAD_LEFT), -$length);
 }
 
-function normalize_color($color) {
-  // Color fields cannot be left blank. We treat #ffffff as "no color" or null.
-
-  if($color === null || $color === "") return null;
-  return strcasecmp($color, "#ffffff") == 0 ? null : $color;
-}
-
-function cast_boolean($value) {
-  return filter_var($value, FILTER_VALIDATE_BOOLEAN);
-}
-
 function circle($class = "") {
   ?>
   <svg class="circle <?= esc_attr($class) ?>" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
@@ -23,18 +12,6 @@ function circle($class = "") {
     <path class="circle__ghost" d="M24 12 C48 3 82 6 95 29 C102 49 95 80 70 92 C44 102 12 95 4 66 C-2 41 10 15 33 9"/>
   </svg>
   <?php
-}
-
-function cast_datetime_utc($date, $time, $timezone = null) {
-  $timezone = $timezone ?? TIMEZONE;
-  $datetime = new DateTime("$date $time", new DateTimeZone($timezone));
-  return $datetime->setTimezone(new DateTimeZone("UTC"))->format('c');
-}
-
-function cast_datetime_local($datetime, $timezone = null) {
-  $timezone = $timezone ?? TIMEZONE;
-  $datetime = new DateTimeImmutable($datetime);
-  return $datetime->setTimezone(new DateTimeZone($timezone))->format('Y-m-d\TH:i:s');
 }
 
 function local_date($format, $timestamp = "now", $timezone = null) {
