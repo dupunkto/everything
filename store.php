@@ -872,7 +872,7 @@ function list_contacts() {
 function get_contact($id) {
   $contact = one('SELECT * FROM `contacts` WHERE id = ?', [$id]);
 
-  if(!$contact) return $c;
+  if(!$contact) return $contact;
 
   $contact['emails'] = list_contact_emails($id);
   $contact['phone_numbers'] = list_contact_phone_numbers($id);
