@@ -1,6 +1,6 @@
 <?php
 
-  $appointment = \store\get_appointment(@$_POST['id'])
+  $appointment = \store\get_appointment($_POST['id'])
     or fail("Appointment not found.", status: 404);
 
   if(!empty($appointment['subscription_id']))

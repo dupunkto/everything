@@ -60,8 +60,9 @@ function serve_cached($path) {
   header("ETag: $etag");
 
   $since = @$_SERVER['HTTP_IF_MODIFIED_SINCE'];
+  $none_match = @$_SERVER['HTTP_IF_NONE_MATCH'];
 
-  if(@$_SERVER['HTTP_IF_NONE_MATCH'] == $etag or ($since and strtotime($since) >= $modified)) {
+  if($none_match == $etag or ($since and strtotime($since) >= $modified)) {
     http_response_code(304);
     exit;
   }

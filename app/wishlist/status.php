@@ -4,7 +4,7 @@
     \store\set_wish_status(
       $_POST["id"],
       $_POST["status"],
-      @$_POST["comment"]
+      $_POST["comment"]
     ) or fail("Could not update wish status.");
 
     include "listing.php"; exit;

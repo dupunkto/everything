@@ -2,7 +2,7 @@
   // Edit target for note textarea.
 
   $kind = @$_GET['kind'] ?? "person";
-  $id = @$_GET['id'] ?? @$_POST['id'];
+  $id = @$_GET['id'] ?: @$_POST['id'];
 
   if(!in_array($kind, ['person', 'org'])) 
     fail("Malformed 'kind' parameter.", status: 400);

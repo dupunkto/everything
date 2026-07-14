@@ -1,6 +1,6 @@
 <?php
 
-  $query = cast_string(@$_GET['q'] ?? @$_POST['q']) ?? "";
+  $query = cast_string($_GET['q'] ?? $_POST['q'] ?? "");
 
   $addresses = array_filter(\store\list_addresses(), fn($a) =>
     $query == "" || mb_stripos(address_line($a) . " " . $a['label'], $query) !== false);

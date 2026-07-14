@@ -1,6 +1,6 @@
 <?php
 
-  $notes = \store\list_notes(@$_GET['q'] ?? @$_POST['q'] ?? "");
+  $notes = \store\list_notes($_GET['q'] ?? $_POST['q'] ?? "");
 
 ?>
 <ul class="notes-grid">

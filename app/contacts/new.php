@@ -1,7 +1,7 @@
 <?php
   // Blank contact edit form.
 
-  $q = @$_GET['q'] ?? @$_POST['q'] ?? "";
+  $q = $_GET['q'] ?? $_POST['q'] ?? "";
   $is_org = str_contains($q, "is:org") && !str_contains($q, "is:person");
   $_GET['kind'] = $is_org ? "org" : "person";
 

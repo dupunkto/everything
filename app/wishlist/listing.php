@@ -1,7 +1,7 @@
 <?php
 
-  $show = @$_GET['show'] ?? @$_POST['show'] ?? 'dream';
-  $include = @$_GET['i'] ?? @$_POST['i'];
+  $show = $_GET['show'] ?? $_POST['show'] ?? 'dream';
+  $include = @$_GET['i'] ?: @$_POST['i'];
 
   // This array includes IDs of items that have just been clicked.
   // We do not want to have them disappear from under the users cursor,

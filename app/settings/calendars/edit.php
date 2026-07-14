@@ -1,7 +1,7 @@
 <?php
 
   if(isset($_POST["id"], $_POST["color"], $_POST["title"])) {
-    \store\update_calendar($_POST['id'], cast_string(@$_POST['title']), cast_string(@$_POST['subtitle']), cast_color(@$_POST['color']))
+    \store\update_calendar($_POST['id'], cast_string($_POST['title']), cast_string($_POST['subtitle']), cast_color($_POST['color']))
       or fail("Could not save calendar #" . $_POST['id'] . ".");
 
     include __DIR__ . "/listing.php"; exit;

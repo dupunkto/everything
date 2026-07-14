@@ -1,6 +1,6 @@
 <?php
 
-  if(is_nonempty_str(@$_POST['recurrence_horizon'])) {
+  if(is_nonempty_str($_POST['recurrence_horizon'])) {
     if(!is_numeric($_POST['recurrence_horizon']))
       fail("Invalid 'recurrence_horizon' parameter.", status: 400);
 

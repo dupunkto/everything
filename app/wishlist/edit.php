@@ -17,7 +17,7 @@
     }
   }
 
-  $wish = \store\get_wish(@$_GET['id'] ?? @$_POST['id'])
+  $wish = \store\get_wish(@$_GET['id'] ?: @$_POST['id'])
     or fail("Wish not found.", status: 404);
 
   $status_for = fn($target) => $wish['status'] == $target ? "dream" : $target;

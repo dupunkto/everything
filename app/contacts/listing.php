@@ -1,7 +1,7 @@
 <?php
   // Contact listing.
 
-  $query = @$_GET['q'] ?? @$_POST['q'] ?? "";
+  $query = $_GET['q'] ?? $_POST['q'] ?? "";
 
   $kinds = [];
   $selectors = [];

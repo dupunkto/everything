@@ -1,8 +1,8 @@
 <?php
   // Contact edit form.
 
-  $kind = @$_GET['kind'] ?? @$_POST['kind'] ?? "person";
-  $id = @$_GET['id'] ?? @$_POST['id'];
+  $kind = $_GET['kind'] ?? $_POST['kind'] ?? "person";
+  $id = @$_GET['id'] ?: @$_POST['id'];
 
   if(!in_array($kind, ['person', 'org'])) {
     fail("Malformed 'kind' parameter.", status: 400);
@@ -29,19 +29,19 @@
       if($id) {
         \store\update_organisation(
           $id,
-          cast_string(@$_POST['display_name']),
-          cast_string(@$_POST['legal_name']),
-          cast_string(@$_POST['registration_number']),
-          cast_string(@$_POST['vat_number']),
-          cast_string(@$_POST['note'])
+          cast_string($_POST['display_name']),
+          cast_string($_POST['legal_name']),
+          cast_string($_POST['registration_number']),
+          cast_string($_POST['vat_number']),
+          cast_string($_POST['note'])
         ) or fail("Could not update organisation.");
       } else {
         $id = \store\create_organisation(
-          cast_string(@$_POST['display_name']),
-          cast_string(@$_POST['legal_name']),
-          cast_string(@$_POST['registration_number']),
-          cast_string(@$_POST['vat_number']),
-          cast_string(@$_POST['note'])
+          cast_string($_POST['display_name']),
+          cast_string($_POST['legal_name']),
+          cast_string($_POST['registration_number']),
+          cast_string($_POST['vat_number']),
+          cast_string($_POST['note'])
         ) or fail("Could not create organisation.");
       }
 
@@ -55,23 +55,23 @@
       if($id) {
         \store\update_contact(
           $id,
-          cast_string(@$_POST['display_name']),
-          cast_string(@$_POST['first_name']),
-          cast_string(@$_POST['middle_name']),
-          cast_string(@$_POST['infix']),
-          cast_string(@$_POST['last_name']),
-          cast_date(@$_POST['birth_day']),
-          cast_string(@$_POST['note'])
+          cast_string($_POST['display_name']),
+          cast_string($_POST['first_name']),
+          cast_string($_POST['middle_name']),
+          cast_string($_POST['infix']),
+          cast_string($_POST['last_name']),
+          cast_date($_POST['birth_day']),
+          cast_string($_POST['note'])
         ) or fail("Could not update contact.");
       } else {
         $id = \store\create_contact(
-          cast_string(@$_POST['display_name']),
-          cast_string(@$_POST['first_name']),
-          cast_string(@$_POST['middle_name']),
-          cast_string(@$_POST['infix']),
-          cast_string(@$_POST['last_name']),
-          cast_date(@$_POST['birth_day']),
-          cast_string(@$_POST['note'])
+          cast_string($_POST['display_name']),
+          cast_string($_POST['first_name']),
+          cast_string($_POST['middle_name']),
+          cast_string($_POST['infix']),
+          cast_string($_POST['last_name']),
+          cast_date($_POST['birth_day']),
+          cast_string($_POST['note'])
         ) or fail("Could not create contact.");
       }
 

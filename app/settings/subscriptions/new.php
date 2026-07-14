@@ -1,7 +1,7 @@
 <?php
 
   if(isset($_POST['url'])) {
-    $url = cast_string(@$_POST['url']);
+    $url = cast_string($_POST['url']);
     $feed = \ical\fetch_feed($url)
       or fail("Could not read iCal feed from " . $url . ".", status: 400);
 

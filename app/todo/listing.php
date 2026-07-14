@@ -2,8 +2,8 @@
 
   $lists = [];
 
-  $query = @$_GET['q'] ?? @$_POST['q'];
-  $include = @$_GET['i'] ?? @$_POST['i'];
+  $query = $_GET['q'] ?? $_POST['q'] ?? "";
+  $include = @$_GET['i'] ?: @$_POST['i'];
 
   // This array includes IDs of items that have just been clicked.
   // We do not want to have them disappear from under the users cursor,
@@ -37,7 +37,7 @@
     return count(array_intersect($array_a, $array_b));
   }
 
-  $tokens = str_explode($query ?? "");
+  $tokens = str_explode($query);
   $finished = in_array("is:done", $tokens);
 
   $view = match(true) {

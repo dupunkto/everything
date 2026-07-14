@@ -13,7 +13,7 @@
     }
   }
 
-  $note = \store\get_note(@$_GET['id'] ?? @$_POST['id'])
+  $note = \store\get_note(@$_GET['id'] ?: @$_POST['id'])
     or fail("Note not found.", status: 404);
 
 ?>

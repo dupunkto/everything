@@ -12,8 +12,8 @@
     $urgent = !empty($_POST['urgent']);
     $travel = !empty($_POST['travel']);
 
-    $travel_before = $travel ? max(0, (int) @$_POST['travel_before']) : 0;
-    $travel_after = $travel ? max(0, (int) @$_POST['travel_after']) : 0;
+    $travel_before = $travel ? max(0, (int) $_POST['travel_before']) : 0;
+    $travel_after = $travel ? max(0, (int) $_POST['travel_after']) : 0;
 
     if($is_subscription) {
       \store\update_appointment_meta(
@@ -27,11 +27,11 @@
       \store\update_appointment(
         $appointment['id'],
         $_POST['title'],
-        @$_POST['content'],
+        $_POST['content'],
         cast_datetime_utc($_POST['start_date'], $_POST['start_time']),
         cast_datetime_utc($_POST['end_date'], $_POST['end_time']),
-        @$_POST['location'],
-        @$_POST['meeting'],
+        $_POST['location'],
+        $_POST['meeting'],
         $recurrence,
         !empty($_POST['all_day']),
         $going,

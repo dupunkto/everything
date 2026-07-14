@@ -85,11 +85,11 @@ function normalize_value($value) {
 }
 
 function value($key) {
-  $stored = \store\config()[$key] ?? null;
+  $stored = @\store\config()[$key];
   return $stored === null ? constant(normalize_key($key)) : normalize_value($stored);
 }
 
 function canonical_value($key) {
-  $stored = \store\config()[$key] ?? null;
+  $stored = @\store\config()[$key];
   return $stored === null ? null : normalize_value($stored);
 }

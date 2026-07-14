@@ -12,7 +12,7 @@
       $_POST['expiration_date']
     ) or fail("Could not update task.");
 
-    \store\set_task_status($_POST['id'], $_POST['status'], @$_POST['comment'])
+    \store\set_task_status($_POST['id'], $_POST['status'], $_POST['comment'])
       or fail("Could not update task status.");
 
     if(isset($_POST['close'])) {
@@ -21,7 +21,7 @@
     }
   }
 
-  $task = \store\get_task(@$_GET['id'] ?? @$_POST['id'])
+  $task = \store\get_task(@$_GET['id'] ?: @$_POST['id'])
     or fail("Task not found.", status: 404);
 
   $log = \store\get_task_log($task['id']);
