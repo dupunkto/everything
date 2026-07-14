@@ -1,0 +1,28 @@
+#address-editor > div:not(.actions) {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.25em;
+}
+
+#address-editor input {
+  min-width: 0;
+  font-size: 1.3em;
+}
+
+#address-editor .actions {
+  justify-content: flex-start;
+  gap: 0.25em;
+}
+
+.addresses-or {
+  font-weight: 600;
+  text-align: center;
+}
+
+#addresses-list .address-item {
+  cursor: pointer;
+}
+
+#address-search input {
+  margin: 0.5em 0;
+}

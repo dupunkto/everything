@@ -51,6 +51,16 @@
   background: light-dark(#f1f1f1, #2b2b33);
 }
 
+.address-search {
+  margin-top: 0.25em;
+}
+
+.address-search__results {
+  padding: 0;
+  margin: 0.4em 0 0;
+  list-style: none;
+}
+
 /* Detail & edit panel */
 
 .contacts__panel {
