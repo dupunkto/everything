@@ -191,6 +191,16 @@ CREATE TABLE IF NOT EXISTS `notes` (
   PRIMARY KEY (`id`)
 );
 
+CREATE TABLE IF NOT EXISTS `notes_tags` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `note_id` text NOT NULL,
+  `tag_id` int(11) NOT NULL,
+  FOREIGN KEY (`note_id`) REFERENCES `notes` (`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`tag_id`) REFERENCES `tags` (`id`) ON DELETE CASCADE,
+  UNIQUE (`note_id`, `tag_id`),
+  PRIMARY KEY (`id`)
+);
+
 CREATE TABLE IF NOT EXISTS `tasks` (
   `id` text NOT NULL, -- humid
   `title` text NOT NULL,

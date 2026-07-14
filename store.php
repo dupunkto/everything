@@ -23,6 +23,71 @@ switch($_DATABASE['scheme']) {
 define('ENUM_TASK_STATUS', ['todo', 'backlog', 'blocked', 'done', 'nvm']);
 define('ENUM_WISH_STATUS', ['dream', 'bought', 'nvm']);
 
+// Notes
+
+function create_note($title, $content) {
+  return exec_query('INSERT INTO `notes` (
+    `id`,
+    `title`,
+    `content`
+  ) VALUES (?, ?, ?)', [
+    generate_humid(),
+    $title,
+    $content
+  ]);
+}
+
+function update_note($id, $title, $content) {
+  return exec_query('UPDATE `notes` SET
+    `title` = ?,
+    `content` = ?
+  WHERE id = ?', [$title, $content, $id]);
+}
+
+function get_note($id) {
+  return one('SELECT * FROM `notes` WHERE `id` = ?', [$id]);
+}
+
+function list_notes($query = "") {
+  $where = [];
+  $params = [];
+  $tags = [];
+
+  foreach(preg_split('/\s+/', trim($query)) ?: [] as $token) {
+    if($token == "") continue;
+
+    if($token[0] == "+") {
+      $tags[] = mb_strtolower(substr($token, 1));
+      continue;
+    }
+
+    $where[] = '(LOWER(`title`) LIKE ? OR LOWER(`content`) LIKE ?)';
+    $params[] = "%" . mb_strtolower($token) . "%";
+    $params[] = "%" . mb_strtolower($token) . "%";
+  }
+
+  foreach(array_filter($tags) as $tag) {
+    $where[] = 'EXISTS (
+      SELECT 1 FROM `notes_tags` nt
+      JOIN `tags` t ON t.id = nt.tag_id
+      WHERE nt.note_id = notes.id AND LOWER(t.label) = ?
+    )';
+    $params[] = $tag;
+  }
+
+  $sql = 'SELECT * FROM `notes`';
+  if($where) $sql .= ' WHERE ' . join(' AND ', $where);
+  $sql .= ' ORDER BY `title`';
+
+  return all($sql, $params) ?? [];
+}
+
+function delete_note($id) {
+  return exec_query('DELETE FROM `notes` WHERE `id` = ?', [$id]);
+}
+
+// Tasks
+
 function create_task(
   $title,
   $content,
@@ -1212,6 +1277,10 @@ function update_address(
     $timezone,
     $id
   ]);
+}
+
+function delete_address($id) {
+  return exec_query('DELETE FROM `addresses` WHERE id = ?', [$id]);
 }
 
 // Configuration
