@@ -1,9 +1,45 @@
 <?php
 
-  $fields = [];
-  foreach(['label', 'street_name', 'street_number', 'postal_code', 'city', 'province', 'country', 'timezone', 'note'] as $col)
-    $fields[$col] = trim(@$_POST["addr_$col"] ?? "");
+  if(isset($_POST['addr_street_name'], $_POST['addr_street_number'], $_POST['addr_postal_code'], $_POST['addr_city'], $_POST['addr_province'], $_POST['addr_country'], $_POST['addr_timezone'])) {
+    $fields = [
+      'label' => cast_string(@$_POST['addr_label']),
+      'street_name' => cast_string(@$_POST['addr_street_name']),
+      'street_number' => cast_string(@$_POST['addr_street_number']),
+      'postal_code' => cast_string(@$_POST['addr_postal_code']),
+      'city' => cast_string(@$_POST['addr_city']),
+      'province' => cast_string(@$_POST['addr_province']),
+      'country' => cast_string(@$_POST['addr_country']),
+      'timezone' => cast_string(@$_POST['addr_timezone']),
+      'note' => cast_string(@$_POST['addr_note']),
+    ];
 
-  if($fields['street_name'] !== "") \store\create_address($fields);
+    if(@$_POST['addr_id']) {
+      \store\update_address(
+        $_POST['addr_id'],
+        $fields['label'],
+        $fields['street_name'],
+        $fields['street_number'],
+        $fields['postal_code'],
+        $fields['city'],
+        $fields['province'],
+        $fields['country'],
+        $fields['timezone'],
+        $fields['note']
+      );
+    }
+    else {
+      \store\create_address(
+        $fields['label'],
+        $fields['street_name'],
+        $fields['street_number'],
+        $fields['postal_code'],
+        $fields['city'],
+        $fields['province'],
+        $fields['country'],
+        $fields['timezone'],
+        $fields['note']
+      );
+    }
+  }
 
   include __DIR__ . "/listing.php";
