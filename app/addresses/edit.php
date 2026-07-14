@@ -29,7 +29,7 @@
       <button><?= isset($_GET['id']) ? "Save" : "Add address" ?></button>
     </div>
     <div>
-      <?php if($address): ?>
+      <?php if(isset($_GET['id'])): ?>
         <button type="button" x-delete="/addresses/delete?id=<?= esc_attr($address['id']) ?>" x-target="#addresses-list" x-refresh="#address-editor" x-data="#address-search" x-confirm="Delete this address and remove it from all contacts and organisations?">Delete</button>
       <?php endif ?>
     </div>
