@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS `contact_socials` (
   `contact_id` int(11) NOT NULL,
   `handle` text NOT NULL,
   `type` text NOT NULL, -- str<instagram|discord|snapchat|linkedin|matrix|pinterest
-                        -- twitter|youtube|facebook|activitypub|atproto>
+                        -- twitter|youtube|facebook|activitypub|bsky>
   FOREIGN KEY (`contact_id`) REFERENCES `contacts` (`id`) ON DELETE CASCADE,
   PRIMARY KEY (`id`)
 );

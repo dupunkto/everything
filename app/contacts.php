@@ -18,7 +18,8 @@
           <input
             name="q"
             class="contacts__search"
-            placeholder="is:person +qdentity email:…"
+            placeholder="is:person +acme"
+            value="is:person"
             x-get="/contacts/listing"
             x-on="input"
             x-target="#contacts-list"
@@ -58,7 +59,7 @@
         const parts = search.value.split(/\s+/).filter(Boolean)
           .filter(p => p !== 'is:person' && p !== 'is:org');
         parts.unshift(`is:${btn.dataset.type}`);
-        search.value = parts.join(' ');
+        search.value = parts.join(" ");
         search.dispatchEvent(new Event('input', { bubbles: true }));
       }));
 

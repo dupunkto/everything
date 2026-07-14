@@ -1,62 +1,86 @@
 <?php
+  // Contact listing.
 
-  $query = trim(@$_GET['q'] ?? @$_POST['q'] ?? "");
+  $query = @$_GET['q'] ?? @$_POST['q'] ?? "";
 
-  // Query grammar: is:person / is:org (stackable — both shows both), +tag,
-  // org:/phone:/email: selectors and bare terms (fuzzy against names + note).
-  $terms = [];
   $kinds = [];
-  foreach(preg_split('/\s+/', $query, -1, PREG_SPLIT_NO_EMPTY) as $token) {
-    if($token === "is:person") { $kinds['person'] = true; continue; }
-    if($token === "is:org") { $kinds['org'] = true; continue; }
-    if($token[0] === "+") { $terms[] = ['tag', substr($token, 1)]; continue; }
+  $selectors = [];
 
-    [$sel, $val] = array_pad(explode(":", $token, 2), 2, null);
-    if($val === null) { $terms[] = ['fuzzy', $token]; continue; }        // bare term
-    if(in_array($sel, ['org', 'phone', 'email'])) $terms[] = [$sel, $val];
-    // An unrecognised selector (e.g. is:aaaa) is ignored, not matched.
+  foreach(str_explode($query) as $token) {
+    if($token == "is:person") { 
+      $kinds['person'] = true;
+      continue;
+    }
+
+    if($token == "is:org") {
+      $kinds['org'] = true;
+      continue;
+    }
+
+    if($token[0] == "+") {
+      $selectors[] = ['tag', substr($token, 1)];
+      continue;
+    }
+
+    [$key, $value] = array_pad(explode(":", $token, 2), 2, null);
+
+    // Bare words should fuzzy search
+    if($value === null) {
+      $selectors[] = ['fuzzy', $token];
+      continue;
+    }
+
+    // Unrecognised selectors should be ignored
+    if(!in_array($key, ['org', 'phone', 'email'])) continue;
+
+    $selectors[] = [$key, $value];
   }
 
-  if(!$kinds) $kinds = ['person' => true]; // default view
+  if(!$kinds) $kinds = ['person' => true]; // Show people by default
 
-  $has = fn($hay, $needle) => $needle === "" || mb_stripos($hay ?? "", $needle) !== false;
-
-  // Normalise people and orgs to a common shape so filtering, sorting and
-  // grouping stay identical across both.
-  $rows = [];
+  $rows = []; // Used for sorting and filtering.
 
   if(isset($kinds['person'])) {
-    $rows = array_merge($rows, array_map(fn($c) => [
-      'id' => $c['id'], 'kind' => 'person',
-      'sort' => $c['last_name'] ?: $c['first_name'],
-      'display' => trim("{$c['first_name']} {$c['infix']} {$c['last_name']}") ?: $c['display_name'],
+    $rows = array_merge($rows, array_map(fn($contact) => [
+      'id' => $contact['id'],
+      'kind' => 'person',
+      'sort' => $contact['last_name'] ?: $contact['first_name'],
+      'display' => $contact['display_name'] ?: str_implode(" ", [$contact['first_name'], $contact['infix'], $contact['last_name']]),
       'search' => [
-        'fuzzy' => "{$c['first_name']} {$c['middle_name']} {$c['last_name']} {$c['note']}",
-        'tag' => $c['tag_labels'], 'email' => $c['emails'], 'phone' => $c['phones'],
-        'org' => $c['org_names'],
+        'fuzzy' => "{$contact['first_name']} {$contact['middle_name']} {$contact['last_name']} {$contact['note']}",
+        'tag' => $contact['tag_labels'],
+        'email' => $contact['emails'],
+        'phone' => $contact['phone_numbers'],
+        'org' => $contact['org_names'],
       ],
     ], \store\list_contacts()));
   }
 
   if(isset($kinds['org'])) {
-    $rows = array_merge($rows, array_map(fn($o) => [
-      'id' => $o['id'], 'kind' => 'org',
-      'sort' => $o['display_name'], 'display' => $o['display_name'],
+    $rows = array_merge($rows, array_map(fn($organisation) => [
+      'id' => $organisation['id'],
+      'kind' => 'org',
+      'sort' => $organisation['display_name'],
+      'display' => $organisation['display_name'],
       'search' => [
-        'fuzzy' => "{$o['display_name']} {$o['legal_name']} {$o['note']}",
-        'tag' => $o['tag_labels'], 'email' => $o['emails'], 'phone' => $o['phones'],
-        'org' => $o['display_name'],
+        'fuzzy' => "{$organisation['display_name']} {$organisation['legal_name']} {$organisation['note']}",
+        'tag' => $organisation['tag_labels'],
+        'email' => $organisation['emails'],
+        'phone' => $organisation['phone_numbers'],
+        'org' => $organisation['display_name'],
       ],
     ], \store\list_organisations()));
   }
 
-  $rows = array_filter($rows, function($row) use ($terms, $has) {
-    foreach($terms as [$field, $needle])
-      if(!$has($row['search'][$field], $needle)) return false;
+  $rows = array_filter($rows, function($row) use ($selectors) {
+    foreach($selectors as [$field, $needle])
+      if(!($needle === "" || mb_stripos($row['search'][$field] ?? "", $needle) !== false)) return false;
     return true;
   });
 
-  usort($rows, fn($a, $b) => strcasecmp($a['sort'], $b['sort']) ?: strcasecmp($a['display'], $b['display']));
+  usort($rows, fn($a, $b) =>
+    strcasecmp($a['sort'], $b['sort']) ?:
+    strcasecmp($a['display'], $b['display']));
 
 ?>
 <?php $letter = null ?>

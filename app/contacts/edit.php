@@ -4,22 +4,36 @@
   $kind = @$_GET['kind'] ?? @$_POST['kind'] ?? "person";
   $id = @$_GET['id'] ?? @$_POST['id'];
 
-  if(!in_array($kind, ['person', 'org'])) 
+  if(!in_array($kind, ['person', 'org'])) {
     fail("Malformed 'kind' parameter.", status: 400);
+  }
 
   // Address inputs share this column => field-name mapping (also used at /addresses).
   define('ADDR_SPEC', [
-    'label' => 'addr_label', 'street_name' => 'addr_street_name', 'street_number' => 'addr_street_number',
-    'postal_code' => 'addr_postal_code', 'city' => 'addr_city', 'province' => 'addr_province',
-    'country' => 'addr_country', 'timezone' => 'addr_timezone',
+    'label' => 'addr_label',
+    'street_name' => 'addr_street_name',
+    'street_number' => 'addr_street_number',
+    'postal_code' => 'addr_postal_code',
+    'city' => 'addr_city',
+    'province' => 'addr_province',
+    'country' => 'addr_country',
+    'timezone' => 'addr_timezone',
   ]);
 
-  // Proper display names per social type; the enum slugs don't ucfirst cleanly.
   define('SOCIALS_LABELS', [
-    'instagram' => 'Instagram', 'discord' => 'Discord', 'snapchat' => 'Snapchat',
-    'github' => 'GitHub', 'linkedin' => 'LinkedIn', 'matrix' => 'Matrix',
-    'pinterest' => 'Pinterest', 'twitter' => 'Twitter', 'youtube' => 'YouTube',
-    'facebook' => 'Facebook', 'activitypub' => 'Mastodon', 'atproto' => 'Bluesky',
+    'instagram' => 'Instagram',
+    'discord' => 'Discord',
+    'snapchat' => 'Snapchat',
+    'github' => 'GitHub',
+    'codeberg' => 'Codebeg',
+    'linkedin' => 'LinkedIn',
+    'matrix' => 'Matrix',
+    'pinterest' => 'Pinterest',
+    'twitter' => 'Twitter',
+    'youtube' => 'YouTube',
+    'facebook' => 'Facebook',
+    'activitypub' => 'Mastodon',
+    'bsky' => 'Bluesky',
   ]);
 
   // Zips parallel POST arrays into rows, dropping any whose $required column is blank.
@@ -84,15 +98,13 @@
 
   if($is_new) {
     $item = array_merge(
-      ['id' => '', 'display_name' => '', 'first_name' => '', 'middle_name' => '', 'infix' => '',
-       'last_name' => '', 'birth_day' => '', 'legal_name' => '',
-       'registration_number' => '', 'vat_number' => '', 'note' => ''],
-      ['emails' => [], 'phones' => [], 'urls' => [], 'socials' => [], 'roles' => [], 'addresses' => [], 'tags' => []]
+      repeat(['id', 'display_name', 'first_name', 'middle_name', 'infix', 'last_name', 'birth_day', 'legal_name', 'registration_number', 'vat_number', 'note'], ''),
+      repeat(['emails', 'phone_numbers', 'urls', 'socials', 'roles', 'addresses', 'tags'], [])
     );
   }
   else {
     $item = $kind === "org" ? \store\get_organisation($id) : \store\get_contact($id);
-    $item or fail("Not found.", status: 404);
+    if(!$item) fail(($kind === 'org' ? "Organisation" : "Contact") ." not found.", status: 404);
   }
 
   $addresses = \store\list_addresses();
@@ -187,7 +199,7 @@
   <hr>
 
   <?php $repeat("Email", $item['emails'], $pair('email_label', 'email', ['label', 'email'])) ?>
-  <?php $repeat("Phone", $item['phones'], $pair('phone_label', 'phone', ['label', 'phone_number'])) ?>
+  <?php $repeat("Phone", $item['phone_numbers'], $pair('phone_label', 'phone', ['label', 'phone_number'])) ?>
   <?php $repeat("Address", $item['addresses'], $address_field) ?>
   <?php $repeat("Socials", $item['socials'], $social_field) ?>
   <?php $repeat("Websites", $item['urls'], $pair('url_label', 'url', ['label', 'url'])) ?>

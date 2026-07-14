@@ -848,7 +848,7 @@ define('ENUM_SSL_MODE', ['plain', 'tls', 'ssl']);
 
 // Contacts
 
-define('ENUM_SOCIAL_TYPE', ['instagram', 'discord', 'snapchat', 'github', 'linkedin', 'matrix', 'pinterest', 'twitter', 'youtube', 'facebook', 'activitypub', 'atproto']);
+define('ENUM_SOCIAL_TYPE', ['instagram', 'discord', 'snapchat', 'github', 'codeberg', 'linkedin', 'matrix', 'pinterest', 'twitter', 'youtube', 'facebook', 'activitypub', 'bsky']);
 
 function set_children($table, $fk, $id, $rows) {
   exec_query("DELETE FROM `$table` WHERE `$fk` = ?", [$id]);
@@ -875,7 +875,7 @@ function list_contacts() {
     (SELECT GROUP_CONCAT(contact_phone_numbers.phone_number, ' ')
       FROM contact_phone_numbers
       WHERE contact_phone_numbers.contact_id = contacts.id
-    ) AS phones,
+    ) AS phone_numbers,
     (SELECT GROUP_CONCAT(contact_roles.name, ' ')
       FROM contact_roles
       WHERE contact_roles.contact_id = contacts.id
@@ -888,7 +888,7 @@ function get_contact($id) {
   if(!$contact) return $c;
 
   $contact['emails'] = list_contact_emails($id);
-  $contact['phones'] = list_contact_phone_numbers($id);
+  $contact['phone_numbers'] = list_contact_phone_numbers($id);
   $contact['urls'] = list_contact_urls($id);
   $contact['socials'] = list_contact_socials($id);
   $contact['roles'] = list_contact_roles($id);
@@ -983,7 +983,7 @@ function list_organisations() {
     (SELECT GROUP_CONCAT(org_phone_numbers.phone_number, ' ')
       FROM org_phone_numbers
       WHERE org_phone_numbers.org_id = organisations.id
-    ) AS phones FROM organisations") ?? [];
+    ) AS phone_numbers FROM organisations") ?? [];
 }
 
 function get_organisation($id) {
@@ -992,7 +992,7 @@ function get_organisation($id) {
   if(!$organisation) return $organisation;
 
   $organisation['emails'] = list_organisation_emails($id);
-  $organisation['phones'] = list_organisation_phone_numbers($id);
+  $organisation['phone_numbers'] = list_organisation_phone_numbers($id);
   $organisation['urls'] = list_organisation_urls($id);
   $organisation['socials'] = list_organisation_socials($id);
   $organisation['addresses'] = list_organisation_addresses($id);

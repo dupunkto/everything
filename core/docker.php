@@ -6,7 +6,7 @@ namespace docker;
 function docker(...$args) {
   $binary = escapeshellcmd(APP['binary']);
   $socket = escapeshellarg(APP['socket']);
-  $subcmd = implode(' ', array_map('escapeshellarg', $args));
+  $subcmd = implode(" ", array_map('escapeshellarg', $args));
   $cmd = "$binary --host=unix://$socket $subcmd 2>&1";
 
   exec($cmd, $output, $exit); // Probably not the safest method.

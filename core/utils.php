@@ -51,7 +51,7 @@ function address_line($a) {
     $a['country'] ?? '',
   ];
 
-  return str_join(", ", $parts);
+  return str_implode(", ", $parts);
 }
 
 function maps_url($provider, $destination) {

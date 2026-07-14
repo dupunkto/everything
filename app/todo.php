@@ -15,7 +15,7 @@
           id="todo-search"
           class="page-header__search"
           name="q"
-          placeholder="is:todo +qdentity"
+          placeholder="is:todo +acme"
           value="is:todo"
           x-get="/todo/listing"
           x-on="input"

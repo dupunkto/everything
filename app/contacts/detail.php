@@ -4,11 +4,13 @@
   $kind = @$_GET['kind'] ?? "person";
   $id = @$_GET['id'] ?? @$_POST['id'];
 
-  if(!in_array($kind, ['person', 'org'])) 
+  if(!in_array($kind, ['person', 'org'])) {
     fail("Malformed 'kind' parameter.", status: 400);
+  }
 
-  if(!$id)
+  if(!$id) {
     fail("Missing 'id' parameter.", status: 400);
+  }
 
   $item = $kind == "org" ? \store\get_organisation($id) : \store\get_contact($id);
 
@@ -19,14 +21,14 @@
     $legal = trim($item['legal_name'] ?? '');
     $subtitle = (is_nonempty_str($legal) && $legal !== $title) ? $legal : '';
   }
-  else {
-    $full = str_join(" ", [$item['first_name'], $item['middle_name'], $item['infix'], $item['last_name']]);
-    $title = trim($item['display_name']) ?: $full;
+
+  if($kind == "person") {
+    $full = str_implode(" ", [$item['first_name'], $item['middle_name'], $item['infix'], $item['last_name']]);
+    $title = trim($item['display_name'] ?? '') ?: $full;
     $subtitle = (is_nonempty_str($full) && $full !== $title) ? $full : '';
   }
 
   $timezone = null;
-
   foreach($item['addresses'] as $address) {
     $zone = $address['timezone'];
 
@@ -34,40 +36,6 @@
       $timezone = $zone; break;
     }
   }
-
-  $get_social_link = function($type, $handle) use ($kind) {
-    $raw = trim($handle);
-    $h = ltrim($raw, "@");
-    $enc = rawurlencode($h);
-    $ap = explode("@", $h); // activitypub: user@instance
-
-    $icons = [
-      'instagram' => 'fa-brands fa-instagram', 'discord' => 'fa-brands fa-discord',
-      'snapchat' => 'fa-brands fa-snapchat', 'github' => 'fa-brands fa-github',
-      'linkedin' => 'fa-brands fa-linkedin', 'matrix' => 'fa-solid fa-hashtag',
-      'pinterest' => 'fa-brands fa-pinterest', 'twitter' => 'fa-brands fa-twitter',
-      'youtube' => 'fa-brands fa-youtube', 'facebook' => 'fa-brands fa-facebook',
-      'activitypub' => 'fa-brands fa-mastodon', 'atproto' => 'fa-brands fa-bluesky',
-    ];
-
-    $url = match($type) {
-      'instagram'   => "https://instagram.com/$enc",
-      'discord'     => ctype_digit($h) ? "https://discord.com/users/$enc" : null,
-      'snapchat'    => "https://snapchat.com/add/$enc",
-      'github'      => "https://github.com/$enc",
-      'linkedin'    => $kind == "org" ? "https://linkedin.com/company/$enc" : "https://linkedin.com/in/$enc",
-      'matrix'      => "https://matrix.to/#/" . rawurlencode($raw),
-      'pinterest'   => "https://pinterest.com/$enc",
-      'twitter'     => "https://twitter.com/$enc",
-      'youtube'     => "https://youtube.com/@$enc",
-      'facebook'    => "https://facebook.com/$enc",
-      'activitypub' => count($ap) == 2 ? "https://{$ap[1]}/@{$ap[0]}" : null,
-      'atproto'     => "https://bsky.app/profile/$enc",
-      default       => null,
-    };
-
-    return [$icons[$type] ?? 'fa-solid fa-at', $url];
-  };
 
 ?>
 <header class="detail__header">
@@ -105,7 +73,7 @@
   <div class="detail__main">
     <?php
       $comms = [
-        ['fa-solid fa-phone', 'tel:', array_map(fn($r) => [$r['label'], $r['phone_number']], $item['phones'])],
+        ['fa-solid fa-phone', 'tel:', array_map(fn($r) => [$r['label'], $r['phone_number']], $item['phone_numbers'])],
         ['fa-solid fa-envelope', 'mailto:', array_map(fn($r) => [$r['label'], $r['email']], $item['emails'])],
       ];
     ?>
@@ -140,7 +108,7 @@
             <?php if(is_nonempty_str($address['link_label'])): ?>
             <span class="detail__address-label"><?= esc_inner($address['link_label']) ?></span>
             <?php endif ?>
-            <p class="detail__address-lines"><?= esc_inner(str_join("\n", $lines)) ?></p>
+            <p class="detail__address-lines"><?= esc_inner(str_implode("\n", $lines)) ?></p>
             <?php if($maps = maps_url(MAP_PROVIDER, address_line($address))): ?>
             <a class="button detail__direction" href="<?= esc_attr($maps) ?>">Directions &rarr;</a>
             <?php endif ?>
@@ -149,7 +117,12 @@
       </div>
     <?php endif ?>
 
-    <?php include __DIR__ . "/note.php" ?>
+    <form class="detail__note" x-post="/contacts/note" x-on="input">
+      <h3>Note</h3>
+      <input type="hidden" name="kind" value="<?= $kind ?>">
+      <input type="hidden" name="id" value="<?= esc_attr($item['id']) ?>">
+      <textarea name="note" rows="4" placeholder="Anything to note..?"><?= esc_inner($item['note'] ?? '') ?></textarea>
+    </form>
   </div>
 
   <div class="detail__side">
@@ -168,14 +141,53 @@
     <?php if($item['socials']): ?>
       <h3>Socials</h3>
       <ul class="detail__socials">
-        <?php foreach($item['socials'] as $s): ?>
+        <?php foreach($item['socials'] as $social): ?>
           <li>
-            <?php [$icon, $url] = $get_social_link($s['type'], $s['handle']) ?>
+            <?php
+              $raw = trim($social['handle']);
+              $h = ltrim($raw, "@");
+              $enc = rawurlencode($h);
+              $ap = explode("@", $h); // activitypub: user@instance
+
+              $icon = match($social['type']) {
+                'instagram' => 'fa-brands fa-instagram',
+                'discord' => 'fa-brands fa-discord',
+                'snapchat' => 'fa-brands fa-snapchat',
+                'github' => 'fa-brands fa-github',
+                'codeberg' => 'fa-brands fa-codeberg',
+                'linkedin' => 'fa-brands fa-linkedin',
+                'matrix' => 'fa-solid fa-hashtag',
+                'pinterest' => 'fa-brands fa-pinterest',
+                'twitter' => 'fa-brands fa-twitter',
+                'youtube' => 'fa-brands fa-youtube',
+                'facebook' => 'fa-brands fa-facebook',
+                'activitypub' => 'fa-brands fa-mastodon',
+                'bsky' => 'fa-brands fa-bluesky',
+                default => 'fa-solid fa-at',
+              };
+
+              $url = match($social['type']) {
+                'instagram' => "https://instagram.com/$enc",
+                'discord' => ctype_digit($h) ? "https://discord.com/users/$enc" : null,
+                'snapchat' => "https://snapchat.com/add/$enc",
+                'github' => "https://github.com/$enc",
+                'codeberg' => "https://codeberg.org/$enc",
+                'linkedin' => $kind == "org" ? "https://linkedin.com/company/$enc" : "https://linkedin.com/in/$enc",
+                'matrix' => "https://matrix.to/#/" . rawurlencode($raw),
+                'pinterest' => "https://pinterest.com/$enc",
+                'twitter' => "https://twitter.com/$enc",
+                'youtube' => "https://youtube.com/@$enc",
+                'facebook' => "https://facebook.com/$enc",
+                'activitypub' => count($ap) == 2 ? "https://{$ap[1]}/@{$ap[0]}" : null,
+                'bsky' => "https://bsky.app/profile/$enc",
+                default => null,
+              };
+            ?>
 
             <?php if($url): ?>
-              <a href="<?= esc_attr($url) ?>"><i class="<?= $icon ?>"></i> <?= esc_inner($s['handle']) ?></a>
+              <a href="<?= esc_attr($url) ?>"><i class="<?= $icon ?>"></i> <?= esc_inner($social['handle']) ?></a>
             <?php else: ?>
-              <span><i class="<?= $icon ?>"></i> <?= esc_inner($s['handle']) ?></span>
+              <span><i class="<?= $icon ?>"></i> <?= esc_inner($social['handle']) ?></span>
             <?php endif ?>
           </li>
         <?php endforeach ?>
@@ -217,7 +229,3 @@
     <?php endif ?>
   </div>
 </div>
-
-<?php if($item['note']): ?>
-  <div class="detail__note"><?= nl2br(esc_inner($item['note'])) ?></div>
-<?php endif ?>

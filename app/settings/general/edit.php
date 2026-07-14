@@ -21,7 +21,7 @@
   $timezones = [];
 
   foreach(\DateTimeZone::listIdentifiers() as $timezone) {
-    $timezones[$timezone] = str_replace('_', ' ', $timezone);
+    $timezones[$timezone] = str_replace("_", " ", $timezone);
   }
 ?>
 <form class="settings-form" x-post="/settings/general/edit" x-on="change" x-target="#general-settings">
