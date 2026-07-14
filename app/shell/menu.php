@@ -1,4 +1,14 @@
+<?php
+$segments = array_values(array_filter(explode("/", $path)));
+$section = @$segments[0];
+$actions = $section ? path_join(__DIR__, "..", $section, "actions.php") : null;
+?>
+
 <nav class="nav">
+  <div class="nav__actions">
+    <?php if($actions && file_exists($actions)) include $actions ?>
+  </div>
+
   <ul>
     <li><a href="/mail"><i class="fa-regular fa-inbox"></i> <span>Mail</span></a></li>
     <li><a href="/calendar"><i class="fa-regular fa-calendar"></i> <span>Calendar</span></a></li>

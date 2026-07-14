@@ -29,8 +29,6 @@
 
         <section id="contacts-list" class="contacts__list" x-get="/contacts/listing" x-data="#contacts-controls"></section>
 
-        <button type="button" id="contacts-new" style="display: none"
-          x-post="/contacts/new" x-data="#contacts-controls" x-target="#contacts-panel"></button>
       </aside>
 
       <section id="contacts-panel" class="contacts__panel">

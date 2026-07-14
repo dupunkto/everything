@@ -8,10 +8,6 @@
     fail("Malformed 'kind' parameter.", status: 400);
   }
 
-  if(!$id) {
-    fail("Missing 'id' parameter.", status: 400);
-  }
-
   $item = $kind == "org" ? \store\get_organisation($id) : \store\get_contact($id);
 
   if(!$item) exit; // No row clears the panel.
