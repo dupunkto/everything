@@ -13,7 +13,9 @@
         <form id="contacts-controls" class="contacts__controls">
           <input
             name="q"
+            type="search"
             class="contacts__search"
+            z-key="/"
             placeholder="is:person +acme"
             value="is:person"
             x-get="/contacts/listing"

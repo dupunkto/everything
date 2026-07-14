@@ -59,7 +59,7 @@
 
       <h4 class="listing__title">
         <span class="humid"><?= $wish['id'] ?></span>
-        <a class="listing__link" href="/wishlist/edit?id=<?= $wish['id'] ?>" tabindex="-1" z-key="e o">
+        <a class="listing__link" href="/wishlist/edit?id=<?= $wish['id'] ?>" tabindex="-1" z-key="enter e o">
           <?= esc_inner($wish['title']) ?>
         </a>
       </h4>

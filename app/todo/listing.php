@@ -102,7 +102,7 @@
               </form>
               <h4 class="listing__title">
                 <span class="humid"><?= $task['id'] ?></span>
-                <a class="listing__link" href="/todo/edit?id=<?= $task['id'] ?>" tabindex="-1" z-key="e o">
+                <a class="listing__link" href="/todo/edit?id=<?= $task['id'] ?>" tabindex="-1" z-key="enter e o">
                   <?= esc_inner($task['title']) ?>
                 </a>
               </h4>

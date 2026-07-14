@@ -22,8 +22,10 @@
   </head>
   <body>
     <?php include __DIR__ . "/../shell/menu.php" ?>
-    <main class="main main--semi-wide">
+    <main class="main">
       <form id="wishlist-form" class="wishlist-form" x-post="/wishlist/new">
+        <a href="/wishlist" z-key="escape" hidden></a>
+
         <input type="hidden" name="status" value="dream">
 
         <input name="title" type="text" placeholder="Title">

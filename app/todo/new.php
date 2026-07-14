@@ -29,6 +29,8 @@
     <?php include __DIR__ . "/../shell/menu.php" ?>
     <main class="main main--semi-wide">
       <form id="todo-form" class="todo-form" x-post="/todo/new">
+        <a href="/todo" z-key="escape" hidden></a>
+
         <div class="todo-form__meta">
           <div class="field">
             <label for="status">Status</label>

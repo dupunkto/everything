@@ -18,6 +18,7 @@
         <input
           name="q"
           type="search"
+          z-key="/"
           placeholder="find existing address…"
           x-get="/addresses/listing"
           x-on="input"

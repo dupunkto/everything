@@ -11,7 +11,9 @@
       <input
         id="todo-search"
         class="page-header__search"
+        type="search"
         name="q"
+        z-key="/"
         placeholder="is:todo +acme"
         value="is:todo"
         x-get="/todo/listing"
