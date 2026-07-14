@@ -36,7 +36,6 @@ function create_task(
 ) {
   in_array($status, ENUM_TASK_STATUS) or die("status $status does not exist");
 
-  $id = generate_humid();
   $open_date ??= gmdate("Y-m-d H:i:s");
 
   $ok = exec_query('INSERT INTO `tasks` (
@@ -49,7 +48,14 @@ function create_task(
     `due_date`,
     `expiration_date`
   ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [
-    $id, $title, $content, $urgent, $recurrence, $open_date, $due_date, $expiration_date
+    $id = generate_humid(),
+    $title,
+    $content,
+    $urgent,
+    $recurrence,
+    $open_date,
+    $due_date,
+    $expiration_date
   ]);
 
   if(!$ok) return $ok;
@@ -59,7 +65,9 @@ function create_task(
     `status`,
     `comment`
   ) VALUES (?, ?, ?)', [
-    $id, $status, $comment
+    $id,
+    $status,
+    $comment
   ]);
 
   return $ok;
@@ -254,7 +262,9 @@ function create_wish($title, $content, $status, $urgent = false) {
     `title`,
     `content`,
     `urgent`
-  ) VALUES (?, ?, ?, ?)', [$id, $title, $content, $urgent]);
+  ) VALUES (?, ?, ?, ?)', [
+    $id, $title, $content, $urgent
+  ]);
 
   if(!$ok) return $ok;
 
@@ -419,8 +429,6 @@ function delete_timing($id) {
 function create_tag($label, $color, $parent_id) {
   if($parent_id) get_tag($parent_id) or die("tag with ID $parent_id does not exist");
 
-  $color = normalize_color($color);
-
   return exec_query('INSERT INTO `tags` (
     `label`,
     `color`,
@@ -441,8 +449,6 @@ function update_tag($id, $label, $color, $parent_id) {
       $cursor = $tag['parent_id'];
     }
   }
-
-  $color = normalize_color($color);
 
   return exec_query('UPDATE `tags` SET
     `label` = ?,
@@ -489,8 +495,6 @@ function delete_tag($id) {
 // Calendars
 
 function create_calendar($title, $subtitle, $color) {
-  $color = normalize_color($color);
-
   return exec_query('INSERT INTO `calendars` (
     `id`,
     `title`,
@@ -505,8 +509,6 @@ function create_calendar($title, $subtitle, $color) {
 }
 
 function update_calendar($id, $title, $subtitle, $color) {
-  $color = normalize_color($color);
-
   return exec_query('UPDATE `calendars` SET
     `title` = ?,
     `subtitle` = ?,
@@ -535,8 +537,6 @@ function delete_calendar($id) {
 // Subscriptions
 
 function create_subscription($title, $subtitle, $url, $color) {
-  $color = normalize_color($color);
-
   return exec_query('INSERT INTO `subscriptions` (
     `id`,
     `title`,
@@ -553,8 +553,6 @@ function create_subscription($title, $subtitle, $url, $color) {
 }
 
 function update_subscription($id, $title, $subtitle, $url, $color) {
-  $color = normalize_color($color);
-
   return exec_query('UPDATE `subscriptions` SET
     `title` = ?,
     `subtitle` = ?,
@@ -850,17 +848,6 @@ define('ENUM_SSL_MODE', ['plain', 'tls', 'ssl']);
 
 define('ENUM_SOCIAL_TYPE', ['instagram', 'discord', 'snapchat', 'github', 'codeberg', 'linkedin', 'matrix', 'pinterest', 'twitter', 'youtube', 'facebook', 'activitypub', 'bsky']);
 
-function set_children($table, $fk, $id, $rows) {
-  exec_query("DELETE FROM `$table` WHERE `$fk` = ?", [$id]);
-
-  foreach($rows as $row) {
-    $cols = array_keys($row);
-    $names = implode(", ", array_map(fn($c) => "`$c`", [$fk, ...$cols]));
-    $marks = implode(", ", array_fill(0, count($cols) + 1, "?"));
-    exec_query("INSERT INTO `$table` ($names) VALUES ($marks)", [$id, ...array_values($row)]);
-  }
-}
-
 function list_contacts() {
   return all("SELECT contacts.*,
     (SELECT GROUP_CONCAT(tags.label, ' ')
@@ -965,6 +952,47 @@ function update_contact_note($id, $note) {
   return exec_query('UPDATE `contacts` SET `note` = ? WHERE id = ?', [$note, $id]);
 }
 
+function set_contact_emails($id, $rows) {
+  set_children('contact_emails', 'contact_id', $id, $rows);
+}
+
+function set_contact_phone_numbers($id, $rows) {
+  set_children('contact_phone_numbers', 'contact_id', $id, $rows);
+}
+
+function set_contact_urls($id, $rows) {
+  set_children('contact_urls', 'contact_id', $id, $rows);
+}
+
+function set_contact_socials($id, $rows) {
+  set_children('contact_socials', 'contact_id', $id, $rows);
+}
+
+function set_contact_roles($id, $rows) {
+  set_children('contact_roles', 'contact_id', $id, $rows);
+}
+
+function set_contact_addresses($id, $rows) {
+  exec_query('DELETE FROM `contact_addresses` WHERE contact_id = ?', [$id]);
+
+  foreach($rows as $row) {
+    $address_id = create_address(
+      label: null,
+      street_name: $row['street_name'],
+      street_number: $row['street_number'],
+      postal_code: $row['postal_code'],
+      city: $row['city'],
+      province: $row['province'],
+      country: $row['country'],
+      timezone: $row['timezone'],
+      note: null
+    );
+
+    exec_query('INSERT INTO `contact_addresses` (contact_id, label, address_id) VALUES (?, ?, ?)',
+      [$id, $row['label'], $address_id]);
+  }
+}
+
 function delete_contact($id) {
   return exec_query('DELETE FROM `contacts` WHERE id = ?', [$id]);
 }
@@ -1050,55 +1078,144 @@ function update_organisation_note($id, $note) {
   return exec_query('UPDATE `organisations` SET `note` = ? WHERE id = ?', [$note, $id]);
 }
 
-function delete_organisation($id) {
-  return exec_query('DELETE FROM `organisations` WHERE id = ?', [$id]);
+function set_organisation_emails($id, $rows) {
+  set_children('org_emails', 'org_id', $id, $rows);
 }
 
-// Addresses
-
-function list_addresses() {
-  return all('SELECT * FROM `addresses` ORDER BY `city`, `street_name`') ?? [];
+function set_organisation_phone_numbers($id, $rows) {
+  set_children('org_phone_numbers', 'org_id', $id, $rows);
 }
 
-function create_address($f) {
-  // If an address already exists verbatim, we reuse the existing address row.
-  // This keeps the database free of duplicates.
-
-  $get = fn($k) => $f[$k] ?? '';
-
-  $existing = one('SELECT id FROM `addresses`
-    WHERE street_name = ? AND street_number = ? AND postal_code = ? AND city = ? AND country = ?',
-    [$get('street_name'), $get('street_number'), $get('postal_code'), $get('city'), $get('country')]);
-
-  if($existing) return $existing['id'];
-
-  exec_query('INSERT INTO `addresses`
-    (`label`, `street_name`, `street_number`, `postal_code`, `city`, `province`, `country`, `timezone`, `note`)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    [$get('label'), $get('street_name'), $get('street_number'), $get('postal_code'),
-     $get('city'), $get('province'), $get('country'), $get('timezone'), $get('note')]);
-
-  return DBH->lastInsertId();
+function set_organisation_urls($id, $rows) {
+  set_children('org_urls', 'org_id', $id, $rows);
 }
 
-function set_contact_addresses($id, $rows) {
-  exec_query('DELETE FROM `contact_addresses` WHERE contact_id = ?', [$id]);
-
-  foreach($rows as $row) {
-    $address_id = create_address($row);
-    exec_query('INSERT INTO `contact_addresses` (contact_id, label, address_id) VALUES (?, ?, ?)',
-      [$id, $row['label'] ?? '', $address_id]);
-  }
+function set_organisation_socials($id, $rows) {
+  set_children('org_socials', 'org_id', $id, $rows);
 }
 
 function set_organisation_addresses($id, $rows) {
   exec_query('DELETE FROM `org_addresses` WHERE org_id = ?', [$id]);
 
   foreach($rows as $row) {
-    $address_id = create_address($row);
+    $address_id = create_address(
+      label: null,
+      street_name: $row['street_name'],
+      street_number: $row['street_number'],
+      postal_code: $row['postal_code'],
+      city: $row['city'],
+      province: $row['province'],
+      country: $row['country'],
+      timezone: $row['timezone'],
+      note: null
+    );
+
     exec_query('INSERT INTO `org_addresses` (org_id, label, address_id) VALUES (?, ?, ?)',
-      [$id, $row['label'] ?? '', $address_id]);
+      [$id, $row['label'], $address_id]);
   }
+}
+
+function delete_organisation($id) {
+  return exec_query('DELETE FROM `organisations` WHERE id = ?', [$id]);
+}
+
+function set_children($table, $fk, $id, $rows) {
+  exec_query("DELETE FROM `$table` WHERE `$fk` = ?", [$id]);
+
+  foreach($rows as $row) {
+    $cols = array_keys($row);
+    $names = implode(", ", array_map(fn($c) => "`$c`", [$fk, ...$cols]));
+    $marks = implode(", ", array_fill(0, count($cols) + 1, "?"));
+    exec_query("INSERT INTO `$table` ($names) VALUES ($marks)", [$id, ...array_values($row)]);
+  }
+}
+
+// Addresses
+
+function list_addresses() {
+  return all("SELECT * FROM `addresses`
+    ORDER BY CASE WHEN `label` IS NULL OR `label` = '' THEN 1 ELSE 0 END, `city`, `street_name`");
+}
+
+function create_address(
+  $label,
+  $street_name,
+  $street_number,
+  $postal_code,
+  $city,
+  $province,
+  $country,
+  $timezone,
+  $note
+) {
+  // If an address already exists verbatim, we reuse the existing address row.
+  // This keeps the database free of duplicates.
+
+  $existing = one('SELECT id FROM `addresses`
+    WHERE street_name = ? AND street_number = ? AND postal_code = ? AND city = ? AND country = ?',
+    [$street_name, $street_number, $postal_code, $city, $country]);
+
+  if($existing) return $existing['id'];
+
+  exec_query('INSERT INTO `addresses` (
+    `label`,
+    `street_name`,
+    `street_number`,
+    `postal_code`,
+    `city`,
+    `province`,
+    `country`,
+    `timezone`,
+    `note`
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+    $label,
+    $street_name,
+    $street_number,
+    $postal_code,
+    $city,
+    $province,
+    $country,
+    $timezone,
+    $note
+  ]);
+
+  return DBH->lastInsertId();
+}
+
+function update_address(
+  $id,
+  $label,
+  $street_name,
+  $street_number,
+  $postal_code,
+  $city,
+  $province,
+  $country,
+  $timezone,
+  $note
+) {
+  return exec_query('UPDATE `addresses` SET
+    `label` = ?,
+    `street_name` = ?,
+    `street_number` = ?,
+    `postal_code` = ?,
+    `city` = ?,
+    `province` = ?,
+    `country` = ?,
+    `timezone` = ?,
+    `note` = ?
+  WHERE id = ?', [
+    $label,
+    $street_name,
+    $street_number,
+    $postal_code,
+    $city,
+    $province,
+    $country,
+    $timezone,
+    $note,
+    $id
+  ]);
 }
 
 // Configuration
