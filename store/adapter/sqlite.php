@@ -18,7 +18,13 @@ function establish_connection() {
 
   try {
     define('INITIAL_RUN', !file_exists($database));
-    return new PDO($dsn, options: $options);
+    $dbh = new PDO($dsn, options: $options);
+
+    // SQLite ignores foreign keys (and their ON DELETE actions) unless
+    // enforcement is switched on per connection.
+    $dbh->exec("PRAGMA foreign_keys = ON");
+
+    return $dbh;
   }
   catch(PDOException $e) {
     die("Database connection failed: " . $e->getMessage());
@@ -37,17 +43,22 @@ function initial_run() {
 }
 
 function execute($path) {
-  $sql = str_replace(
-    ["int(11)", "NOT NULL AUTO_INCREMENT", ",\n  PRIMARY KEY (`id`)"],
-    ["INTEGER", "PRIMARY KEY AUTOINCREMENT", ""],
-    file_get_contents($path)
-  );
+  $queries = explode(';', file_get_contents($path));
 
-  $queries = explode(';', $sql);
-  
   foreach ($queries as $query) {
     $query = trim($query);
-    if(!empty($query)) DBH->exec($query) !== false 
+    if(empty($query)) continue;
+
+    if(str_contains($query, "AUTO_INCREMENT"))
+      $query = str_replace(",\n  PRIMARY KEY (`id`)", "", $query);
+
+    $query = str_replace(
+      ["int(11)", "NOT NULL AUTO_INCREMENT"],
+      ["INTEGER", "PRIMARY KEY AUTOINCREMENT"],
+      $query
+    );
+
+    DBH->exec($query) !== false
       or die("Could not execute query '$query'.");
   }
 }
