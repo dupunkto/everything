@@ -21,12 +21,12 @@ CREATE TABLE IF NOT EXISTS `tags` (
 
 CREATE TABLE IF NOT EXISTS `contacts` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `display_name` text NOT NULL,
+  `display_name` text,
   `first_name` text NOT NULL,
-  `middle_name` text NOT NULL,
-  `infix` text NOT NULL,
-  `last_name` text NOT NULL,
-  `birth_day` text NOT NULL,
+  `middle_name` text,
+  `infix` text,
+  `last_name` text,
+  `birth_day` text,
   `note` text,
   PRIMARY KEY (`id`)
 );
@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS `org_socials` (
 CREATE TABLE IF NOT EXISTS `contact_urls` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `contact_id` int(11) NOT NULL,
-  `label` text NOT NULL,
+  `label` text,
   `url` text NOT NULL,
   FOREIGN KEY (`contact_id`) REFERENCES `contacts` (`id`) ON DELETE CASCADE,
   UNIQUE (`contact_id`, `url`),
@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS `contact_urls` (
 CREATE TABLE IF NOT EXISTS `org_urls` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `org_id` int(11) NOT NULL,
-  `label` text NOT NULL,
+  `label` text,
   `url` text NOT NULL,
   FOREIGN KEY (`org_id`) REFERENCES `organisations` (`id`) ON DELETE CASCADE,
   UNIQUE (`org_id`, `url`),
@@ -112,7 +112,7 @@ CREATE TABLE IF NOT EXISTS `org_urls` (
 CREATE TABLE IF NOT EXISTS `contact_emails` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `contact_id` int(11) NOT NULL,
-  `label` text NOT NULL,
+  `label` text,
   `email` text NOT NULL,
   FOREIGN KEY (`contact_id`) REFERENCES `contacts` (`id`) ON DELETE CASCADE,
   UNIQUE (`contact_id`, `email`),
@@ -122,7 +122,7 @@ CREATE TABLE IF NOT EXISTS `contact_emails` (
 CREATE TABLE IF NOT EXISTS `org_emails` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `org_id` int(11) NOT NULL,
-  `label` text NOT NULL,
+  `label` text,
   `email` text NOT NULL,
   FOREIGN KEY (`org_id`) REFERENCES `organisations` (`id`) ON DELETE CASCADE,
   UNIQUE (`org_id`, `email`),
@@ -132,7 +132,7 @@ CREATE TABLE IF NOT EXISTS `org_emails` (
 CREATE TABLE IF NOT EXISTS `contact_phone_numbers` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `contact_id` int(11) NOT NULL,
-  `label` text NOT NULL,
+  `label` text,
   `phone_number` text NOT NULL,
   FOREIGN KEY (`contact_id`) REFERENCES `contacts` (`id`) ON DELETE CASCADE,
   UNIQUE (`contact_id`, `phone_number`),
@@ -142,7 +142,7 @@ CREATE TABLE IF NOT EXISTS `contact_phone_numbers` (
 CREATE TABLE IF NOT EXISTS `org_phone_numbers` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `org_id` int(11) NOT NULL,
-  `label` text NOT NULL,
+  `label` text,
   `phone_number` text NOT NULL,
   FOREIGN KEY (`org_id`) REFERENCES `organisations` (`id`) ON DELETE CASCADE,
   UNIQUE (`org_id`, `phone_number`),
@@ -166,7 +166,7 @@ CREATE TABLE IF NOT EXISTS `addresses` (
 CREATE TABLE IF NOT EXISTS `contact_addresses` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `contact_id` int(11) NOT NULL,
-  `label` text NOT NULL,
+  `label` text,
   `address_id` int(11) NOT NULL,
   FOREIGN KEY (`contact_id`) REFERENCES `contacts` (`id`) ON DELETE CASCADE,
   FOREIGN KEY (`address_id`) REFERENCES `addresses` (`id`) ON DELETE CASCADE,
@@ -177,7 +177,7 @@ CREATE TABLE IF NOT EXISTS `contact_addresses` (
 CREATE TABLE IF NOT EXISTS `org_addresses` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `org_id` int(11) NOT NULL,
-  `label` text NOT NULL,
+  `label` text,
   `address_id` int(11) NOT NULL,
   FOREIGN KEY (`org_id`) REFERENCES `organisations` (`id`) ON DELETE CASCADE,
   FOREIGN KEY (`address_id`) REFERENCES `addresses` (`id`) ON DELETE CASCADE,
