@@ -20,6 +20,8 @@ fallback('timezone', getenv("TIMEZONE") ?: "Europe/Amsterdam");
 fallback('currency', "eur");
 fallback('map-provider', "google_maps");
 
+fallback('ui.panel-position', "right");
+
 fallback('calendar.default_calendar', \store\first_calendar_id());
 
 fallback('todo.recurrence-horizon', 3);

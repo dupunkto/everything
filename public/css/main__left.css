@@ -1,0 +1,38 @@
+.nav {
+  left: var(--sidebar-padding);
+  right: auto;
+}
+
+.nav__actions {
+  left: var(--sidebar-padding);
+  right: auto;
+}
+
+.nav--expanded .nav ul li a span {
+  position: static;
+  transform: none;
+  margin-left: 0.75em;
+}
+
+.nav__toggle {
+  justify-content: flex-start;
+}
+
+.nav__toggle i {
+  transform: rotate(180deg);
+}
+
+.nav--expanded .nav__toggle i {
+  transform: rotate(0deg);
+}
+
+body {
+  padding-left: calc(var(--sidebar-collapsed) + 2 * var(--sidebar-padding));
+  padding-right: 0;
+  transition: padding-left 0.3s ease;
+}
+
+.nav--expanded body {
+  padding-left: calc(var(--sidebar-expanded) + 2 * var(--sidebar-padding));
+  padding-right: 0;
+}
