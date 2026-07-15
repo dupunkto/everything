@@ -49,21 +49,40 @@
   </div>
 </header>
 
-<?php if($kind == "person" && $item['birth_day']):
-  $bd = DateTime::createFromFormat('Y-m-d', $item['birth_day']) ?: null; ?>
-  <?php if($bd): ?>
-    <p class="detail__meta">
-      <span><?= (new DateTime())->diff($bd)->y ?> yo</span>  
-      <span><?= $bd->format('F, j') ?></span>
-      <span><?= star_sign((int)$bd->format('n'), (int)$bd->format('j')) ?></span>
-      <?php if($timezone): ?>
-        <span title="<?= esc_attr($timezone) ?>"><?= local_date('H:i', 'now', $timezone) ?></span>
-      <?php endif ?>
-    </p>
-  <?php endif ?>
-<?php elseif($kind == "person" && $timezone): ?>
+<?php
+  $meta = [];
+
+  if($kind == "person") {
+    if($item['birth_day'] && $item['birth_month']) {
+      // If the birth year is unknown, we take 2000 as a safe default,
+      // so we can still do calculations on a proper DateTime object.
+      $birthday = DateTime::createFromFormat('!Y-m-d', join("-", [
+        str_pad($item['birth_year'] ?: 2000, 4, "0", STR_PAD_LEFT),
+        str_pad($item['birth_month'], 2, "0", STR_PAD_LEFT),
+        str_pad($item['birth_day'], 2, "0", STR_PAD_LEFT),
+      ]));
+
+      if($birthday) {
+        if($item['birth_year']) {
+          $meta[] = (new DateTime())->diff($birthday)->y . " yo";
+        }
+
+        $meta[] = $birthday->format('F, j');
+        $meta[] = star_sign($birthday->format('n'), $birthday->format('j'));
+      }
+    }
+
+    if($timezone) {
+      $meta[] = local_date('H:i', 'now', $timezone);
+    }
+  }
+?>
+
+<?php if($meta): ?>
   <p class="detail__meta">
-    <span title="<?= esc_attr($timezone) ?>"><?= local_date('H:i', 'now', $timezone) ?></span>
+    <?php foreach($meta as $text): ?>
+      <span><?= esc_inner($text) ?></span>
+    <?php endforeach ?>
   </p>
 <?php endif ?>
 

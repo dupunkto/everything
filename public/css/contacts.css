@@ -308,6 +308,11 @@
   gap: 0.15em;
 }
 
+.birthday-fields {
+  display: flex;
+  gap: 0.25em;
+}
+
 .detail__delete {
   margin-top: 2em;
   align-self: flex-start;

@@ -26,8 +26,12 @@ CREATE TABLE IF NOT EXISTS `contacts` (
   `middle_name` text,
   `infix` text,
   `last_name` text,
-  `birth_day` text,
+  `birth_day` int(2),
+  `birth_month` int(2),
+  `birth_year` int(4),
   `note` text,
+  CHECK ((`birth_day` IS NULL) = (`birth_month` IS NULL)),
+  CHECK (`birth_year` IS NULL OR (`birth_day` IS NOT NULL AND `birth_month` IS NOT NULL)),
   PRIMARY KEY (`id`)
 );
 

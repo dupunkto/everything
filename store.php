@@ -1083,12 +1083,20 @@ function create_contact(
   $infix,
   $last_name,
   $birth_day,
+  $birth_month,
+  $birth_year,
   $note
 ) {
+  $birthday = validate_birthday($birth_day, $birth_month, $birth_year);
+
+  if($birthday === null) return false;
+
+  [$birth_day, $birth_month, $birth_year] = $birthday;
+
   $ok = exec_query('INSERT INTO `contacts`
-    (`display_name`, `first_name`, `middle_name`, `infix`, `last_name`, `birth_day`, `note`)
-    VALUES (?, ?, ?, ?, ?, ?, ?)',
-    [$display_name, $first_name, $middle_name, $infix, $last_name, $birth_day, $note]);
+    (`display_name`, `first_name`, `middle_name`, `infix`, `last_name`, `birth_day`, `birth_month`, `birth_year`, `note`)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [$display_name, $first_name, $middle_name, $infix, $last_name, $birth_day, $birth_month, $birth_year, $note]);
 
   return $ok ? DBH->lastInsertId() : null;
 }
@@ -1101,12 +1109,20 @@ function update_contact(
   $infix,
   $last_name,
   $birth_day,
+  $birth_month,
+  $birth_year,
   $note
 ) {
+  $birthday = validate_birthday($birth_day, $birth_month, $birth_year);
+
+  if($birthday === null) return false;
+
+  [$birth_day, $birth_month, $birth_year] = $birthday;
+
   return exec_query('UPDATE `contacts` SET
     `display_name` = ?, `first_name` = ?, `middle_name` = ?,
-    `infix` = ?, `last_name` = ?, `birth_day` = ?, `note` = ? WHERE id = ?',
-    [$display_name, $first_name, $middle_name, $infix, $last_name, $birth_day, $note, $id]);
+    `infix` = ?, `last_name` = ?, `birth_day` = ?, `birth_month` = ?, `birth_year` = ?, `note` = ? WHERE id = ?',
+    [$display_name, $first_name, $middle_name, $infix, $last_name, $birth_day, $birth_month, $birth_year, $note, $id]);
 }
 
 function update_contact_note($id, $note) {
@@ -1155,6 +1171,14 @@ function set_contact_addresses($id, $rows) {
 
 function delete_contact($id) {
   return exec_query('DELETE FROM `contacts` WHERE id = ?', [$id]);
+}
+
+function validate_birthday($day, $month, $year) {
+  if(($day === null) !== ($month === null)) return null;
+  if($year !== null && $day === null) return null;
+  if($day !== null && !checkdate($month, $day, $year ?: 2000)) return null;
+
+  return [$day, $month, $year];
 }
 
 function list_organisations() {

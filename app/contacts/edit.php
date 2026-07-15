@@ -60,7 +60,9 @@
           cast_string($_POST['middle_name']),
           cast_string($_POST['infix']),
           cast_string($_POST['last_name']),
-          cast_date($_POST['birth_day']),
+          cast_int($_POST['birth_day']),
+          cast_int($_POST['birth_month']),
+          cast_int($_POST['birth_year']),
           cast_string($_POST['note'])
         ) or fail("Could not update contact.");
       } else {
@@ -70,7 +72,9 @@
           cast_string($_POST['middle_name']),
           cast_string($_POST['infix']),
           cast_string($_POST['last_name']),
-          cast_date($_POST['birth_day']),
+          cast_int($_POST['birth_day']),
+          cast_int($_POST['birth_month']),
+          cast_int($_POST['birth_year']),
           cast_string($_POST['note'])
         ) or fail("Could not create contact.");
       }
@@ -178,7 +182,11 @@
     </div>
     <div class="field">
       <label for="birth_day">Birthday</label>
-      <input id="birth_day" name="birth_day" type="date" value="<?= esc_attr(@$item['birth_day']) ?>">
+      <span class="birthday-fields">
+        <input id="birth_day" name="birth_day" type="number" min="1" max="31" placeholder="day" value="<?= esc_attr(@$item['birth_day']) ?>">
+        <input name="birth_month" type="number" min="1" max="12" placeholder="month" value="<?= esc_attr(@$item['birth_month']) ?>">
+        <input name="birth_year" type="number" min="1" max="9999" placeholder="year" value="<?= esc_attr(@$item['birth_year']) ?>">
+      </span>
     </div>
   <?php endif ?>
 

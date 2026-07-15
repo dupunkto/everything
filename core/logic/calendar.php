@@ -110,7 +110,7 @@ function task_deadlines($from, $to) {
 
 // Contact birthdays as annually-recurring all-day appointments within
 // [$from, $to). Titled with the turning age when the birth year is known,
-// a plain birthday otherwise (year absent, or a "MM-DD" birth_day).
+// a plain birthday otherwise.
 function birthdays($from, $to) {
   $ordinal = function($n) {
     $tens = $n % 100;
@@ -121,14 +121,18 @@ function birthdays($from, $to) {
   $birthdays = [];
 
   foreach(\store\list_contacts() as $contact) {
-    if(!preg_match('/^(?:(\d{4})-)?(\d{2})-(\d{2})$/', trim($contact['birth_day']), $m)) continue;
-    [, $birth_year, $month, $day] = $m;
+    if(empty($contact['birth_day']) || empty($contact['birth_month'])) continue;
 
     for($year = (int) $from->format('Y'); $year <= (int) $to->format('Y'); $year++) {
-      $date = \DateTime::createFromFormat('!Y-m-d', sprintf('%04d-%s-%s', $year, $month, $day));
+      $date = DateTime::createFromFormat('!Y-m-d', join("-", [
+        str_pad($contact['birth_year'] ?: 2000, 4, "0", STR_PAD_LEFT),
+        str_pad($contact['birth_month'], 2, "0", STR_PAD_LEFT),
+        str_pad($contact['birth_day'], 2, "0", STR_PAD_LEFT),
+      ]));
+
       if(!$date || $date < $from || $date >= $to) continue;
 
-      $age = $birth_year !== '' ? $year - (int) $birth_year : null;
+      $age = $contact['birth_year'] ? $year - (int) $contact['birth_year'] : null;
       $name = \esc_inner(\contacts\contact_display_name($contact));
 
       $birthdays[] = [
