@@ -1,12 +1,10 @@
 <?php
 
-  if(is_nonempty_str($_POST['recurrence_horizon'])) {
-    if(!is_numeric($_POST['recurrence_horizon']))
-      fail("Invalid 'recurrence_horizon' parameter.", status: 400);
-
-    \store\update_config('todo.recurrence-horizon', $_POST['recurrence_horizon'])
+  if(isset($_POST['recurrence_horizon'])) {
+    \store\update_config('todo.recurrence-horizon', cast_int($_POST['recurrence_horizon']))
       or fail("Could not update recurrence horizon.");
   }
+
 ?>
 <form class="settings-form" x-post="/settings/todo/edit" x-on="change" x-target="#todo-settings">
   <label>
