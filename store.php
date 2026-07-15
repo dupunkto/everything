@@ -407,7 +407,8 @@ function list_wishes($statuses = [], $override = []) {
       wishes.*,
       log.status,
       log.comment,
-      log.date as updated_date
+      log.date as updated_date,
+      (SELECT SUM(price) FROM `wish_urls` WHERE wish_urls.wish_id = wishes.id) as total_price
     FROM `wishes`
     LEFT JOIN `wish_log` log
       ON log.id = (

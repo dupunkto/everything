@@ -17,6 +17,8 @@ fallback('prefered-proto', FORCE_HTTPS ? "https" : "http");
 fallback('secure', PREFERED_PROTO == "https");
 fallback('canonical', PREFERED_PROTO . "://" . HOST);
 fallback('timezone', getenv("TIMEZONE") ?: "Europe/Amsterdam");
+fallback('currency', "eur");
+fallback('map-provider', "google_maps");
 
 fallback('calendar.default_calendar', \store\first_calendar_id());
 
@@ -24,7 +26,6 @@ fallback('todo.recurrence-horizon', 3);
 
 fallback('contacts.display-format', "first_last");
 fallback('contacts.sort-order', "first");
-fallback('map-provider', "google_maps");
 
 function required($key) {
   if(!defined(normalize_key($key))) {

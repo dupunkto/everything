@@ -63,6 +63,17 @@
   padding: 0;
 }
 
+#wishlist-listing .listing__title {
+  flex: 1;
+  min-width: 0;
+}
+
+.listing__price {
+  margin-left: auto;
+  opacity: 0.6;
+  margin-right: 0.25em;
+}
+
 .status-comment {
   background-color: light-dark(#f1f1f1, #2b2b33);
   margin: 0;
