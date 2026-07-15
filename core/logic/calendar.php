@@ -8,8 +8,9 @@ namespace calendar;
 // so instants order and compare as plain strings. Day collections are keyed
 // by "Y-m-d" date, so views of any length share the same shapes.
 
-define('TASK_COLOR', "#cccccc");
 define('BIRTHDAY_COLOR', "#cccccc");
+define('TASK_COLOR', "#cccccc");
+define('TASK_DONE_COLOR', "#4caf50");
 
 function wall($utc) {
   return str_replace("T", " ", \cast_datetime_local($utc));
@@ -80,7 +81,7 @@ function chronological(&$appointments) {
 function task_deadlines($from, $to) {
   $deadlines = [];
 
-  foreach(\store\list_tasks("not:done not:nvm", [], respect_horizon: false) ?: [] as $task) {
+  foreach(\store\list_tasks("not:nvm", [], respect_horizon: false) ?: [] as $task) {
     if(!$task['next']) continue;
 
     $due = new \DateTime(wall($task['next']));
@@ -104,13 +105,14 @@ function task_deadlines($from, $to) {
       'going' => true,
       'calendar_id' => null,
       'subscription_id' => null,
-      'calendar_color' => TASK_COLOR,
+      'calendar_color' => $task['status'] == 'done' ? TASK_DONE_COLOR : TASK_COLOR,
       'location' => null,
       'recurrence' => null,
       'meeting' => false,
       'travel_before' => 0,
       'travel_after' => 0,
       'urgent' => $task['urgent'],
+      'task_status' => $task['status'],
       'is_task' => true,
     ];
   }
