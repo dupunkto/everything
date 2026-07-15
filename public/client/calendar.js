@@ -149,6 +149,11 @@
     const appointment = event.target.closest(".appointment");
 
     if(appointment) {
+      if(appointment.dataset.taskId) {
+        location.href = "/todo/edit?id=" + encodeURIComponent(appointment.dataset.taskId);
+        return;
+      }
+
       if(!appointment.dataset.id) return;
       if(!editor.hidden && appointment.dataset.id == editing) close_editor();
       else open_editor(appointment);

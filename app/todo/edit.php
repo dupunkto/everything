@@ -1,6 +1,9 @@
 <?php
 
   if(isset($_POST['id'])) {
+    $all_day = cast_string($_POST['due_date']) != null
+      && cast_string(@$_POST['due_time']) == null;
+
     \store\update_task(
       $_POST['id'],
       $_POST['title'],
@@ -9,6 +12,7 @@
       $_POST['recurrence'],
       cast_datetime_utc($_POST['open_date'], $_POST['open_time']),
       cast_datetime_utc($_POST['due_date'], @$_POST['due_time'] ?: "00:00"),
+      $all_day,
       cast_datetime_utc($_POST['expiration_date'], @$_POST['expiration_time'] ?: "00:00")
     ) or fail("Could not update task.");
 
@@ -111,7 +115,7 @@
             <label for="due_date">Due</label>
             <span class="datetime-pair">
               <input type="date" id="due_date" name="due_date" value="<?= esc_attr($task['due_date'] ? local_date("Y-m-d", $task['due_date']) : '') ?>">
-              <input type="time" name="due_time" value="<?= esc_attr($task['due_date'] ? local_date("H:i", $task['due_date']) : '') ?>">
+              <input type="time" name="due_time" value="<?= esc_attr($task['due_date'] && !$task['due_all_day'] ? local_date("H:i", $task['due_date']) : '') ?>">
             </span>
           </div>
 
@@ -129,7 +133,7 @@
           </div>
 
           <?php if($task['recurrence'] && $task['status'] == 'done' && $task['next']): ?>
-            <p class="todo-editor__next"><small>Next occurrence <?= esc_inner(local_date("l j M, H:i", $task['next'])) ?></small></p>
+            <p class="todo-editor__next"><small>Next occurrence <?= esc_inner(local_date($task['due_all_day'] ? "l j M" : "l j M, H:i", $task['next'])) ?></small></p>
           <?php endif ?>
         </aside>
       </form>

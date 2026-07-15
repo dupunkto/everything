@@ -1,6 +1,9 @@
 <?php
 
   if(isset($_POST["status"], $_POST["recurrence"], $_POST["urgent"], $_POST["open_date"], $_POST["open_time"], $_POST["due_date"], $_POST["due_time"], $_POST["expiration_date"], $_POST["expiration_time"])) {
+    $all_day = cast_string($_POST['due_date']) != null
+      && cast_string(@$_POST['due_time']) == null;
+
     \store\create_task(
       cast_string($_POST['title']),
       cast_string(@$_POST['content']),
@@ -9,6 +12,7 @@
       cast_string($_POST['recurrence']),
       cast_datetime_utc($_POST['open_date'], $_POST['open_time']),
       cast_datetime_utc($_POST['due_date'], @$_POST['due_time'] ?: "00:00"),
+      $all_day,
       cast_datetime_utc($_POST['expiration_date'], @$_POST['expiration_time'] ?: "00:00"),
       cast_string($_POST['comment'])
     ) or fail("Could not save task '" . $_POST['title'] . "'.");

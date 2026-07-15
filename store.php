@@ -96,6 +96,7 @@ function create_task(
   $recurrence = null,
   $open_date = null,
   $due_date = null,
+  $due_all_day = false,
   $expiration_date = null,
   $comment = null
 ) {
@@ -111,8 +112,9 @@ function create_task(
     `recurrence`,
     `open_date`,
     `due_date`,
+    `due_all_day`,
     `expiration_date`
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [
     $id = generate_humid(),
     $title,
     $content,
@@ -120,6 +122,7 @@ function create_task(
     $recurrence,
     $open_date,
     $due_date,
+    $due_all_day,
     $expiration_date
   ]);
 
@@ -148,6 +151,7 @@ function update_task(
   $recurrence,
   $open_date,
   $due_date,
+  $due_all_day,
   $expiration_date
 ) {
   return exec_query('UPDATE `tasks` SET
@@ -157,6 +161,7 @@ function update_task(
     `recurrence` = ?,
     `open_date` = ?,
     `due_date` = ?,
+    `due_all_day` = ?,
     `expiration_date` = ?
   WHERE id = ?', [
     $title,
@@ -165,6 +170,7 @@ function update_task(
     $recurrence,
     $open_date,
     $due_date,
+    $due_all_day,
     $expiration_date,
     $id
   ]);
@@ -284,6 +290,7 @@ function get_task($id) {
     task.recurrence,
     task.open_date,
     task.due_date,
+    task.due_all_day,
     task.expiration_date,
     log.status,
     log.comment,
@@ -296,7 +303,7 @@ function get_task($id) {
   WHERE task.id = ?
   ORDER BY log.date DESC', [$id]);
 
-  if($task === null) return $task;
+  if($task === false) return $task;
 
   $task = array_merge($task, \recurrence\task_state($task));
 
@@ -304,7 +311,7 @@ function get_task($id) {
     JOIN `tasks_tags` tt ON tt.tag_id = tags.id
     WHERE tt.task_id = ?', [$id]);
 
-  if($tags === null) return $tags;
+  if($tags === false) return $tags;
 
   $task['tags'] = array_column($tags, 'label');
 

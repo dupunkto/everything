@@ -62,7 +62,7 @@
       <?= $is_subscription ? 'readonly' : 'required autofocus' ?>>
     <?php circle() ?>
     <label class="title-check__urgent" title="Circle">
-      <input type="checkbox" name="urgent" aria-label="Circle" <?= cast_boolean($appointment['urgent']) ? 'checked' : '' ?>>
+      <input type="checkbox" name="urgent" aria-label="Circle" <?= $appointment['urgent'] ? 'checked' : '' ?>>
       <i class="fa-regular fa-flag"></i>
       <i class="fa-solid fa-flag"></i>
     </label>

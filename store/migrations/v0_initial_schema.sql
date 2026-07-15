@@ -213,6 +213,7 @@ CREATE TABLE IF NOT EXISTS `tasks` (
   `recurrence` text, -- int|cron
   `open_date` datetime NOT NULL DEFAULT current_timestamp,
   `due_date` datetime,
+  `due_all_day` boolean NOT NULL DEFAULT false,
   `expiration_date` datetime,
   -- `status` is a virtual field, derived from task_log
   PRIMARY KEY (`id`)

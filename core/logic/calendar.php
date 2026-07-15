@@ -84,14 +84,23 @@ function task_deadlines($from, $to) {
     if(!$task['next']) continue;
 
     $due = new \DateTime(wall($task['next']));
-    if($due <= $from || $due > $to) continue;
+
+    if(@$task['due_all_day']) {
+      $start = (clone $due)->setTime(0, 0);
+      $end = (clone $start)->modify('+1 day');
+      if($start >= $to || $end <= $from) continue;
+    } else {
+      if($due <= $from || $due > $to) continue;
+      $start = (clone $due)->modify('-1 hour');
+      $end = $due;
+    }
 
     $deadlines[] = [
       'id' => $task['id'],
       'title' => \esc_inner($task['title']),
-      'starts_at' => (clone $due)->modify('-1 hour')->format("Y-m-d H:i:s"),
-      'ends_at' => $due->format("Y-m-d H:i:s"),
-      'all_day' => false,
+      'starts_at' => $start->format("Y-m-d H:i:s"),
+      'ends_at' => $end->format("Y-m-d H:i:s"),
+      'all_day' => @$task['due_all_day'],
       'going' => true,
       'calendar_id' => null,
       'subscription_id' => null,
