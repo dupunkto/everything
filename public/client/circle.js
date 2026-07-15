@@ -9,8 +9,12 @@ const fit = (field) => {
 
   const style = getComputedStyle(input);
   gauge.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
-  const width = gauge.measureText(input.value || input.placeholder || "").width;
-  const origin = parseFloat(style.paddingLeft) + parseFloat(style.borderLeftWidth);
+  const text_width = gauge.measureText(input.value || input.placeholder || "").width;
+  const padding_left = parseFloat(style.paddingLeft);
+  const padding_right = parseFloat(style.paddingRight);
+  const origin = padding_left + parseFloat(style.borderLeftWidth);
+  const max_width = Math.max(0, input.clientWidth - padding_left - padding_right);
+  const width = Math.min(text_width, max_width);
 
   // The ellipse tapers to points at its ends, so wide text needs
   // proportionally more horizontal room to stay inside the ring; the
