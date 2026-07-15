@@ -660,6 +660,45 @@ function delete_subscription($id) {
   return exec_query('DELETE FROM `subscriptions` WHERE `id` = ?', [$id]);
 }
 
+// Habits
+
+function create_habit($title, $every, $color, $icon) {
+  return exec_query('INSERT INTO `habits` (
+    `id`,
+    `title`,
+    `every`,
+    `color`,
+    `icon`
+  ) VALUES (?, ?, ?, ?, ?)', [
+    generate_humid(),
+    $title,
+    $every,
+    $color,
+    $icon
+  ]);
+}
+
+function update_habit($id, $title, $every, $color, $icon) {
+  return exec_query('UPDATE `habits` SET
+    `title` = ?,
+    `every` = ?,
+    `color` = ?,
+    `icon` = ?
+  WHERE id = ?', [$title, $every, $color, $icon, $id]);
+}
+
+function list_habits() {
+  return all('SELECT * FROM `habits` ORDER BY `title`');
+}
+
+function get_habit($id) {
+  return one('SELECT * FROM `habits` WHERE `id` = ?', [$id]);
+}
+
+function delete_habit($id) {
+  return exec_query('DELETE FROM `habits` WHERE `id` = ?', [$id]);
+}
+
 // Appointments
 
 function create_calendar_appointment(

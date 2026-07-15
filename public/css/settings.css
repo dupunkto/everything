@@ -21,6 +21,70 @@
   max-width: 20%;
 }
 
+.settings-editor--habit {
+  display: block;
+}
+
+.settings-editor__row {
+  display: flex;
+  flex-direction: row;
+  gap: 0.25em;
+}
+
+.settings-editor__title {
+  flex: 1;
+}
+
+.settings-editor__phrase {
+  align-items: center;
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0.25em;
+  justify-content: center;
+  margin-block: 0;
+  margin-inline: 1.5em;
+}
+
+.settings-editor__phrase input {
+  flex: 0 0 3ch;
+  width: calc(3ch + 2em); /* the 2em is to compensate for
+    the space arrows on a number input take up */
+}
+
+.settings-editor__icon-button {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  height: 2em;
+  margin-right: 0.25em;
+  width: auto;
+  font-size: 1em;
+}
+
+.settings-editor__icon-picker {
+  align-items: center;
+  display: grid;
+  gap: 0.5em 1em;
+  grid-template-columns: max-content auto;
+  justify-content: start;
+  margin-top: 0.5em;
+  padding-block: 0.5em;
+}
+
+.settings-editor__icon-picker-label {
+  font-weight: bold;
+  text-transform: lowercase;
+}
+
+.settings-editor__icon-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25em;
+}
+
+.settings-editor__icon-picker input[type="text"] {
+  width: 16ch;
+}
+
 .settings-editor input[type="color"] {
   aspect-ratio: 1;
   width: auto;
