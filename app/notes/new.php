@@ -20,11 +20,13 @@
     <?php include __DIR__ . "/../shell/menu.php" ?>
     <main class="main">
       <form id="note-form" class="note-form" x-post="/notes/new">
-        <a href="/notes" z-key="escape" hidden></a>
+        <div class="actions">
+          <a class="button" href="/notes" z-key="escape">Cancel</a>
+          <button>Save</button>
+        </div>
 
         <input name="title" type="text" placeholder="Title" autofocus>
         <textarea name="content" placeholder="What's on your mind?"></textarea>
-        <button>Save</button>
       </form>
     </main>
   </body>
