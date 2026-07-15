@@ -460,6 +460,9 @@ body:has(.calendar-page) {
 
 .calendar-week__all-day {
   grid-column: 2 / -1;
+  /* comment the following line in if you want the all day bar to always be visible */
+  /* TODO(robin): make this configurable? */
+  /* min-height: 2rem; */
   display: grid;
   grid-template-columns: subgrid;
   gap: 1px;

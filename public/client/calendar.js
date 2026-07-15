@@ -21,6 +21,10 @@
 
   const pad = (n) => String(n).padStart(2, "0");
   const hhmm = (min) => `${pad(Math.floor(min / 60) % 24)}:${pad(min % 60)}`;
+  const date_add = (date, days) => {
+    const [year, month, day] = date.split("-").map(Number);
+    return new Date(Date.UTC(year, month - 1, day + days)).toISOString().slice(0, 10);
+  };
 
   const fit_circles = () => {
     for(const ring of view.querySelectorAll(".appointment__title .circle")) {
@@ -52,9 +56,7 @@
   const range = (date, start, end) => ({
     start_date: date,
     start_time: hhmm(start),
-    end_date: end >= DAY
-      ? new Date(new Date(date + "T00:00:00").getTime() + 864e5).toLocaleDateString("en-CA")
-      : date,
+    end_date: end >= DAY ? date_add(date, 1) : date,
     end_time: hhmm(end >= DAY ? 0 : end),
   });
 
@@ -119,12 +121,53 @@
     position_editor();
   };
 
-  view.addEventListener("dblclick", (event) => {
-    const appointment = event.target.closest(".appointment[data-id]");
-    if(!appointment) return;
+  const create_appointment = async (params) => {
+    const response = await post("/calendar/new", params);
+    if(!response.ok) return null;
 
-    if(!editor.hidden && appointment.dataset.id == editing) close_editor();
-    else open_editor(appointment);
+    const id = (await response.text()).trim();
+    await xhtml.refresh("#calendar-view");
+
+    const created = view.querySelector(`.appointment[data-id="${CSS.escape(id)}"]`);
+    if(created) open_editor(created);
+
+    return id;
+  };
+
+  const create_range = (day, start, end) =>
+    create_appointment(range(day.dataset.date, start, end));
+
+  const create_all_day = (date) => create_appointment({
+    start_date: date,
+    start_time: "00:00",
+    end_date: date_add(date, 1),
+    end_time: "00:00",
+    all_day: 1,
+  });
+
+  view.addEventListener("dblclick", (event) => {
+    const appointment = event.target.closest(".appointment");
+
+    if(appointment) {
+      if(!appointment.dataset.id) return;
+      if(!editor.hidden && appointment.dataset.id == editing) close_editor();
+      else open_editor(appointment);
+      return;
+    }
+
+    const all_day = event.target.closest(".calendar-week__all-day");
+    if(all_day) {
+      const rect = all_day.getBoundingClientRect();
+      const column = Math.max(0, Math.min(6, Math.floor((event.clientX - rect.left) / rect.width * 7)));
+      create_all_day(date_add(all_day.dataset.start, column));
+      return;
+    }
+
+    const day = event.target.closest(".day");
+    if(!day) return;
+
+    const start = Math.min(23 * 60, Math.floor(minute_at(day, event.clientY) / 60) * 60);
+    create_range(day, start, start + 60);
   });
 
   document.addEventListener("click", (event) => {
@@ -194,18 +237,11 @@
     }, async () => {
       if(end - start < SNAP) return ghost.remove(); // just a click
 
-      const response = await post("/calendar/new", range(day.dataset.date, start, end));
-      if(!response.ok) return ghost.remove();
-
-      const id = (await response.text()).trim();
-
       // The ghost stays put: the refresh swaps the whole fragment (ghost
       // included) atomically, so the block never blinks out before the real
       // appointment renders.
-      await xhtml.refresh("#calendar-view");
-
-      const created = view.querySelector(`.appointment[data-id="${CSS.escape(id)}"]`);
-      if(created) open_editor(created);
+      const id = await create_range(day, start, end);
+      if(!id) ghost.remove();
     });
   };
 

@@ -89,14 +89,13 @@ $color = fn($a) => esc_attr($a['calendar_color'] ?? $a['subscription_color'] ?? 
     <?php endforeach ?>
   </div>
 
-  <?php if($all_day): ?>
-    <div class="calendar-week__all-day">
-      <?php foreach($all_day as $appointment): ?>
-        <article class="appointment appointment--all-day<?= $appointment['going'] ? "" : " appointment--not-going" ?><?= empty($appointment['is_birthday']) ? "" : " appointment--birthday" ?>"
-                 <?= empty($appointment['is_birthday']) ? 'data-id="' . esc_attr($appointment['id']) . '"' : '' ?>
-                 style="--appointment-column: <?= $appointment['layout']['column'] ?>; --appointment-span: <?= $appointment['layout']['span'] ?>;
-                        --appointment-row: <?= $appointment['layout']['row'] ?>;
-                        --appointment-color: <?= $color($appointment) ?>">
+  <div class="calendar-week__all-day" data-start="<?= $from->format('Y-m-d') ?>">
+    <?php foreach($all_day as $appointment): ?>
+      <article class="appointment appointment--all-day<?= $appointment['going'] ? "" : " appointment--not-going" ?><?= empty($appointment['is_birthday']) ? "" : " appointment--birthday" ?>"
+               <?= empty($appointment['is_birthday']) ? 'data-id="' . esc_attr($appointment['id']) . '"' : '' ?>
+               style="--appointment-column: <?= $appointment['layout']['column'] ?>; --appointment-span: <?= $appointment['layout']['span'] ?>;
+                      --appointment-row: <?= $appointment['layout']['row'] ?>;
+                      --appointment-color: <?= $color($appointment) ?>">
           <h3 class="appointment__title"><?= $appointment['title'] ?><?php if(!empty($appointment['urgent'])) circle("circle--tight") ?></h3>
 
           <?php if($appointment['recurrence'] || $appointment['meeting'] || !empty($appointment['is_birthday'])): ?>
@@ -106,10 +105,9 @@ $color = fn($a) => esc_attr($a['calendar_color'] ?? $a['subscription_color'] ?? 
               <?php if($appointment['meeting']): ?><i class="fa-solid fa-video"></i><?php endif ?>
             </span>
           <?php endif ?>
-        </article>
-      <?php endforeach ?>
-    </div>
-  <?php endif ?>
+      </article>
+    <?php endforeach ?>
+  </div>
 
   <div class="calendar-week__days">
     <div class="calendar-week__hours">
