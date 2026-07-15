@@ -91,7 +91,7 @@ function task_deadlines($from, $to) {
       if($start >= $to || $end <= $from) continue;
     } else {
       if($due <= $from || $due > $to) continue;
-      $start = (clone $due)->modify('-1 hour');
+      $start = (clone $due)->modify('-45 minutes');
       $end = $due;
     }
 
@@ -135,7 +135,7 @@ function birthdays($from, $to) {
 
     for($year = (int) $from->format('Y'); $year <= (int) $to->format('Y'); $year++) {
       $date = \DateTime::createFromFormat('!Y-m-d', join("-", [
-        str_pad($contact['birth_year'] ?: 2000, 4, "0", STR_PAD_LEFT),
+        str_pad($year, 4, "0", STR_PAD_LEFT),
         str_pad($contact['birth_month'], 2, "0", STR_PAD_LEFT),
         str_pad($contact['birth_day'], 2, "0", STR_PAD_LEFT),
       ]));
