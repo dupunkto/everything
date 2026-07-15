@@ -277,6 +277,7 @@ CREATE TABLE IF NOT EXISTS `habits` (
   `id` text NOT NULL, -- humid
   `title` text NOT NULL,
   `every` text NOT NULL, -- int|cron
+  `start_date` date NOT NULL DEFAULT current_date,
   `color` text NOT NULL,
   `icon` text NOT NULL,
   PRIMARY KEY (`id`)
