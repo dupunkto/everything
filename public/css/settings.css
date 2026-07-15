@@ -21,7 +21,8 @@
   max-width: 20%;
 }
 
-.settings-editor--habit {
+.settings-editor--habit,
+.settings-editor--subscription {
   display: block;
 }
 
@@ -49,6 +50,29 @@
   flex: 0 0 3ch;
   width: calc(3ch + 2em); /* the 2em is to compensate for
     the space arrows on a number input take up */
+}
+
+.settings-editor__filter {
+  align-items: center;
+  display: flex;
+  gap: 0.5em;
+  margin-top: 0.25em;
+}
+
+.settings-editor__filter[hidden] {
+  display: none;
+}
+
+.settings-editor__filter-button--active {
+  position: relative;
+}
+
+.settings-editor__filter-button--active::after {
+  bottom: -0.3em;
+  content: "*";
+  font-weight: bold;
+  position: absolute;
+  right: 0.2em;
 }
 
 .settings-editor__icon-button {
