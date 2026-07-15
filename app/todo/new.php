@@ -36,7 +36,7 @@
         </div>
 
         <div class="title-check" z-circle>
-          <input name="title" type="text" placeholder="Title" autofocus>
+          <input name="title" type="text" placeholder="Title" required autofocus>
           <?php circle() ?>
           <label class="title-check__urgent" title="Circle">
             <input type="hidden" name="urgent" value="false">
