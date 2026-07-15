@@ -9,6 +9,8 @@
 // birthdays? is whether to show contact birthdays
 // timings? is whether to show timings
 // declined? is whether to show events marked as 'not going'
+// filtered? is whether to show events hidden by subscription filters
+// habits? is whether to show habit badges
 
 $tz = new DateTimeZone(TIMEZONE);
 $today = new DateTime('today', $tz);
@@ -21,11 +23,21 @@ $to = (clone $from)->modify('+7 days');
 $filtered = isset($_GET['filter']);
 $visible = $filtered ? (array) (@$_GET['visible'] ?: []) : null;
 $show = fn($extra) => !$filtered || isset($_GET[$extra]);
+$show_filtered_events = isset($_GET['filtered']);
 
-$appointments = array_filter(\calendar\appointments($from, $to), function($a) use ($visible, $show) {
-  if($visible !== null && !in_array($a['calendar_id'] ?? $a['subscription_id'], $visible)) return false;
-  return $show('declined') || $a['going'];
-});
+$appointments = [];
+foreach(\calendar\appointments($from, $to) as $a) {
+  if($visible !== null && !in_array($a['calendar_id'] ?? $a['subscription_id'], $visible)) continue;
+
+  $hidden_by_filter = !empty($a['subscription_filter']) && stripos($a['title'], $a['subscription_filter']) === false;
+  if($hidden_by_filter) {
+    if(!$show_filtered_events) continue;
+    $a['going'] = false;
+  }
+
+  if(!$hidden_by_filter && !$show('declined') && !$a['going']) continue;
+  $appointments[] = $a;
+}
 
 $timed = array_filter($appointments, fn($a) => !$a['all_day']);
 if($show('tasks')) $timed = array_merge($timed, \calendar\task_deadlines($from, $to));
@@ -36,7 +48,7 @@ $all_day = \calendar\all_day_lanes($all_day_appointments, $from);
 $days = array_map('\calendar\layout', \calendar\day_segments($timed, $from, $to));
 $travel = $show('travel') ? \calendar\travel_bands($timed, $from, $to) : [];
 $timings = $show('timings') ? \calendar\timing_lines($from, $to) : [];
-$habits = \habits\calendar($from, $to);
+$habits = $show('habits') ? \habits\calendar($from, $to) : [];
 
 $now_date = $now->format('Y-m-d');
 $now_top = ((int) $now->format('H') * 60 + (int) $now->format('i')) / 1440 * 100;
@@ -160,13 +172,15 @@ $color = fn($a) => esc_attr($a['calendar_color'] ?? $a['subscription_color'] ?? 
     <?php endforeach ?>
   </div>
 
-  <div class="calendar-week__habits">
-    <?php foreach(array_keys($days) as $date): ?>
-      <div class="day__habits">
-        <?php foreach($habits[$date] as $habit): ?>
-          <?php include __DIR__ . "/habits/button.php" ?>
-        <?php endforeach ?>
-      </div>
-    <?php endforeach ?>
-  </div>
+  <?php if($habits): ?>
+    <div class="calendar-week__habits">
+      <?php foreach(array_keys($days) as $date): ?>
+        <div class="day__habits">
+          <?php foreach($habits[$date] as $habit): ?>
+            <?php include __DIR__ . "/habits/button.php" ?>
+          <?php endforeach ?>
+        </div>
+      <?php endforeach ?>
+    </div>
+  <?php endif ?>
 </div>

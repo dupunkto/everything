@@ -623,29 +623,32 @@ function delete_calendar($id) {
 
 // Subscriptions
 
-function create_subscription($title, $subtitle, $url, $color) {
+function create_subscription($title, $subtitle, $url, $color, $filter = null) {
   return exec_query('INSERT INTO `subscriptions` (
     `id`,
     `title`,
     `subtitle`,
     `url`,
-    `color`
-  ) VALUES (?, ?, ?, ?, ?)', [
+    `color`,
+    `filter`
+  ) VALUES (?, ?, ?, ?, ?, ?)', [
     generate_humid(),
     $title,
     $subtitle,
     $url,
-    $color
+    $color,
+    $filter
   ]);
 }
 
-function update_subscription($id, $title, $subtitle, $url, $color) {
+function update_subscription($id, $title, $subtitle, $url, $color, $filter = null) {
   return exec_query('UPDATE `subscriptions` SET
     `title` = ?,
     `subtitle` = ?,
     `url` = ?,
-    `color` = ?
-  WHERE id = ?', [$title, $subtitle, $url, $color, $id]);
+    `color` = ?,
+    `filter` = ?
+  WHERE id = ?', [$title, $subtitle, $url, $color, $filter, $id]);
 }
 
 function list_subscriptions() {
@@ -947,7 +950,8 @@ function list_appointments($from, $to) {
     c.color AS calendar_color,
     s.title AS subscription_title,
     s.subtitle AS subscription_subtitle,
-    s.color AS subscription_color
+    s.color AS subscription_color,
+    s.`filter` AS subscription_filter
   FROM `appointments` a
   LEFT JOIN `calendars` c ON c.id = a.calendar_id
   LEFT JOIN `subscriptions` s ON s.id = a.subscription_id
@@ -968,7 +972,8 @@ function list_recurring_appointments($from, $to) {
     c.color AS calendar_color,
     s.title AS subscription_title,
     s.subtitle AS subscription_subtitle,
-    s.color AS subscription_color
+    s.color AS subscription_color,
+    s.`filter` AS subscription_filter
   FROM `appointments` a
   LEFT JOIN `calendars` c ON c.id = a.calendar_id
   LEFT JOIN `subscriptions` s ON s.id = a.subscription_id
@@ -986,7 +991,8 @@ function get_appointment($id) {
     c.color AS calendar_color,
     s.title AS subscription_title,
     s.subtitle AS subscription_subtitle,
-    s.color AS subscription_color
+    s.color AS subscription_color,
+    s.`filter` AS subscription_filter
   FROM `appointments` a
   LEFT JOIN `calendars` c ON c.id = a.calendar_id
   LEFT JOIN `subscriptions` s ON s.id = a.subscription_id

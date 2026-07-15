@@ -306,6 +306,7 @@ CREATE TABLE IF NOT EXISTS `subscriptions` (
   `subtitle` text,
   `url` text NOT NULL,
   `color` text NOT NULL,
+  `filter` text,
   PRIMARY KEY (`id`)
 );
 

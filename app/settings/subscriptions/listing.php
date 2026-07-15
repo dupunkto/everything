@@ -7,6 +7,7 @@
         <input name="title" type="text" required value="<?= esc_attr($sub['title']) ?>" placeholder="Title">
         <input name="subtitle" type="text" value="<?= esc_attr($sub['subtitle'] ?? '') ?>" placeholder="Subtitle">
         <input name="url" type="url" required value="<?= esc_attr($sub['url']) ?>" placeholder="iCal URL">
+        <input name="filter" type="text" value="<?= esc_attr($sub['filter'] ?? '') ?>" placeholder="Filter">
         <button type="button" x-delete="/settings/subscriptions/delete?id=<?= $sub['id'] ?>" x-target="#subscriptions-listing" x-confirm="Delete this subscription and all synced appointments?">&times;</button>
       </form>
     </li>

@@ -66,10 +66,24 @@
                 <input type="checkbox" name="timings" checked>
                 <span class="calendar-sidebar__label">Timings</span>
               </label>
+            </section>
+
+            <section class="calendar-sidebar__group">
+              <h2 class="calendar-sidebar__heading">Options</h2>
               <label class="calendar-sidebar__item">
                 <input type="checkbox" name="declined" checked>
                 <span class="calendar-sidebar__label">Declined events</span>
               </label>
+              <label class="calendar-sidebar__item">
+                <input type="checkbox" name="filtered">
+                <span class="calendar-sidebar__label">Filtered events</span>
+              </label>
+              <?php if(\store\list_habits()): ?>
+                <label class="calendar-sidebar__item">
+                  <input type="checkbox" name="habits" checked>
+                  <span class="calendar-sidebar__label">Habit badges</span>
+                </label>
+              <?php endif ?>
             </section>
           </div>
 
