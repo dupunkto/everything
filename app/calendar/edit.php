@@ -8,9 +8,9 @@
   $source_color = $appointment['calendar_color'] ?? $appointment['subscription_color'];
 
   if(isset($_POST['id'])) {
-    $going = !empty($_POST['going']);
-    $urgent = !empty($_POST['urgent']);
-    $travel = !empty($_POST['travel']);
+    $going = cast_boolean(@$_POST['going']);
+    $urgent = cast_boolean(@$_POST['urgent']);
+    $travel = cast_boolean(@$_POST['travel']);
 
     $travel_before = $travel ? max(0, (int) $_POST['travel_before']) : 0;
     $travel_after = $travel ? max(0, (int) $_POST['travel_after']) : 0;
@@ -33,7 +33,7 @@
         $_POST['location'],
         $_POST['meeting'],
         $recurrence,
-        !empty($_POST['all_day']),
+        cast_boolean(@$_POST['all_day']),
         $going,
         $urgent,
         $travel_before,
@@ -62,7 +62,7 @@
       <?= $is_subscription ? 'readonly' : 'required autofocus' ?>>
     <?php circle() ?>
     <label class="title-check__urgent" title="Circle">
-      <input type="checkbox" name="urgent" aria-label="Circle" <?= $appointment['urgent'] ? 'checked' : '' ?>>
+      <input type="checkbox" name="urgent" aria-label="Circle" <?= cast_boolean($appointment['urgent']) ? 'checked' : '' ?>>
       <i class="fa-regular fa-flag"></i>
       <i class="fa-solid fa-flag"></i>
     </label>

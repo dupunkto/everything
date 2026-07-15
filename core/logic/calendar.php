@@ -8,7 +8,7 @@ namespace calendar;
 // so instants order and compare as plain strings. Day collections are keyed
 // by "Y-m-d" date, so views of any length share the same shapes.
 
-define('TASK_COLOR', "#e06c75");
+define('TASK_COLOR', "#cccccc");
 define('BIRTHDAY_COLOR', "#cccccc");
 
 function wall($utc) {
@@ -85,7 +85,7 @@ function task_deadlines($from, $to) {
 
     $due = new \DateTime(wall($task['next']));
 
-    if(@$task['due_all_day']) {
+    if(cast_boolean(@$task['due_all_day'])) {
       $start = (clone $due)->setTime(0, 0);
       $end = (clone $start)->modify('+1 day');
       if($start >= $to || $end <= $from) continue;
@@ -100,7 +100,7 @@ function task_deadlines($from, $to) {
       'title' => \esc_inner($task['title']),
       'starts_at' => $start->format("Y-m-d H:i:s"),
       'ends_at' => $end->format("Y-m-d H:i:s"),
-      'all_day' => @$task['due_all_day'],
+      'all_day' => cast_boolean(@$task['due_all_day']),
       'going' => true,
       'calendar_id' => null,
       'subscription_id' => null,
@@ -110,6 +110,7 @@ function task_deadlines($from, $to) {
       'meeting' => false,
       'travel_before' => 0,
       'travel_after' => 0,
+      'urgent' => $task['urgent'],
       'is_task' => true,
     ];
   }
@@ -193,7 +194,7 @@ function day_segments($appointments, $from, $to) {
         $segment['ends_at'] = $segment_end->format("Y-m-d H:i:s");
         $segment['layout_end'] = max($segment_end, (clone $segment_start)->modify('+30 minutes'))->format("Y-m-d H:i:s");
         $segment['editable'] = empty($appointment['subscription_id'])
-          && empty($appointment['is_task'])
+          && !cast_boolean(@$appointment['is_task'])
           && empty($appointment['recurrence'])
           && $segment_start == $start
           && $segment_end == $end;
@@ -232,8 +233,8 @@ function vertical($segment) {
 function layout($day) {
   chronological($day);
 
-  $skipped = array_filter($day, fn($a) => !$a['going']);
-  $day = array_filter($day, fn($a) => $a['going']);
+  $skipped = array_filter($day, fn($a) => !cast_boolean($a['going']));
+  $day = array_filter($day, fn($a) => cast_boolean($a['going']));
 
   $overlaps = fn($a, $b) =>
     $a['starts_at'] < $b['layout_end'] && $a['layout_end'] > $b['starts_at'];
@@ -337,7 +338,7 @@ function travel_bands($appointments, $from, $to) {
   $bands = array_fill_keys(dates($from, $to), []);
 
   foreach($appointments as $appointment) {
-    if(!$appointment['going']) continue;
+    if(!cast_boolean($appointment['going'])) continue;
 
     $windows = [];
 

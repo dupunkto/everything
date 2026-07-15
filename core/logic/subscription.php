@@ -136,7 +136,7 @@ function appointment_differs($row, $data) {
     || $row['meeting'] != $data['meeting']
     || $row['starts_at'] != $data['starts_at']
     || $row['ends_at'] != $data['ends_at']
-    || (bool)$row['all_day'] != $data['all_day']
+    || cast_boolean($row['all_day']) != $data['all_day']
     || $row['recurrence'] != $data['recurrence']
     || $row['recurrence_until'] != $data['recurrence_until']
     || $row['recurrence_count'] != $data['recurrence_count'];

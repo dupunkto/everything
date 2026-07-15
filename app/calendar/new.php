@@ -7,7 +7,7 @@
   $ends_at = cast_datetime_utc($_POST['end_date'], $_POST['end_time']);
 
   $id = \store\create_calendar_appointment(CALENDAR_DEFAULT_CALENDAR, "New event", null, $starts_at, $ends_at,
-    all_day: !empty($_POST['all_day']))
+    all_day: cast_boolean(@$_POST['all_day']))
     or fail("Could not create appointment.");
 
   header("Content-Type: text/plain");

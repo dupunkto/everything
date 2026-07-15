@@ -35,14 +35,19 @@ foreach(\calendar\appointments($from, $to) as $a) {
     $a['going'] = false;
   }
 
-  if(!$hidden_by_filter && !$show('declined') && !$a['going']) continue;
+  if(!$hidden_by_filter && !$show('declined') && !cast_boolean($a['going'])) continue;
   $appointments[] = $a;
 }
 
-$timed = array_filter($appointments, fn($a) => !$a['all_day']);
-if($show('tasks')) $timed = array_merge($timed, \calendar\task_deadlines($from, $to));
+$timed = array_filter($appointments, fn($a) => !cast_boolean($a['all_day']));
+$all_day_appointments = array_filter($appointments, fn($a) => cast_boolean($a['all_day']));
 
-$all_day_appointments = array_filter($appointments, fn($a) => $a['all_day']);
+if($show('tasks')) {
+  $tasks = \calendar\task_deadlines($from, $to);
+  $timed = array_merge($timed, array_filter($tasks, fn($a) => !cast_boolean($a['all_day'])));
+  $all_day_appointments = array_merge($all_day_appointments, array_filter($tasks, fn($a) => cast_boolean($a['all_day'])));
+}
+
 if($show('birthdays')) $all_day_appointments = array_merge($all_day_appointments, \calendar\birthdays($from, $to));
 $all_day = \calendar\all_day_lanes($all_day_appointments, $from);
 $days = array_map('\calendar\layout', \calendar\day_segments($timed, $from, $to));
@@ -91,16 +96,17 @@ $color = fn($a) => esc_attr($a['calendar_color'] ?? $a['subscription_color'] ?? 
 
   <div class="calendar-week__all-day" data-start="<?= $from->format('Y-m-d') ?>">
     <?php foreach($all_day as $appointment): ?>
-      <article class="appointment appointment--all-day<?= $appointment['going'] ? "" : " appointment--not-going" ?><?= empty($appointment['is_birthday']) ? "" : " appointment--birthday" ?>"
-               <?= empty($appointment['is_birthday']) ? 'data-id="' . esc_attr($appointment['id']) . '"' : '' ?>
+      <?php $is_birthday = cast_boolean(@$appointment['is_birthday']); $is_task = cast_boolean(@$appointment['is_task']) ?>
+      <article class="appointment appointment--all-day<?= cast_boolean($appointment['going']) ? "" : " appointment--not-going" ?><?= $is_birthday ? " appointment--birthday" : "" ?><?= $is_task ? " appointment--task" : "" ?>"
+               <?= !$is_birthday && !$is_task ? 'data-id="' . esc_attr($appointment['id']) . '"' : '' ?>
+               <?= $is_task ? 'data-task-id="' . esc_attr($appointment['id']) . '"' : '' ?>
                style="--appointment-column: <?= $appointment['layout']['column'] ?>; --appointment-span: <?= $appointment['layout']['span'] ?>;
                       --appointment-row: <?= $appointment['layout']['row'] ?>;
                       --appointment-color: <?= $color($appointment) ?>">
-          <h3 class="appointment__title"><?= $appointment['title'] ?><?php if(!empty($appointment['urgent'])) circle("circle--tight") ?></h3>
+          <h3 class="appointment__title"><?php if($is_birthday): ?><i class="fa-solid fa-cake-candles"></i> <?php endif ?><?php if($is_task): ?><i class="fa-solid fa-check"></i> <?php endif ?><?= $appointment['title'] ?><?php if(cast_boolean(@$appointment['urgent'])) circle("circle--tight") ?></h3>
 
-          <?php if($appointment['recurrence'] || $appointment['meeting'] || !empty($appointment['is_birthday'])): ?>
+          <?php if($appointment['recurrence'] || $appointment['meeting']): ?>
             <span class="appointment__icons">
-              <?php if(!empty($appointment['is_birthday'])): ?><i class="fa-solid fa-cake-candles"></i><?php endif ?>
               <?php if($appointment['recurrence']): ?><i class="fa-solid fa-repeat" title="<?= esc_attr(\recurrence\describe($appointment['recurrence'])) ?>"></i><?php endif ?>
               <?php if($appointment['meeting']): ?><i class="fa-solid fa-video"></i><?php endif ?>
             </span>
@@ -134,34 +140,37 @@ $color = fn($a) => esc_attr($a['calendar_color'] ?? $a['subscription_color'] ?? 
           </div>
         <?php endforeach ?>
 
-        <?php foreach($day as $appointment): $layout = $appointment['layout'] ?>
-          <article class="appointment<?= $appointment['going'] ? "" : " appointment--not-going" ?><?= empty($appointment['is_task']) ? "" : " appointment--task" ?>"
-                   <?= empty($appointment['is_task']) ? 'data-id="' . esc_attr($appointment['id']) . '"' : '' ?>
+        <?php foreach($day as $appointment): $layout = $appointment['layout']; $is_task = cast_boolean(@$appointment['is_task']) ?>
+          <article class="appointment<?= cast_boolean($appointment['going']) ? "" : " appointment--not-going" ?><?= $is_task ? " appointment--task" : "" ?>"
+                   <?= $is_task ? 'data-task-id="' . esc_attr($appointment['id']) . '"' : 'data-id="' . esc_attr($appointment['id']) . '"' ?>
                    style="--appointment-top: <?= $layout['top'] ?>;
                           --appointment-height: <?= $layout['height'] ?>;
-                          <?= $appointment['going']
+                          <?= cast_boolean($appointment['going'])
                             ? "--appointment-width: {$layout['width']}; --appointment-left: {$layout['left']};"
                             : "--appointment-inset: {$layout['inset']};" ?>
                           --appointment-color: <?= $color($appointment) ?>">
-            <h3 class="appointment__title"><?= $appointment['title'] ?><?php if(!empty($appointment['urgent'])) circle("circle--tight") ?></h3>
+            <h3 class="appointment__title"><?php if($is_task): ?><i class="fa-solid fa-check"></i> <?php endif ?><?= $appointment['title'] ?><?php if(cast_boolean(@$appointment['urgent'])) circle("circle--tight") ?></h3>
 
             <?php if($appointment['location']): ?>
               <span class="appointment__location"><?= $appointment['location'] ?></span>
             <?php endif ?>
 
             <span class="appointment__duration">
-              <time class="appointment__start" datetime="<?= $appointment['starts_at'] ?>"><?= date("H:i", strtotime($appointment['starts_at'])) ?></time> – <time class="appointment__end" datetime="<?= $appointment['ends_at'] ?>"><?= date("H:i", strtotime($appointment['ends_at'])) ?></time>
+              <?php if($is_task): ?>
+                <time class="appointment__end" datetime="<?= $appointment['ends_at'] ?>"><?= date("H:i", strtotime($appointment['ends_at'])) ?></time>
+              <?php else: ?>
+                <time class="appointment__start" datetime="<?= $appointment['starts_at'] ?>"><?= date("H:i", strtotime($appointment['starts_at'])) ?></time> – <time class="appointment__end" datetime="<?= $appointment['ends_at'] ?>"><?= date("H:i", strtotime($appointment['ends_at'])) ?></time>
+              <?php endif ?>
             </span>
 
-            <?php if($appointment['recurrence'] || $appointment['meeting'] || !empty($appointment['is_task'])): ?>
+            <?php if($appointment['recurrence'] || $appointment['meeting']): ?>
               <span class="appointment__icons">
-                <?php if(!empty($appointment['is_task'])): ?><i class="fa-solid fa-flag"></i><?php endif ?>
                 <?php if($appointment['recurrence']): ?><i class="fa-solid fa-repeat" title="<?= esc_attr(\recurrence\describe($appointment['recurrence'])) ?>"></i><?php endif ?>
                 <?php if($appointment['meeting']): ?><i class="fa-solid fa-video"></i><?php endif ?>
               </span>
             <?php endif ?>
 
-            <?php if(!empty($appointment['editable'])): ?>
+            <?php if(cast_boolean(@$appointment['editable'])): ?>
               <span class="appointment__handle appointment__handle--top"></span>
               <span class="appointment__handle appointment__handle--bottom"></span>
             <?php endif ?>

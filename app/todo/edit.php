@@ -115,7 +115,7 @@
             <label for="due_date">Due</label>
             <span class="datetime-pair">
               <input type="date" id="due_date" name="due_date" value="<?= esc_attr($task['due_date'] ? local_date("Y-m-d", $task['due_date']) : '') ?>">
-              <input type="time" name="due_time" value="<?= esc_attr($task['due_date'] && !$task['due_all_day'] ? local_date("H:i", $task['due_date']) : '') ?>">
+              <input type="time" name="due_time" value="<?= esc_attr($task['due_date'] && !cast_boolean($task['due_all_day']) ? local_date("H:i", $task['due_date']) : '') ?>">
             </span>
           </div>
 
@@ -133,7 +133,7 @@
           </div>
 
           <?php if($task['recurrence'] && $task['status'] == 'done' && $task['next']): ?>
-            <p class="todo-editor__next"><small>Next occurrence <?= esc_inner(local_date($task['due_all_day'] ? "l j M" : "l j M, H:i", $task['next'])) ?></small></p>
+            <p class="todo-editor__next"><small>Next occurrence <?= esc_inner(local_date(cast_boolean($task['due_all_day']) ? "l j M" : "l j M, H:i", $task['next'])) ?></small></p>
           <?php endif ?>
         </aside>
       </form>
