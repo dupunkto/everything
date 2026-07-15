@@ -1301,6 +1301,9 @@ function update_config($property, $value) {
   // We also don't care if this first query succeeds (bc yk it might not exist).
 
   exec_query('DELETE FROM `config` WHERE `property` = ?', [$property]);
+
+  if($value === null) return true;
+
   return exec_query('INSERT INTO `config` (`property`, `value`) VALUES (?, ?)', [$property, $value]);
 }
 
