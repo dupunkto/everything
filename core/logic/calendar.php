@@ -83,7 +83,7 @@ function task_deadlines($from, $to) {
   foreach(\store\list_tasks("not:done not:nvm", [], respect_horizon: false) ?: [] as $task) {
     if(!$task['next']) continue;
 
-    $due = new \DateTime($task['next']);
+    $due = new \DateTime(wall($task['next']));
     if($due <= $from || $due > $to) continue;
 
     $deadlines[] = [
@@ -124,7 +124,7 @@ function birthdays($from, $to) {
     if(empty($contact['birth_day']) || empty($contact['birth_month'])) continue;
 
     for($year = (int) $from->format('Y'); $year <= (int) $to->format('Y'); $year++) {
-      $date = DateTime::createFromFormat('!Y-m-d', join("-", [
+      $date = \DateTime::createFromFormat('!Y-m-d', join("-", [
         str_pad($contact['birth_year'] ?: 2000, 4, "0", STR_PAD_LEFT),
         str_pad($contact['birth_month'], 2, "0", STR_PAD_LEFT),
         str_pad($contact['birth_day'], 2, "0", STR_PAD_LEFT),
