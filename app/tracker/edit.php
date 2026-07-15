@@ -7,7 +7,6 @@
     include __DIR__ . "/listing.php"; exit;
   }
 
-  if(!isset($_GET['id'])) fail("Timing is missing.", status: 400);
   $timing = \store\get_timing($_GET['id']) or fail("Timing not found.", status: 404);
 
 ?>
