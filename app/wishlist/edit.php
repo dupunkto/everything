@@ -11,7 +11,10 @@
     \store\set_wish_status($_POST['id'], $_POST['status'], cast_string(@$_POST['comment']))
       or fail("Could not update wish status.");
 
-    \store\set_wish_urls($_POST['id'], unfold($_POST, 'url', 'url'));
+    $urls = array_map(fn($row) => [...$row, 'price' => cast_float(@$row['price'])],
+      unfold($_POST, 'url', 'url'));
+
+    \store\set_wish_urls($_POST['id'], $urls);
 
     if(isset($_POST['close'])) {
       http_response_code(303);
@@ -39,7 +42,7 @@
 
   $url_field = function($row) { ?>
     <input name="url_url[]" type="url" placeholder="url" required value="<?= esc_attr(@$row['url']) ?>" data-value>
-    <input name="url_price[]" type="number" min="0" step="1" placeholder="price" value="<?= esc_attr(@$row['price']) ?>">
+    <input name="url_price[]" type="number" min="0" step="0.01" placeholder="price" value="<?= esc_attr(format_price_value(@$row['price'])) ?>">
   <?php };
 
 ?>
@@ -53,7 +56,7 @@
   </head>
   <body>
     <?php include __DIR__ . "/../shell/menu.php" ?>
-    <main class="main main--semi-wide">
+    <main class="main">
       <form id="wishlist-editor" class="wishlist-editor" x-post="/wishlist/edit" x-on="change" x-target="@document">
         <input type="hidden" name="id" value="<?= esc_attr($wish['id']) ?>">
 

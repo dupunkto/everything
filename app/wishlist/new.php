@@ -8,7 +8,10 @@
       cast_boolean($_POST['urgent'])
     ) or fail("Could not save wish '" . $_POST['title'] . "'.");
 
-    \store\set_wish_urls($id, unfold($_POST, 'url', 'url'));
+    $urls = array_map(fn($row) => [...$row, 'price' => cast_float(@$row['price'])],
+      unfold($_POST, 'url', 'url'));
+
+    \store\set_wish_urls($id, $urls);
 
     http_response_code(303);
     header("Location: /wishlist"); exit;
@@ -30,7 +33,7 @@
 
   $url_field = function($row) { ?>
     <input name="url_url[]" type="url" placeholder="url" required value="<?= esc_attr(@$row['url']) ?>" data-value>
-    <input name="url_price[]" type="number" min="0" step="1" placeholder="price" value="<?= esc_attr(@$row['price']) ?>">
+    <input name="url_price[]" type="number" min="0" step="0.01" placeholder="price" value="<?= esc_attr(format_price_value(@$row['price'])) ?>">
   <?php };
 
 ?>

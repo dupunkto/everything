@@ -267,7 +267,7 @@ CREATE TABLE IF NOT EXISTS `wish_urls` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `wish_id` text NOT NULL,
   `url` text NOT NULL,
-  `price` int(11),
+  `price` decimal(10,2),
   FOREIGN KEY (`wish_id`) REFERENCES `wishes` (`id`) ON DELETE CASCADE,
   UNIQUE (`wish_id`, `url`),
   PRIMARY KEY (`id`)
