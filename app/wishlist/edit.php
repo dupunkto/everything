@@ -8,8 +8,10 @@
       $_POST['urgent']
     ) or fail("Could not update wish.");
 
-    \store\set_wish_status($_POST['id'], $_POST['status'])
+    \store\set_wish_status($_POST['id'], $_POST['status'], cast_string(@$_POST['comment']))
       or fail("Could not update wish status.");
+
+    \store\set_wish_urls($_POST['id'], unfold($_POST, 'url', 'url'));
 
     if(isset($_POST['close'])) {
       http_response_code(303);
@@ -21,6 +23,24 @@
     or fail("Wish not found.", status: 404);
 
   $status_for = fn($target) => $wish['status'] == $target ? "dream" : $target;
+
+  $repeat = function($legend, $button, $rows, $render, $confirm = "Are you sure?") { ?>
+    <fieldset class="repeat" z-repeat="<?= esc_attr($confirm) ?>">
+      <legend><?= esc_inner($legend) ?></legend>
+      <div class="repeat__rows">
+        <?php foreach($rows as $row): ?>
+          <div class="repeat__row"><?php $render($row) ?><button type="button" data-remove>&times;</button></div>
+        <?php endforeach ?>
+      </div>
+      <template><div class="repeat__row"><?php $render([]) ?><button type="button" data-remove>&times;</button></div></template>
+      <button type="button" data-add>+ <?= esc_inner($button) ?></button>
+    </fieldset>
+  <?php };
+
+  $url_field = function($row) { ?>
+    <input name="url_url[]" type="url" placeholder="url" required value="<?= esc_attr(@$row['url']) ?>" data-value>
+    <input name="url_price[]" type="number" min="0" step="1" placeholder="price" value="<?= esc_attr(@$row['price']) ?>">
+  <?php };
 
 ?>
 <!DOCTYPE html>
@@ -50,11 +70,16 @@
             ["dream", "bought", "nvm"], selected: $wish['status'], capitalize: false) ?>
         </div>
 
+        <?php if($wish['status'] == 'nvm' && $wish['comment']): ?>
+          <p class="status-comment"><?= esc_inner($wish['comment']) ?></p>
+        <?php endif ?>
+
         <textarea name="content" placeholder="What are you wishing for...?"><?= esc_inner($wish['content']) ?></textarea>
+
+        <?php $repeat("URLs", "URL", $wish['urls'], $url_field) ?>
 
         <div class="actions">
           <a class="button" href="/wishlist/delete?id=<?= esc_attr($wish['id']) ?>" z-confirm="Delete this wish?">Delete</a>
-
           <label class="check">
             <input type="hidden" name="urgent" value="false">
             <input type="checkbox" id="urgent" name="urgent" value="true" <?php if(filter_var($wish['urgent'], FILTER_VALIDATE_BOOLEAN)) echo "checked" ?>> Circle

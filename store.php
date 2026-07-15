@@ -320,23 +320,26 @@ function delete_task($id) {
 function create_wish($title, $content, $status, $urgent = false) {
   in_array($status, ENUM_WISH_STATUS) or die("status $status does not exist");
 
-  $id = generate_humid();
-
   $ok = exec_query('INSERT INTO `wishes` (
     `id`,
     `title`,
     `content`,
     `urgent`
   ) VALUES (?, ?, ?, ?)', [
-    $id, $title, $content, $urgent
+    $id = generate_humid(),
+    $title,
+    $content,
+    $urgent
   ]);
 
   if(!$ok) return $ok;
 
-  return exec_query('INSERT INTO `wish_log` (
+  $ok = exec_query('INSERT INTO `wish_log` (
     `wish_id`,
     `status`
   ) VALUES (?, ?)', [$id, $status]);
+
+  return $ok ? $id : $ok;
 }
 
 function set_wish_status($id, $status, $comment = "") {
@@ -364,7 +367,7 @@ function update_wish($id, $title, $content, $urgent) {
 }
 
 function get_wish($id) {
-  return one('SELECT
+  $wish = one('SELECT
     wishes.*,
     log.status,
     log.comment,
@@ -379,6 +382,24 @@ function get_wish($id) {
       LIMIT 1
     )
   WHERE wishes.id = ?', [$id]);
+
+  if(!$wish) return $wish;
+
+  $wish['urls'] = list_wish_urls($id);
+
+  return $wish;
+}
+
+function list_wish_urls($id) {
+  return all('SELECT * FROM `wish_urls` WHERE wish_id = ?', [$id]);
+}
+
+function set_wish_urls($id, $rows) {
+  set_children('wish_urls', 'wish_id', $id, $rows);
+}
+
+function get_wish_log($id) {
+  return all('SELECT * FROM `wish_log` WHERE `wish_id` = ? ORDER BY `date` ASC', [$id]) ?? [];
 }
 
 function list_wishes($statuses = [], $override = []) {

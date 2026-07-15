@@ -335,6 +335,10 @@
   min-width: 6em;
 }
 
+.repeat__row input {
+  padding: 0;
+}
+
 
 .repeat__row input[data-value] {
   flex: 2;

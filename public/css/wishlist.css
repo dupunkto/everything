@@ -9,7 +9,7 @@
   align-items: center;
 }
 
-.title-row .circled-field {
+.title-row .title-check {
   flex: 2;
 }
 
@@ -22,4 +22,41 @@
 
 .wishlist-editor .check {
   margin-right: 1em;
+}
+
+.wishlist-form fieldset button,
+.wishlist-editor fieldset button {
+  padding: 0.5em 0.75em;
+}
+
+.wishlist-form [data-remove],
+.wishlist-editor [data-remove] {
+  padding: 2px 8px;
+}
+
+.repeat__rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.repeat__row {
+  display: grid;
+  grid-template-columns: minmax(0, 8fr) minmax(6em, 2fr) auto;
+  gap: 0.25em;
+  align-items: center;
+  margin-bottom: 0.3em;
+}
+
+.repeat__row input:not(.repeat__wide) {
+  min-width: 0;
+}
+
+.repeat__row input {
+  padding: 0;
+}
+
+.status-comment {
+  background-color: light-dark(#f1f1f1, #2b2b33);
+  margin: 0;
+  padding: 10px 15px;
 }
