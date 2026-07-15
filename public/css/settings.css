@@ -60,6 +60,11 @@
   font-size: 1em;
 }
 
+.settings-editor__icon-button--square {
+  border-radius: 0;
+  margin-right: 0;
+}
+
 .settings-editor__icon-picker {
   align-items: center;
   display: grid;

@@ -54,6 +54,7 @@ $now_date = $now->format('Y-m-d');
 $now_top = ((int) $now->format('H') * 60 + (int) $now->format('i')) / 1440 * 100;
 
 $color = fn($a) => esc_attr($a['calendar_color'] ?? $a['subscription_color'] ?? '#cccccc');
+
 ?>
 <div class="page-header">
   <div class="calendar-week__lead">
