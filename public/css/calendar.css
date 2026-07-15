@@ -513,13 +513,13 @@ body:has(.calendar-page) {
 .calendar-editor__source select {
   box-sizing: border-box;
   width: 100%;
-  padding-right: 2.5rem;
+  padding-left: 2.5rem;
 }
 
 .calendar-editor__source input[type=color] {
   position: absolute;
   top: 50%;
-  right: 0.35rem;
+  left: 0.35rem;
   transform: translateY(-50%);
   width: 1.8rem;
   height: 1.8rem;
