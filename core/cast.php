@@ -42,9 +42,12 @@ function cast_datetime_utc($date, $time, $timezone = null): ?string {
   $time = cast_string($time);
   if($date === null || $time === null) return null;
 
-  $timezone = $timezone ?? TIMEZONE;
-  $datetime = new DateTime("$date $time", new DateTimeZone($timezone));
-  return $datetime->setTimezone(new DateTimeZone("UTC"))->format('c');
+  $value = strlen($time) == 5 ? "$date $time:00" : "$date $time";
+  $datetime = DateTimeImmutable::createFromFormat('!Y-m-d H:i:s', $value, new DateTimeZone($timezone ?? TIMEZONE));
+
+  return $datetime && $datetime->format('Y-m-d H:i:s') == $value
+    ? $datetime->setTimezone(new DateTimeZone("UTC"))->format('c')
+    : null;
 }
 
 function cast_datetime_local($datetime, $timezone = null): ?string {

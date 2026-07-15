@@ -211,16 +211,15 @@ function cron_occurrences($cron, $base, $from, $to, $until, $count) {
 // TODO_RECURRENCE_HORIZON days of its next deadline.
 //
 // Expects the store-shaped row: recurrence, status + updated_date (latest log,
-// UTC), last_done (UTC, nullable), due_date + open_date (local wall time).
-// Returns ['status', 'next', 'previous', 'visible']; 'next'/'previous' are
-// local wall-time strings (or null).
+// UTC), last_done (UTC, nullable), due_date + open_date (UTC, nullable).
+// Returns ['status', 'next', 'previous', 'visible']; 'next'/'previous' are UTC
+// strings (or null).
 function task_state($task) {
   $tz = new \DateTimeZone(TIMEZONE);
   $utc = new \DateTimeZone("UTC");
 
   $from_utc = fn($v) => $v ? (new \DateTimeImmutable($v, $utc))->setTimezone($tz) : null;
-  $from_local = fn($v) => $v ? new \DateTimeImmutable($v, $tz) : null;
-  $fmt = fn($dt) => $dt?->format('Y-m-d H:i:s');
+  $fmt_utc = fn($dt) => $dt?->setTimezone($utc)->format('c');
 
   $recurrence = trim((string)$task['recurrence']);
   $latest_status = $task['status'];
@@ -235,8 +234,8 @@ function task_state($task) {
 
   if(is_interval($recurrence)) {
     $anchor = $from_utc(@$task['last_done'])
-      ?? $from_local(@$task['due_date'])
-      ?? $from_local(@$task['open_date'])
+      ?? $from_utc(@$task['due_date'])
+      ?? $from_utc(@$task['open_date'])
       ?? $now;
     $next = $anchor->modify("+" . (int)$recurrence . " days");
     $previous = $anchor;
@@ -260,8 +259,8 @@ function task_state($task) {
 
   return [
     'status' => $status,
-    'next' => $fmt($next),
-    'previous' => $fmt($previous),
+    'next' => $fmt_utc($next),
+    'previous' => $fmt_utc($previous),
     'visible' => $visible,
   ];
 }

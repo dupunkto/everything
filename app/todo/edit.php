@@ -7,9 +7,9 @@
       $_POST['content'],
       $_POST['urgent'],
       $_POST['recurrence'],
-      $_POST['open_date'],
-      $_POST['due_date'],
-      $_POST['expiration_date']
+      cast_datetime_utc($_POST['open_date'], $_POST['open_time']),
+      cast_datetime_utc($_POST['due_date'], @$_POST['due_time'] ?: "00:00"),
+      cast_datetime_utc($_POST['expiration_date'], @$_POST['expiration_time'] ?: "00:00")
     ) or fail("Could not update task.");
 
     \store\set_task_status($_POST['id'], $_POST['status'], $_POST['comment'])
@@ -101,17 +101,26 @@
 
           <div class="field">
             <label for="open_date">Open</label>
-            <input type="datetime-local" id="open_date" name="open_date" value="<?= esc_attr(local_date("Y-m-d H:i", $task['open_date'])) ?>">
+            <span class="datetime-pair">
+              <input type="date" id="open_date" name="open_date" value="<?= esc_attr(local_date("Y-m-d", $task['open_date'])) ?>" required>
+              <input type="time" name="open_time" value="<?= esc_attr(local_date("H:i", $task['open_date'])) ?>" required>
+            </span>
           </div>
 
           <div class="field">
             <label for="due_date">Due</label>
-            <input type="datetime-local" id="due_date" name="due_date" value="<?= esc_attr($task['due_date'] ? local_date("Y-m-d H:i", $task['due_date']) : '') ?>">
+            <span class="datetime-pair">
+              <input type="date" id="due_date" name="due_date" value="<?= esc_attr($task['due_date'] ? local_date("Y-m-d", $task['due_date']) : '') ?>">
+              <input type="time" name="due_time" value="<?= esc_attr($task['due_date'] ? local_date("H:i", $task['due_date']) : '') ?>">
+            </span>
           </div>
 
           <div class="field">
             <label for="expiration_date">Expire</label>
-            <input type="datetime-local" id="expiration_date" name="expiration_date" value="<?= esc_attr($task['expiration_date'] ? local_date("Y-m-d H:i", $task['expiration_date']) : '') ?>">
+            <span class="datetime-pair">
+              <input type="date" id="expiration_date" name="expiration_date" value="<?= esc_attr($task['expiration_date'] ? local_date("Y-m-d", $task['expiration_date']) : '') ?>">
+              <input type="time" name="expiration_time" value="<?= esc_attr($task['expiration_date'] ? local_date("H:i", $task['expiration_date']) : '') ?>">
+            </span>
           </div>
 
           <div class="field">
@@ -119,8 +128,8 @@
             <input type="text" id="recurrence" name="recurrence" placeholder="cron or number of days" value="<?= esc_attr($task['recurrence'] ?? '') ?>">
           </div>
 
-          <?php if($task['recurrence'] && $task['next']): ?>
-            <p class="todo-editor__next"><small>Next occurrence <?= esc_inner((new DateTime($task['next']))->format("l j M, H:i")) ?></small></p>
+          <?php if($task['recurrence'] && $task['status'] == 'done' && $task['next']): ?>
+            <p class="todo-editor__next"><small>Next occurrence <?= esc_inner(local_date("l j M, H:i", $task['next'])) ?></small></p>
           <?php endif ?>
         </aside>
       </form>

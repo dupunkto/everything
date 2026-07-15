@@ -101,7 +101,7 @@ function create_task(
 ) {
   in_array($status, ENUM_TASK_STATUS) or die("status $status does not exist");
 
-  $open_date ??= gmdate("Y-m-d H:i:s");
+  $open_date ??= gmdate('c');
 
   $ok = exec_query('INSERT INTO `tasks` (
     `id`,
@@ -127,10 +127,12 @@ function create_task(
 
   $ok = exec_query('INSERT INTO `task_log` (
     `task_id`,
+    `date`,
     `status`,
     `comment`
-  ) VALUES (?, ?, ?)', [
+  ) VALUES (?, ?, ?, ?)', [
     $id,
+    gmdate('c'),
     $status,
     $comment
   ]);
@@ -181,10 +183,12 @@ function set_task_status($id, $status, $comment = "") {
 
   return exec_query('INSERT INTO `task_log` (
     `task_id`,
+    `date`,
     `status`,
     `comment`
-  ) VALUES (?, ?, ?)', [
+  ) VALUES (?, ?, ?, ?)', [
     $id,
+    gmdate('c'),
     $status,
     $comment
   ]);

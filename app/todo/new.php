@@ -1,15 +1,15 @@
 <?php
 
-  if(isset($_POST["status"], $_POST["recurrence"], $_POST["urgent"], $_POST["open_date"], $_POST["due_date"], $_POST["expiration_date"])) {
+  if(isset($_POST["status"], $_POST["recurrence"], $_POST["urgent"], $_POST["open_date"], $_POST["open_time"], $_POST["due_date"], $_POST["due_time"], $_POST["expiration_date"], $_POST["expiration_time"])) {
     \store\create_task(
       cast_string($_POST['title']),
       cast_string(@$_POST['content']),
       cast_string($_POST['status']),
       cast_boolean($_POST['urgent']),
       cast_string($_POST['recurrence']),
-      $_POST['open_date'],
-      $_POST['due_date'],
-      $_POST['expiration_date'],
+      cast_datetime_utc($_POST['open_date'], $_POST['open_time']),
+      cast_datetime_utc($_POST['due_date'], @$_POST['due_time'] ?: "00:00"),
+      cast_datetime_utc($_POST['expiration_date'], @$_POST['expiration_time'] ?: "00:00"),
       cast_string($_POST['comment'])
     ) or fail("Could not save task '" . $_POST['title'] . "'.");
 
@@ -65,17 +65,26 @@
 
           <div class="field">
             <label for="open_date">Open</label>
-            <input type="datetime-local" id="open_date" name="open_date" value="<?= local_date("Y-m-d H:i") ?>">
+            <span class="datetime-pair">
+              <input type="date" id="open_date" name="open_date" value="<?= local_date("Y-m-d") ?>" required>
+              <input type="time" name="open_time" value="<?= local_date("H:i") ?>" required>
+            </span>
           </div>
 
           <div class="field">
             <label for="due_date">Due</label>
-            <input type="datetime-local" id="due_date" name="due_date">
+            <span class="datetime-pair">
+              <input type="date" id="due_date" name="due_date">
+              <input type="time" name="due_time">
+            </span>
           </div>
 
           <div class="field">
             <label for="expiration_date">Expire</label>
-            <input type="datetime-local" id="expiration_date" name="expiration_date">
+            <span class="datetime-pair">
+              <input type="date" id="expiration_date" name="expiration_date">
+              <input type="time" name="expiration_time">
+            </span>
           </div>
         </div>
       </form>
