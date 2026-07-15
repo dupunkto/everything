@@ -221,10 +221,20 @@ body:has(.calendar-page) {
   position: absolute;
   top: 4px;
   right: 8px;
+  line-height: 1.35;
+  text-align: right;
+}
+
+.calendar-week .day .appointment__duration time {
+  display: block;
+}
+
+.calendar-week .day .appointment__duration-separator {
+  display: none;
 }
 
 .calendar-week .day .appointment__title {
-  padding-right: 5em;
+  padding-right: 3.25em;
 }
 
 .calendar-week .appointment__location {
