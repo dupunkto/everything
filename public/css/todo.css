@@ -38,6 +38,10 @@
   font-size: 1.5em;
 }
 
+.todo-form .actions {
+  padding-bottom: 0.5em;
+}
+
 .todo-form__meta {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -49,7 +53,7 @@
 
 .todo-form__meta .field {
   display: grid;
-  grid-template-columns: 1fr 5fr;
+  grid-template-columns: 1.3fr 5fr;
   align-items: center;
 }
 

@@ -2,10 +2,10 @@
 
   if(isset($_POST["title"], $_POST["status"], $_POST["urgent"])) {
     $id = \store\create_wish(
-      $_POST['title'],
-      $_POST['content'],
-      $_POST['status'],
-      $_POST['urgent']
+      cast_string($_POST['title']),
+      cast_string(@$_POST['content']),
+      cast_string($_POST['status']),
+      cast_boolean($_POST['urgent'])
     ) or fail("Could not save wish '" . $_POST['title'] . "'.");
 
     \store\set_wish_urls($id, unfold($_POST, 'url', 'url'));
@@ -46,12 +46,15 @@
     <?php include __DIR__ . "/../shell/menu.php" ?>
     <main class="main">
       <form id="wishlist-form" class="wishlist-form" x-post="/wishlist/new">
-        <a href="/wishlist" z-key="escape" hidden></a>
+        <div class="actions">
+          <a class="button" href="/wishlist" z-key="escape">Cancel</a>
+          <button>Save</button>
+        </div>
 
         <input type="hidden" name="status" value="dream">
 
         <div class="title-check" z-circle>
-          <input name="title" type="text" placeholder="Title">
+          <input name="title" type="text" placeholder="Title" autofocus>
           <?php circle() ?>
           <label class="title-check__urgent" title="Circle">
             <input type="hidden" name="urgent" value="false">
@@ -60,11 +63,8 @@
             <i class="fa-solid fa-flag"></i>
           </label>
         </div>
-        <textarea name="content" placeholder="What are you wishing for...?"></textarea>
 
         <?php $repeat("URLs", "URL", [], $url_field) ?>
-
-        <button>Save</button>
       </form>
     </main>
   </body>

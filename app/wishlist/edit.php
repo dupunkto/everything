@@ -80,9 +80,12 @@
           <p class="status-comment"><?= esc_inner($wish['comment']) ?></p>
         <?php endif ?>
 
-        <textarea name="content" placeholder="What are you wishing for...?"><?= esc_inner($wish['content']) ?></textarea>
-
         <?php $repeat("URLs", "URL", $wish['urls'], $url_field) ?>
+
+        <label class="wishlist-editor-textarea">
+          Description
+          <textarea name="content" placeholder="What are you wishing for...?" rows="3"><?= esc_inner($wish['content']) ?></textarea>
+        </label>
 
         <div class="actions">
           <a class="button" href="/wishlist/delete?id=<?= esc_attr($wish['id']) ?>" z-confirm="Delete this wish?">Delete</a>
