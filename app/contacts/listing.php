@@ -44,8 +44,8 @@
     $rows = array_merge($rows, array_map(fn($contact) => [
       'id' => $contact['id'],
       'kind' => 'person',
-      'sort' => $contact['last_name'] ?: $contact['first_name'],
-      'display' => $contact['display_name'] ?: str_implode(" ", [$contact['first_name'], $contact['infix'], $contact['last_name']]),
+      'sort' => \contacts\contact_sort_name($contact),
+      'display' => \contacts\contact_display_name($contact),
       'search' => [
         'fuzzy' => "{$contact['first_name']} {$contact['middle_name']} {$contact['last_name']} {$contact['note']}",
         'tag' => $contact['tag_labels'],

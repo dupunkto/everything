@@ -129,7 +129,7 @@ function birthdays($from, $to) {
       if(!$date || $date < $from || $date >= $to) continue;
 
       $age = $birth_year !== '' ? $year - (int) $birth_year : null;
-      $name = \esc_inner($contact['display_name'] ?: $contact['first_name']);
+      $name = \esc_inner(\contacts\contact_display_name($contact));
 
       $birthdays[] = [
         'id' => "birthday-{$contact['id']}-$year",

@@ -98,7 +98,7 @@
   $address_map = [];
   foreach($addresses as $a) $address_map[address_line($a)] = $a;
 
-  $repeat = function($legend, $rows, $render, $extra = null, $confirm = "Are you sure?") { ?>
+  $repeat = function($legend, $button, $rows, $render, $extra = null, $confirm = "Are you sure?") { ?>
     <fieldset class="repeat" z-repeat="<?= esc_attr($confirm) ?>">
       <legend><?= esc_inner($legend) ?></legend>
       <div class="repeat__rows">
@@ -107,7 +107,7 @@
         <?php endforeach ?>
       </div>
       <template><div class="repeat__row"><?php $render([]) ?><button type="button" data-remove>&times;</button></div></template>
-      <button type="button" data-add>+ <?= esc_inner($legend) ?></button>
+      <button type="button" data-add>+ <?= esc_inner($button) ?></button>
       <?php if($extra) $extra() ?>
     </fieldset>
   <?php };
@@ -184,19 +184,19 @@
 
   <hr>
 
-  <?php $repeat("Email", @$item['emails'] ?: [], $generic_field('email', 'email', 'email')) ?>
-  <?php $repeat("Phone", @$item['phone_numbers'] ?: [], $generic_field('phone', 'phone_number', 'phone')) ?>
-  <?php $repeat("Address", @$item['addresses'] ?: [], $address_field, confirm: "", extra: function() { ?>
+  <?php $repeat("Emails", "Email", @$item['emails'] ?: [], $generic_field('email', 'email', 'email')) ?>
+  <?php $repeat("Phones", "Phone", @$item['phone_numbers'] ?: [], $generic_field('phone', 'phone_number', 'phone')) ?>
+  <?php $repeat("Addresses", "Address", @$item['addresses'] ?: [], $address_field, confirm: "", extra: function() { ?>
     <button type="button" data-address-search-toggle>+ Existing address</button>
     <div class="address-search" data-address-search hidden>
       <input class="repeat__wide" type="search" placeholder="find existing address…">
       <ul class="listing address-search__results"></ul>
     </div>
   <?php }) ?>
-  <?php $repeat("Socials", @$item['socials'] ?: [], $social_field) ?>
-  <?php $repeat("Websites", @$item['urls'] ?: [], $generic_field('url', 'url', 'url')) ?>
+  <?php $repeat("Socials", "Social", @$item['socials'] ?: [], $social_field) ?>
+  <?php $repeat("Websites", "Website", @$item['urls'] ?: [], $generic_field('url', 'url', 'url')) ?>
   <?php if($kind === "person"): ?>
-    <?php $repeat("Roles", @$item['roles'] ?: [], $roles_field) ?>
+    <?php $repeat("Roles", "Role", @$item['roles'] ?: [], $roles_field) ?>
   <?php endif ?>
 
   <?php if($kind == 'org'): ?>
