@@ -135,6 +135,7 @@ body:has(.calendar-page) {
 }
 
 .calendar-week {
+  position: relative;
   flex: 1;
   min-height: 0;
   display: grid;
@@ -334,6 +335,51 @@ body:has(.calendar-page) {
 
 .calendar-week .appointment__handle--bottom {
   bottom: 0;
+}
+
+.calendar-week__habits {
+  position: absolute;
+  left: calc(3.5em + 1px);
+  right: 0;
+  bottom: 10px;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  pointer-events: none;
+}
+
+.calendar-week .day__habits {
+  display: flex;
+  flex-wrap: wrap-reverse;
+  justify-content: center;
+  align-content: flex-start;
+  gap: 0.5em 0.6em;
+  padding: 0 0.5em;
+}
+
+.calendar-week .day__habit {
+  margin: 0;
+  pointer-events: auto;
+}
+
+.calendar-week .day__habit button {
+  width: 2.2em;
+  height: 2.2em;
+  padding: 0;
+  border: 2px solid var(--habit-color);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--habit-icon-color);
+}
+
+.calendar-week .day__habit--done button {
+  background: var(--habit-color);
+}
+
+.calendar-week .day__habit button:disabled {
+  opacity: 1;
+  cursor: default;
 }
 
 .calendar-week .appointment--not-going {

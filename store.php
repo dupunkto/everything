@@ -699,6 +699,35 @@ function delete_habit($id) {
   return exec_query('DELETE FROM `habits` WHERE `id` = ?', [$id]);
 }
 
+function list_habit_logs($from, $to) {
+  return all('SELECT `habit_id`, DATE(`date`) AS `date`
+    FROM `habit_log`
+    WHERE `date` >= ? AND `date` < ?
+    ORDER BY `date`', [$from, $to]);
+}
+
+function get_habit_log($habit_id, $date) {
+  return one('SELECT * FROM `habit_log`
+    WHERE `habit_id` = ? AND DATE(`date`) = ?', [$habit_id, $date]);
+}
+
+function log_habit($habit_id, $date) {
+  if(get_habit_log($habit_id, $date)) return true;
+
+  $id = @one('SELECT MAX(`id`) + 1 AS `id` FROM `habit_log`')['id'] ?: 1;
+
+  return exec_query('INSERT INTO `habit_log` (
+    `id`,
+    `habit_id`,
+    `date`
+  ) VALUES (?, ?, ?)', [$id, $habit_id, "$date 00:00:00"]);
+}
+
+function unlog_habit($habit_id, $date) {
+  return exec_query('DELETE FROM `habit_log`
+    WHERE `habit_id` = ? AND DATE(`date`) = ?', [$habit_id, $date]);
+}
+
 // Appointments
 
 function create_calendar_appointment(

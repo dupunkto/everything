@@ -36,6 +36,7 @@ $all_day = \calendar\all_day_lanes($all_day_appointments, $from);
 $days = array_map('\calendar\layout', \calendar\day_segments($timed, $from, $to));
 $travel = $show('travel') ? \calendar\travel_bands($timed, $from, $to) : [];
 $timings = $show('timings') ? \calendar\timing_lines($from, $to) : [];
+$habits = \habits\calendar($from, $to);
 
 $now_date = $now->format('Y-m-d');
 $now_top = ((int) $now->format('H') * 60 + (int) $now->format('i')) / 1440 * 100;
@@ -156,6 +157,16 @@ $color = fn($a) => esc_attr($a['calendar_color'] ?? $a['subscription_color'] ?? 
           </article>
         <?php endforeach ?>
       </section>
+    <?php endforeach ?>
+  </div>
+
+  <div class="calendar-week__habits">
+    <?php foreach(array_keys($days) as $date): ?>
+      <div class="day__habits">
+        <?php foreach($habits[$date] as $habit): ?>
+          <?php include __DIR__ . "/habits/button.php" ?>
+        <?php endforeach ?>
+      </div>
     <?php endforeach ?>
   </div>
 </div>
