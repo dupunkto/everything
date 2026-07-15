@@ -3,7 +3,7 @@
 const gauge = document.createElement("canvas").getContext("2d");
 
 const fit = (field) => {
-  const input = field.querySelector("input");
+  const input = field.querySelector("input[type=text], input:not([type])");
   const ring = field.querySelector(".circle");
   if(!input || !ring) return;
 

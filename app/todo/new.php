@@ -24,6 +24,7 @@
     <?php include __DIR__ . "/../shell/head.php" ?>
     <title>ToDo</title>
     <link rel="stylesheet" href="<?= CANONICAL ?>/css/todo.css">
+    <script src="<?= CANONICAL ?>/client/circle.js" type="module"></script>
   </head>
   <body>
     <?php include __DIR__ . "/../shell/menu.php" ?>
@@ -44,14 +45,6 @@
           </div>
 
           <div class="field">
-            <label for="urgent">Circled</label>
-            <div>
-              <input type="hidden" name="urgent" value="false">
-              <input type="checkbox" id="urgent" name="urgent" value="true">
-            </div>
-          </div>
-
-          <div class="field">
             <label for="open_date">Open</label>
             <input type="datetime-local" id="open_date" name="open_date" value="<?= local_date("Y-m-d H:i") ?>">
           </div>
@@ -67,7 +60,16 @@
           </div>
         </div>
 
-        <input name="title" type="text" placeholder="Title">
+        <div class="title-check" z-circle>
+          <input name="title" type="text" placeholder="Title">
+          <?php circle() ?>
+          <label class="title-check__urgent" title="Circle">
+            <input type="hidden" name="urgent" value="false">
+            <input type="checkbox" name="urgent" value="true" aria-label="Circle">
+            <i class="fa-regular fa-flag"></i>
+            <i class="fa-solid fa-flag"></i>
+          </label>
+        </div>
         <textarea name="content" placeholder="What to do...?"></textarea>
 
         <div id="todo-form-comment" class="field">

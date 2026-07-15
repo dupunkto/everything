@@ -62,10 +62,16 @@
         <button type="submit" name="close" value="1" z-key="escape mod+enter" hidden></button>
 
         <div class="title-row">
-          <span class="circled-field" z-circle>
-            <?php if(cast_boolean($wish['urgent'])) circle() ?>
+          <div class="title-check" z-circle>
             <input name="title" type="text" placeholder="Title" value="<?= esc_attr($wish['title']) ?>">
-          </span>
+            <?php circle() ?>
+            <label class="title-check__urgent" title="Circle">
+              <input type="hidden" name="urgent" value="false">
+              <input type="checkbox" name="urgent" value="true" aria-label="Circle" <?php if(filter_var($wish['urgent'], FILTER_VALIDATE_BOOLEAN)) echo "checked" ?>>
+              <i class="fa-regular fa-flag"></i>
+              <i class="fa-solid fa-flag"></i>
+            </label>
+          </div>
           <?php \forms\options("status",
             ["dream", "bought", "nvm"], selected: $wish['status'], capitalize: false) ?>
         </div>
@@ -80,10 +86,6 @@
 
         <div class="actions">
           <a class="button" href="/wishlist/delete?id=<?= esc_attr($wish['id']) ?>" z-confirm="Delete this wish?">Delete</a>
-          <label class="check">
-            <input type="hidden" name="urgent" value="false">
-            <input type="checkbox" id="urgent" name="urgent" value="true" <?php if(filter_var($wish['urgent'], FILTER_VALIDATE_BOOLEAN)) echo "checked" ?>> Circle
-          </label>
         </div>
       </form>
     </main>

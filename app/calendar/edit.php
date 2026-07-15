@@ -57,21 +57,29 @@
 <form id="calendar-edit" x-post="/calendar/edit" x-on="change" x-refresh="#calendar-view">
   <input type="hidden" name="id" value="<?= esc_attr($appointment['id']) ?>">
 
-  <div class="calendar-editor__head">
-    <input type="color" value="<?= esc_attr($source_color) ?>" tabindex="-1" readonly>
+  <div class="calendar-editor__head title-check" z-circle>
     <input type="text" name="title" placeholder="Title" value="<?= esc_attr($appointment['title']) ?>"
       <?= $is_subscription ? 'readonly' : 'required autofocus' ?>>
+    <?php circle() ?>
+    <label class="title-check__urgent" title="Circle">
+      <input type="checkbox" name="urgent" aria-label="Circle" <?= cast_boolean($appointment['urgent']) ? 'checked' : '' ?>>
+      <i class="fa-regular fa-flag"></i>
+      <i class="fa-solid fa-flag"></i>
+    </label>
   </div>
 
   <?php if(!$is_subscription): ?>
     <?php if(count($calendars) > 1): ?>
-      <select name="calendar_id" required>
-        <?php foreach($calendars as $c): ?>
-          <option value="<?= esc_attr($c['id']) ?>" data-color="<?= esc_attr($c['color']) ?>" <?= $c['id'] == $appointment['calendar_id'] ? 'selected' : '' ?>>
-            <?= esc_inner($c['title']) ?><?php if($c['subtitle']) echo " (" . esc_inner($c['subtitle']) . ")" ?>
-          </option>
-        <?php endforeach ?>
-      </select>
+      <div class="calendar-editor__source">
+        <select name="calendar_id" required>
+          <?php foreach($calendars as $c): ?>
+            <option value="<?= esc_attr($c['id']) ?>" data-color="<?= esc_attr($c['color']) ?>" <?= $c['id'] == $appointment['calendar_id'] ? 'selected' : '' ?>>
+              <?= esc_inner($c['title']) ?><?php if($c['subtitle']) echo " (" . esc_inner($c['subtitle']) . ")" ?>
+            </option>
+          <?php endforeach ?>
+        </select>
+        <input type="color" value="<?= esc_attr($source_color) ?>" tabindex="-1" readonly>
+      </div>
     <?php endif ?>
 
     <textarea name="content" placeholder="Description"><?= esc_inner($appointment['content'] ?? '') ?></textarea>
@@ -105,7 +113,6 @@
     </div>
   <?php endif ?>
 
-  <label class="check"><input type="checkbox" name="urgent" <?= cast_boolean($appointment['urgent']) ? 'checked' : '' ?>> Circle</label>
   <label class="check"><input type="checkbox" name="going" <?= cast_boolean($appointment['going']) ? 'checked' : '' ?>> Going</label>
 
   <label class="check">

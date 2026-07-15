@@ -40,6 +40,7 @@
     <?php include __DIR__ . "/../shell/head.php" ?>
     <title>Wishlist</title>
     <link rel="stylesheet" href="<?= CANONICAL ?>/css/wishlist.css">
+    <script src="<?= CANONICAL ?>/client/circle.js" type="module"></script>
   </head>
   <body>
     <?php include __DIR__ . "/../shell/menu.php" ?>
@@ -49,15 +50,16 @@
 
         <input type="hidden" name="status" value="dream">
 
-        <label class="title-check">
+        <div class="title-check" z-circle>
           <input name="title" type="text" placeholder="Title">
-          <span class="title-check__urgent" title="Circle">
+          <?php circle() ?>
+          <label class="title-check__urgent" title="Circle">
             <input type="hidden" name="urgent" value="false">
             <input type="checkbox" name="urgent" value="true" aria-label="Circle">
-            <i class="fa-regular fa-square-exclamation"></i>
-            <i class="fa-solid fa-square-exclamation"></i>
-          </span>
-        </label>
+            <i class="fa-regular fa-flag"></i>
+            <i class="fa-solid fa-flag"></i>
+          </label>
+        </div>
         <textarea name="content" placeholder="What are you wishing for...?"></textarea>
 
         <?php $repeat("URLs", "URL", [], $url_field) ?>

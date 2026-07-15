@@ -228,6 +228,53 @@ button,
   width: auto;
 }
 
+.title-check {
+  position: relative;
+  display: block;
+}
+
+.title-check > input[type=text] {
+  box-sizing: border-box;
+  width: 100%;
+  padding-right: 2.5em;
+}
+
+.title-check:not(:has(.title-check__urgent input[type=checkbox]:checked)) > .circle {
+  display: none;
+}
+
+.title-check__urgent {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  width: auto;
+  cursor: pointer;
+  z-index: 4;
+  font-size: 1.2em;
+}
+
+.title-check__urgent input[type=checkbox] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.title-check__urgent input[type=checkbox]:focus-visible ~ i {
+  outline: 1px solid currentColor;
+  outline-offset: 2px;
+}
+
+.title-check__urgent .fa-solid,
+.title-check__urgent input[type=checkbox]:checked ~ .fa-regular {
+  display: none;
+}
+
+.title-check__urgent input[type=checkbox]:checked ~ .fa-solid {
+  display: inline-block;
+}
+
 .nav {
   position: fixed;
   right: var(--sidebar-padding);

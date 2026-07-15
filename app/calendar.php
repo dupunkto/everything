@@ -5,6 +5,7 @@
     <title>Calendar</title>
     <link rel="stylesheet" href="<?= CANONICAL ?>/css/calendar.css">
     <script src="<?= CANONICAL ?>/client/calendar.js" defer></script>
+    <script src="<?= CANONICAL ?>/client/circle.js" type="module"></script>
   </head>
   <body>
     <?php include __DIR__ . "/shell/menu.php" ?>

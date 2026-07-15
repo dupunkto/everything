@@ -50,10 +50,16 @@
         <button type="submit" name="close" value="1" z-key="escape mod+enter" hidden></button>
 
         <section>
-          <span class="circled-field" z-circle>
-            <?php if(cast_boolean($task['urgent'])) circle() ?>
+          <div class="title-check" z-circle>
             <input name="title" type="text" placeholder="Title" value="<?= esc_attr($task['title']) ?>">
-          </span>
+            <?php circle() ?>
+            <label class="title-check__urgent" title="Circle">
+              <input type="hidden" name="urgent" value="false">
+              <input type="checkbox" name="urgent" value="true" aria-label="Circle" <?php if(filter_var($task['urgent'], FILTER_VALIDATE_BOOLEAN)) echo "checked" ?>>
+              <i class="fa-regular fa-flag"></i>
+              <i class="fa-solid fa-flag"></i>
+            </label>
+          </div>
           <textarea name="content" placeholder="What to do...?"><?= esc_inner($task['content']) ?></textarea>
 
           <?php if($log): ?>
@@ -106,14 +112,6 @@
           <div class="field">
             <label for="expiration_date">Expire</label>
             <input type="datetime-local" id="expiration_date" name="expiration_date" value="<?= esc_attr($task['expiration_date'] ? local_date("Y-m-d H:i", $task['expiration_date']) : '') ?>">
-          </div>
-
-          <div class="field">
-            <label for="urgent">Circle</label>
-            <div>
-              <input type="hidden" name="urgent" value="false">
-              <input type="checkbox" id="urgent" name="urgent" value="true" <?php if(filter_var($task['urgent'], FILTER_VALIDATE_BOOLEAN)) echo "checked" ?>>
-            </div>
           </div>
 
           <div class="field">

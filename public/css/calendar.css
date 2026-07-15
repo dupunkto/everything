@@ -457,11 +457,20 @@ body:has(.calendar-page) {
 }
 
 .calendar-editor__head input[name=title] {
-  padding-right: 2.5rem;
   font-size: 1.3em;
 }
 
-.calendar-editor__head input[type=color] {
+.calendar-editor__source {
+  position: relative;
+}
+
+.calendar-editor__source select {
+  box-sizing: border-box;
+  width: 100%;
+  padding-right: 2.5rem;
+}
+
+.calendar-editor__source input[type=color] {
   position: absolute;
   top: 50%;
   right: 0.35rem;
@@ -481,4 +490,8 @@ body:has(.calendar-page) {
 .calendar-editor .datetime-pair {
   display: flex;
   gap: 0.4rem;
+}
+
+.title-check__urgent {
+  right: 7px;
 }
