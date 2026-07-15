@@ -103,7 +103,7 @@ $color = fn($a) => esc_attr($a['calendar_color'] ?? $a['subscription_color'] ?? 
                style="--appointment-column: <?= $appointment['layout']['column'] ?>; --appointment-span: <?= $appointment['layout']['span'] ?>;
                       --appointment-row: <?= $appointment['layout']['row'] ?>;
                       --appointment-color: <?= $color($appointment) ?>">
-          <h3 class="appointment__title"><?php if($is_birthday): ?><i class="fa-solid fa-cake-candles"></i> <?php endif ?><?php if($is_task): ?><i class="fa-solid fa-check"></i> <?php endif ?><?= $appointment['title'] ?><?php if(cast_boolean(@$appointment['urgent'])) circle("circle--tight") ?></h3>
+          <h3 class="appointment__title"><?php if($is_birthday): ?><i class="fa-solid fa-cake-candles"></i> <?php endif ?><?php if($is_task): ?><i class="fa-solid fa-alarm-clock"></i> <?php endif ?><?= $appointment['title'] ?><?php if(cast_boolean(@$appointment['urgent'])) circle("circle--tight") ?></h3>
 
           <?php if($appointment['recurrence'] || $appointment['meeting']): ?>
             <span class="appointment__icons">
@@ -149,7 +149,7 @@ $color = fn($a) => esc_attr($a['calendar_color'] ?? $a['subscription_color'] ?? 
                             ? "--appointment-width: {$layout['width']}; --appointment-left: {$layout['left']};"
                             : "--appointment-inset: {$layout['inset']};" ?>
                           --appointment-color: <?= $color($appointment) ?>">
-            <h3 class="appointment__title"><?php if($is_task): ?><i class="fa-solid fa-check"></i> <?php endif ?><?= $appointment['title'] ?><?php if(cast_boolean(@$appointment['urgent'])) circle("circle--tight") ?></h3>
+            <h3 class="appointment__title"><?php if($is_task): ?><i class="fa-solid fa-alarm-clock"></i> <?php endif ?><?= $appointment['title'] ?><?php if(cast_boolean(@$appointment['urgent'])) circle("circle--tight") ?></h3>
 
             <?php if($appointment['location']): ?>
               <span class="appointment__location"><?= $appointment['location'] ?></span>
