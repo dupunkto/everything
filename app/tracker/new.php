@@ -4,11 +4,13 @@
     $starts_at = cast_datetime_utc($_POST['start_date'], $_POST['start_time']);
     $ends_at = cast_datetime_utc($_POST['end_date'], $_POST['end_time']);
 
-    \store\create_timing(
+    $id = \store\create_timing(
       $_POST['description'],
       $starts_at,
       $ends_at
     ) or fail("Could not save timing from $starts_at to $ends_at with description '" . $_POST['description'] . "'.");
+
+    \store\set_timing_tags($id, $_POST['tags'] ?? []);
 
     include __DIR__ . "/listing.php"; exit;
   }
@@ -16,6 +18,8 @@
 ?>
 <form id="tracker-form" class="tracker-form" x-post="/tracker/new" x-target="#tracker-listing" x-refresh="#tracker-new" z-timer>
   <textarea name="description" placeholder="What have you been up to?"></textarea>
+
+  <?php tags_field() ?>
 
   <div class="tracker-form__timer">
     <button type="button" class="tracker-form__duration" data-duration>0:00:00</button>

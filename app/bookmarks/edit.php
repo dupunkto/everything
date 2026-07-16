@@ -9,6 +9,8 @@
       cast_datetime_utc($_POST['date'], $_POST['time'])
     ) or fail("Could not update bookmark.");
 
+    \store\set_bookmark_tags($_POST['id'], $_POST['tags'] ?? []);
+
     if(isset($_POST['close'])) {
       http_response_code(303);
       header("Location: /bookmarks"); exit;
@@ -38,6 +40,8 @@
           <input name="url" type="url" placeholder="URL" required value="<?= esc_attr($bookmark['url']) ?>">
           <a class="button" href="<?= esc_attr($bookmark['url']) ?>" z-key="g">&rarr;</a>
         </div>
+
+        <?php tags_field(\store\get_bookmark_tags($bookmark['id'])) ?>
 
         <label>
           Note

@@ -19,6 +19,8 @@
     \store\set_task_status($_POST['id'], $_POST['status'], $_POST['comment'])
       or fail("Could not update task status.");
 
+    \store\set_task_tags($_POST['id'], $_POST['tags'] ?? []);
+
     if(isset($_POST['close'])) {
       http_response_code(303);
       header("Location: /todo"); exit;
@@ -65,6 +67,8 @@
             </label>
           </div>
           <textarea name="content" placeholder="What to do...?"><?= esc_inner($task['content']) ?></textarea>
+
+          <?php tags_field(\store\get_task_tags($task['id'])) ?>
 
           <?php if($log): ?>
             <h2>History</h2>

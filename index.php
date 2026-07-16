@@ -2,7 +2,9 @@
 // Application entrypoint. Can serve as a catch-all for running the
 // builtin PHP webserver, with the bundled .htaccess file in production.
 
-if(getenv("ENV") == 'dev') {
+$_ENV = getenv("ENV") ?: 'prod';
+
+if($_ENV == 'dev') {
   error_reporting(E_ALL & ~E_DEPRECATED);
   ini_set('display_errors', 1);
   ini_set('display_startup_errors', 1);

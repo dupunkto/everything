@@ -4,7 +4,7 @@
     $all_day = cast_string($_POST['due_date']) != null
       && cast_string(@$_POST['due_time']) == null;
 
-    \store\create_task(
+    $id = \store\create_task(
       cast_string($_POST['title']),
       cast_string(@$_POST['content']),
       cast_string($_POST['status']),
@@ -16,6 +16,8 @@
       cast_datetime_utc($_POST['expiration_date'], @$_POST['expiration_time'] ?: "00:00"),
       cast_string($_POST['comment'])
     ) or fail("Could not save task '" . $_POST['title'] . "'.");
+
+    \store\set_task_tags($id, $_POST['tags'] ?? []);
 
     http_response_code(303);
     header("Location: /todo"); exit;
@@ -49,6 +51,8 @@
             <i class="fa-solid fa-flag"></i>
           </label>
         </div>
+
+        <?php tags_field() ?>
 
         <div class="todo-form__meta">
           <div class="field">

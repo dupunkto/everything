@@ -7,6 +7,8 @@
     \store\update_timing($_POST['id'], $_POST['description'], $starts_at, $ends_at, null)
       or fail("Could not save timing " . $_POST['id'] . " from " . $starts_at . " to " . $ends_at . " with description '" . $_POST['description'] . "'.");
 
+    \store\set_timing_tags($_POST['id'], $_POST['tags'] ?? []);
+
     include __DIR__ . "/listing.php"; exit;
   }
 
@@ -21,6 +23,8 @@
   <button type="button" class="tracker-editor__close" data-close aria-label="Close">×</button>
 
   <textarea name="description" placeholder="What were you up to?" rows="2" autofocus><?= esc_inner($timing['description']) ?></textarea>
+
+  <?php tags_field(\store\get_timing_tags($_GET['id'])) ?>
 
   <div class="tracker-editor__times">
     <label>

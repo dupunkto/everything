@@ -12,6 +12,7 @@
       unfold($_POST, 'url', 'url'));
 
     \store\set_wish_urls($id, $urls);
+    \store\set_wish_tags($id, $_POST['tags'] ?? []);
 
     http_response_code(303);
     header("Location: /wishlist"); exit;
@@ -66,6 +67,8 @@
             <i class="fa-solid fa-flag"></i>
           </label>
         </div>
+
+        <?php tags_field() ?>
 
         <?php $repeat("URLs", "URL", [], $url_field) ?>
       </form>

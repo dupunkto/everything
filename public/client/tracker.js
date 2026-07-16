@@ -173,6 +173,7 @@ zhtml.directive("z-timer", (form) => {
 
   document.addEventListener("click", (event) => {
     if(editor.hidden || editor.contains(event.target)) return;
+    if(!event.target.isConnected) return; // the click removed its target (eg. a tag badge), so contains() can't place it
     if(event.target.closest(".tracker-list__item[data-id]")) return; // clicks of a dblclick
     close_editor();
   });

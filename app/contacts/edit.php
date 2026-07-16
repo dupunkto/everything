@@ -85,6 +85,7 @@
       \store\set_contact_socials($id, unfold($_POST, 'social', 'handle'));
       \store\set_contact_roles($id, unfold($_POST, 'role', 'name'));
       \store\set_contact_addresses($id, unfold($_POST, 'address', 'street_name'));
+      \store\set_contact_tags($id, $_POST['tags'] ?? []);
     }
 
     $_GET['kind'] = $kind;
@@ -191,6 +192,9 @@
         <input name="birth_month" type="number" min="1" max="12" placeholder="month" value="<?= esc_attr(@$item['birth_month']) ?>">
         <input name="birth_year" type="number" min="1" max="9999" placeholder="year" value="<?= esc_attr(@$item['birth_year']) ?>">
       </span>
+    </div>
+    <div class="field">
+      <?php tags_field(isset($item['id']) ? \store\get_contact_tags($item['id']) : []) ?>
     </div>
   <?php endif ?>
 

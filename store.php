@@ -26,15 +26,17 @@ define('ENUM_WISH_STATUS', ['dream', 'bought', 'nvm']);
 // Notes
 
 function create_note($title, $content) {
-  return exec_query('INSERT INTO `notes` (
+  $ok = exec_query('INSERT INTO `notes` (
     `id`,
     `title`,
     `content`
   ) VALUES (?, ?, ?)', [
-    generate_humid(),
+    $id = generate_humid(),
     $title,
     $content
   ]);
+
+  return $ok ? $id : $ok;
 }
 
 function update_note($id, $title, $content) {
@@ -46,6 +48,14 @@ function update_note($id, $title, $content) {
 
 function get_note($id) {
   return one('SELECT * FROM `notes` WHERE `id` = ?', [$id]);
+}
+
+function get_note_tags($id) {
+  return tags_of('notes_tags', 'note_id', $id);
+}
+
+function set_note_tags($id, $tag_ids) {
+  set_tags('notes_tags', 'note_id', $id, $tag_ids);
 }
 
 function list_notes($query = "") {
@@ -140,7 +150,7 @@ function create_task(
     $comment
   ]);
 
-  return $ok;
+  return $ok ? $id : $ok;
 }
 
 function update_task(
@@ -200,14 +210,12 @@ function set_task_status($id, $status, $comment = "") {
   ]);
 }
 
-function add_task_tag($id, $tag_id) {
-  return exec_query('INSERT INTO `tasks_tags` (
-    `task_id`, `tag_id`) VALUES (?, ?)', [$id, $tag_id]);
+function get_task_tags($id) {
+  return tags_of('tasks_tags', 'task_id', $id);
 }
 
-function remove_task_tag($id, $tag_id) {
-  return exec_query('DELETE FROM `tasks_tags`
-    WHERE `task_id` = ? AND `tag_id` = ?', [$id, $tag_id]);
+function set_task_tags($id, $tag_ids) {
+  set_tags('tasks_tags', 'task_id', $id, $tag_ids);
 }
 
 // Status is derived from the log (see \recurrence\task_state) and a recurring
@@ -409,6 +417,14 @@ function set_wish_urls($id, $rows) {
   set_children('wish_urls', 'wish_id', $id, $rows);
 }
 
+function get_wish_tags($id) {
+  return tags_of('wishes_tags', 'wish_id', $id);
+}
+
+function set_wish_tags($id, $tag_ids) {
+  set_tags('wishes_tags', 'wish_id', $id, $tag_ids);
+}
+
 function get_wish_log($id) {
   return all('SELECT * FROM `wish_log` WHERE `wish_id` = ? ORDER BY `date` ASC', [$id]) ?? [];
 }
@@ -480,6 +496,14 @@ function update_bookmark($id, $label, $url, $note = null, $date = null) {
   WHERE id = ?', [$label, $url, $note, $date, $id]);
 }
 
+function get_bookmark_tags($id) {
+  return tags_of('bookmarks_tags', 'bookmark_id', $id);
+}
+
+function set_bookmark_tags($id, $tag_ids) {
+  set_tags('bookmarks_tags', 'bookmark_id', $id, $tag_ids);
+}
+
 function get_bookmark($id) {
   return one('SELECT * FROM `bookmarks` WHERE `id` = ?', [$id]);
 }
@@ -528,19 +552,21 @@ function delete_bookmark($id) {
 function create_timing($description, $starts_at, $ends_at, $task_id = null) {
   if($task_id) get_task($task_id) or die("task with ID $task_id does not exist");
 
-  return exec_query('INSERT INTO `timings` (
+  $ok = exec_query('INSERT INTO `timings` (
     `id`,
     `description`,
     `starts_at`,
     `ends_at`,
     `task_id`
   ) VALUES (?, ?, ?, ?, ?)', [
-    generate_humid(),
+    $id = generate_humid(),
     $description,
     $starts_at,
     $ends_at,
     $task_id
   ]);
+
+  return $ok ? $id : $ok;
 }
 
 function update_timing($id, $description, $starts_at, $ends_at, $task_id) {
@@ -560,14 +586,12 @@ function update_timing($id, $description, $starts_at, $ends_at, $task_id) {
   ]);
 }
 
-function add_timing_tag($id, $tag_id) {
-  return exec_query('INSERT INTO `timings_tags` (
-    `timing_id`, `tag_id`) VALUES (?, ?)', [$id, $tag_id]);
+function get_timing_tags($id) {
+  return tags_of('timings_tags', 'timing_id', $id);
 }
 
-function remove_timing_tag($id, $tag_id) {
-  return exec_query('DELETE FROM `timings_tags`
-    WHERE `timing_id` = ? AND `tag_id` = ?', [$id, $tag_id]);
+function set_timing_tags($id, $tag_ids) {
+  set_tags('timings_tags', 'timing_id', $id, $tag_ids);
 }
 
 function list_timings() {
@@ -663,6 +687,18 @@ function reorder_tags($ids) {
   }
 
   return true;
+}
+
+function tags_of($table, $fk, $id) {
+  return all("SELECT tags.* FROM `tags`
+    JOIN `$table` link ON link.tag_id = tags.id
+    WHERE link.`$fk` = ?
+    ORDER BY tags.`order` ASC, tags.id DESC", [$id]);
+}
+
+function set_tags($table, $fk, $id, $tag_ids) {
+  set_children($table, $fk, $id,
+    array_map(fn($tag_id) => ['tag_id' => $tag_id], $tag_ids));
 }
 
 function get_tag($id) {
@@ -1305,6 +1341,14 @@ function set_contact_socials($id, $rows) {
 
 function set_contact_roles($id, $rows) {
   set_children('contact_roles', 'contact_id', $id, $rows);
+}
+
+function get_contact_tags($id) {
+  return tags_of('contacts_tags', 'contact_id', $id);
+}
+
+function set_contact_tags($id, $tag_ids) {
+  set_tags('contacts_tags', 'contact_id', $id, $tag_ids);
 }
 
 function set_contact_addresses($id, $rows) {

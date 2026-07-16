@@ -12,6 +12,8 @@
       gmdate('c')
     ) or fail("Could not save bookmark.");
 
+    \store\set_bookmark_tags($id, $_POST['tags'] ?? []);
+
     http_response_code(303);
     header("Location: /bookmarks"); exit;
   }
@@ -34,6 +36,8 @@
         </div>
 
         <input name="url" type="url" placeholder="URL" required autofocus>
+
+        <?php tags_field() ?>
 
         <label>
           Note

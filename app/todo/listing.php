@@ -14,16 +14,19 @@
   $tasks = \store\list_tasks($query, $include);
   $tags = \store\list_tags();
 
-  $query_tags = extract_match($query, '/(?:^|\s)\+(\S+)/');
+  $query_tags = array_map('tag_slug', extract_match($query, '/(?:^|\s)\+(\S+)/'));
   $root_tags = array_filter($tags, fn($tag) => !$tag['parent_id']);
 
   foreach($tasks as $task) {
+    $task_tags = array_map('tag_slug', array_column($task['tags'], 'label'));
+    if($query_tags && !overlap($task_tags, $query_tags)) continue;
+
     $found = false;
 
     foreach($root_tags as $tag) {
       if(in_array($tag['label'], array_column($task['tags'], 'label'))) {
         $found = true;
-        $lists[$tag['label']][] = $task;
+        $lists[tag_slug($tag['label'])][] = $task;
         break;
       }
     }
@@ -32,6 +35,13 @@
       $lists['all'][] = $task;
     }
   }
+
+  // Columns follow the configured order, with ~all always leading.
+  $ordered = [];
+  foreach(['all', ...array_map(fn($tag) => tag_slug($tag['label']), $root_tags)] as $key) {
+    if(isset($lists[$key])) $ordered[$key] = $lists[$key];
+  }
+  $lists = $ordered;
 
   function overlap($array_a, $array_b) {
     return count(array_intersect($array_a, $array_b));
@@ -77,38 +87,36 @@
 
       <ul>
         <?php foreach($tasks as $task): ?>
-          <?php if($query_tags == [] || overlap(array_column($task['tags'], 'label'), $query_tags) >= 1): ?>
-            <li class="listing__item" tabindex="0">
-              <?php if(cast_boolean($task['urgent'])) circle() ?>
-              <form x-post="/todo/status" x-target="#todo-listing" x-on="change">
-                <input type="hidden" name="id" value="<?= $task['id'] ?>">
-                <input type="hidden" name="status" value="todo" />
-                <input type="hidden" name="q" value="<?= esc_attr($query) ?>" />
-                <input type="hidden" name="i" value="<?= esc_attr(join(",", array_unique([...$include, $task['id']]))) ?>" />
+          <li class="listing__item" tabindex="0">
+            <?php if(cast_boolean($task['urgent'])) circle() ?>
+            <form x-post="/todo/status" x-target="#todo-listing" x-on="change">
+              <input type="hidden" name="id" value="<?= $task['id'] ?>">
+              <input type="hidden" name="status" value="todo" />
+              <input type="hidden" name="q" value="<?= esc_attr($query) ?>" />
+              <input type="hidden" name="i" value="<?= esc_attr(join(",", array_unique([...$include, $task['id']]))) ?>" />
 
-                <input
-                  type="checkbox"
-                  class="listing__check"
-                  name="status"
-                  value="done"
-                  z-key="c"
-                  <?php if(in_array($task['status'], ['done', 'nvm'])) echo "checked" ?>
-                  <?php if($task['status'] == "nvm") echo "disabled" ?>
-                >
+              <input
+                type="checkbox"
+                class="listing__check"
+                name="status"
+                value="done"
+                z-key="c"
+                <?php if(in_array($task['status'], ['done', 'nvm'])) echo "checked" ?>
+                <?php if($task['status'] == "nvm") echo "disabled" ?>
+              >
 
-                <button name="status" value="<?= $status_for($task, 'backlog') ?>" z-key="b" hidden></button>
-                <button name="status" value="todo" z-key="u" hidden></button>
-                <button name="status" value="<?= $status_for($task, 'nvm') ?>" z-key="s" hidden></button>
-              </form>
-              <h4 class="listing__title">
-                <span class="humid"><?= $task['id'] ?></span>
-                <a class="listing__link" href="/todo/edit?id=<?= $task['id'] ?>" tabindex="-1" z-key="enter e o">
-                  <?= esc_inner($task['title']) ?>
-                </a>
-              </h4>
-              <a href="/todo/delete?id=<?= $task['id'] ?>" z-key="d" z-confirm="Delete this task?" hidden></a>
-            </li>
-          <?php endif; ?>
+              <button name="status" value="<?= $status_for($task, 'backlog') ?>" z-key="b" hidden></button>
+              <button name="status" value="todo" z-key="u" hidden></button>
+              <button name="status" value="<?= $status_for($task, 'nvm') ?>" z-key="s" hidden></button>
+            </form>
+            <h4 class="listing__title">
+              <span class="humid"><?= $task['id'] ?></span>
+              <a class="listing__link" href="/todo/edit?id=<?= $task['id'] ?>" tabindex="-1" z-key="enter e o">
+                <?= esc_inner($task['title']) ?>
+              </a>
+            </h4>
+            <a href="/todo/delete?id=<?= $task['id'] ?>" z-key="d" z-confirm="Delete this task?" hidden></a>
+          </li>
         <?php endforeach; ?>
       </ul>
     </section>

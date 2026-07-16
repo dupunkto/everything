@@ -1,8 +1,23 @@
 .tracker-form {
   display: grid;
   grid-template-columns: 1fr 10rem 6rem;
+  grid-template-areas:
+    "description timer record"
+    "tags        .     .";
   align-items: stretch;
   gap: 0.5rem;
+}
+
+.tracker-form textarea {
+  grid-area: description;
+}
+
+.tracker-form .tags {
+  grid-area: tags;
+}
+
+.tracker-form__record {
+  grid-area: record;
 }
 
 .tracker-form textarea,
@@ -13,6 +28,7 @@
 }
 
 .tracker-form__timer {
+  grid-area: timer;
   position: relative;
   display: flex;
 }

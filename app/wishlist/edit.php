@@ -15,6 +15,7 @@
       unfold($_POST, 'url', 'url'));
 
     \store\set_wish_urls($_POST['id'], $urls);
+    \store\set_wish_tags($_POST['id'], $_POST['tags'] ?? []);
 
     if(isset($_POST['close'])) {
       http_response_code(303);
@@ -78,6 +79,8 @@
           <?php \forms\options("status",
             ["dream", "bought", "nvm"], selected: $wish['status'], capitalize: false) ?>
         </div>
+
+        <?php tags_field(\store\get_wish_tags($wish['id'])) ?>
 
         <?php if($wish['status'] == 'nvm' && $wish['comment']): ?>
           <p class="status-comment"><?= esc_inner($wish['comment']) ?></p>

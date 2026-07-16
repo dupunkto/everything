@@ -1,6 +1,34 @@
 <?php
 // Shared UI components.
 
+// Tag picker: the selected tags as removable badges (hidden `tags[]`
+// inputs carry the ids) in front of a search input. The suggestion list
+// holds every tag; client/tags.js (z-tags) filters it while typing.
+function tags_field($selected = []) {
+  ?>
+  <div class="tags" z-tags>
+    <?php foreach($selected as $tag): ?>
+      <button type="button" class="tags__tag" title="Remove tag" style="--tag-color: <?= esc_attr($tag['color']) ?>"><input
+        type="hidden" name="tags[]" value="<?= esc_attr($tag['id']) ?>"><?= esc_inner($tag['label']) ?></button>
+    <?php endforeach ?>
+    <!-- The wrapper anchors the suggestion list to the input, so it opens
+         under the caret rather than at the component's left edge. The input's
+         name never reaches a store function; it lets xhtml restore focus
+         here when an autosaving editor re-renders the document. -->
+    <span class="tags__search">
+      <input class="tags__input" type="text" name="tags_search" placeholder="Add tags..." autocomplete="off">
+      <ul class="listing tags__suggestions" hidden>
+        <?php foreach(\store\list_tags() as $tag): ?>
+          <li class="listing__item tags__suggestion" data-id="<?= esc_attr($tag['id']) ?>" data-label="<?= esc_attr($tag['label']) ?>"
+            data-slug="<?= esc_attr(tag_slug($tag['label'])) ?>" data-color="<?= esc_attr($tag['color']) ?>" hidden><?= esc_inner($tag['label']) ?></li>
+        <?php endforeach ?>
+      </ul>
+    </span>
+    <template><button type="button" class="tags__tag" title="Remove tag"><input type="hidden" name="tags[]"></button></template>
+  </div>
+  <?php
+}
+
 function circle($class = "") {
   ?>
   <svg class="circle <?= esc_attr($class) ?>" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">

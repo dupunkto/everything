@@ -7,6 +7,8 @@
       $_POST['content']
     ) or fail("Could not update note.");
 
+    \store\set_note_tags($_POST['id'], $_POST['tags'] ?? []);
+
     if(isset($_POST['close'])) {
       http_response_code(303);
       header("Location: /notes"); exit;
@@ -32,6 +34,7 @@
         <button type="submit" name="close" value="1" z-key="escape mod+enter" hidden></button>
 
         <input name="title" type="text" placeholder="Title" value="<?= esc_attr($note['title']) ?>" autofocus>
+        <?php tags_field(\store\get_note_tags($note['id'])) ?>
         <textarea name="content" placeholder="What do you want to remember?"><?= esc_inner($note['content']) ?></textarea>
 
         <div class="actions">

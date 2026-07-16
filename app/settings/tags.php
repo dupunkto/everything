@@ -11,7 +11,7 @@
     <main class="main">
       <header class="page-header">
         <h2>Tags</h2>
-        <a class="button" x-post="/settings/tags/new" x-target="#tags-listing">Add tag</a>
+        <a class="button" x-post="/settings/tags/new" x-target="#tags-listing" x-focus="#tags-listing input[name=label]">Add tag</a>
       </header>
 
       <section id="tags-listing" x-get="/settings/tags/listing"></section>

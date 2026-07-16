@@ -1,8 +1,10 @@
 <?php
 
   if(isset($_POST["title"], $_POST["content"])) {
-    \store\create_note($_POST['title'], $_POST['content'])
+    $id = \store\create_note($_POST['title'], $_POST['content'])
       or fail("Could not save note '" . $_POST['title'] . "'.");
+
+    \store\set_note_tags($id, $_POST['tags'] ?? []);
 
     http_response_code(303);
     header("Location: /notes"); exit;
@@ -26,6 +28,7 @@
         </div>
 
         <input name="title" type="text" placeholder="Title" autofocus>
+        <?php tags_field() ?>
         <textarea name="content" placeholder="What's on your mind?"></textarea>
       </form>
     </main>

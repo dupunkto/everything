@@ -275,6 +275,77 @@ button,
   display: inline-block;
 }
 
+.tags {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25em;
+  margin-bottom: 0.25em;
+}
+
+.tags__tag {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  white-space: nowrap;
+  color: inherit;
+  text-transform: none;
+  background: transparent;
+  border: none;
+  /* No vertical padding: the badge must stay shorter than the input,
+     or the row grows when the first tag is added. */
+  padding: 0 10px 0 6px;
+  font-size: inherit;
+  cursor: pointer;
+}
+
+.tags__tag::before {
+  content: "";
+  width: 1em;
+  height: 1em;
+  border-radius: 4px;
+  background: var(--tag-color);
+}
+
+.tags__tag:hover {
+  text-decoration: line-through;
+}
+
+.tags__search {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-width: 8em;
+}
+
+.tags__input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: none;
+}
+
+.tags__suggestions {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 0.25em);
+  left: 0;
+  min-width: 12em;
+  max-height: 14em;
+  margin: 0;
+  list-style: none;
+  background: light-dark(#fff, #23232a);
+}
+
+.tags__suggestion {
+  cursor: pointer;
+}
+
+.tags__suggestion--active {
+  box-shadow: inset 0 0 0 2px light-dark(#0066cc, #4da6ff);
+}
+
 .nav {
   position: fixed;
   right: var(--sidebar-padding);
