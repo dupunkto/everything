@@ -353,7 +353,7 @@ CREATE TABLE IF NOT EXISTS `appointments` (
 );
 
 CREATE TABLE IF NOT EXISTS `calendars_tags` (
-  `id` text NOT NULL, -- humid
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `calendar_id` text NOT NULL,
   `tag_id` int(11) NOT NULL,
   FOREIGN KEY (`calendar_id`) REFERENCES `calendars` (`id`) ON DELETE CASCADE,
@@ -363,7 +363,7 @@ CREATE TABLE IF NOT EXISTS `calendars_tags` (
 );
 
 CREATE TABLE IF NOT EXISTS `appointments_tags` (
-  `id` text NOT NULL, -- humid
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `appointment_id` text NOT NULL,
   `tag_id` int(11) NOT NULL,
   FOREIGN KEY (`appointment_id`) REFERENCES `appointments` (`id`) ON DELETE CASCADE,
@@ -384,7 +384,7 @@ CREATE TABLE IF NOT EXISTS `timings` (
 );
 
 CREATE TABLE IF NOT EXISTS `timings_tags` (
-  `id` text NOT NULL, -- humid
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `timing_id` text NOT NULL,
   `tag_id` int(11) NOT NULL,
   FOREIGN KEY (`timing_id`) REFERENCES `timings` (`id`) ON DELETE CASCADE,
