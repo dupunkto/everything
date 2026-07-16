@@ -161,7 +161,7 @@
   </div>
 
   <?php if($kind === "org"): ?>
-    <input class="detail__title" name="display_name" placeholder="Display name" required value="<?= esc_attr(@$item['display_name']) ?>">
+    <input autofocus class="detail__title" name="display_name" placeholder="Display name" required value="<?= esc_attr(@$item['display_name']) ?>">
     <div class="field">
       <label for="legal_name">Legal name</label>
       <input id="legal_name" name="legal_name" value="<?= esc_attr(@$item['legal_name']) ?>">
@@ -170,7 +170,7 @@
     <?php $has_middle = @$item['middle_name'] != '' ?>
     <?php $has_infix = @$item['infix'] != '' ?>
     <div class="detail__names">
-      <input name="first_name" placeholder="First" required value="<?= esc_attr(@$item['first_name']) ?>">
+      <input autofocus name="first_name" placeholder="First" required value="<?= esc_attr(@$item['first_name']) ?>">
       <button type="button" class="js-middle" title="Add middle name" z-toggle=".js-middle" <?= $has_middle ? 'hidden' : '' ?>>+</button>
       <input class="js-middle" name="middle_name" placeholder="Middle" value="<?= esc_attr(@$item['middle_name']) ?>" <?= $has_middle ? '' : 'hidden' ?>>
       <button type="button" class="js-infix" title="Add infix" z-toggle=".js-infix" <?= $has_infix ? 'hidden' : '' ?>>+</button>
