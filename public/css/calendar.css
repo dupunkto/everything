@@ -355,7 +355,7 @@ body:has(.calendar-page) {
 
 .calendar-week .day__timing-dot i {
   font-size: 9px;
-  color: white;
+  color: black;
 }
 
 .calendar-week .appointment__handle {

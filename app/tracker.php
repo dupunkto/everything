@@ -11,6 +11,7 @@
     <main class="main main--wide">
       <section id="tracker-new" x-get="/tracker/new"></section>
       <section id="tracker-listing" x-get="/tracker/listing"></section>
+      <aside class="tracker-popup-editor" hidden></aside>
     </main>
   </body>
 </html>

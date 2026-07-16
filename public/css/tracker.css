@@ -1,46 +1,66 @@
-.tracker-form,
-.tracker-editor {
+.tracker-form {
   display: grid;
-  grid-template-columns: 1fr 350px 120px;
+  grid-template-columns: 1fr 10rem 6rem;
   align-items: stretch;
+  gap: 0.5rem;
 }
 
 .tracker-form textarea,
 .tracker-editor textarea {
-  min-height: 0;
   resize: none;
-}
-
-.tracker-form label {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.25em;
-}
-
-.tracker-form button {
+  min-height: 0;
   font-size: 1.5em;
 }
 
-.tracker-form__col,
-.tracker-editor__col {
+.tracker-form__timer {
+  position: relative;
+  display: flex;
+}
+
+.tracker-form__duration,
+.tracker-form__record {
+  width: 100%;
+  font-size: 1.5em;
+}
+
+.tracker-form__record {
+  font-size: 2em;
+}
+
+.tracker-time-popup {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 0.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  box-sizing: border-box;
+  width: 18rem;
+  padding: 0.75rem;
+  background: light-dark(#fff, #23232a);
+  border: 1px solid light-dark(#ddd, #3a3a42);
   display: flex;
   flex-direction: column;
-  gap: 0.5em;
+  gap: 0.5rem;
 }
 
-.tracker-editor {
-  grid-column: 1/3;
+.tracker-time-popup[hidden] {
+  display: none;
 }
 
-.tracker-editor__col {
-  gap: 0.25em;
-  justify-content: space-evenly;
+.tracker-time-popup label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
 }
 
-.tracker-editor label {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.25em;
+.tracker-time-popup__inputs {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.tracker-time-popup input {
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .tracker-list {
@@ -55,19 +75,6 @@
   grid-template-columns: 1fr 300px;
   grid-template-areas: "meta duration" "meta duration";
   align-items: center;
-  cursor: pointer;
-}
-
-.tracker-list__item:hover {
-  opacity: .8;
-}
-
-.tracker-list__item--editing {
-  cursor: auto;
-}
-
-.tracker-list__item--editing:hover {
-  opacity: 1;
 }
 
 .tracker-list__description {
@@ -87,5 +94,87 @@
   grid-row-start: 1;
   grid-row-end: 3;
   text-align: right;
-  margin: 0.25em 1em;
+  margin: 0.25em;
+}
+
+.tracker-popup-editor {
+  position: fixed;
+  z-index: 200;
+  box-sizing: border-box;
+  width: min(32rem, calc(100vw - 2rem));
+  padding: 0.75rem;
+  background: light-dark(#fff, #23232a);
+  border: 1px solid light-dark(#ddd, #3a3a42);
+}
+
+.tracker-popup-editor[hidden] {
+  display: none;
+}
+
+.tracker-editor {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.tracker-editor label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.tracker-editor input,
+.tracker-editor textarea,
+.tracker-editor__delete {
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.tracker-editor__close {
+  position: absolute;
+  top: -0.35rem;
+  right: -0.35rem;
+}
+
+.tracker-editor__times {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.tracker-editor__datetime {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.tracker-editor__datetime input {
+  text-align: center;
+}
+
+.tracker-editor__time {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.tracker-editor__time input {
+  min-width: 0;
+}
+
+.tracker-editor__time button {
+  flex: 0 0 auto;
+  padding: 2px 8px;
+}
+
+.tracker-editor__datetime input[hidden] {
+  display: none;
+}
+
+.tracker-editor textarea {
+  resize: vertical;
+}
+
+.tracker-editor__delete {
+  margin-top: 0.5rem;
 }

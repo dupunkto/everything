@@ -1,6 +1,6 @@
 <ul class="tracker-list">
   <?php foreach(\store\list_timings() as $timing): ?>
-    <li class="tracker-list__item" x-get="/tracker/edit?id=<?= $timing['id'] ?>" x-on="click" x-replace="outerHTML">
+    <li class="tracker-list__item" data-id="<?= esc_attr($timing['id']) ?>">
       <h3 class="tracker-list__description">
         <?= $timing['description'] ? esc_inner($timing['description']) : '<i class="empty">No description.</i>' ?>
       </h3>
@@ -17,7 +17,7 @@
       <p class="tracker-list__duration">
         <time>
           <?php $i = date_diff(date_create($timing['starts_at']), date_create($timing['ends_at'])) ?>
-          <?= $i->format("%H") ?>h<?= $i->format("%I") ?>m<?= $i->format("%S") ?>s
+          <?= (int) $i->format("%H") ?>:<?= $i->format("%I") ?>:<?= $i->format("%S") ?>
         </time>
       </p>
     </li>

@@ -14,20 +14,28 @@
   }
 
 ?>
-<form id="tracker-form" class="tracker-form" x-post="/tracker/new" x-target="#tracker-listing" z-timer>
+<form id="tracker-form" class="tracker-form" x-post="/tracker/new" x-target="#tracker-listing" x-refresh="#tracker-new" z-timer>
   <textarea name="description" placeholder="What have you been up to?" autofocus></textarea>
-  <div class="tracker-form__col">
-    <label>
-      Start
-      <input name="start_date" type="date" value="<?= local_date("Y-m-d") ?>">
-      <input name="start_time" type="time" step="1">
-    </label>
-    <label>
-      End
-      <input name="end_date" type="date" value="<?= local_date("Y-m-d") ?>">
-      <input name="end_time" type="time" step="1">
-    </label>
+
+  <div class="tracker-form__timer">
+    <button type="button" class="tracker-form__duration" data-duration>0:00:00</button>
+    <div class="tracker-time-popup" data-time-popup hidden>
+      <label>
+        Start
+        <span class="tracker-time-popup__inputs">
+          <input name="start_date" type="date" value="<?= local_date("Y-m-d") ?>">
+          <input name="start_time" type="time" step="1">
+        </span>
+      </label>
+      <label>
+        End
+        <span class="tracker-time-popup__inputs">
+          <input name="end_date" type="date" value="<?= local_date("Y-m-d") ?>">
+          <input name="end_time" type="time" step="1">
+        </span>
+      </label>
+    </div>
   </div>
-  <button type="button" data-record>Sorry, the tracker could not be loaded.</button>
-  <button type="submit" data-save hidden>Save</button>
+
+  <button type="button" class="tracker-form__record" data-record>▶</button>
 </form>
