@@ -19,6 +19,7 @@ $actions = $section ? path_join(__DIR__, "..", $section, "actions.php") : null;
     <li><a z-key="7" href="/wishlist"><i class="fa-regular fa-book-heart"></i> <span>Wishlist</span></a></li>
     <li><a z-key="8" href="/contacts"><i class="fa-regular fa-address-book"></i> <span>Contacts</span></a></li>
     <li><a z-key="9" href="/addresses"><i class="fa-regular fa-location-arrow"></i> <span>Addresses</span></a></li>
+    <li hidden><a z-key="?" href="/settings/shortcuts">Shortcuts</a></li>
     <li><a z-key="0" href="/settings"><i class="fa-regular fa-gear"></i> <span>Settings</span></a></li>
   </ul>
 

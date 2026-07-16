@@ -109,12 +109,30 @@
   <div
     class="contact-item"
     tabindex="0"
-    data-id="<?= $row['id'] ?>"
-    data-kind="<?= $row['kind'] ?>"
-    x-get="/contacts/detail?kind=<?= $row['kind'] ?>&id=<?= $row['id'] ?>"
+    data-id="<?= esc_attr($row['id']) ?>"
+    data-kind="<?= esc_attr($row['kind']) ?>"
+    z-key="enter o"
+    x-get="/contacts/detail?kind=<?= esc_attr($row['kind']) ?>&id=<?= esc_attr($row['id']) ?>"
     x-on="click"
     x-target="#contacts-panel"
-  ><?= esc_inner($row['display']) ?></div>
+  >
+    <?= esc_inner($row['display']) ?>
+    <button
+      type="button"
+      z-key="e"
+      x-get="/contacts/edit?kind=<?= esc_attr($row['kind']) ?>&id=<?= esc_attr($row['id']) ?>"
+      x-target="#contacts-panel"
+      z-stop
+      hidden
+    ></button>
+    <a
+      href="/contacts/delete?kind=<?= esc_attr($row['kind']) ?>&id=<?= esc_attr($row['id']) ?>"
+      z-key="d"
+      z-confirm="Delete this <?= $row['kind'] == 'org' ? 'organisation' : 'contact' ?>?"
+      z-stop
+      hidden
+    ></a>
+  </div>
 <?php endforeach ?>
 <?php if(!$rows): ?>
   <p class="placeholder">Nothing here.</p>

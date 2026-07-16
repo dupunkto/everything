@@ -12,6 +12,19 @@ function address_line($a) {
   return str_implode(", ", $parts);
 }
 
+function map_provider_options() {
+  return [
+    'google_maps' => 'Google Maps',
+    'apple_maps' => 'Apple Maps',
+    'openstreetmap' => 'OpenStreetMap',
+    'none' => 'None',
+  ];
+}
+
+function map_provider_label($provider = MAP_PROVIDER) {
+  return map_provider_options()[$provider] ?? $provider;
+}
+
 function maps_url($destination) {
   $to = rawurlencode($destination);
 

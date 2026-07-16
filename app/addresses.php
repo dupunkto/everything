@@ -7,7 +7,7 @@
   </head>
   <body>
     <?php include __DIR__ . "/shell/menu.php" ?>
-    <main class="main main--semi-wide">
+    <main class="main main--semi-wide" z-nav="#address-search input, .address-item">
       <header class="page-header"><h2>Addresses</h2></header>
 
       <section id="address-editor" x-get="/addresses/edit"></section>

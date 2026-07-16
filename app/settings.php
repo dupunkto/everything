@@ -21,6 +21,8 @@
         <li><a href="<?= CANONICAL ?>/settings/todo">ToDo</a></li>
         <li><a href="<?= CANONICAL ?>/settings/habits">Habits</a></li>
         <li><a href="<?= CANONICAL ?>/settings/contacts">Contacts</a></li>
+        <li><a href="<?= CANONICAL ?>/settings/shortcuts">Shortcuts</a></li>
+        <li><a href="<?= CANONICAL ?>/settings/about">About</a></li>
       </ul>
     </main>
   </body>

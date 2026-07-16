@@ -44,7 +44,7 @@ function serve_file($path) {
   }
 
   if(in_array(path_ext($path), CACHEABLE_EXTENSIONS)) {
-    serve_cached($path);
+    // serve_cached($path);
   }
 
   header("Content-Type: {$mime_type}");

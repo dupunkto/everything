@@ -8,7 +8,7 @@
   </head>
   <body>
     <?php include __DIR__ . "/shell/menu.php" ?>
-    <main class="main main--wide contacts">
+    <main class="main main--wide contacts" z-nav=".contacts__search, .contact-item">
       <aside class="contacts__sidebar">
         <form id="contacts-controls" class="contacts__controls">
           <input

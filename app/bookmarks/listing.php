@@ -22,7 +22,7 @@
         </a>
       </h4>
 
-      <a href="/bookmarks/edit?id=<?= esc_attr($bookmark['id']) ?>" z-key="enter e" hidden></a>
+      <a href="/bookmarks/edit?id=<?= esc_attr($bookmark['id']) ?>" z-key="enter e o" hidden></a>
       <a href="<?= esc_attr($bookmark['url']) ?>" z-key="g" hidden></a>
       <a href="/bookmarks/delete?id=<?= esc_attr($bookmark['id']) ?>" z-key="d" z-confirm="Delete this bookmark?" hidden></a>
     </li>

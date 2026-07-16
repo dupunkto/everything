@@ -26,11 +26,14 @@
 }
 
 .address-row {
+  margin-bottom: 0.25em;
+}
+
+.address-row--mapped {
   display: grid;
   grid-template-columns: minmax(0, 1fr) max-content;
   align-items: stretch;
   gap: 0.25em;
-  margin-bottom: 0.25em;
 }
 
 #addresses-list .address-item {
@@ -45,4 +48,8 @@
 
 #address-search input {
   margin: 0.5em 0;
+}
+
+#address-editor input {
+  padding: 0;
 }

@@ -15,7 +15,7 @@
 
 ?>
 <form id="tracker-form" class="tracker-form" x-post="/tracker/new" x-target="#tracker-listing" x-refresh="#tracker-new" z-timer>
-  <textarea name="description" placeholder="What have you been up to?" autofocus></textarea>
+  <textarea name="description" placeholder="What have you been up to?"></textarea>
 
   <div class="tracker-form__timer">
     <button type="button" class="tracker-form__duration" data-duration>0:00:00</button>

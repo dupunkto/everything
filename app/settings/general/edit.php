@@ -3,7 +3,7 @@
   // These would be loaded in the store, but since neuro is not yet available when
   // the store loads, we define them here instead, since this is the only callsite at this point.
   define('ENUM_CURRENCY', array_keys(CURRENCY_SYMBOLS));
-  define('ENUM_MAP_PROVIDER', ['google_maps', 'apple_maps', 'openstreetmap', 'none']);
+  define('ENUM_MAP_PROVIDER', array_keys(map_provider_options()));
 
   if(isset($_POST['timezone'])) {
     if(!in_array($_POST['timezone'], \DateTimeZone::listIdentifiers()))
@@ -46,12 +46,7 @@
   </label>
   <label>
     Map provider
-    <?php \forms\options('map-provider', [
-      'google_maps' => 'Google Maps',
-      'apple_maps' => 'Apple Maps',
-      'openstreetmap' => 'OpenStreetMap',
-      'none' => 'None',
-    ], \config\fresh_value('map-provider'), flat: true) ?>
+    <?php \forms\options('map-provider', map_provider_options(), \config\fresh_value('map-provider'), flat: true) ?>
   </label>
   <label>
     Currency

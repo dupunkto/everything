@@ -150,3 +150,34 @@
 .subscription-new-form input[type="url"] {
   flex: 1;
 }
+
+.shortcuts-group {
+  margin-block: 1.5em;
+}
+
+.shortcuts-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.shortcuts-table th,
+.shortcuts-table td {
+  border-bottom: 1px solid #333;
+  padding: 0.4em 0.6em;
+  text-align: left;
+  vertical-align: top;
+}
+
+.shortcuts-table th {
+  white-space: nowrap;
+  width: 12em;
+}
+
+
+.about {
+  text-align: center;
+}
+
+.about-version {
+  font-size: 0.9em;
+}

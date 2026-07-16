@@ -149,6 +149,10 @@
     <input name="social_handle[]" placeholder="handle" required value="<?= esc_attr(@$row['handle']) ?>" data-value>
   <?php };
 
+  $cancel_url = isset($item['id'])
+    ? "/contacts/detail?kind=" . rawurlencode($kind) . "&id=" . rawurlencode($item['id'])
+    : "/contacts/detail";
+
 ?>
 <form class="detail__edit" x-post="/contacts/edit" x-target="#contacts-panel" x-refresh="#contacts-list">
   <input type="hidden" name="kind" value="<?= $kind ?>">
@@ -156,7 +160,7 @@
 
   <div class="actions">
     <button type="button" z-key="escape" z-discard="Discard unsaved changes?"
-      x-get="/contacts/detail?kind=<?= $kind ?>&id=<?= @$item['id'] ?>" x-target="#contacts-panel">Cancel</button>
+      x-get="<?= esc_attr($cancel_url) ?>" x-target="#contacts-panel" x-blur>Cancel</button>
     <button>Save</button>
   </div>
 
