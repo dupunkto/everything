@@ -15,30 +15,38 @@
   $tags = \store\list_tags();
 
   $query_tags = array_map('tag_slug', extract_match($query, '/(?:^|\s)\+(\S+)/'));
-  $root_tags = array_filter($tags, fn($tag) => !$tag['parent_id']);
+
+  $depth_of = function($tag) use ($tags) {
+    $depth = 0;
+    $by_id = array_column($tags, null, 'id');
+
+    while($tag['parent_id']) {
+      $tag = $by_id[$tag['parent_id']]; $depth++;
+    }
+
+    return $depth;
+  };
 
   foreach($tasks as $task) {
     $task_tags = array_map('tag_slug', array_column($task['tags'], 'label'));
     if($query_tags && !overlap($task_tags, $query_tags)) continue;
 
-    $found = false;
+    // A task lands in the column of its tag closest to the root, and of those,
+    // the first in the configured order.
+    $ids = array_column($task['tags'], 'id');
+    $best = null;
 
-    foreach($root_tags as $tag) {
-      if(in_array($tag['label'], array_column($task['tags'], 'label'))) {
-        $found = true;
-        $lists[tag_slug($tag['label'])][] = $task;
-        break;
-      }
+    foreach($tags as $tag) {
+      if(!in_array($tag['id'], $ids)) continue;
+      if(!$best || $depth_of($tag) < $depth_of($best)) $best = $tag;
     }
 
-    if(!$found) {
-      $lists['all'][] = $task;
-    }
+    $lists[$best ? tag_slug($best['label']) : 'all'][] = $task;
   }
 
   // Columns follow the configured order, with ~all always leading.
   $ordered = [];
-  foreach(['all', ...array_map(fn($tag) => tag_slug($tag['label']), $root_tags)] as $key) {
+  foreach(['all', ...array_map(fn($tag) => tag_slug($tag['label']), $tags)] as $key) {
     if(isset($lists[$key])) $ordered[$key] = $lists[$key];
   }
   $lists = $ordered;
