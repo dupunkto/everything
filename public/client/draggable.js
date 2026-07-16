@@ -39,12 +39,15 @@ document.addEventListener("dragover", (e) => {
 
   e.preventDefault();
 
-  const item = sortable_item(e.target);
-  if(!item) return list.append(dragged_item);
-  if(item == dragged_item) return;
+  const next = [...list.children]
+    .filter((item) => item.matches("[data-order-id]") && item != dragged_item)
+    .find((item) => {
+      const {top, height} = item.getBoundingClientRect();
+      return e.clientY < top + height / 2;
+    });
 
-  const {top, height} = item.getBoundingClientRect();
-  item[height / 2 > e.clientY - top ? "before" : "after"](dragged_item);
+  if(next) next.before(dragged_item);
+  else list.append(dragged_item);
 });
 
 document.addEventListener("drop", async (e) => {
