@@ -404,21 +404,3 @@ CREATE TABLE IF NOT EXISTS `imap_connections` (
   `ssl_mode` text NOT NULL, -- str<plain|tls|ssl>
   PRIMARY KEY (`id`)
 );
-
-CREATE TABLE IF NOT EXISTS `documents` (
-  `id` text NOT NULL, -- humid
-  `filename` text NOT NULL,
-  `cdn_url` text NOT NULL,
-  `source_url` text,
-  PRIMARY KEY (`id`)
-);
-
-CREATE TABLE IF NOT EXISTS `documents_tags` (
-  `id` text NOT NULL, -- humid
-  `document_id` text NOT NULL,
-  `tag_id` int(11) NOT NULL,
-  FOREIGN KEY (`document_id`) REFERENCES `documents` (`id`) ON DELETE CASCADE,
-  FOREIGN KEY (`tag_id`) REFERENCES `tags` (`id`) ON DELETE CASCADE,
-  UNIQUE (`document_id`, `tag_id`),
-  PRIMARY KEY (`id`)
-);
