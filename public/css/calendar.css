@@ -269,6 +269,10 @@ body:has(.calendar-page) {
   align-content: start;
 }
 
+.calendar-week .day .appointment.appointment--task {
+  height: auto;
+}
+
 .calendar-week .day__ghost {
   position: absolute;
   left: 0;

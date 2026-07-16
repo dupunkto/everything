@@ -91,9 +91,9 @@ function task_deadlines($from, $to) {
       $end = (clone $start)->modify('+1 day');
       if($start >= $to || $end <= $from) continue;
     } else {
-      if($due <= $from || $due > $to) continue;
-      $start = (clone $due)->modify('-45 minutes');
-      $end = $due;
+      $start = clone $due;
+      $end = clone $due;
+      if($due < $from || $due >= $to) continue;
     }
 
     $deadlines[] = [
@@ -182,6 +182,20 @@ function day_segments($appointments, $from, $to) {
     $end = min(new \DateTime($appointment['ends_at']), $to);
 
     $cursor = max((clone $start)->setTime(0, 0), clone $from);
+
+    if(cast_boolean(@$appointment['is_task']) && $start == $end) {
+      $date = $start->format('Y-m-d');
+
+      if(isset($days[$date]) && $start >= $from && $start < $to) {
+        $segment = $appointment;
+        $segment['layout_end'] = (clone $start)->modify('+30 minutes')->format("Y-m-d H:i:s");
+        $segment['editable'] = false;
+
+        $days[$date][] = $segment;
+      }
+
+      continue;
+    }
 
     while($cursor < $end) {
       $day_end = (clone $cursor)->modify('+1 day');
