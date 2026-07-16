@@ -42,7 +42,7 @@
 <form class="settings-form" x-post="/settings/general/edit" x-on="change" x-target="#general-settings">
   <label>
     Timezone
-    <?php \forms\options('timezone', $timezones, \config\value('timezone'), flat: true) ?>
+    <?php \forms\options('timezone', $timezones, \config\fresh_value('timezone'), flat: true) ?>
   </label>
   <label>
     Map provider
@@ -51,10 +51,10 @@
       'apple_maps' => 'Apple Maps',
       'openstreetmap' => 'OpenStreetMap',
       'none' => 'None',
-    ], \config\value('map-provider'), flat: true) ?>
+    ], \config\fresh_value('map-provider'), flat: true) ?>
   </label>
   <label>
     Currency
-    <?php \forms\options('currency', $currency_options, \config\value('currency'), flat: true) ?>
+    <?php \forms\options('currency', $currency_options, \config\fresh_value('currency'), flat: true) ?>
   </label>
 </form>

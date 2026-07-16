@@ -10,7 +10,7 @@ function format_price_value($price) {
 }
 
 function format_price($price, $currency = null) {
-  $currency = strtolower($currency ?? \config\value('currency'));
+  $currency = strtolower($currency ?? \config\fresh_value('currency'));
   $symbol = CURRENCY_SYMBOLS[$currency] ?? strtoupper($currency);
 
   return $symbol . format_price_value($price);

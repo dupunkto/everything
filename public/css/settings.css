@@ -2,6 +2,10 @@
   margin: 1em 0;
 }
 
+.settings-form--spaced {
+  margin-bottom: 10px;
+}
+
 .settings-listing li {
   margin-bottom: 0.25em;
 }

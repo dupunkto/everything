@@ -21,6 +21,7 @@ fallback('currency', "eur");
 fallback('map-provider', "google_maps");
 
 fallback('ui.panel-position', "right");
+fallback('ui.sidebar-position', "left");
 
 fallback('calendar.default_calendar', @\store\get_oldest_calendar()['id']);
 
@@ -87,12 +88,12 @@ function normalize_value($value) {
   };
 }
 
-function value($key) {
-  $stored = @\store\config()[$key];
-  return $stored === null ? constant(normalize_key($key)) : normalize_value($stored);
-}
-
 function canonical_value($key) {
   $stored = @\store\config()[$key];
   return $stored === null ? null : normalize_value($stored);
+}
+
+function fresh_value($key) {
+  $stored = @\store\config()[$key];
+  return $stored === null ? constant(normalize_key($key)) : normalize_value($stored);
 }

@@ -19,8 +19,8 @@
       or fail("Could not update sort order.");
   }
 
-  $display = \config\value('contacts.display-format');
-  $sort = \config\value('contacts.sort-order');
+  $display = \config\fresh_value('contacts.display-format');
+  $sort = \config\fresh_value('contacts.sort-order');
 
 ?>
 <form class="settings-form" x-post="/settings/contacts/edit" x-on="change" x-target="#contacts-settings">

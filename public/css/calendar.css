@@ -12,6 +12,10 @@
   gap: 0.6em;
 }
 
+.calendar-page--sidebar-right .page-header__title {
+  margin-left: 1em;
+}
+
 .calendar-week__tools {
   display: flex;
   gap: 0.2em;
@@ -27,6 +31,10 @@
 
 .calendar-week__nav [data-sync] {
   margin-inline-end: 0.6em;
+}
+
+.calendar-week__nav [data-sidebar] {
+  margin-inline-start: 0.6em;
 }
 
 #calendar-view[x-loading] [data-sync] i {
@@ -46,6 +54,10 @@ body:has(.calendar-page) {
   overflow: hidden;
   display: flex;
   flex-direction: row;
+}
+
+.calendar-page--sidebar-right {
+  flex-direction: row-reverse;
 }
 
 .calendar-page #calendar-view {

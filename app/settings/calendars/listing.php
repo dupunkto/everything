@@ -1,7 +1,7 @@
 <?php
   // We cannot use the defined constant here, because the default
   // might have just changed. Pull a fresh value from the database instead.
-  $default_calendar = \config\value('calendar.default_calendar')
+  $default_calendar = \config\fresh_value('calendar.default_calendar')
 ?>
 
 <ul class="settings-listing settings-listing--sortable" data-reorder-url="/settings/calendars/reorder" data-reorder-target="#calendars-listing">

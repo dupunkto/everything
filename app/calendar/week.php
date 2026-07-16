@@ -60,13 +60,16 @@ $now_top = ((int) $now->format('H') * 60 + (int) $now->format('i')) / 1440 * 100
 
 $color = fn($a) => esc_attr($a['calendar_color'] ?? $a['subscription_color'] ?? '#cccccc');
 $task_icon = fn($a) => ['done' => 'fa-check', 'blocked' => 'fa-xmark'][@$a['task_status']] ?? 'fa-alarm-clock';
+$sidebar_right = UI_SIDEBAR_POSITION == 'right';
 
 ?>
 <div class="page-header">
   <div class="calendar-week__lead">
-    <div class="calendar-week__tools">
-      <button type="button" title="Filters" data-sidebar><i class="fa-regular fa-sidebar-flip"></i></button>
-    </div>
+    <?php if(!$sidebar_right): ?>
+      <div class="calendar-week__tools">
+        <button type="button" title="Filters" data-sidebar><i class="fa-regular fa-sidebar-flip"></i></button>
+      </div>
+    <?php endif ?>
     <h1 class="page-header__title"><strong><?= $from->format('F') ?></strong> <?= $from->format('Y') ?></h1>
   </div>
 
@@ -81,6 +84,9 @@ $task_icon = fn($a) => ['done' => 'fa-check', 'blocked' => 'fa-xmark'][@$a['task
       x-target="#calendar-view" x-data="#calendar-filters">Today</button>
     <button type="button" title="Next week" x-get="/calendar/week?date=<?= (clone $from)->modify('+7 days')->format('Y-m-d') ?>"
       x-target="#calendar-view" x-data="#calendar-filters">&rarr;</button>
+    <?php if($sidebar_right): ?>
+      <button type="button" title="Filters" data-sidebar><i class="fa-regular fa-sidebar-flip"></i></button>
+    <?php endif ?>
   </div>
 </div>
 <div class="calendar-week">
