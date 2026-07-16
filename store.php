@@ -582,7 +582,9 @@ function list_tags() {
 
 function reorder_tags($ids) {
   foreach(array_values($ids) as $order => $id) {
-    $ok = exec_query('UPDATE `tags` SET `order` = ? WHERE `id` = ?', [$order, $id]);
+    $ok = exec_query('UPDATE `tags`
+      SET `order` = ? WHERE `id` = ?', [$order, $id]);
+
     if(!$ok) return false;
   }
 
@@ -628,12 +630,14 @@ function create_calendar($title, $subtitle, $color) {
     `id`,
     `title`,
     `subtitle`,
-    `color`
-  ) VALUES (?, ?, ?, ?)', [
+    `color`,
+    `order`
+  ) VALUES (?, ?, ?, ?, ?)', [
     generate_humid(),
     $title,
     $subtitle,
-    $color
+    $color,
+    append_order('sources')
   ]);
 }
 
@@ -646,17 +650,15 @@ function update_calendar($id, $title, $subtitle, $color) {
 }
 
 function list_calendars() {
-  return all('SELECT * FROM `calendars` ORDER BY `title`');
+  return all('SELECT * FROM `calendars` ORDER BY `order` ASC, `title` ASC');
 }
 
 function get_calendar($id) {
   return one('SELECT * FROM `calendars` WHERE `id` = ?', [$id]);
 }
 
-// The oldest calendar, by insertion order. Backs the default-calendar config
-// fallback so a fresh install still has somewhere to drop new events.
-function first_calendar_id() {
-  return @one('SELECT `id` FROM `calendars` ORDER BY `rowid`')['id'];
+function get_oldest_calendar() {
+  return one('SELECT `id` FROM `calendars` ORDER BY `rowid`');
 }
 
 function delete_calendar($id) {
@@ -672,14 +674,16 @@ function create_subscription($title, $subtitle, $url, $color, $filter = null) {
     `subtitle`,
     `url`,
     `color`,
-    `filter`
-  ) VALUES (?, ?, ?, ?, ?, ?)', [
+    `filter`,
+    `order`
+  ) VALUES (?, ?, ?, ?, ?, ?, ?)', [
     generate_humid(),
     $title,
     $subtitle,
     $url,
     $color,
-    $filter
+    $filter,
+    append_order('sources')
   ]);
 }
 
@@ -694,7 +698,7 @@ function update_subscription($id, $title, $subtitle, $url, $color, $filter = nul
 }
 
 function list_subscriptions() {
-  return all('SELECT * FROM `subscriptions` ORDER BY `title`');
+  return all('SELECT * FROM `subscriptions` ORDER BY `order` ASC, `title` ASC');
 }
 
 function get_subscription($id) {
@@ -703,6 +707,44 @@ function get_subscription($id) {
 
 function delete_subscription($id) {
   return exec_query('DELETE FROM `subscriptions` WHERE `id` = ?', [$id]);
+}
+
+// Calendar sources
+
+function list_sources() {
+  return all('SELECT * FROM `sources` ORDER BY `order` ASC, `title` ASC');
+}
+
+function reorder_sources($sources) {
+  foreach(array_values($sources) as $order => $source) {
+    [$type, $id] = explode(':', $source, 2) + [null, null];
+
+    $table = match($type) {
+      'calendar' => 'calendars',
+      'subscription' => 'subscriptions',
+      default => null
+    };
+
+    if(!$table || !exec_query("UPDATE `$table`
+      SET `order` = ? WHERE `id` = ?", [$order, $id])) return false;
+  }
+
+  return true;
+}
+
+function reorder_source_by_type($type, $ids) {
+  in_array($type, ['calendars', 'subscriptions']) or die("type $type does not exist");
+
+  $slots = array_column(all("SELECT `order` FROM `$type` ORDER BY `order` ASC, `title` ASC") ?: [], 'order');
+
+  foreach(array_values($ids) as $i => $id) {
+    $ok = exec_query("UPDATE `$type`
+      SET `order` = ? WHERE `id` = ?", [$slots[$i] ?? $i, $id]);
+
+    if(!$ok) return false;
+  }
+
+  return true;
 }
 
 // Habits

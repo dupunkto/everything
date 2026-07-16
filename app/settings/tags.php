@@ -4,7 +4,7 @@
     <?php include __DIR__ . "/../shell/head.php" ?>
     <title>Settings</title>
     <link rel="stylesheet" href="<?= CANONICAL ?>/css/settings.css">
-    <script src="<?= CANONICAL ?>/client/settings.js" defer></script>
+    <script src="<?= CANONICAL ?>/client/draggable.js" defer></script>
   </head>
   <body>
     <?php include __DIR__ . "/../shell/menu.php" ?>

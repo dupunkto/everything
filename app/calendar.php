@@ -5,6 +5,7 @@
     <title>Calendar</title>
     <link rel="stylesheet" href="<?= CANONICAL ?>/css/calendar.css">
     <script src="<?= CANONICAL ?>/client/calendar.js" defer></script>
+    <script src="<?= CANONICAL ?>/client/draggable.js" defer></script>
     <script src="<?= CANONICAL ?>/client/circle.js" type="module"></script>
   </head>
   <body>
@@ -15,12 +16,7 @@
       // which is the color of the default calendar.
       $ghost_color = @\store\get_calendar(CALENDAR_DEFAULT_CALENDAR)['color'] ?: '#cccccc';
 
-      $sources = array_merge(
-        \store\list_calendars() ?: [],
-        \store\list_subscriptions() ?: []
-      );
-
-      usort($sources, fn($a, $b) => strcasecmp($a['title'], $b['title']));
+      $sources = \store\list_sources() ?: [];
     ?>
 
     <main class="main main--wide calendar-page" style="--ghost-color: <?= esc_attr($ghost_color) ?>">
@@ -33,13 +29,13 @@
 
             <section class="calendar-sidebar__group">
               <h2 class="calendar-sidebar__heading">Calendars</h2>
-              <ul class="calendar-sidebar__list">
+              <ul class="calendar-sidebar__list" data-reorder-url="/calendar/sources/reorder">
                 <?php foreach($sources as $source): ?>
-                  <li>
+                  <li data-order-id="<?= esc_attr($source['type'] . ':' . $source['id']) ?>">
                     <label class="calendar-sidebar__item">
                       <input type="checkbox" name="visible[]" value="<?= esc_attr($source['id']) ?>"
                         checked style="accent-color: <?= esc_attr($source['color'] ?? '#cccccc') ?>">
-                      <span class="calendar-sidebar__label">
+                      <span class="calendar-sidebar__label" data-drag-handle>
                         <?= esc_inner($source['title']) ?><?php if($source['subtitle']): ?> (<?= esc_inner($source['subtitle']) ?>)<?php endif ?>
                       </span>
                     </label>

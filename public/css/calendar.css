@@ -129,6 +129,18 @@ body:has(.calendar-page) {
   cursor: pointer;
 }
 
+.order-item--dragging {
+  opacity: 0.5;
+}
+
+.calendar-sidebar__label[data-drag-handle] {
+  cursor: grab;
+}
+
+.calendar-sidebar__label[data-drag-handle]:active {
+  cursor: grabbing;
+}
+
 .calendar-sidebar__zoom {
   width: 100%;
   cursor: pointer;

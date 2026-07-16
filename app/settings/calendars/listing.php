@@ -4,11 +4,12 @@
   $default_calendar = \config\value('calendar.default_calendar')
 ?>
 
-<ul class="settings-listing">
+<ul class="settings-listing settings-listing--sortable" data-reorder-url="/settings/calendars/reorder" data-reorder-target="#calendars-listing">
   <?php foreach(\store\list_calendars() as $calendar): ?>
     <?php $is_default = $calendar['id'] == $default_calendar ?>
-    <li>
+    <li class="settings-listing__item" data-order-id="<?= esc_attr($calendar['id']) ?>">
       <form class="settings-editor" x-post="/settings/calendars/edit" x-on="change" x-target="#calendars-listing">
+        <span class="settings-editor__drag-handle" title="Drag to reorder" data-drag-handle><i class="fa-solid fa-grip"></i></span>
         <input name="id" type="hidden" value="<?= esc_attr($calendar['id']) ?>">
         <input name="color" type="color" required value="<?= esc_attr($calendar['color']) ?>">
         <input name="title" type="text" required value="<?= esc_attr($calendar['title']) ?>" placeholder="Title">

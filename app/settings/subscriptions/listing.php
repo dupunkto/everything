@@ -1,15 +1,16 @@
 <?php $current_filter = @$_GET['filter'] ?>
 
-<ul class="settings-listing">
+<ul class="settings-listing settings-listing--sortable" data-reorder-url="/settings/subscriptions/reorder" data-reorder-target="#subscriptions-listing">
   <?php foreach(\store\list_subscriptions() as $subscription): ?>
     <?php
       $filter = $subscription['filter'] ?? '';
       $has_filter = is_nonempty_str($filter);
       $is_open = $current_filter == $subscription['id'];
     ?>
-    <li>
+    <li class="settings-listing__item" data-order-id="<?= esc_attr($subscription['id']) ?>">
       <form class="settings-editor settings-editor--subscription" x-post="/settings/subscriptions/edit<?php if($current_filter) echo "?filter=" . urlencode($current_filter) ?>" x-on="change" x-target="#subscriptions-listing">
         <div class="settings-editor__row">
+          <span class="settings-editor__drag-handle" title="Drag to reorder" data-drag-handle><i class="fa-solid fa-grip"></i></span>
           <input name="id" type="hidden" value="<?= esc_attr($subscription['id']) ?>">
           <input name="color" type="color" required value="<?= esc_attr($subscription['color']) ?>">
           <input name="title" type="text" required value="<?= esc_attr($subscription['title']) ?>" placeholder="Title">

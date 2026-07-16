@@ -6,7 +6,7 @@
   margin-bottom: 0.25em;
 }
 
-.settings-listing__item--dragging {
+.order-item--dragging {
   opacity: 0.5;
 }
 

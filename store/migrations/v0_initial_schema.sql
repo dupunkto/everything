@@ -303,6 +303,7 @@ CREATE TABLE IF NOT EXISTS `calendars` (
   `title` text NOT NULL,
   `subtitle` text,
   `color` text NOT NULL,
+  `order` int(11) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`)
 );
 
@@ -313,8 +314,14 @@ CREATE TABLE IF NOT EXISTS `subscriptions` (
   `url` text NOT NULL,
   `color` text NOT NULL,
   `filter` text,
+  `order` int(11) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`)
 );
+
+CREATE VIEW IF NOT EXISTS `sources` AS
+  SELECT 'calendar' AS `type`, `id`, `title`, `subtitle`, `color`, `order` FROM `calendars`
+  UNION ALL
+  SELECT 'subscription' AS `type`, `id`, `title`, `subtitle`, `color`, `order` FROM `subscriptions`;
 
 CREATE TABLE IF NOT EXISTS `appointments` (
   `id` text NOT NULL, -- humid|external
