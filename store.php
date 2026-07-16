@@ -449,6 +449,78 @@ function delete_wish($id) {
   return exec_query('DELETE FROM `wishes` WHERE `id` = ?', [$id]);
 }
 
+// Bookmarks
+
+function create_bookmark($label, $url, $note = null, $date = null) {
+  $ok = exec_query('INSERT INTO `bookmarks` (
+    `id`,
+    `label`,
+    `url`,
+    `note`,
+    `date`
+  ) VALUES (?, ?, ?, ?, ?)', [
+    $id = generate_humid(),
+    $label,
+    $url,
+    $note,
+    $date ?? gmdate('c')
+  ]);
+
+  return $ok ? $id : $ok;
+}
+
+function update_bookmark($id, $label, $url, $note = null, $date = null) {
+  return exec_query('UPDATE `bookmarks` SET
+    `label` = ?,
+    `url` = ?,
+    `note` = ?,
+    `date` = ?
+  WHERE id = ?', [$label, $url, $note, $date, $id]);
+}
+
+function get_bookmark($id) {
+  return one('SELECT * FROM `bookmarks` WHERE `id` = ?', [$id]);
+}
+
+function list_bookmarks($query = "") {
+  $where = [];
+  $params = [];
+  $tags = [];
+
+  foreach(preg_split('/\s+/', trim($query)) ?: [] as $token) {
+    if($token == "") continue;
+
+    if($token[0] == "+") {
+      $tags[] = mb_strtolower(substr($token, 1));
+      continue;
+    }
+
+    $where[] = '(LOWER(`label`) LIKE ? OR LOWER(`url`) LIKE ? OR LOWER(`note`) LIKE ?)';
+    $params[] = "%" . mb_strtolower($token) . "%";
+    $params[] = "%" . mb_strtolower($token) . "%";
+    $params[] = "%" . mb_strtolower($token) . "%";
+  }
+
+  foreach(array_filter($tags) as $tag) {
+    $where[] = 'EXISTS (
+      SELECT 1 FROM `bookmarks_tags` bt
+      JOIN `tags` t ON t.id = bt.tag_id
+      WHERE bt.bookmark_id = bookmarks.id AND LOWER(t.label) = ?
+    )';
+    $params[] = $tag;
+  }
+
+  $sql = 'SELECT * FROM `bookmarks`';
+  if($where) $sql .= ' WHERE ' . join(' AND ', $where);
+  $sql .= ' ORDER BY COALESCE(`label`, `url`)';
+
+  return all($sql, $params) ?? [];
+}
+
+function delete_bookmark($id) {
+  return exec_query('DELETE FROM `bookmarks` WHERE `id` = ?', [$id]);
+}
+
 // Tracker
 
 function create_timing($description, $starts_at, $ends_at, $task_id = null) {

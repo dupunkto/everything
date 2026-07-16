@@ -15,6 +15,7 @@ $actions = $section ? path_join(__DIR__, "..", $section, "actions.php") : null;
     <li><a href="/todo"><i class="fa-regular fa-box-check"></i> <span>ToDo</span></a></li>
     <li><a href="/tracker"><i class="fa-regular fa-timer"></i> <span>Tracker</span></a></li>
     <li><a href="/notes"><i class="fa-regular fa-notebook"></i> <span>Notes</span></a></li>
+    <li><a href="/bookmarks"><i class="fa-regular fa-bookmark"></i> <span>Bookmarks</span></a></li>
     <li><a href="/wishlist"><i class="fa-regular fa-book-heart"></i> <span>Wishlist</span></a></li>
     <li><a href="/contacts"><i class="fa-regular fa-address-book"></i> <span>Contacts</span></a></li>
     <li><a href="/addresses"><i class="fa-regular fa-location-arrow"></i> <span>Addresses</span></a></li>

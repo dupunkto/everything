@@ -404,3 +404,22 @@ CREATE TABLE IF NOT EXISTS `imap_connections` (
   `ssl_mode` text NOT NULL, -- str<plain|tls|ssl>
   PRIMARY KEY (`id`)
 );
+
+CREATE TABLE IF NOT EXISTS `bookmarks` (
+  `id` text NOT NULL, -- humid
+  `label` text,
+  `url` text NOT NULL,
+  `note` text,
+  `date` datetime NOT NULL,
+  PRIMARY KEY (`id`)
+);
+
+CREATE TABLE IF NOT EXISTS `bookmarks_tags` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `bookmark_id` text NOT NULL,
+  `tag_id` int(11) NOT NULL,
+  FOREIGN KEY (`bookmark_id`) REFERENCES `bookmarks` (`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`tag_id`) REFERENCES `tags` (`id`) ON DELETE CASCADE,
+  UNIQUE (`bookmark_id`, `tag_id`),
+  PRIMARY KEY (`id`)
+);
