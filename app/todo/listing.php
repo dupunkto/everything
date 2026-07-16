@@ -58,11 +58,13 @@
   $tokens = str_explode($query);
   $finished = in_array("is:done", $tokens);
 
-  $view = match(true) {
-    in_array("is:nvm", $tokens) => "Shelves",
-    in_array("is:backlog", $tokens) => "Backlog",
-    default => "ToDo",
-  };
+  $views = ["is:todo" => "ToDo", "is:nvm" => "Shelves", "is:backlog" => "Backlog"];
+  $view = "ToDo";
+
+  foreach($tokens as $token) {
+    if(!isset($views[$token])) continue;
+    $view = $views[$token]; break;
+  }
 
   // The status a shortcut moves a task to; pressing it again reverts.
   $status_for = fn($task, $target) => $task['status'] == $target ? "todo" : $target;
