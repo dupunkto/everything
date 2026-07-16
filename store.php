@@ -530,11 +530,13 @@ function create_tag($label, $color, $parent_id) {
   return exec_query('INSERT INTO `tags` (
     `label`,
     `color`,
-    `parent_id`
-  ) VALUES (?, ?, ?)', [
+    `parent_id`,
+    `order`
+  ) VALUES (?, ?, ?, ?)', [
     $label,
     $color,
-    $parent_id
+    $parent_id,
+    prepend_order('tags')
   ]);
 }
 
@@ -561,7 +563,7 @@ function update_tag($id, $label, $color, $parent_id) {
 }
 
 function list_tags() {
-  $tags = all('SELECT * FROM `tags` ORDER BY `id` DESC');
+  $tags = all('SELECT * FROM `tags` ORDER BY `order` ASC, `id` DESC');
 
   $children = [];
   foreach($tags as $tag) $children[$tag['parent_id']][] = $tag;
@@ -578,6 +580,15 @@ function list_tags() {
   return $result;
 }
 
+function reorder_tags($ids) {
+  foreach(array_values($ids) as $order => $id) {
+    $ok = exec_query('UPDATE `tags` SET `order` = ? WHERE `id` = ?', [$order, $id]);
+    if(!$ok) return false;
+  }
+
+  return true;
+}
+
 function get_tag($id) {
   return one('SELECT * FROM `tags` WHERE `id` = ?', [$id]);
 }
@@ -588,6 +599,26 @@ function get_tag_by_label($label) {
 
 function delete_tag($id) {
   return exec_query('DELETE FROM `tags` WHERE `id` = ?', [$id]);
+}
+
+// Ordering
+
+function prepend_order($table) {
+  $first = one('SELECT MIN(`order`) AS `order` FROM ' . $table);
+
+  if($first['order'] === false) return 0;
+  if($first['order'] > 0) return $first['order'] - 1;
+
+  // If this fails, too bad, the ordering is a bit messed up, but
+  // not the end of the world.
+  exec_query('UPDATE ' . $table . ' SET `order` = `order` + 1', []);
+  
+  return 0;
+}
+
+function append_order($table) {
+  $last = one('SELECT COALESCE(MAX(`order`), 0) AS `order` FROM ' . $table);
+  return $last['order'] + 1;
 }
 
 // Calendars

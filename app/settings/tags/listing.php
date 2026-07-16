@@ -15,11 +15,12 @@
   };
 
 ?>
-<ul class="settings-listing">
+<ul class="settings-listing settings-listing--tags" data-reorder-url="/settings/tags/reorder">
   <?php foreach($tags as $tag): ?>
     <?php $forbidden = $subtree_of($tag['id']) ?>
-    <li>
+    <li class="settings-listing__item" data-tag-id="<?= $tag['id'] ?>">
       <form class="settings-editor" x-post="/settings/tags/edit" x-on="change" x-target="#tags-listing">
+        <span class="settings-editor__drag-handle" title="Drag to reorder"><i class="fa-solid fa-grip"></i></span>
         <input name="id" type="hidden" value="<?= $tag['id'] ?>">
         <input name="color" type="color" required value="<?= esc_attr($tag['color']) ?>">
         <input name="label" type="text" required value="<?= esc_attr($tag['label']) ?>">

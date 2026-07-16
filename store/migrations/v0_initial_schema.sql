@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS `tags` (
   `parent_id` int(11),
   `label` text NOT NULL,
   `color` text NOT NULL,
+  `order` int(11) NOT NULL DEFAULT 0,
   FOREIGN KEY (`parent_id`) REFERENCES `tags` (`id`) ON DELETE SET NULL,
   PRIMARY KEY (`id`)
 );
