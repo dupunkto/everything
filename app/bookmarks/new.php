@@ -2,11 +2,13 @@
 
   if(isset($_POST['url'])) {
     $url = cast_string($_POST['url']) or fail("URL is required.");
+    $meta = \bookmarks\fetch_meta($url);
 
     $id = \store\create_bookmark(
-      \bookmarks\fetch_label($url),
       $url,
+      $meta['label'],
       cast_string(@$_POST['note']),
+      $meta['favicon'],
       gmdate('c')
     ) or fail("Could not save bookmark.");
 

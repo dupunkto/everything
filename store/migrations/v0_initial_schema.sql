@@ -410,6 +410,7 @@ CREATE TABLE IF NOT EXISTS `bookmarks` (
   `label` text,
   `url` text NOT NULL,
   `note` text,
+  `favicon` text,
   `date` datetime NOT NULL,
   PRIMARY KEY (`id`)
 );

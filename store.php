@@ -451,18 +451,20 @@ function delete_wish($id) {
 
 // Bookmarks
 
-function create_bookmark($label, $url, $note = null, $date = null) {
+function create_bookmark($url, $label = null, $note = null, $favicon = null, $date = null) {
   $ok = exec_query('INSERT INTO `bookmarks` (
     `id`,
     `label`,
     `url`,
     `note`,
+    `favicon`,
     `date`
-  ) VALUES (?, ?, ?, ?, ?)', [
+  ) VALUES (?, ?, ?, ?, ?, ?)', [
     $id = generate_humid(),
     $label,
     $url,
     $note,
+    $favicon,
     $date ?? gmdate('c')
   ]);
 

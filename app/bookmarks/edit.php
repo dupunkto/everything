@@ -39,14 +39,6 @@
           <a class="button" href="<?= esc_attr($bookmark['url']) ?>" z-key="g">&rarr;</a>
         </div>
 
-        <div class="field">
-          <label for="date">Saved</label>
-          <span class="datetime-pair">
-            <input type="date" id="date" name="date" value="<?= esc_attr(local_date("Y-m-d", $bookmark['date'])) ?>" required>
-            <input type="time" name="time" value="<?= esc_attr(local_date("H:i", $bookmark['date'])) ?>" required>
-          </span>
-        </div>
-
         <label>
           Note
           <textarea name="note" rows="4"><?= esc_inner($bookmark['note']) ?></textarea>
@@ -54,6 +46,13 @@
 
         <div class="actions">
           <a class="button" href="/bookmarks/delete?id=<?= esc_attr($bookmark['id']) ?>" z-confirm="Delete this bookmark?">Delete</a>
+          <div class="field bookmark-editor__saved">
+            <label for="date">Saved on</label>
+            <span class="datetime-pair">
+              <input type="date" id="date" name="date" value="<?= esc_attr(local_date("Y-m-d", $bookmark['date'])) ?>" required>
+              <input type="time" name="time" value="<?= esc_attr(local_date("H:i", $bookmark['date'])) ?>" required>
+            </span>
+          </div>
         </div>
       </form>
     </main>

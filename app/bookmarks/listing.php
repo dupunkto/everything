@@ -5,10 +5,15 @@
 ?>
 <ul class="listing">
   <?php foreach($bookmarks as $bookmark): ?>
+    <?php $favicon = $bookmark['favicon'] ?: \bookmarks\fallback_favicon($bookmark['url']) ?>
     <li class="listing__item bookmark" tabindex="0">
       <a class="bookmark__edit" href="/bookmarks/edit?id=<?= esc_attr($bookmark['id']) ?>" tabindex="-1" aria-label="Edit bookmark"></a>
+      <?php if($favicon): ?>
+        <img class="bookmark__favicon" src="<?= esc_attr($favicon) ?>" alt="" onerror="this.replaceWith(Object.assign(document.createElement('i'), {className: 'bookmark__favicon fa-regular fa-globe'}))">
+      <?php else: ?>
+        <i class="bookmark__favicon fa-regular fa-globe"></i>
+      <?php endif ?>
       <h4 class="listing__title bookmark__title">
-        <span class="humid"><?= esc_inner($bookmark['id']) ?></span>
         <?php if($bookmark['label']): ?>
           <span><?= esc_inner($bookmark['label']) ?></span>
         <?php endif ?>
