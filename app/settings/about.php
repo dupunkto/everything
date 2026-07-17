@@ -40,7 +40,7 @@ $about_rows = [
       </hgroup>
       
       <p class="about-version">
-        <span>v<?= EVERYTHING_VERSION ?></span> &middot;
+        <span>v<?= EVERYTHING_VERSION ?>-<?= STORE_VERSION ?></span> &middot;
         <?php if(defined('GIT_SHA')): ?>
           built from <span><a href="//git.dupunkto.org/dupunkto/everything/commit/<?= GIT_SHA ?>"><?= substr(GIT_SHA, 0, 7) ?></a></span>
         <?php else: ?>
