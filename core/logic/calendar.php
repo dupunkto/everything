@@ -415,6 +415,7 @@ function timing_lines($from, $to) {
 
     foreach(clip($start, $end, $from, $to) as $date => [$a, $b]) {
       $lines[$date][] = [
+        'id' => $timing['id'],
         'top' => $a / 1440 * 100,
         'height' => ($b - $a) / 1440 * 100,
         'color' => $root_color($timing['first_tag_id']) ?: '#cccccc',

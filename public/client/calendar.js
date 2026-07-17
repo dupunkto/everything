@@ -146,6 +146,12 @@
   });
 
   view.addEventListener("dblclick", (event) => {
+    const timing = event.target.closest(".day__timing[data-id]");
+    if(timing) {
+      location.href = "/tracker?edit=" + encodeURIComponent(timing.dataset.id);
+      return;
+    }
+
     const appointment = event.target.closest(".appointment");
 
     if(appointment) {

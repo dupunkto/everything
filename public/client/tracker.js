@@ -104,9 +104,11 @@ zhtml.directive("z-timer", (form) => {
 });
 
 (() => {
+  const creator = document.getElementById("tracker-new");
   const listing = document.getElementById("tracker-listing");
   const editor = document.querySelector(".tracker-popup-editor");
   let editing = null;
+  let pending_edit = new URLSearchParams(location.search).get("edit");
 
   const anchor = () =>
     editing && listing.querySelector(`.tracker-list__item[data-id="${CSS.escape(editing)}"]`);
@@ -167,7 +169,16 @@ zhtml.directive("z-timer", (form) => {
   });
 
   editor.addEventListener("x-swap", () => xhtml.refresh("#tracker-listing"));
-  listing.addEventListener("x-swap", () => anchor() ? position_editor() : close_editor());
+  listing.addEventListener("x-swap", () => {
+    if(pending_edit) {
+      open_editor(pending_edit);
+      pending_edit = null;
+      return;
+    }
+
+    anchor() ? position_editor() : close_editor();
+  });
+  creator.addEventListener("x-swap", position_editor);
   document.addEventListener("scroll", position_editor, true);
   addEventListener("resize", position_editor);
 
