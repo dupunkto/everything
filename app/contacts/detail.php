@@ -34,7 +34,7 @@
   }
 
 ?>
-<header class="detail__header">
+<header class="detail__header" data-contact-state="view" data-kind="<?= esc_attr($kind) ?>" data-id="<?= esc_attr($item['id']) ?>">
   <div class="detail__identity">
     <span class="detail__avatar"><i class="fa-solid fa-<?= $kind == "org" ? "building-columns" : "user" ?>"></i></span>
     <div>

@@ -9,7 +9,8 @@
   <body>
     <?php include __DIR__ . "/shell/menu.php" ?>
     <?php
-      $url = null; $kind = @$_GET['kind'] ?: 'person';
+      $kind = @$_GET['kind'] ?: 'person';
+      $url = null;
 
       if(@$_GET['edit']) $url = "/contacts/edit?kind=" . rawurlencode($kind) . "&id=" . rawurlencode($_GET['edit']);
       elseif(@$_GET['view']) $url = "/contacts/detail?kind=" . rawurlencode($kind) . "&id=" . rawurlencode($_GET['view']);
@@ -23,7 +24,7 @@
             class="contacts__search"
             z-key="/"
             placeholder="is:person +acme"
-            value="is:person"
+            value="is:<?= esc_attr($kind) ?>"
             x-get="/contacts/listing"
             x-on="input"
             x-target="#contacts-list"

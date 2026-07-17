@@ -108,7 +108,26 @@ zhtml.directive("z-timer", (form) => {
   const listing = document.getElementById("tracker-listing");
   const editor = document.querySelector(".tracker-popup-editor");
   let editing = null;
+  let restoring_history = false;
   let pending_edit = new URLSearchParams(location.search).get("edit");
+
+  const push_editor_state = (id) => {
+    if(restoring_history) return;
+
+    const url = new URL(location.href);
+    if(id) url.searchParams.set("edit", id);
+    else url.searchParams.delete("edit");
+
+    if(url.href != location.href) history.pushState(null, "", url);
+  };
+
+  const restore_editor_state = () => {
+    const id = new URLSearchParams(location.search).get("edit");
+
+    restoring_history = true;
+    id ? open_editor(id) : close_editor();
+    restoring_history = false;
+  };
 
   const anchor = () =>
     editing && listing.querySelector(`.tracker-list__item[data-id="${CSS.escape(editing)}"]`);
@@ -135,10 +154,12 @@ zhtml.directive("z-timer", (form) => {
     editor.hidden = true;
     editor.innerHTML = "";
     editing = null;
+    push_editor_state(null);
   };
 
   const open_editor = async (id) => {
     editing = id;
+    push_editor_state(id);
     const response = await fetch("/tracker/edit?id=" + encodeURIComponent(id), { headers: { Accept: "text/html" } });
     xhtml.swap(editor, await response.text());
     editor.hidden = false;
@@ -188,6 +209,8 @@ zhtml.directive("z-timer", (form) => {
     if(event.target.closest(".tracker-list__item[data-id]")) return; // clicks of a dblclick
     close_editor();
   });
+
+  addEventListener("popstate", restore_editor_state);
 
   document.addEventListener("keydown", (event) => {
     if(event.key == "Escape") close_editor();

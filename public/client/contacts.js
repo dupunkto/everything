@@ -33,6 +33,51 @@ const item_for = (line, address) => {
   return item;
 };
 
+let restoring_history = false;
+
+const contact_state_url = (state) => {
+  const url = new URL(location.href);
+  url.searchParams.delete("edit");
+  url.searchParams.delete("view");
+  url.searchParams.delete("kind");
+
+  if(state?.id) {
+    url.searchParams.set("kind", state.kind);
+    url.searchParams.set(state.mode, state.id);
+  }
+
+  return url;
+};
+
+const push_contact_state = (state) => {
+  if(restoring_history) return;
+
+  const url = contact_state_url(state);
+  if(url.href != location.href) history.pushState(null, "", url);
+};
+
+const restore_contact_state = async () => {
+  const panel = document.getElementById("contacts-panel");
+  const query = new URLSearchParams(location.search);
+  const kind = query.get("kind") || "person";
+  const mode = query.has("edit") ? "edit" : query.has("view") ? "view" : null;
+  const id = mode && query.get(mode);
+
+  restoring_history = true;
+
+  if(id) {
+    const path = mode == "edit" ? "/contacts/edit" : "/contacts/detail";
+    const url = `${path}?kind=${encodeURIComponent(kind)}&id=${encodeURIComponent(id)}`;
+    const response = await fetch(url, { headers: { Accept: "text/html" } });
+    xhtml.swap(panel, await response.text());
+  }
+  else {
+    panel.replaceChildren();
+  }
+
+  restoring_history = false;
+};
+
 document.addEventListener("input", (e) => {
   const search = e.target.closest?.("[data-address-search]");
   if(!search || e.target != search.querySelector("input")) return;
@@ -64,6 +109,16 @@ document.addEventListener("click", (e) => {
 // Deselect the open contact once it drops out of the re-filtered list,
 // but only in view mode — never yank it out from under an edit.
 document.addEventListener("x-swap", (e) => {
+  if(e.target.id == "contacts-panel") {
+    const state = e.target.querySelector("[data-contact-state]");
+    push_contact_state(state && {
+      mode: state.dataset.contactState,
+      kind: state.dataset.kind,
+      id: state.dataset.id,
+    });
+    return;
+  }
+
   if(e.target.id != "contacts-list") return;
 
   const open = document.querySelector("#contacts-panel [data-edit]");
@@ -71,5 +126,10 @@ document.addEventListener("x-swap", (e) => {
 
   const url = new URL(open.getAttribute("x-get"), location.href);
   const item = `.contact-item[data-id="${url.searchParams.get("id")}"][data-kind="${url.searchParams.get("kind")}"]`;
-  if(!e.target.querySelector(item)) document.getElementById("contacts-panel").replaceChildren();
+  if(!e.target.querySelector(item)) {
+    document.getElementById("contacts-panel").replaceChildren();
+    push_contact_state(null);
+  }
 });
+
+addEventListener("popstate", restore_contact_state);
