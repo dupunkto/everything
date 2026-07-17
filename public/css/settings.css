@@ -180,4 +180,22 @@
 
 .about-version {
   font-size: 0.9em;
+  margin-top: 2em;
+}
+
+.about-info {
+  border-collapse: collapse;
+  margin: 3em auto 0;
+  text-align: left;
+  max-width: 500px;
+}
+
+.about-info th,
+.about-info td {
+  border-bottom: 1px solid #333;
+  padding: 0.4em 0.6em;
+}
+
+.about-info th {
+  white-space: nowrap;
 }
