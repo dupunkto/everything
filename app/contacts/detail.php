@@ -78,10 +78,14 @@
   }
 ?>
 
-<?php if($meta): ?>
+<?php if($meta || $item['tags']): ?>
   <p class="detail__meta">
     <?php foreach($meta as $text): ?>
-      <span><?= esc_inner($text) ?></span>
+      <span class="detail__meta-badge"><?= esc_inner($text) ?></span>
+    <?php endforeach ?>
+    <?php foreach($item['tags'] as $tag): ?>
+      <?php $color = contrast_color($tag['color'], lighten($tag['color'], 0.85), darken($tag['color'], 0.65)) ?>
+      <span class="detail__meta-badge detail__meta-tag" style="background-color: <?= esc_attr($tag['color']) ?>; color: <?= esc_attr($color) ?>"><?= esc_inner($tag['label']) ?></span>
     <?php endforeach ?>
   </p>
 <?php endif ?>

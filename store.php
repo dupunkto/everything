@@ -1267,7 +1267,8 @@ function list_contact_addresses($id) {
 
 function list_contact_tags($id) {
   return all('SELECT t.* FROM `tags` t
-    JOIN `contacts_tags` ct ON ct.tag_id = t.id WHERE ct.contact_id = ?', [$id]);
+    JOIN `contacts_tags` ct ON ct.tag_id = t.id WHERE ct.contact_id = ?
+    ORDER BY t.`order` ASC, t.id DESC', [$id]);
 }
 
 function create_contact(
@@ -1438,7 +1439,8 @@ function list_organisation_addresses($id) {
 
 function list_organisation_tags($id) {
   return all('SELECT t.* FROM `tags` t
-    JOIN `orgs_tags` ot ON ot.tag_id = t.id WHERE ot.org_id = ?', [$id]);
+    JOIN `orgs_tags` ot ON ot.tag_id = t.id WHERE ot.org_id = ?
+    ORDER BY t.`order` ASC, t.id DESC', [$id]);
 }
 
 function create_organisation($display_name, $legal_name, $registration_number, $vat_number, $note) {
