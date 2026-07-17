@@ -385,9 +385,10 @@ body:has(.calendar-page) {
 
 .calendar-week__habits {
   position: absolute;
-  left: calc(3.5em + 1px);
+  grid-column: 2 / -1;
+  grid-row: 3;
+  left: 0;
   right: 0;
-  bottom: 10px;
   z-index: 3;
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -395,13 +396,28 @@ body:has(.calendar-page) {
   pointer-events: none;
 }
 
+.calendar-week__habits--top {
+  top: 10px;
+}
+
+.calendar-week__habits--bottom {
+  bottom: 10px;
+}
+
 .calendar-week .day__habits {
   display: flex;
-  flex-wrap: wrap-reverse;
   justify-content: center;
   align-content: flex-start;
   gap: 0.5em 0.6em;
   padding: 0 0.5em;
+}
+
+.calendar-week__habits--bottom .day__habits {
+  flex-wrap: wrap-reverse;
+}
+
+.calendar-week__habits--top .day__habits {
+  flex-wrap: wrap;
 }
 
 .calendar-week .day__habit {

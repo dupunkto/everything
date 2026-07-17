@@ -1,6 +1,7 @@
 <?php
 
   define('ENUM_UI_POSITION', ['left', 'right']);
+  define('ENUM_UI_HABITS_POSITION', ['top', 'bottom']);
 
   if(isset($_POST['panel-position'])) {
     if(!in_array($_POST['panel-position'], ENUM_UI_POSITION))
@@ -21,6 +22,14 @@
 
     \store\update_config('ui.sidebar-position', $_POST['sidebar-position'])
       or fail("Could not update sidebar position.");
+  }
+
+  if(isset($_POST['habits-position'])) {
+    if(!in_array($_POST['habits-position'], ENUM_UI_HABITS_POSITION))
+      fail("Invalid 'habits-position' parameter.", status: 400);
+
+    \store\update_config('ui.habits-position', $_POST['habits-position'])
+      or fail("Could not update habits position.");
   }
 
 ?>
@@ -46,5 +55,13 @@
       'left' => 'Left',
       'right' => 'Right',
     ], \config\fresh_value('ui.sidebar-position'), flat: true) ?>
+  </label>
+
+  <label>
+    Habits position
+    <?php \forms\options('habits-position', [
+      'top' => 'Top',
+      'bottom' => 'Bottom',
+    ], \config\fresh_value('ui.habits-position'), flat: true) ?>
   </label>
 </form>

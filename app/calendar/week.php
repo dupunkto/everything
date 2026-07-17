@@ -60,6 +60,7 @@ $now_top = ((int) $now->format('H') * 60 + (int) $now->format('i')) / 1440 * 100
 
 $color = fn($a) => esc_attr($a['calendar_color'] ?? $a['subscription_color'] ?? '#cccccc');
 $task_icon = fn($a) => ['done' => 'fa-check', 'blocked' => 'fa-xmark'][@$a['task_status']] ?? 'fa-alarm-clock';
+
 $sidebar_right = UI_SIDEBAR_POSITION == 'right';
 
 ?>
@@ -188,7 +189,7 @@ $sidebar_right = UI_SIDEBAR_POSITION == 'right';
   </div>
 
   <?php if($habits): ?>
-    <div class="calendar-week__habits">
+    <div class="calendar-week__habits calendar-week__habits--<?= UI_HABITS_POSITION ?>">
       <?php foreach(array_keys($days) as $date): ?>
         <div class="day__habits">
           <?php foreach($habits[$date] as $habit): ?>
