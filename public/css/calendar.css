@@ -358,6 +358,14 @@ body:has(.calendar-page) {
   color: black;
 }
 
+.calendar-week .day .appointment:has(.appointment__handle) {
+  cursor: grab;
+}
+
+.calendar-week .day .appointment:has(.appointment__handle):active {
+  cursor: grabbing;
+}
+
 .calendar-week .appointment__handle {
   position: absolute;
   left: 0;

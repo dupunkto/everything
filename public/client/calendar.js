@@ -1,6 +1,6 @@
 // This file contains behaviour for the calendar application that cannot be
 // easily expressed declaratively using xhtml and zhtml. It is split into
-// four sections: helpers, editor popup, drag-to-resize + drag-to-create,
+// four sections: helpers, editor popup, drag-to-move/resize/create,
 // and scroll retention on navigation.
 
 // Everything operates on the #calendar-view element, which survives innerHTML
@@ -50,6 +50,11 @@
     const rect = day.getBoundingClientRect();
     const min = (y - rect.top) / rect.height * DAY;
     return Math.max(0, Math.min(DAY, Math.round(min / SNAP) * SNAP));
+  };
+
+  const minutes = (el) => {
+    const [h, m] = el.getAttribute("datetime").slice(11, 16).split(":");
+    return +h * 60 + +m;
   };
 
   // An end at 24:00 lands on midnight of the following day.
@@ -191,7 +196,7 @@
     if(event.key == "Escape") close_editor();
   });
 
-  // Drag to create or resize
+  // Drag to create, move or resize
 
   const resize = (event, handle, day) => {
     event.preventDefault();
@@ -199,11 +204,6 @@
     const article = handle.closest(".appointment");
     const start_el = article.querySelector(".appointment__start");
     const end_el = article.querySelector(".appointment__end");
-
-    const minutes = (el) => {
-      const [h, m] = el.getAttribute("datetime").slice(11, 16).split(":");
-      return +h * 60 + +m;
-    };
 
     const top = handle.classList.contains("appointment__handle--top");
     const before = [minutes(start_el), minutes(end_el)];
@@ -222,6 +222,36 @@
       if(start == before[0] && end == before[1]) return;
 
       await post("/calendar/resize", { id: article.dataset.id, ...range(day.dataset.date, start, end) });
+      xhtml.refresh("#calendar-view");
+    });
+  };
+
+  const move = (event, article, day) => {
+    event.preventDefault();
+
+    const start_el = article.querySelector(".appointment__start");
+    const end_el = article.querySelector(".appointment__end");
+    const before = { day, start: minutes(start_el), end: minutes(end_el) };
+    const duration = before.end - before.start;
+    const grab = minute_at(day, event.clientY) - before.start;
+    let current = before;
+
+    drag((e) => {
+      const start = Math.max(0, Math.min(DAY - duration, minute_at(day, e.clientY) - grab));
+      const end = start + duration;
+      current = { day, start, end };
+
+      article.style.setProperty("--appointment-top", start / DAY * 100);
+      article.style.setProperty("--appointment-height", duration / DAY * 100);
+      start_el.textContent = hhmm(start);
+      end_el.textContent = hhmm(end);
+    }, async () => {
+      if(current.day == before.day && current.start == before.start) return;
+
+      await post("/calendar/resize", {
+        id: article.dataset.id,
+        ...range(current.day.dataset.date, current.start, current.end),
+      });
       xhtml.refresh("#calendar-view");
     });
   };
@@ -263,8 +293,11 @@
     if(!day) return;
 
     const handle = event.target.closest(".appointment__handle");
+    const appointment = event.target.closest(".appointment[data-id]");
+
     if(handle) resize(event, handle, day);
-    else if(!event.target.closest(".appointment")) create(event, day);
+    else if(appointment?.querySelector(".appointment__handle")) move(event, appointment, day);
+    else if(!appointment) create(event, day);
   });
 
   // Scroll retention
