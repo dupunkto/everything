@@ -4,7 +4,8 @@
     \store\update_note(
       $_POST['id'],
       $_POST['title'],
-      $_POST['content']
+      $_POST['content'],
+      cast_datetime_utc($_POST['date'], $_POST['time'])
     ) or fail("Could not update note.");
 
     \store\set_note_tags($_POST['id'], $_POST['tags'] ?? []);
@@ -37,7 +38,16 @@
         <?php tags_field(\store\get_note_tags($note['id'])) ?>
         <textarea name="content" placeholder="What do you want to remember?"><?= esc_inner($note['content']) ?></textarea>
 
-        <a class="button" z-key="d" href="/notes/delete?id=<?= esc_attr($note['id']) ?>" z-confirm="Delete this note?">Delete</a>
+        <div class="actions">
+          <a class="button" z-key="d" href="/notes/delete?id=<?= esc_attr($note['id']) ?>" z-confirm="Delete this note?">Delete</a>
+          <div class="field note-editor__saved">
+            <label for="date">Written at</label>
+            <span class="datetime-pair">
+              <input type="date" id="date" name="date" value="<?= esc_attr(local_date("Y-m-d", $note['date'])) ?>" required>
+              <input type="time" name="time" value="<?= esc_attr(local_date("H:i", $note['date'])) ?>" required>
+            </span>
+          </div>
+        </div>
       </form>
     </main>
   </body>

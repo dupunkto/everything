@@ -25,25 +25,28 @@ define('ENUM_WISH_STATUS', ['dream', 'bought', 'nvm']);
 
 // Notes
 
-function create_note($title, $content) {
+function create_note($title, $content, $date = null) {
   $ok = exec_query('INSERT INTO `notes` (
     `id`,
     `title`,
-    `content`
-  ) VALUES (?, ?, ?)', [
+    `content`,
+    `date`
+  ) VALUES (?, ?, ?, ?)', [
     $id = generate_humid(),
     $title,
-    $content
+    $content,
+    $date ?? gmdate('c')
   ]);
 
   return $ok ? $id : $ok;
 }
 
-function update_note($id, $title, $content) {
+function update_note($id, $title, $content, $date = null) {
   return exec_query('UPDATE `notes` SET
     `title` = ?,
-    `content` = ?
-  WHERE id = ?', [$title, $content, $id]);
+    `content` = ?,
+    `date` = ?
+  WHERE id = ?', [$title, $content, $date, $id]);
 }
 
 function get_note($id) {

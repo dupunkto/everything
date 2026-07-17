@@ -155,7 +155,7 @@
     : "/contacts/detail";
 
 ?>
-<form class="detail__edit" x-post="/contacts/edit" x-target="#contacts-panel" x-refresh="#contacts-list">
+<form class="detail__edit" data-contact-state="edit" data-kind="<?= esc_attr($kind) ?>" data-id="<?= esc_attr(@$item['id']) ?>" x-post="/contacts/edit" x-target="#contacts-panel" x-refresh="#contacts-list">
   <input type="hidden" name="kind" value="<?= $kind ?>">
   <input type="hidden" name="id" value="<?= esc_attr(@$item['id']) ?>">
 

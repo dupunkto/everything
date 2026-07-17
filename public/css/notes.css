@@ -80,12 +80,43 @@
   border-left: 3px solid light-dark(#ccc, #44444e);
 }
 
+.note-form,
+.note-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75em;
+}
+
 .note-form [name="title"],
 .note-editor [name="title"] {
   font-size: 1.5em;
 }
 
+.note-editor [name="title"] {
+  margin-bottom: -8px;
+}
+
 .note-form textarea,
 .note-editor textarea {
   min-height: 60vh;
+}
+
+.note-editor .field {
+  display: flex;
+  flex-direction: column;
+}
+
+.note-editor__saved {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.note-editor .datetime-pair {
+  display: flex;
+  gap: 0.25em;
+}
+
+.note-editor .datetime-pair input {
+  flex: 1;
 }

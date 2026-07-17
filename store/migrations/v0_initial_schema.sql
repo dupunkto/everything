@@ -193,6 +193,7 @@ CREATE TABLE IF NOT EXISTS `notes` (
   `id` text NOT NULL, -- humid
   `title` text NOT NULL,
   `content` text,
+  `date` datetime NOT NULL,
   PRIMARY KEY (`id`)
 );
 

@@ -1,7 +1,7 @@
 <?php
 
   if(isset($_POST["title"], $_POST["content"])) {
-    $id = \store\create_note($_POST['title'], $_POST['content'])
+    $id = \store\create_note($_POST['title'], $_POST['content'], gmdate('c'))
       or fail("Could not save note '" . $_POST['title'] . "'.");
 
     \store\set_note_tags($id, $_POST['tags'] ?? []);
