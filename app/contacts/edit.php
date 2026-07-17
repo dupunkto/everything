@@ -160,7 +160,7 @@
   <input type="hidden" name="id" value="<?= esc_attr(@$item['id']) ?>">
 
   <div class="actions">
-    <button type="button" z-key="escape" z-discard="Discard unsaved changes?"
+    <button type="button" formnovalidate z-key="escape" z-discard="Discard unsaved changes?"
       x-get="<?= esc_attr($cancel_url) ?>" x-target="#contacts-panel" x-blur>Cancel</button>
     <button>Save</button>
   </div>

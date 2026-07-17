@@ -24,7 +24,7 @@
   <div class="actions">
     <div>
       <?php if(isset($_GET['id'])): ?>
-        <button type="button" z-key="escape" x-get="/addresses/edit" x-target="#address-editor" x-blur>Cancel</button>
+        <button type="button" formnovalidate z-key="escape" x-get="/addresses/edit" x-target="#address-editor" x-blur>Cancel</button>
       <?php endif ?>
       <button><?= isset($_GET['id']) ? "Save" : "Add address" ?></button>
     </div>
