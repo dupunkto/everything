@@ -140,6 +140,63 @@
   height: 2em;
 }
 
+.settings-editor--quota {
+  align-items: center;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 1fr min-content 6em 17em min-content;
+  width: 100%;
+}
+
+.settings-editor--quota label {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5em;
+  justify-content: flex-end;
+}
+
+.settings-editor--quota-new {
+  align-items: center;
+  display: flex;
+}
+
+.settings-listing,
+.settings-listing > li {
+  width: 100%;
+}
+
+.settings-editor--quota select,
+.settings-editor--quota-new select {
+  box-sizing: border-box;
+  max-width: none;
+  width: 100%;
+}
+
+.settings-editor--quota > button:last-child {
+  box-sizing: border-box;
+  height: 2em;
+  justify-content: center;
+  padding: 0;
+  width: 2em;
+}
+
+.settings-editor__quota-tag {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-editor__quota-time {
+  align-items: center;
+  display: flex;
+  gap: 0.25em;
+  white-space: nowrap;
+}
+
+.settings-editor__quota-time input {
+  width: 3em;
+}
+
 .subscription-new-form {
   display: flex;
   flex-direction: row;

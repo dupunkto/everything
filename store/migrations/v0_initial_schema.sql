@@ -394,6 +394,17 @@ CREATE TABLE IF NOT EXISTS `timings_tags` (
   PRIMARY KEY (`id`)
 );
 
+CREATE TABLE IF NOT EXISTS `quotas` (
+  `tag_id` int(11) NOT NULL,
+  `period` text NOT NULL, -- str<week|month>
+  `minutes` int(11) NOT NULL,
+  `start_date` date NOT NULL,
+  FOREIGN KEY (`tag_id`) REFERENCES `tags` (`id`) ON DELETE CASCADE,
+  CHECK (`period` IN ('week', 'month')),
+  CHECK (`minutes` > 0),
+  PRIMARY KEY (`tag_id`)
+);
+
 CREATE TABLE IF NOT EXISTS `imap_connections` (
   `id` int(11) NOT NULL,
   `email` text NOT NULL,

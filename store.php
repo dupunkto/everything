@@ -623,6 +623,53 @@ function delete_timing($id) {
   return exec_query('DELETE FROM `timings` WHERE `id` = ?', [$id]);
 }
 
+function list_timing_tags($from, $to) {
+  return all('SELECT t.id, t.starts_at, t.ends_at, tt.tag_id
+    FROM `timings` t
+    JOIN `timings_tags` tt ON tt.timing_id = t.id
+    WHERE t.starts_at < ? AND t.ends_at > ?', [$to, $from]) ?? [];
+}
+
+// Quotas
+
+function list_quotas() {
+  return all('SELECT q.*, t.label, t.color
+    FROM `quotas` q
+    JOIN `tags` t ON t.id = q.tag_id
+    ORDER BY t.`order` ASC, t.id DESC') ?? [];
+}
+
+function quota_minutes($tag_id, $period, $hours, $minutes, $start_date) {
+  if(!$tag_id || !get_tag($tag_id)) return null;
+  if(!in_array($period, ['week', 'month'])) return null;
+  if($hours === null || $minutes === null || $hours < 0 || $minutes < 0 || $minutes > 59) return null;
+  if(!$start_date || \cast_date($start_date) != $start_date) return null;
+
+  $duration = $hours * 60 + $minutes;
+  return $duration > 0 ? $duration : null;
+}
+
+function create_quota($tag_id, $period, $hours, $minutes, $start_date) {
+  $duration = quota_minutes($tag_id, $period, $hours, $minutes, $start_date);
+  if(!$duration) return false;
+
+  return exec_query('INSERT INTO `quotas` (`tag_id`, `period`, `minutes`, `start_date`)
+    VALUES (?, ?, ?, ?)', [$tag_id, $period, $duration, $start_date]);
+}
+
+function update_quota($tag_id, $period, $hours, $minutes, $start_date) {
+  $duration = quota_minutes($tag_id, $period, $hours, $minutes, $start_date);
+  if(!$duration) return false;
+
+  return exec_query('UPDATE `quotas`
+    SET `period` = ?, `minutes` = ?, `start_date` = ? WHERE `tag_id` = ?',
+    [$period, $duration, $start_date, $tag_id]);
+}
+
+function delete_quota($tag_id) {
+  return exec_query('DELETE FROM `quotas` WHERE `tag_id` = ?', [$tag_id]);
+}
+
 // Tags
 
 function create_tag($label, $color, $parent_id) {

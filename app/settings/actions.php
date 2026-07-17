@@ -8,6 +8,7 @@
     "/calendar" => "Calendar",
     "/contacts" => "Contacts",
     "/todo" => "ToDo",
+    "/tracker" => "Tracker",
   ];
 
 ?>

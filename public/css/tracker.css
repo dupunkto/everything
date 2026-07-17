@@ -194,3 +194,35 @@
 .tracker-editor__delete {
   margin-top: 0.5rem;
 }
+
+.quota-overview__section + .quota-overview__section {
+  margin-top: 3em;
+}
+
+.quota-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.quota-table th:first-child {
+  text-align: left;
+  width: 40%;
+}
+
+.quota-table__tag::before {
+  background: var(--tag-color);
+  border-radius: 50%;
+  content: "";
+  display: inline-block;
+  height: 0.75em;
+  margin-right: 0.5em;
+  width: 0.75em;
+}
+
+.quota-table__positive {
+  color: light-dark(#18733c, #62c98e);
+}
+
+.quota-table__negative {
+  color: light-dark(#a52a2a, #ef7777);
+}
