@@ -16,7 +16,7 @@
       </h2>
 
       <?php if($note['content']): ?>
-        <p class="note-card__content"><?= esc_inner($note['content']) ?></p>
+        <div class="note-card__content"><?= markdown($note['content']) ?></div>
       <?php endif ?>
 
       <a href="/notes/delete?id=<?= esc_attr($note['id']) ?>" z-key="d" z-confirm="Delete this note?" hidden></a>

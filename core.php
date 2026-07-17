@@ -26,3 +26,5 @@ require __DIR__ . "/core/logic/calendar.php";
 require __DIR__ . "/core/logic/habits.php";
 require __DIR__ . "/core/logic/bookmarks.php";
 require __DIR__ . "/core/logic/subscription.php";
+
+require __DIR__ . "/vendor/parsedown.php";

@@ -28,18 +28,16 @@
   </head>
   <body>
     <?php include __DIR__ . "/../shell/menu.php" ?>
-    <main class="main main--semi-wide">
+    <main class="main">
       <form id="note-editor" class="note-editor" x-post="/notes/edit" x-on="change" x-target="@document">
         <input type="hidden" name="id" value="<?= esc_attr($note['id']) ?>">
         <button type="submit" name="close" value="1" z-key="escape mod+enter" hidden></button>
 
-        <input name="title" type="text" placeholder="Title" value="<?= esc_attr($note['title']) ?>" autofocus>
+        <input name="title" type="text" placeholder="Title" value="<?= esc_attr($note['title']) ?>">
         <?php tags_field(\store\get_note_tags($note['id'])) ?>
         <textarea name="content" placeholder="What do you want to remember?"><?= esc_inner($note['content']) ?></textarea>
 
-        <div class="actions">
-          <a class="button" href="/notes/delete?id=<?= esc_attr($note['id']) ?>" z-confirm="Delete this note?">Delete</a>
-        </div>
+        <a class="button" z-key="d" href="/notes/delete?id=<?= esc_attr($note['id']) ?>" z-confirm="Delete this note?">Delete</a>
       </form>
     </main>
   </body>
