@@ -96,7 +96,7 @@
 
           <textarea rows="3" name="comment" placeholder="Add a comment..."></textarea>
           <div class="actions">
-            <a class="button" href="/todo/delete?id=<?= esc_attr($task['id']) ?>" z-confirm="Delete this task?">Delete</a>
+            <a class="button" z-key="d" href="/todo/delete?id=<?= esc_attr($task['id']) ?>" z-confirm="Delete this task?">Delete</a>
             <button x-post="/todo/edit" x-data="#todo-editor" x-target="@document">Comment</button>
           </div>
         </section>

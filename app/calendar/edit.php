@@ -133,7 +133,7 @@
 
   <?php if(!$is_subscription): ?>
     <button type="button" data-id="<?= esc_attr($appointment['id']) ?>"
-      x-post="/calendar/delete" x-refresh="#calendar-view">Delete</button>
+      x-post="/calendar/delete" z-key="d" x-refresh="#calendar-view">Delete</button>
   <?php endif ?>
 
   <script>

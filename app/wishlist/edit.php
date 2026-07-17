@@ -94,7 +94,7 @@
         </label>
 
         <div class="actions">
-          <a class="button" href="/wishlist/delete?id=<?= esc_attr($wish['id']) ?>" z-confirm="Delete this wish?">Delete</a>
+          <a class="button" z-key="d" href="/wishlist/delete?id=<?= esc_attr($wish['id']) ?>" z-confirm="Delete this wish?">Delete</a>
         </div>
       </form>
     </main>

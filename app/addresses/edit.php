@@ -30,7 +30,7 @@
     </div>
     <div>
       <?php if(isset($_GET['id'])): ?>
-        <button type="button" x-delete="/addresses/delete?id=<?= esc_attr($address['id']) ?>" x-target="#addresses-list" x-refresh="#address-editor" x-data="#address-search" x-confirm="Delete this address and remove it from all contacts and organisations?">Delete</button>
+        <button type="button" z-key="d" x-delete="/addresses/delete?id=<?= esc_attr($address['id']) ?>" x-target="#addresses-list" x-refresh="#address-editor" x-data="#address-search" x-confirm="Delete this address and remove it from all contacts and organisations?">Delete</button>
       <?php endif ?>
     </div>
   </div>
