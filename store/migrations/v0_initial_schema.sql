@@ -245,6 +245,7 @@ CREATE TABLE IF NOT EXISTS `wishes` (
   `id` text NOT NULL, -- humid
   `title` text NOT NULL,
   `content` text,
+  `date` datetime NOT NULL,
   -- this name was chosen to stay consistent with the tasks schema
   `urgent` boolean NOT NULL,
   PRIMARY KEY (`id`)

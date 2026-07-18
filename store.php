@@ -339,19 +339,21 @@ function delete_task($id) {
 
 // Wishes
 
-function create_wish($title, $content, $status, $urgent = false) {
+function create_wish($title, $content, $status, $urgent = false, $date = null) {
   in_array($status, ENUM_WISH_STATUS) or die("status $status does not exist");
 
   $ok = exec_query('INSERT INTO `wishes` (
     `id`,
     `title`,
     `content`,
-    `urgent`
-  ) VALUES (?, ?, ?, ?)', [
+    `urgent`,
+    `date`
+  ) VALUES (?, ?, ?, ?, ?)', [
     $id = generate_humid(),
     $title,
     $content,
-    $urgent
+    $urgent,
+    $date ?? gmdate('c')
   ]);
 
   if(!$ok) return $ok;
@@ -380,12 +382,13 @@ function set_wish_status($id, $status, $comment = "") {
   ) VALUES (?, ?, ?)', [$id, $status, $comment]);
 }
 
-function update_wish($id, $title, $content, $urgent) {
+function update_wish($id, $title, $content, $urgent, $date = null) {
   return exec_query('UPDATE `wishes` SET
     `title` = ?,
     `content` = ?,
-    `urgent` = ?
-  WHERE id = ?', [$title, $content, $urgent, $id]);
+    `urgent` = ?,
+    `date` = ?
+  WHERE id = ?', [$title, $content, $urgent, $date, $id]);
 }
 
 function get_wish($id) {
@@ -448,7 +451,7 @@ function list_wishes($statuses = [], $override = []) {
         ORDER BY ranked.date DESC, ranked.id DESC
         LIMIT 1
       )
-    ORDER BY `title`");
+    ORDER BY wishes.`date` DESC, wishes.`id` DESC");
 
   if(!$rows) return $rows;
 

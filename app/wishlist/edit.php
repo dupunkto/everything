@@ -3,9 +3,10 @@
   if(isset($_POST['id'])) {
     \store\update_wish(
       $_POST['id'],
-      $_POST['title'],
-      $_POST['content'],
-      $_POST['urgent']
+      cast_string($_POST['title']),
+      cast_string($_POST['content']),
+      cast_boolean($_POST['urgent']),
+      cast_datetime_utc($_POST['date'], $_POST['time'])
     ) or fail("Could not update wish.");
 
     \store\set_wish_status($_POST['id'], $_POST['status'], cast_string(@$_POST['comment']))
@@ -95,6 +96,13 @@
 
         <div class="actions">
           <a class="button" z-key="d" href="/wishlist/delete?id=<?= esc_attr($wish['id']) ?>" z-confirm="Delete this wish?">Delete</a>
+          <div class="field wishlist-editor__added">
+            <label for="date">added on</label>
+            <span class="datetime-pair">
+              <input type="date" id="date" name="date" value="<?= esc_attr(local_date("Y-m-d", $wish['date'])) ?>" required>
+              <input type="time" name="time" value="<?= esc_attr(local_date("H:i", $wish['date'])) ?>" required>
+            </span>
+          </div>
         </div>
       </form>
     </main>

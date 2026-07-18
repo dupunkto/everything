@@ -28,6 +28,26 @@
   margin-right: 1em;
 }
 
+.wishlist-editor .field {
+  display: flex;
+  flex-direction: column;
+}
+
+.wishlist-editor__added {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.wishlist-editor .datetime-pair {
+  display: flex;
+  gap: 0.25em;
+}
+
+.wishlist-editor .datetime-pair input {
+  flex: 1;
+}
+
 .wishlist-form fieldset button,
 .wishlist-editor fieldset button {
   padding: 0.5em 0.75em;
