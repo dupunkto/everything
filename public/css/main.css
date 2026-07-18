@@ -462,3 +462,7 @@ body {
 [hidden] {
   display: none !important;
 }
+
+textarea {
+  field-sizing: content
+}
