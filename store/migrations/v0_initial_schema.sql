@@ -191,7 +191,7 @@ CREATE TABLE IF NOT EXISTS `org_addresses` (
 
 CREATE TABLE IF NOT EXISTS `notes` (
   `id` text NOT NULL, -- humid
-  `title` text NOT NULL,
+  `title` text,
   `content` text,
   `date` datetime NOT NULL,
   PRIMARY KEY (`id`)
