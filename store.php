@@ -1258,7 +1258,7 @@ define('ENUM_SSL_MODE', ['plain', 'tls', 'ssl']);
 
 // Contacts
 
-define('ENUM_SOCIAL_TYPE', ['instagram', 'discord', 'snapchat', 'github', 'codeberg', 'linkedin', 'matrix', 'pinterest', 'twitter', 'youtube', 'facebook', 'activitypub', 'bsky']);
+define('ENUM_SOCIAL_TYPE', ['instagram', 'discord', 'snapchat', 'airbuds', 'tiktok', 'github', 'codeberg', 'gitlab', 'linkedin', 'matrix', 'pinterest', 'twitter', 'youtube', 'facebook', 'activitypub', 'bsky']);
 
 function list_contacts() {
   return all("SELECT contacts.*,
