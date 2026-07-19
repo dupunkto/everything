@@ -235,7 +235,7 @@ CREATE TABLE IF NOT EXISTS `task_log` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `task_id` text NOT NULL,
   `date` datetime NOT NULL DEFAULT current_timestamp,
-  `status` text NOT NULL, -- str<todo|backlog|blocked|done|nvm>
+  `status` text NOT NULL, -- str<todo|wip|backlog|blocked|done|nvm>
   `comment` text,
   FOREIGN KEY (`task_id`) REFERENCES `tasks` (`id`) ON DELETE CASCADE,
   PRIMARY KEY (`id`)

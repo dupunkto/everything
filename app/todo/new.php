@@ -58,7 +58,7 @@
           <div class="field">
             <label for="status">Status</label>
             <?php \forms\options("status",
-              ["backlog", "todo", "blocked", "done", "nvm"], capitalize: false, selected: "todo") ?>
+              ["backlog", "todo", "wip", "blocked", "done", "nvm"], capitalize: false, selected: "todo") ?>
           </div>
 
           <div class="field">

@@ -131,7 +131,7 @@
 
         <aside>
           <?php \forms\options("status",
-              ["backlog", "todo", "blocked", "done", "nvm"],
+              ["backlog", "todo", "wip", "blocked", "done", "nvm"],
               selected: $task['status'],
               capitalize: false) ?>
 

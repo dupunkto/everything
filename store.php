@@ -20,7 +20,7 @@ switch($_DATABASE['scheme']) {
 
 // Tasks
 
-define('ENUM_TASK_STATUS', ['todo', 'backlog', 'blocked', 'done', 'nvm']);
+define('ENUM_TASK_STATUS', ['todo', 'wip', 'backlog', 'blocked', 'done', 'nvm']);
 define('ENUM_WISH_STATUS', ['dream', 'bought', 'nvm']);
 
 // Notes
@@ -238,6 +238,7 @@ function list_tasks($query = "", $override = [], $respect_horizon = true) {
     [$selector, $value] = $parts;
 
     if($value == 'urgent') $urgent = $selector == "is";
+    elseif($selector == "is" && $value == 'open') $include = [...$include, 'todo', 'wip', 'blocked'];
     elseif($selector == "is" && in_array($value, ENUM_TASK_STATUS)) $include[] = $value;
     elseif($selector == "not" && in_array($value, ENUM_TASK_STATUS)) $exclude[] = $value;
   }

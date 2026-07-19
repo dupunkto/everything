@@ -86,7 +86,7 @@
     <button type="button" z-set="#todo-search" value="is:nvm"><i class="fa-regular fa-box-archive"></i> Shelves</button>
     <button type="button" z-set="#todo-search" value="is:backlog"><i class="fa-regular fa-folder-open"></i> Backlog</button>
   <?php else: ?>
-    <button type="button" z-set="#todo-search" value="is:todo">&larr; Back to todo</button>
+    <button type="button" z-set="#todo-search" value="is:open">&larr; Back to todo</button>
   <?php endif ?>
 </nav>
 
@@ -125,7 +125,14 @@
                 <?= esc_inner($task['title']) ?>
               </a>
             </h4>
-            <?php if($task['recurrence']): ?><span class="todo__recurring">recurring</span><?php endif ?>
+            <?php if(in_array($task['status'], ['wip', 'blocked']) || $task['recurrence']): ?>
+              <span class="todo__badges">
+                <?php if(in_array($task['status'], ['wip', 'blocked'])): ?>
+                  <span class="todo__badge todo__badge--<?= esc_attr($task['status']) ?>"><?= esc_inner($task['status']) ?></span>
+                <?php endif ?>
+                <?php if($task['recurrence']): ?><span class="todo__badge">recurring</span><?php endif ?>
+              </span>
+            <?php endif ?>
             <a href="/todo/delete?id=<?= $task['id'] ?>" z-key="d" z-confirm="Delete this task?" hidden></a>
           </li>
         <?php endforeach; ?>
