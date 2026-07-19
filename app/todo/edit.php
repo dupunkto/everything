@@ -116,7 +116,7 @@
 
           <textarea rows="3" name="comment" placeholder="Add a comment..."></textarea>
           <div class="actions">
-            <a class="button" z-key="d" href="/todo/delete?id=<?= esc_attr($task['id']) ?>" z-confirm="Delete this task?">Delete</a>
+            <button class="button" type="button" formnovalidate z-key="d" x-delete="/todo/delete?id=<?= esc_attr($task['id']) ?>" z-confirm="Delete this task?">Delete</button>
             <?php
               $latest = $log ? $log[array_key_last($log)] : null;
               $before = count($log) > 1 ? $log[array_key_last($log) - 1] : null;

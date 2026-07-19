@@ -237,7 +237,7 @@
 
   <?php if($id): ?>
     <div class="detail__delete">
-      <a class="button" z-key="d" href="/contacts/delete?kind=<?= $kind ?>&id=<?= @$item['id'] ?>" z-confirm="Delete this <?= $kind === 'org' ? 'organisation' : 'contact' ?>?">Delete</a>
+      <button class="button" type="button" formnovalidate z-key="d" x-delete="/contacts/delete?kind=<?= $kind ?>&id=<?= @$item['id'] ?>" z-confirm="Delete this <?= $kind === 'org' ? 'organisation' : 'contact' ?>?">Delete</button>
     </div>
   <?php endif ?>
 

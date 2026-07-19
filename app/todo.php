@@ -8,6 +8,7 @@
   </head>
   <body>
     <?php include __DIR__ . "/shell/menu.php" ?>
+    <?php $query = "is:open" ?>
     <main class="main main--wide main--scrollable todo" z-nav="#todo-search, .listing__item">
       <input
         id="todo-search"
@@ -16,13 +17,15 @@
         name="q"
         z-key="/"
         placeholder="is:open +acme"
-        value="is:open"
+        value="<?= esc_attr($query) ?>"
         x-get="/todo/listing"
         x-on="input"
         x-target="#todo-listing"
       >
 
-      <section id="todo-listing" x-get="/todo/listing" x-data="#todo-search"></section>
+      <section id="todo-listing" x-get="/todo/listing" x-data="#todo-search">
+        <?php fragment("todo/listing", ["q" => $query]) ?>
+      </section>
     </main>
   </body>
 </html>

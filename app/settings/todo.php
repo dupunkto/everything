@@ -12,7 +12,7 @@
         <h2>ToDo</h2>
       </header>
 
-      <section id="todo-settings" x-get="/settings/todo/edit"></section>
+      <section id="todo-settings" x-get="/settings/todo/edit"><?php fragment("settings/todo/edit") ?></section>
     </main>
   </body>
 </html>

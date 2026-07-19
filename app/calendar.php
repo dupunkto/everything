@@ -90,7 +90,13 @@
         </form>
       </aside>
 
-      <section id="calendar-view" x-get="/calendar/week" x-data="#calendar-filters"></section>
+      <!-- The pre-render is a bare-grid skeleton. The explicit
+           x-on="load" still fetches the real view through the one
+           filtered code path, so appointments never flash before
+           persisted filters apply. -->
+      <section id="calendar-view" x-get="/calendar/week" x-data="#calendar-filters" x-on="load">
+        <?php fragment("calendar/week", ["skeleton" => "1"]) ?>
+      </section>
 
       <div class="calendar-editor" hidden></div>
     </main>

@@ -12,7 +12,7 @@
         <h2>General</h2>
       </header>
 
-      <section id="general-settings" x-get="/settings/general/edit"></section>
+      <section id="general-settings" x-get="/settings/general/edit"><?php fragment("settings/general/edit") ?></section>
     </main>
   </body>
 </html>

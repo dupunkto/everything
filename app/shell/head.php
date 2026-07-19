@@ -13,7 +13,7 @@
 
 <script src="<?= CANONICAL ?>/vendor/zhtml.min.js"></script>
 <script src="<?= CANONICAL ?>/vendor/xhtml.min.js"></script>
-<script src="<?= CANONICAL ?>/vendor/instant-page.min.js" type="module"></script>
+<script src="<?= CANONICAL ?>/vendor/nav.min.js"></script>
 <script src="<?= CANONICAL ?>/vendor/forms.min.js" type="module"></script>
 <script src="<?= CANONICAL ?>/vendor/localtime.min.js"></script>
 <script src="<?= CANONICAL ?>/client/shell.js"></script>

@@ -20,11 +20,11 @@
       <?php endif ?>
 
       <?php if($has_weekly): ?>
-        <section id="quota-week" class="quota-overview__section" x-get="/tracker/quotas/week"></section>
+        <section id="quota-week" class="quota-overview__section" x-get="/tracker/quotas/week"><?php fragment("tracker/quotas/week") ?></section>
       <?php endif ?>
 
       <?php if($has_monthly): ?>
-        <section id="quota-month" class="quota-overview__section" x-get="/tracker/quotas/month"></section>
+        <section id="quota-month" class="quota-overview__section" x-get="/tracker/quotas/month"><?php fragment("tracker/quotas/month") ?></section>
       <?php endif ?>
     </main>
   </body>

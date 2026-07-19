@@ -11,6 +11,7 @@
 // declined? is whether to show events marked as 'not going'
 // filtered? is whether to show events hidden by subscription filters
 // habits? is whether to show habit badges
+// skeleton? renders the bare grid: no appointments, extras or now line
 
 $tz = new DateTimeZone(TIMEZONE);
 $today = new DateTime('today', $tz);
@@ -20,13 +21,15 @@ $now = new DateTime('now', $tz);
 $from = new DateTime((new DateTime(@$_GET['date'] ?: 'today', $tz))->modify('monday this week')->format('Y-m-d'));
 $to = (clone $from)->modify('+7 days');
 
+$skeleton = isset($_GET['skeleton']);
+
 $filtered = isset($_GET['filter']);
 $visible = $filtered ? (array) (@$_GET['visible'] ?: []) : null;
-$show = fn($extra) => !$filtered || isset($_GET[$extra]);
+$show = fn($extra) => !$skeleton && (!$filtered || isset($_GET[$extra]));
 $show_filtered_events = isset($_GET['filtered']);
 
 $appointments = [];
-foreach(\calendar\appointments($from, $to) as $a) {
+foreach($skeleton ? [] : \calendar\appointments($from, $to) as $a) {
   if($visible !== null && !in_array($a['calendar_id'] ?? $a['subscription_id'], $visible)) continue;
 
   $hidden_by_filter = !empty($a['subscription_filter']) && stripos($a['title'], $a['subscription_filter']) === false;
@@ -136,7 +139,7 @@ $sidebar_right = UI_SIDEBAR_POSITION == 'right';
 
     <?php foreach($days as $date => $day): ?>
       <section class="day" data-date="<?= $date ?>">
-        <?php if($date == $now_date): ?>
+        <?php if($date == $now_date && !$skeleton): ?>
           <div class="calendar-week__now" style="--now-top: <?= $now_top ?>"></div>
         <?php endif ?>
 

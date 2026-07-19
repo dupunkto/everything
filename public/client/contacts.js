@@ -58,6 +58,8 @@ const push_contact_state = (state) => {
 
 const restore_contact_state = async () => {
   const panel = document.getElementById("contacts-panel");
+  if(!panel) return; // popstate on some other page
+
   const query = new URLSearchParams(location.search);
   const kind = query.get("kind") || "person";
   const mode = query.has("edit") ? "edit" : query.has("view") ? "view" : null;

@@ -19,7 +19,7 @@
         <div class="note-card__content"><?= markdown($note['content']) ?></div>
       <?php endif ?>
 
-      <a href="/notes/delete?id=<?= esc_attr($note['id']) ?>" z-key="d" z-confirm="Delete this note?" hidden></a>
+      <button type="button" x-delete="/notes/delete?id=<?= esc_attr($note['id']) ?>" z-key="d" z-confirm="Delete this note?" hidden></button>
     </li>
   <?php endforeach ?>
 </ul>

@@ -39,7 +39,7 @@
         <textarea name="content" placeholder="What do you want to remember?"><?= esc_inner($note['content']) ?></textarea>
 
         <div class="actions">
-          <a class="button" z-key="d" href="/notes/delete?id=<?= esc_attr($note['id']) ?>" z-confirm="Delete this note?">Delete</a>
+          <button class="button" type="button" formnovalidate z-key="d" x-delete="/notes/delete?id=<?= esc_attr($note['id']) ?>" z-confirm="Delete this note?">Delete</button>
           <div class="field note-editor__saved">
             <label for="date">Written at</label>
             <span class="datetime-pair">

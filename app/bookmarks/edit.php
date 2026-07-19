@@ -49,7 +49,7 @@
         </label>
 
         <div class="actions">
-          <a class="button" z-key="d" href="/bookmarks/delete?id=<?= esc_attr($bookmark['id']) ?>" z-confirm="Delete this bookmark?">Delete</a>
+          <button class="button" type="button" formnovalidate z-key="d" x-delete="/bookmarks/delete?id=<?= esc_attr($bookmark['id']) ?>" z-confirm="Delete this bookmark?">Delete</button>
           <div class="field bookmark-editor__saved">
             <label for="date">Saved on</label>
             <span class="datetime-pair">

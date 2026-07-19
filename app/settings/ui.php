@@ -12,7 +12,7 @@
         <h2>User interface</h2>
       </header>
 
-      <section id="ui-settings" x-get="/settings/ui/edit"></section>
+      <section id="ui-settings" x-get="/settings/ui/edit"><?php fragment("settings/ui/edit") ?></section>
     </main>
   </body>
 </html>

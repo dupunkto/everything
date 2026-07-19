@@ -10,7 +10,7 @@
     <main class="main main--semi-wide main--scrollable" z-nav="#address-search input, .address-item">
       <header class="page-header"><h2>Addresses</h2></header>
 
-      <section id="address-editor" x-get="/addresses/edit"></section>
+      <section id="address-editor" x-get="/addresses/edit"><?php fragment("addresses/edit") ?></section>
 
       <p class="addresses-or">or</p>
 
@@ -27,7 +27,9 @@
         >
       </form>
 
-      <section id="addresses-list" class="listing main__scroll" x-get="/addresses/listing" x-data="#address-search"></section>
+      <section id="addresses-list" class="listing main__scroll" x-get="/addresses/listing" x-data="#address-search">
+        <?php fragment("addresses/listing") ?>
+      </section>
     </main>
   </body>
 </html>

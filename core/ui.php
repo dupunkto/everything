@@ -1,6 +1,18 @@
 <?php
 // Shared UI components.
 
+// Renders a fragment inline for the initial page load, so sections
+// arrive pre-filled instead of fetching themselves after paint. The
+// fragment sees $params merged over the page's own query string —
+// the same request its x-get would have made. xhtml skips the on-load
+// fetch for non-empty elements, so the x-get stays for refreshes.
+function fragment($path, $params = []) {
+  $saved = $_GET;
+  $_GET = $params + $_GET;
+  include path_join(__DIR__, "..", "app", "$path.php");
+  $_GET = $saved;
+}
+
 // Tag picker: the selected tags as removable badges (hidden `tags[]`
 // inputs carry the ids) in front of a search input. The suggestion list
 // holds every tag; client/tags.js (z-tags) filters it while typing.

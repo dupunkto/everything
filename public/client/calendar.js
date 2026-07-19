@@ -12,8 +12,9 @@
   const editor = document.querySelector(".calendar-editor");
   const page = document.querySelector(".calendar-page");
 
-  addEventListener("DOMContentLoaded", () =>
-    requestAnimationFrame(() => page.classList.add("calendar-page--ready")));
+  const ready = () => requestAnimationFrame(() => page.classList.add("calendar-page--ready"));
+  if(document.readyState == "loading") addEventListener("DOMContentLoaded", ready, { once: true });
+  else ready();
 
   const DAY = 1440, SNAP = 10;
 
@@ -191,15 +192,28 @@
     create_range(day, start, start + 60);
   });
 
-  document.addEventListener("click", (event) => {
+  // Each soft navigation into the calendar revives and re-runs this
+  // script against the fresh elements; undo the previous run's
+  // document-level listeners before binding new ones.
+  window.calendar_teardown?.();
+
+  const close_on_click = (event) => {
     if(editor.hidden || editor.contains(event.target)) return;
     if(event.target.closest(".appointment[data-id]")) return; // the clicks of a dblclick
     close_editor();
-  });
+  };
 
-  document.addEventListener("keydown", (event) => {
+  const close_on_escape = (event) => {
     if(event.key == "Escape") close_editor();
-  });
+  };
+
+  document.addEventListener("click", close_on_click);
+  document.addEventListener("keydown", close_on_escape);
+
+  window.calendar_teardown = () => {
+    document.removeEventListener("click", close_on_click);
+    document.removeEventListener("keydown", close_on_escape);
+  };
 
   // Drag to create, move or resize
 

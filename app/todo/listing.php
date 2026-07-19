@@ -136,7 +136,7 @@
                 <?php if($task['recurrence']): ?><span class="todo__badge">recurring</span><?php endif ?>
               </span>
             <?php endif ?>
-            <a href="/todo/delete?id=<?= $task['id'] ?>" z-key="d" z-confirm="Delete this task?" hidden></a>
+            <button type="button" x-delete="/todo/delete?id=<?= $task['id'] ?>" z-key="d" z-confirm="Delete this task?" hidden></button>
           </li>
         <?php endforeach; ?>
       </ul>

@@ -12,7 +12,7 @@
         <h2>Contacts</h2>
       </header>
 
-      <section id="contacts-settings" x-get="/settings/contacts/edit"></section>
+      <section id="contacts-settings" x-get="/settings/contacts/edit"><?php fragment("settings/contacts/edit") ?></section>
     </main>
   </body>
 </html>

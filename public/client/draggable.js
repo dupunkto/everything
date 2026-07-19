@@ -1,3 +1,9 @@
+// Bound once per browser page load: everything is delegated and looks
+// its elements up at event time, so revived copies (document swaps
+// re-execute classic scripts) must not double-bind.
+if(!window.draggable_bound) {
+window.draggable_bound = true;
+
 let dragged_item = null;
 
 function sortable_item(target) {
@@ -85,3 +91,5 @@ document.addEventListener("dragend", () => {
 
   dragged_item = null;
 });
+
+}

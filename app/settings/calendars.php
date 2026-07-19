@@ -14,7 +14,7 @@
         <a class="button" x-post="/settings/calendars/new" x-target="#calendars-listing">Add calendar</a>
       </header>
 
-      <section id="calendars-listing" x-get="/settings/calendars/listing"></section>
+      <section id="calendars-listing" x-get="/settings/calendars/listing"><?php fragment("settings/calendars/listing") ?></section>
     </main>
   </body>
 </html>

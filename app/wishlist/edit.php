@@ -95,7 +95,7 @@
         </label>
 
         <div class="actions">
-          <a class="button" z-key="d" href="/wishlist/delete?id=<?= esc_attr($wish['id']) ?>" z-confirm="Delete this wish?">Delete</a>
+          <button class="button" type="button" formnovalidate z-key="d" x-delete="/wishlist/delete?id=<?= esc_attr($wish['id']) ?>" z-confirm="Delete this wish?">Delete</button>
           <div class="field wishlist-editor__added">
             <label for="date">added on</label>
             <span class="datetime-pair">

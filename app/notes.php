@@ -22,7 +22,7 @@
         >
       </div>
 
-      <section id="notes-listing" class="main__scroll" x-get="/notes/listing"></section>
+      <section id="notes-listing" class="main__scroll" x-get="/notes/listing"><?php fragment("notes/listing") ?></section>
     </main>
   </body>
 </html>

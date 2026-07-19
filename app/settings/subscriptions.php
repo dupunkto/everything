@@ -14,8 +14,8 @@
         <a class="button" z-toggle="#subscription-new">Add subscription</a>
       </header>
 
-      <section id="subscription-new" x-get="/settings/subscriptions/new" z-dismiss="escape" hidden></section>
-      <section id="subscriptions-listing" x-get="/settings/subscriptions/listing"></section>
+      <section id="subscription-new" x-get="/settings/subscriptions/new" z-dismiss="escape" hidden><?php fragment("settings/subscriptions/new") ?></section>
+      <section id="subscriptions-listing" x-get="/settings/subscriptions/listing"><?php fragment("settings/subscriptions/listing") ?></section>
     </main>
   </body>
 </html>

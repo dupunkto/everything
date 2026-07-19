@@ -67,7 +67,7 @@
       <?php if($wish['total_price'] !== null): ?>
         <span class="listing__price"><?= esc_inner(format_price($wish['total_price'])) ?></span>
       <?php endif ?>
-      <a href="/wishlist/delete?id=<?= $wish['id'] ?>" z-key="d" z-confirm="Delete this wish?" hidden></a>
+      <button type="button" x-delete="/wishlist/delete?id=<?= $wish['id'] ?>" z-key="d" z-confirm="Delete this wish?" hidden></button>
     </li>
   <?php endforeach ?>
 </ul>

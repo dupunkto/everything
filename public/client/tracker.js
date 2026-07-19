@@ -104,12 +104,13 @@ zhtml.directive("z-timer", (form) => {
 });
 
 (() => {
-  const creator = document.getElementById("tracker-new");
-  const listing = document.getElementById("tracker-listing");
-  const editor = document.querySelector(".tracker-popup-editor");
+  // Elements are looked up at event time: document swaps replace them,
+  // while this module runs only once per browser page load.
+  const listing = () => document.getElementById("tracker-listing");
+  const editor = () => document.querySelector(".tracker-popup-editor");
+
   let editing = null;
   let restoring_history = false;
-  let pending_edit = new URLSearchParams(location.search).get("edit");
 
   const push_editor_state = (id) => {
     if(restoring_history) return;
@@ -122,6 +123,7 @@ zhtml.directive("z-timer", (form) => {
   };
 
   const restore_editor_state = () => {
+    if(!listing()) return; // popstate on some other page
     const id = new URLSearchParams(location.search).get("edit");
 
     restoring_history = true;
@@ -130,29 +132,33 @@ zhtml.directive("z-timer", (form) => {
   };
 
   const anchor = () =>
-    editing && listing.querySelector(`.tracker-list__item[data-id="${CSS.escape(editing)}"]`);
+    editing && listing()?.querySelector(`.tracker-list__item[data-id="${CSS.escape(editing)}"]`);
 
   const position_editor = () => {
+    const popup = editor();
     const target = anchor();
-    if(!target || editor.hidden) return;
+    if(!target || !popup || popup.hidden) return;
 
     const gap = parseFloat(getComputedStyle(document.documentElement).fontSize);
     const rect = target.getBoundingClientRect();
     const form = document.getElementById("tracker-form");
     const form_bottom = form ? form.getBoundingClientRect().bottom + gap : gap;
 
-    const left = Math.max(gap, Math.min(rect.left + rect.width / 2 - editor.offsetWidth / 2, innerWidth - gap - editor.offsetWidth));
+    const left = Math.max(gap, Math.min(rect.left + rect.width / 2 - popup.offsetWidth / 2, innerWidth - gap - popup.offsetWidth));
     const min_top = Math.max(gap, form_bottom);
-    const max_top = innerHeight - gap - editor.offsetHeight;
-    const top = Math.max(min_top, Math.min(rect.top + rect.height / 2 - editor.offsetHeight / 4, max_top));
+    const max_top = innerHeight - gap - popup.offsetHeight;
+    const top = Math.max(min_top, Math.min(rect.top + rect.height / 2 - popup.offsetHeight / 4, max_top));
 
-    editor.style.left = left + "px";
-    editor.style.top = top + "px";
+    popup.style.left = left + "px";
+    popup.style.top = top + "px";
   };
 
   const close_editor = () => {
-    editor.hidden = true;
-    editor.innerHTML = "";
+    const popup = editor();
+    if(popup) {
+      popup.hidden = true;
+      popup.innerHTML = "";
+    }
     editing = null;
     push_editor_state(null);
   };
@@ -161,22 +167,27 @@ zhtml.directive("z-timer", (form) => {
     editing = id;
     push_editor_state(id);
     const response = await fetch("/tracker/edit?id=" + encodeURIComponent(id), { headers: { Accept: "text/html" } });
-    xhtml.swap(editor, await response.text());
-    editor.hidden = false;
+    const popup = editor();
+    if(!popup) return;
+    xhtml.swap(popup, await response.text());
+    popup.hidden = false;
     position_editor();
   };
 
-  listing.addEventListener("dblclick", (event) => {
-    const item = event.target.closest(".tracker-list__item[data-id]");
+  document.addEventListener("dblclick", (event) => {
+    const item = event.target.closest?.("#tracker-listing .tracker-list__item[data-id]");
     if(item) open_editor(item.dataset.id);
   });
 
-  editor.addEventListener("click", async (event) => {
+  document.addEventListener("click", async (event) => {
+    const popup = event.target.closest?.(".tracker-popup-editor");
+    if(!popup) return;
+
     if(event.target.closest("[data-close]")) return close_editor();
 
     const dates = event.target.closest("[data-show-dates]");
     if(dates) {
-      for(const field of editor.querySelectorAll(".tracker-editor__date")) field.hidden = false;
+      for(const field of popup.querySelectorAll(".tracker-editor__date")) field.hidden = false;
       dates.hidden = true;
       return;
     }
@@ -189,22 +200,29 @@ zhtml.directive("z-timer", (form) => {
     xhtml.refresh("#tracker-listing");
   });
 
-  editor.addEventListener("x-swap", () => xhtml.refresh("#tracker-listing"));
-  listing.addEventListener("x-swap", () => {
-    if(pending_edit) {
-      open_editor(pending_edit);
-      pending_edit = null;
+  document.addEventListener("x-swap", (event) => {
+    if(event.target.closest?.(".tracker-popup-editor"))
+      return void xhtml.refresh("#tracker-listing");
+
+    if(event.target.id == "tracker-listing") {
+      // A fresh listing with ?edit in the URL is a deep link (or a soft
+      // navigation to one): open the editor once, then keep it anchored.
+      const wanted = new URLSearchParams(location.search).get("edit");
+      if(wanted && !editing) return void open_editor(wanted);
+
+      anchor() ? position_editor() : close_editor();
       return;
     }
 
-    anchor() ? position_editor() : close_editor();
+    if(event.target.id == "tracker-new") position_editor();
   });
-  creator.addEventListener("x-swap", position_editor);
+
   document.addEventListener("scroll", position_editor, true);
   addEventListener("resize", position_editor);
 
   document.addEventListener("click", (event) => {
-    if(editor.hidden || editor.contains(event.target)) return;
+    const popup = editor();
+    if(!popup || popup.hidden || popup.contains(event.target)) return;
     if(!event.target.isConnected) return; // the click removed its target (eg. a tag badge), so contains() can't place it
     if(event.target.closest(".tracker-list__item[data-id]")) return; // clicks of a dblclick
     close_editor();
@@ -213,6 +231,6 @@ zhtml.directive("z-timer", (form) => {
   addEventListener("popstate", restore_editor_state);
 
   document.addEventListener("keydown", (event) => {
-    if(event.key == "Escape") close_editor();
+    if(event.key == "Escape" && listing()) close_editor();
   });
 })();

@@ -14,7 +14,7 @@
         <a class="button" x-post="/settings/tags/new" x-target="#tags-listing" x-focus="#tags-listing input[name=label]">Add tag</a>
       </header>
 
-      <section id="tags-listing" x-get="/settings/tags/listing"></section>
+      <section id="tags-listing" x-get="/settings/tags/listing"><?php fragment("settings/tags/listing") ?></section>
     </main>
   </body>
 </html>

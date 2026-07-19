@@ -13,7 +13,7 @@
         <a class="button" x-post="/settings/habits/new" x-target="#habits-listing">Add habit</a>
       </header>
 
-      <section id="habits-listing" x-get="/settings/habits/listing"></section>
+      <section id="habits-listing" x-get="/settings/habits/listing"><?php fragment("settings/habits/listing") ?></section>
     </main>
   </body>
 </html>
