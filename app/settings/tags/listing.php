@@ -3,7 +3,12 @@
   $tags = \store\list_tags();
 
   $children_of = [];
-  foreach($tags as $t) $children_of[$t['parent_id']][] = $t['id'];
+  $depth_of = [];
+
+  foreach($tags as $t) {
+    $children_of[$t['parent_id']][] = $t['id'];
+    $depth_of[$t['id']] = $t['parent_id'] ? $depth_of[$t['parent_id']] + 1 : 0;
+  }
 
   // A tag's own subtree (itself + all descendants) can't become its parent
   // without forming a cycle.
@@ -15,10 +20,10 @@
   };
 
 ?>
-<ul class="settings-listing settings-listing--sortable" data-reorder-url="/settings/tags/reorder" data-reorder-target="#tags-listing">
+<ul class="settings-listing settings-listing--sortable settings-listing--tags" data-reorder-url="/settings/tags/reorder" data-reorder-target="#tags-listing">
   <?php foreach($tags as $tag): ?>
     <?php $forbidden = $subtree_of($tag['id']) ?>
-    <li class="settings-listing__item" data-order-id="<?= $tag['id'] ?>">
+    <li class="settings-listing__item" data-order-id="<?= $tag['id'] ?>" style="--tag-depth: <?= $depth_of[$tag['id']] ?>">
       <form class="settings-editor" x-post="/settings/tags/edit" x-on="change" x-target="#tags-listing">
         <span class="settings-editor__drag-handle" title="Drag to reorder" data-drag-handle><i class="fa-solid fa-grip"></i></span>
         <input name="id" type="hidden" value="<?= $tag['id'] ?>">
