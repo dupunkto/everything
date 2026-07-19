@@ -1,6 +1,6 @@
 // Contact behaviour that keeps state on the client: the existing-address
-// picker in the edit form, and clearing the panel when the open contact
-// drops out of a re-filtered listing.
+// picker in the edit form, retaining the list scroll position, and clearing
+// the panel when the open contact drops out of a re-filtered listing.
 
 const addresses = () =>
   JSON.parse(document.getElementById("addresses-data")?.textContent || "{}");
@@ -34,6 +34,7 @@ const item_for = (line, address) => {
 };
 
 let restoring_history = false;
+let list_scroll = 0;
 
 const contact_state_url = (state) => {
   const url = new URL(location.href);
@@ -78,6 +79,10 @@ const restore_contact_state = async () => {
   restoring_history = false;
 };
 
+document.addEventListener("scroll", (e) => {
+  if(e.target.matches?.(".contacts__list")) list_scroll = e.target.scrollTop;
+}, true);
+
 document.addEventListener("input", (e) => {
   const search = e.target.closest?.("[data-address-search]");
   if(!search || e.target != search.querySelector("input")) return;
@@ -120,6 +125,8 @@ document.addEventListener("x-swap", (e) => {
   }
 
   if(e.target.id != "contacts-list") return;
+
+  e.target.querySelector(".contacts__list").scrollTop = list_scroll;
 
   const open = document.querySelector("#contacts-panel [data-edit]");
   if(!open) return;
