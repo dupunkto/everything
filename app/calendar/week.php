@@ -104,7 +104,10 @@ $sidebar_right = UI_SIDEBAR_POSITION == 'right';
 
   <div class="calendar-week__all-day" data-start="<?= $from->format('Y-m-d') ?>">
     <?php foreach($all_day as $appointment): ?>
-      <?php $is_birthday = cast_boolean(@$appointment['is_birthday']); $is_task = cast_boolean(@$appointment['is_task']) ?>
+      <?php
+        $is_birthday = cast_boolean(@$appointment['is_birthday']);
+        $is_task = cast_boolean(@$appointment['is_task'])
+      ?>
       <article class="appointment appointment--all-day<?= cast_boolean($appointment['going']) ? "" : " appointment--not-going" ?><?= $is_birthday ? " appointment--birthday" : "" ?><?= $is_task ? " appointment--task" : "" ?>"
                <?= !$is_birthday && !$is_task ? 'data-id="' . esc_attr($appointment['id']) . '"' : '' ?>
                <?= $is_task ? 'data-task-id="' . esc_attr($appointment['id']) . '"' : '' ?>

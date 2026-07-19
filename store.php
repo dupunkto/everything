@@ -90,7 +90,7 @@ function list_notes($query = "") {
 
   $sql = 'SELECT * FROM `notes`';
   if($where) $sql .= ' WHERE ' . join(' AND ', $where);
-  $sql .= ' ORDER BY `title`';
+  $sql .= ' ORDER BY CASE WHEN `date` IS NULL THEN 1 ELSE 0 END, `date` DESC';
 
   return all($sql, $params) ?? [];
 }
@@ -544,7 +544,7 @@ function list_bookmarks($query = "") {
 
   $sql = 'SELECT * FROM `bookmarks`';
   if($where) $sql .= ' WHERE ' . join(' AND ', $where);
-  $sql .= ' ORDER BY COALESCE(`label`, `url`)';
+  $sql .= ' ORDER BY CASE WHEN `date` IS NULL THEN 1 ELSE 0 END, `date` DESC';
 
   return all($sql, $params) ?? [];
 }
