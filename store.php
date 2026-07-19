@@ -502,6 +502,10 @@ function update_bookmark($id, $label, $url, $note = null, $date = null) {
   WHERE id = ?', [$label, $url, $note, $date, $id]);
 }
 
+function update_bookmark_favicon($id, $favicon) {
+  return exec_query('UPDATE `bookmarks` SET `favicon` = ? WHERE `id` = ?', [$favicon, $id]);
+}
+
 function get_bookmark_tags($id) {
   return tags_of('bookmarks_tags', 'bookmark_id', $id);
 }
