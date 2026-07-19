@@ -99,6 +99,13 @@
         <?php foreach($tasks as $task): ?>
           <li class="listing__item" tabindex="0">
             <?php if(cast_boolean($task['urgent'])) circle() ?>
+            <form x-post="/todo/urgent" x-target="#todo-listing" x-on="change">
+              <input type="hidden" name="id" value="<?= $task['id'] ?>">
+              <input type="hidden" name="urgent" value="false">
+              <input type="hidden" name="q" value="<?= esc_attr($query) ?>">
+              <input type="hidden" name="i" value="<?= esc_attr(join(",", array_unique([...$include, $task['id']]))) ?>">
+              <input type="checkbox" name="urgent" value="true" z-key="m" <?php if(cast_boolean($task['urgent'])) echo "checked" ?> hidden>
+            </form>
             <form x-post="/todo/status" x-target="#todo-listing" x-on="change">
               <input type="hidden" name="id" value="<?= $task['id'] ?>">
               <input type="hidden" name="status" value="todo" />

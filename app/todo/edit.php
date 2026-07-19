@@ -67,7 +67,7 @@
           <div class="title-check" z-circle>
             <input name="title" type="text" placeholder="Title" required value="<?= esc_attr($task['title']) ?>">
             <?php circle() ?>
-            <label class="title-check__urgent" title="Circle">
+            <label class="title-check__urgent" title="Circle" z-key="m">
               <input type="hidden" name="urgent" value="false">
               <input type="checkbox" name="urgent" value="true" aria-label="Circle" <?php if(filter_var($task['urgent'], FILTER_VALIDATE_BOOLEAN)) echo "checked" ?>>
               <i class="fa-regular fa-flag"></i>

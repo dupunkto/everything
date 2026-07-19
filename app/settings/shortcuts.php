@@ -31,9 +31,12 @@
     ],
     "ToDo" => [
       ["c", "Toggle done"],
-      ["b", "Toggle backlog"],
       ["u", "Revert to todo"],
+      ["m", "Mark circled"],
+      ["b", "Toggle backlog"],
       ["s", "Toggle shelved"],
+      ["w", "Toggle wip"],
+      ["x", "Toggle blocked"],
     ],
     "Wishlist" => [
       ["c", "Toggle bought"],

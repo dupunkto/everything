@@ -189,6 +189,10 @@ function update_task(
   ]);
 }
 
+function set_task_urgent($id, $urgent) {
+  return exec_query('UPDATE `tasks` SET `urgent` = ? WHERE `id` = ?', [$urgent, $id]);
+}
+
 function set_task_status($id, $status, $comment = "") {
   in_array($status, ENUM_TASK_STATUS) or die("status $status does not exist");
 
