@@ -7,7 +7,7 @@
   </head>
   <body>
     <?php include __DIR__ . "/shell/menu.php" ?>
-    <main class="main main--wide notes" z-nav=".page-header__search, .note-card">
+    <main class="main main--wide main--scrollable notes" z-nav=".page-header__search, .note-card">
       <div class="page-header">
         <h1 class="page-header__title"><strong>Notes</strong></h1>
         <input
@@ -22,7 +22,7 @@
         >
       </div>
 
-      <section id="notes-listing" x-get="/notes/listing"></section>
+      <section id="notes-listing" class="main__scroll" x-get="/notes/listing"></section>
     </main>
   </body>
 </html>

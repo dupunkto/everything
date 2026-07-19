@@ -7,7 +7,7 @@
   </head>
   <body>
     <?php include __DIR__ . "/shell/menu.php" ?>
-    <main class="main main--wide todo" z-nav="#todo-search, .listing__item">
+    <main class="main main--wide main--scrollable todo" z-nav="#todo-search, .listing__item">
       <input
         id="todo-search"
         class="page-header__search"

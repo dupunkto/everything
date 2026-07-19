@@ -7,7 +7,7 @@
   </head>
   <body>
     <?php include __DIR__ . "/shell/menu.php" ?>
-    <main class="main" z-nav=".listing__item">
+    <main class="main main--scrollable" z-nav=".listing__item">
       <input
         type="hidden"
         id="wishlist-filter"
@@ -18,7 +18,7 @@
         x-target="#wishlist-listing"
       >
 
-      <section id="wishlist-listing" x-get="/wishlist/listing" x-data="#wishlist-filter"></section>
+      <section id="wishlist-listing" class="main__scroll" x-get="/wishlist/listing" x-data="#wishlist-filter"></section>
     </main>
   </body>
 </html>

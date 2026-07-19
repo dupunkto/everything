@@ -7,7 +7,7 @@
   </head>
   <body>
     <?php include __DIR__ . "/shell/menu.php" ?>
-    <main class="main main--semi-wide" z-nav="#address-search input, .address-item">
+    <main class="main main--semi-wide main--scrollable" z-nav="#address-search input, .address-item">
       <header class="page-header"><h2>Addresses</h2></header>
 
       <section id="address-editor" x-get="/addresses/edit"></section>
@@ -27,7 +27,7 @@
         >
       </form>
 
-      <section id="addresses-list" class="listing" x-get="/addresses/listing" x-data="#address-search"></section>
+      <section id="addresses-list" class="listing main__scroll" x-get="/addresses/listing" x-data="#address-search"></section>
     </main>
   </body>
 </html>

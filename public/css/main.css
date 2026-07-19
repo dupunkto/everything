@@ -62,6 +62,32 @@
   margin: 5vh auto;
 }
 
+body:has(.main--scrollable) {
+  height: 100vh;
+  overflow-y: hidden;
+}
+
+.main--scrollable {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 3em);
+  min-height: 0;
+}
+
+.main--scrollable.main--wide {
+  height: calc(100vh - 2em);
+}
+
+.main--scrollable.main--semi-wide {
+  height: 90vh;
+}
+
+.main__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
 ul {
   margin: 0;
   padding: 0;

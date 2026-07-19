@@ -83,6 +83,16 @@
   padding: 0;
 }
 
+#wishlist-listing {
+  display: flex;
+  flex-direction: column;
+}
+
+#wishlist-listing > .listing {
+  flex: 1;
+  min-height: 0;
+}
+
 #wishlist-listing .listing__title {
   flex: 1;
   min-width: 0;

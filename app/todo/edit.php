@@ -78,14 +78,26 @@
 
           <?php if($log): ?>
             <h2>History</h2>
-            <?php $previous = null; foreach($log as $entry): ?>
+            <?php
+              $last = array_key_last($log);
+              $undo = count($log) > 1 && $log[$last]['status'] != $log[$last - 1]['status'];
+              $previous = null;
+              foreach($log as $key => $entry):
+            ?>
               <?php $change = $entry['status'] !== $previous ?>
               <?php $previous = $entry['status'] ?>
 
               <div class="log-entry <?php if($change) echo "log-entry--status" ?> <?php if($entry['comment']) echo "log-entry--comment" ?>">
                 <?php if($change): ?>
                   Status is <b><?= esc_inner($entry['status']) ?></b><?php if($entry['comment']) echo ", with comment:" ?>
-                  <time><?= esc_attr(local_date("Y-m-d H:i", $entry['date'])) ?></time>
+                  <span class="log-entry__meta">
+                    <time><?= esc_attr(local_date("Y-m-d H:i", $entry['date'])) ?></time>
+                    <?php if($undo && $key == $last): ?>
+                      <button class="log-entry__undo" type="button" title="Undo status change" aria-label="Undo status change" x-delete="/todo/undo?id=<?= esc_attr($task['id']) ?>&amp;log_id=<?= esc_attr($entry['id']) ?>" x-target="@document">
+                        <i class="fa-solid fa-rotate-left"></i>
+                      </button>
+                    <?php endif ?>
+                  </span>
                 <?php endif ?>
                 <?php if($entry['comment']): ?>
                   <div class="log-entry__message">

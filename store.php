@@ -319,7 +319,7 @@ function get_task($id) {
   FROM `tasks` task
   LEFT JOIN `task_log` log ON log.task_id = task.id
   WHERE task.id = ?
-  ORDER BY log.date DESC', [$id]);
+  ORDER BY log.date DESC, log.id DESC', [$id]);
 
   if($task === false) return $task;
 
@@ -348,6 +348,24 @@ function amend_task_status($id, $comment) {
 
   return exec_query('UPDATE `task_log` SET `comment` = ?
     WHERE `id` = ? AND `task_id` = ?', [$comment, $log[0]['id'], $id]);
+}
+
+function undo_task_status($id, $log_id) {
+  $log = all('SELECT `id`, `status` FROM `task_log`
+    WHERE `task_id` = ? ORDER BY `date` DESC, `id` DESC LIMIT 2', [$id]);
+
+  if(!$log || count($log) < 2 || $log[0]['id'] != $log_id ||
+    $log[0]['status'] == $log[1]['status']) return false;
+
+  $query = exec_query('DELETE FROM `task_log`
+    WHERE `id` = ? AND `task_id` = ? AND `id` = (
+      SELECT latest.id FROM (
+        SELECT `id` FROM `task_log`
+        WHERE `task_id` = ? ORDER BY `date` DESC, `id` DESC LIMIT 1
+      ) latest
+    )', [$log_id, $id, $id]);
+
+  return $query && $query->rowCount() == 1;
 }
 
 function delete_task($id) {
