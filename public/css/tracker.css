@@ -79,8 +79,8 @@
   width: 100%;
 }
 
-.tracker-list {
-  margin: 1em 0;
+#tracker-listing {
+  margin-top: 1em;
 }
 
 .tracker-list__item {
