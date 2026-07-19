@@ -23,7 +23,6 @@ function contact_sort_name($contact) {
 function contact_first_last_name($contact) {
   return str_implode(" ", [
     $contact['first_name'],
-    $contact['middle_name'],
     $contact['infix'],
     $contact['last_name'],
   ]);
@@ -31,7 +30,7 @@ function contact_first_last_name($contact) {
 
 function contact_last_first_name($contact) {
   $last = $contact['last_name'];
-  $first = str_implode(" ", [$contact['first_name'], $contact['middle_name'], $contact['infix']]);
+  $first = str_implode(" ", [$contact['first_name'], $contact['infix']]);
 
   return $last && $first ? "$last, $first" : ($last ?: $first);
 }
