@@ -33,6 +33,16 @@
   align-self: start;
 }
 
+.todo__recurring {
+  margin-left: auto;
+  font-family: monospace;
+  padding: 2px 6px;
+  font-size: 0.8em;
+  font-weight: 600;
+  background: light-dark(#e5e5e5, #3a3a3a);
+  color: light-dark(#666, #ccc);
+}
+
 .todo-form [name="title"],
 .todo-editor [name="title"] {
   font-size: 1.5em;

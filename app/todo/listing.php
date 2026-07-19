@@ -125,6 +125,7 @@
                 <?= esc_inner($task['title']) ?>
               </a>
             </h4>
+            <?php if($task['recurrence']): ?><span class="todo__recurring">recurring</span><?php endif ?>
             <a href="/todo/delete?id=<?= $task['id'] ?>" z-key="d" z-confirm="Delete this task?" hidden></a>
           </li>
         <?php endforeach; ?>
