@@ -4,6 +4,7 @@
     <?php include __DIR__ . "/shell/head.php" ?>
     <title>ToDo</title>
     <link rel="stylesheet" href="<?= CANONICAL ?>/css/todo.css">
+    <script src="<?= CANONICAL ?>/client/todo.js" type="module"></script>
   </head>
   <body>
     <?php include __DIR__ . "/shell/menu.php" ?>

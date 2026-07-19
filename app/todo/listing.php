@@ -102,6 +102,7 @@
             <form x-post="/todo/status" x-target="#todo-listing" x-on="change">
               <input type="hidden" name="id" value="<?= $task['id'] ?>">
               <input type="hidden" name="status" value="todo" />
+              <input type="hidden" name="comment" value="" />
               <input type="hidden" name="q" value="<?= esc_attr($query) ?>" />
               <input type="hidden" name="i" value="<?= esc_attr(join(",", array_unique([...$include, $task['id']]))) ?>" />
 
@@ -116,6 +117,8 @@
               >
 
               <button name="status" value="<?= $status_for($task, 'backlog') ?>" z-key="b" hidden></button>
+              <button name="status" value="<?= $status_for($task, 'wip') ?>" z-key="w" hidden></button>
+              <button name="status" value="<?= $status_for($task, 'blocked') ?>" z-key="x" hidden></button>
               <button name="status" value="todo" z-key="u" hidden></button>
               <button name="status" value="<?= $status_for($task, 'nvm') ?>" z-key="s" hidden></button>
             </form>

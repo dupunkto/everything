@@ -56,6 +56,8 @@
 
         <?php $status_for = fn($target) => $task['status'] == $target ? "todo" : $target ?>
         <button type="button" z-key="b" z-set=".todo-editor [name=status]" value="<?= $status_for('backlog') ?>" hidden></button>
+        <button type="button" z-key="w" z-set=".todo-editor [name=status]" value="<?= $status_for('wip') ?>" hidden></button>
+        <button type="button" z-key="x" z-set=".todo-editor [name=status]" value="<?= $status_for('blocked') ?>" hidden></button>
         <button type="button" z-key="c" z-set=".todo-editor [name=status]" value="<?= $status_for('done') ?>" hidden></button>
         <button type="button" z-key="u" z-set=".todo-editor [name=status]" value="todo" hidden></button>
         <button type="button" z-key="s" z-set=".todo-editor [name=status]" value="<?= $status_for('nvm') ?>" hidden></button>
