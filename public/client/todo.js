@@ -1,22 +1,18 @@
-// Blocked and backlogged tasks want a reason: ask for one before the
-// status change posts, and drop the change when the prompt is cancelled.
-// Capture-phase, so this runs before xhtml posts the form.
+// Blocked statuses want a reason: ask for one before the status change posts,
+// and drop the change when the prompt is cancelled.
 
 document.addEventListener("change", (e) => {
   const editor = e.target.closest?.(".todo-editor");
   if(!editor) return;
 
-  // A comment on its own is sent with the Comment button, not on blur.
+  // A comment on its own is sent with the Comment/amend button, not on blur.
   if(e.target.matches("[name=comment]")) return e.stopPropagation();
+
+  // Everything other than blocked status changes follows regular flow. Continue.
   if(!e.target.matches("[name=status]")) return;
+  if(e.target.value != "blocked") return;
 
-  const question = {
-    blocked: "Why was this task blocked?",
-    backlog: "Why was this task backlogged?",
-  }[e.target.value];
-  if(!question) return;
-
-  const reason = prompt(question);
+  const reason = prompt("Why was this task blocked?");
 
   if(reason == null) {
     e.stopPropagation();
