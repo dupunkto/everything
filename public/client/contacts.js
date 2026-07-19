@@ -1,6 +1,5 @@
 // Contact behaviour that keeps state on the client: the existing-address
-// picker in the edit form, retaining the list scroll position, and clearing
-// the panel when the open contact drops out of a re-filtered listing.
+// picker in the edit form and retaining the list scroll position.
 
 const addresses = () =>
   JSON.parse(document.getElementById("addresses-data")?.textContent || "{}");
@@ -111,11 +110,10 @@ document.addEventListener("click", (e) => {
   }
 });
 
-// Deselect the open contact once it drops out of the re-filtered list,
-// but only in view mode — never yank it out from under an edit.
 document.addEventListener("x-swap", (e) => {
   if(e.target.id == "contacts-panel") {
     const state = e.target.querySelector("[data-contact-state]");
+    document.getElementById("contacts-new").disabled = state?.dataset.contactState == "edit";
     push_contact_state(state && {
       mode: state.dataset.contactState,
       kind: state.dataset.kind,
@@ -124,19 +122,8 @@ document.addEventListener("x-swap", (e) => {
     return;
   }
 
-  if(e.target.id != "contacts-list") return;
-
-  e.target.querySelector(".contacts__list").scrollTop = list_scroll;
-
-  const open = document.querySelector("#contacts-panel [data-edit]");
-  if(!open) return;
-
-  const url = new URL(open.getAttribute("x-get"), location.href);
-  const item = `.contact-item[data-id="${url.searchParams.get("id")}"][data-kind="${url.searchParams.get("kind")}"]`;
-  if(!e.target.querySelector(item)) {
-    document.getElementById("contacts-panel").replaceChildren();
-    push_contact_state(null);
-  }
+  if(e.target.id == "contacts-list")
+    e.target.querySelector(".contacts__list").scrollTop = list_scroll;
 });
 
 addEventListener("popstate", restore_contact_state);
