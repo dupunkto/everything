@@ -16,8 +16,14 @@
       cast_datetime_utc($_POST['expiration_date'], @$_POST['expiration_time'] ?: "00:00")
     ) or fail("Could not update task.");
 
-    \store\set_task_status($_POST['id'], $_POST['status'], $_POST['comment'])
-      or fail("Could not update task status.");
+    if(isset($_POST['amend'])) {
+      \store\amend_task_status($_POST['id'], $_POST['comment'])
+        or fail("Could not amend task status.");
+    }
+    else {
+      \store\set_task_status($_POST['id'], $_POST['status'], $_POST['comment'])
+        or fail("Could not update task status.");
+    }
 
     \store\set_task_tags($_POST['id'], $_POST['tags'] ?? []);
 
@@ -97,7 +103,17 @@
           <textarea rows="3" name="comment" placeholder="Add a comment..."></textarea>
           <div class="actions">
             <a class="button" z-key="d" href="/todo/delete?id=<?= esc_attr($task['id']) ?>" z-confirm="Delete this task?">Delete</a>
-            <button x-post="/todo/edit" x-data="#todo-editor" x-target="@document">Comment</button>
+            <?php
+              $latest = $log ? $log[array_key_last($log)] : null;
+              $before = count($log) > 1 ? $log[array_key_last($log) - 1] : null;
+            ?>
+            <div class="actions__group">
+              <?php if($latest && !$latest['comment'] &&
+                (!$before || $latest['status'] != $before['status'])): ?>
+                <button name="amend" value="1">Amend</button>
+              <?php endif ?>
+              <button>Comment</button>
+            </div>
           </div>
         </section>
 

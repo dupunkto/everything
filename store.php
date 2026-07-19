@@ -330,7 +330,17 @@ function get_task($id) {
 }
 
 function get_task_log($id) {
-  return all('SELECT * FROM `task_log` WHERE `task_id` = ? ORDER BY `date` ASC', [$id]) ?? [];
+  return all('SELECT * FROM `task_log` WHERE `task_id` = ? ORDER BY `date` ASC, `id` ASC', [$id]) ?? [];
+}
+
+function amend_task_status($id, $comment) {
+  $log = all('SELECT * FROM `task_log`
+    WHERE `task_id` = ? ORDER BY `date` DESC, `id` DESC LIMIT 2', [$id]);
+
+  if(!$log) return $log;
+
+  return exec_query('UPDATE `task_log` SET `comment` = ?
+    WHERE `id` = ? AND `task_id` = ?', [$comment, $log[0]['id'], $id]);
 }
 
 function delete_task($id) {

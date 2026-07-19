@@ -121,6 +121,11 @@
   text-align: right;
 }
 
+.todo-editor .actions__group {
+  display: flex;
+  gap: 0.25em;
+}
+
 .todo-editor time {
   opacity: 0.5;
   float: right;
