@@ -22,7 +22,11 @@
       <form class="settings-editor" x-post="/settings/tags/edit" x-on="change" x-target="#tags-listing">
         <span class="settings-editor__drag-handle" title="Drag to reorder" data-drag-handle><i class="fa-solid fa-grip"></i></span>
         <input name="id" type="hidden" value="<?= $tag['id'] ?>">
-        <input name="color" type="color" required value="<?= esc_attr($tag['color']) ?>">
+        <?php if($tag['parent_id']): ?>
+          <input type="color" disabled value="<?= esc_attr($tag['color']) ?>">
+        <?php else: ?>
+          <input name="color" type="color" required value="<?= esc_attr($tag['color']) ?>">
+        <?php endif ?>
         <input name="label" type="text" required value="<?= esc_attr($tag['label']) ?>">
 
         <select name="parent">

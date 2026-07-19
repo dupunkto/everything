@@ -275,7 +275,14 @@ function list_tasks($query = "", $override = [], $respect_horizon = true) {
   $override = $override ?? [];
   $result = [];
 
+  $colors = array_column(list_tags(), 'color', 'id');
+
   foreach(collect_by($rows, 'tag', 'tags') as $task) {
+    foreach($task['tags'] as &$tag) {
+      $tag['color'] = @$colors[$tag['id']] ?: $tag['color'];
+    }
+    unset($tag);
+
     $state = \recurrence\task_state($task);
     $task = array_merge($task, $state);
 
@@ -650,10 +657,12 @@ function list_timing_tags($from, $to) {
 // Quotas
 
 function list_quotas() {
-  return all('SELECT q.*, t.label, t.color
+  $quotas = all('SELECT q.*, t.label, t.color
     FROM `quotas` q
     JOIN `tags` t ON t.id = q.tag_id
     ORDER BY t.`order` ASC, t.id DESC') ?? [];
+
+  return inherit_tag_colors($quotas, id_key: 'tag_id');
 }
 
 function quota_minutes($tag_id, $period, $hours, $minutes, $start_date) {
@@ -717,7 +726,7 @@ function update_tag($id, $label, $color, $parent_id) {
 
   return exec_query('UPDATE `tags` SET
     `label` = ?,
-    `color` = ?,
+    `color` = COALESCE(?, `color`),
     `parent_id` = ?
   WHERE id = ?', [
     $label,
@@ -734,15 +743,25 @@ function list_tags() {
   foreach($tags as $tag) $children[$tag['parent_id']][] = $tag;
 
   $result = [];
-  $walk = function($parent_id) use (&$walk, &$children, &$result) {
+  $walk = function($parent_id, $color = null) use (&$walk, &$children, &$result) {
     foreach($children[$parent_id] ?? [] as $tag) {
+      if($parent_id) $tag['color'] = $color;
       $result[] = $tag;
-      $walk($tag['id']);
+      $walk($tag['id'], $tag['color']);
     }
   };
 
   $walk(null);
   return $result;
+}
+
+function inherit_tag_colors($items, $id_key = 'id') {
+  $colors = array_column(list_tags(), 'color', 'id');
+
+  return array_map(function($item) use ($colors, $id_key) {
+    $item['color'] = @$colors[$item[$id_key]] ?: $item['color'];
+    return $item;
+  }, $items);
 }
 
 function reorder_tags($ids) {
@@ -757,10 +776,12 @@ function reorder_tags($ids) {
 }
 
 function tags_of($table, $fk, $id) {
-  return all("SELECT tags.* FROM `tags`
+  $tags = all("SELECT tags.* FROM `tags`
     JOIN `$table` link ON link.tag_id = tags.id
     WHERE link.`$fk` = ?
     ORDER BY tags.`order` ASC, tags.id DESC", [$id]);
+
+  return $tags === false ? false : inherit_tag_colors($tags);
 }
 
 function set_tags($table, $fk, $id, $tag_ids) {
@@ -1333,9 +1354,11 @@ function list_contact_addresses($id) {
 }
 
 function list_contact_tags($id) {
-  return all('SELECT t.* FROM `tags` t
+  $tags = all('SELECT t.* FROM `tags` t
     JOIN `contacts_tags` ct ON ct.tag_id = t.id WHERE ct.contact_id = ?
     ORDER BY t.`order` ASC, t.id DESC', [$id]);
+
+  return $tags === false ? false : inherit_tag_colors($tags);
 }
 
 function create_contact(
@@ -1505,9 +1528,11 @@ function list_organisation_addresses($id) {
 }
 
 function list_organisation_tags($id) {
-  return all('SELECT t.* FROM `tags` t
+  $tags = all('SELECT t.* FROM `tags` t
     JOIN `orgs_tags` ot ON ot.tag_id = t.id WHERE ot.org_id = ?
     ORDER BY t.`order` ASC, t.id DESC', [$id]);
+
+  return $tags === false ? false : inherit_tag_colors($tags);
 }
 
 function create_organisation($display_name, $legal_name, $registration_number, $vat_number, $note) {
