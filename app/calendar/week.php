@@ -111,6 +111,7 @@ $sidebar_right = UI_SIDEBAR_POSITION == 'right';
       <article class="appointment appointment--all-day<?= cast_boolean($appointment['going']) ? "" : " appointment--not-going" ?><?= $is_birthday ? " appointment--birthday" : "" ?><?= $is_task ? " appointment--task" : "" ?>"
                <?= !$is_birthday && !$is_task ? 'data-id="' . esc_attr($appointment['id']) . '"' : '' ?>
                <?= $is_task ? 'data-task-id="' . esc_attr($appointment['id']) . '"' : '' ?>
+               <?= $is_birthday ? 'data-contact-id="' . esc_attr($appointment['contact_id']) . '"' : '' ?>
                style="--appointment-column: <?= $appointment['layout']['column'] ?>; --appointment-span: <?= $appointment['layout']['span'] ?>;
                       --appointment-row: <?= $appointment['layout']['row'] ?>;
                       --appointment-color: <?= $color($appointment) ?>">

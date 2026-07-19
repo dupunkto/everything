@@ -165,6 +165,11 @@
         return;
       }
 
+      if(appointment.dataset.contactId) {
+        location.href = "/contacts?view=" + encodeURIComponent(appointment.dataset.contactId);
+        return;
+      }
+
       if(!appointment.dataset.id) return;
       if(!editor.hidden && appointment.dataset.id == editing) close_editor();
       else open_editor(appointment);

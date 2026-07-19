@@ -155,6 +155,7 @@ function birthdays($from, $to) {
         'meeting' => false,
         'urgent' => false,
         'is_birthday' => true,
+        'contact_id' => $contact['id'],
       ];
     }
   }
