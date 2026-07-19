@@ -26,6 +26,10 @@
       <?php if($has_monthly): ?>
         <section id="quota-month" class="quota-overview__section" x-get="/tracker/quotas/month"><?php fragment("tracker/quotas/month") ?></section>
       <?php endif ?>
+
+      <?php if($quotas): ?>
+        <section id="quota-total" class="quota-overview__section" x-get="/tracker/quotas/total"><?php fragment("tracker/quotas/total") ?></section>
+      <?php endif ?>
     </main>
   </body>
 </html>
