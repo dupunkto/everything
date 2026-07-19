@@ -121,15 +121,8 @@ function task_deadlines($from, $to) {
 }
 
 // Contact birthdays as annually-recurring all-day appointments within
-// [$from, $to). Titled with the turning age when the birth year is known,
-// a plain birthday otherwise.
+// [$from, $to). Includes the turning age when the birth year is known.
 function birthdays($from, $to) {
-  $ordinal = function($n) {
-    $tens = $n % 100;
-    $suffix = $tens >= 11 && $tens <= 13 ? 'th' : (['th', 'st', 'nd', 'rd'][$n % 10] ?? 'th');
-    return "$n$suffix";
-  };
-
   $birthdays = [];
 
   foreach(\store\list_contacts() as $contact) {
@@ -149,7 +142,7 @@ function birthdays($from, $to) {
 
       $birthdays[] = [
         'id' => "birthday-{$contact['id']}-$year",
-        'title' => $age >= 1 ? "$name's {$ordinal($age)} birthday" : "$name's birthday",
+        'title' => $age >= 1 ? "$name ($age)" : $name,
         'starts_at' => $date->format("Y-m-d 00:00:00"),
         'ends_at' => (clone $date)->modify('+1 day')->format("Y-m-d 00:00:00"),
         'all_day' => true,
