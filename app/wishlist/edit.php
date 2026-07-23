@@ -17,6 +17,8 @@
 
     \store\set_wish_urls($_POST['id'], $urls);
     \store\set_wish_tags($_POST['id'], $_POST['tags'] ?? []);
+    \store\insert_log('wishes', $_POST['id'], "Updated wish.", 'user')
+      or fail("Could not create audit entry.");
 
     if(isset($_POST['close'])) {
       http_response_code(303);

@@ -7,4 +7,7 @@
       or fail("Could not unset default calendar.");
   }
 
+  \store\insert_log('calendars', $_GET['id'], "Deleted calendar.", 'user')
+    or fail("Could not create audit entry.");
+
   include __DIR__ . "/listing.php"; exit;

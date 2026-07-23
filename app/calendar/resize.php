@@ -15,5 +15,7 @@
 
   \store\update_appointment_times($appointment['id'], $starts_at, $ends_at)
     or fail("Could not move or resize appointment.");
+  \store\insert_log('appointments', $appointment['id'], "Moved or resized appointment.", 'user')
+    or fail("Could not create audit entry.");
 
   http_response_code(204); exit;

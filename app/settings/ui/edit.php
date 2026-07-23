@@ -9,6 +9,8 @@
 
     \store\update_config('ui.panel-position', $_POST['panel-position'])
       or fail("Could not update panel position.");
+    \store\insert_log('config', 'ui', "Updated UI settings.", 'user')
+      or fail("Could not create audit entry.");
 
     // We need to do a full reload for the panel to change place.
     http_response_code(303);
@@ -30,6 +32,11 @@
 
     \store\update_config('ui.habits-position', $_POST['habits-position'])
       or fail("Could not update habits position.");
+  }
+
+  if($_POST) {
+    \store\insert_log('config', 'ui', "Updated UI settings.", 'user')
+      or fail("Could not create audit entry.");
   }
 
 ?>

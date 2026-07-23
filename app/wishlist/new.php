@@ -13,6 +13,8 @@
 
     \store\set_wish_urls($id, $urls);
     \store\set_wish_tags($id, $_POST['tags'] ?? []);
+    \store\insert_log('wishes', $id, "Created wish.", 'user')
+      or fail("Could not create audit entry.");
 
     http_response_code(303);
     header("Location: /wishlist"); exit;

@@ -18,6 +18,8 @@
     ) or fail("Could not save task '" . $_POST['title'] . "'.");
 
     \store\set_task_tags($id, $_POST['tags'] ?? []);
+    \store\insert_log('tasks', $id, "Created task.", 'user')
+      or fail("Could not create audit entry.");
 
     http_response_code(303);
     header("Location: /todo"); exit;

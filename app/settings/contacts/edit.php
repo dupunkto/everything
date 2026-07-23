@@ -19,6 +19,11 @@
       or fail("Could not update sort order.");
   }
 
+  if($_POST) {
+    \store\insert_log('config', 'contacts', "Updated contact settings.", 'user')
+      or fail("Could not create audit entry.");
+  }
+
   $display = \config\fresh_value('contacts.display-format');
   $sort = \config\fresh_value('contacts.sort-order');
 

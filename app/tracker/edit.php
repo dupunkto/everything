@@ -8,6 +8,8 @@
       or fail("Could not save timing " . $_POST['id'] . " from " . $starts_at . " to " . $ends_at . " with description '" . $_POST['description'] . "'.");
 
     \store\set_timing_tags($_POST['id'], $_POST['tags'] ?? []);
+    \store\insert_log('timings', $_POST['id'], "Updated timing.", 'user')
+      or fail("Could not create audit entry.");
 
     include __DIR__ . "/listing.php"; exit;
   }

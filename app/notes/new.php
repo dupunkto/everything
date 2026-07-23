@@ -5,6 +5,8 @@
       or fail("Could not save note '" . $_POST['title'] . "'.");
 
     \store\set_note_tags($id, $_POST['tags'] ?? []);
+    \store\insert_log('notes', $id, "Created note.", 'user')
+      or fail("Could not create audit entry.");
 
     http_response_code(303);
     header("Location: /notes"); exit;

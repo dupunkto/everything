@@ -26,6 +26,8 @@
     }
 
     \store\set_task_tags($_POST['id'], $_POST['tags'] ?? []);
+    \store\insert_log('tasks', $_POST['id'], "Updated task.", 'user')
+      or fail("Could not create audit entry.");
 
     if(isset($_POST['close'])) {
       http_response_code(303);

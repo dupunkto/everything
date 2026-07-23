@@ -12,6 +12,9 @@ foreach($ids as $id) {
   if(isset($result['error'])) {
     fail("Could not sync subscription #$id: " . $result['error']);
   }
+
+  \store\insert_log('subscriptions', $id, "Synced subscription.", 'syncer')
+    or fail("Could not create audit entry.");
 }
 
 include __DIR__ . "/week.php"; exit;

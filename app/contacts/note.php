@@ -13,6 +13,10 @@
 
     if($kind == "person") \store\update_contact_note($id, $_POST['note'])
       or fail("Could not save note.");
+
+    $table = $kind == 'org' ? 'organisations' : 'contacts';
+    \store\insert_log($table, $id, "Updated note.", 'user')
+      or fail("Could not create audit entry.");
   }
 
   http_response_code(204); exit;

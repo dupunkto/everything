@@ -29,6 +29,11 @@
       or fail("Could not update currency.");
   }
 
+  if($_POST) {
+    \store\insert_log('config', 'general', "Updated general settings.", 'user')
+      or fail("Could not create audit entry.");
+  }
+
   $timezones = [];
 
   foreach(\DateTimeZone::listIdentifiers() as $timezone) {

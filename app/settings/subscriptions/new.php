@@ -14,8 +14,10 @@
 
     $title = cast_string($feed['title'] ?? parse_url($url, PHP_URL_HOST) ?? "Untitled subscription");
 
-    \store\create_subscription($title, null, $url, cast_color($feed['color'] ?? "#efefef"))
+    $id = \store\create_subscription($title, null, $url, cast_color($feed['color'] ?? "#efefef"))
       or fail("Could not create new subscription.");
+    \store\insert_log('subscriptions', $id, "Created subscription.", 'user')
+      or fail("Could not create audit entry.");
 
     ?>
     <section id="subscription-new" z-dismiss="escape" hidden>

@@ -42,6 +42,9 @@
       ) or fail("Could not update appointment.");
     }
 
+    \store\insert_log('appointments', $appointment['id'], "Updated appointment.", 'user')
+      or fail("Could not create audit entry.");
+
     // The caller refreshes the week itself; nothing to render back.
     http_response_code(204); exit;
   }

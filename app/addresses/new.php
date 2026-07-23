@@ -14,10 +14,16 @@
 
     if($_POST['addr_id']) {
       \store\update_address($_POST['addr_id'], ...$fields);
+      $id = $_POST['addr_id'];
+      $message = "Updated address.";
     }
     else {
-      \store\create_address(...$fields);
+      $id = \store\create_address(...$fields);
+      $message = "Created address.";
     }
+
+    \store\insert_log('addresses', $id, $message, 'user')
+      or fail("Could not create audit entry.");
   }
 
   include __DIR__ . "/listing.php";

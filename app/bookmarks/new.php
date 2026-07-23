@@ -13,6 +13,8 @@
     ) or fail("Could not save bookmark.");
 
     \store\set_bookmark_tags($id, $_POST['tags'] ?? []);
+    \store\insert_log('bookmarks', $id, "Created bookmark.", 'user')
+      or fail("Could not create audit entry.");
 
     http_response_code(303);
     header("Location: /bookmarks"); exit;

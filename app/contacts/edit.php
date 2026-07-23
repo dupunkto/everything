@@ -28,6 +28,8 @@
   ]);
 
   if($kind === "org" ? isset($_POST['display_name']) : isset($_POST['first_name'])) {
+    $creating = !$id;
+
     if($kind === "org") {
       if($id) {
         \store\update_organisation(
@@ -90,6 +92,11 @@
       \store\set_contact_addresses($id, unfold($_POST, 'address', 'street_name'));
       \store\set_contact_tags($id, $_POST['tags'] ?? []);
     }
+
+    $table = $kind === 'org' ? 'organisations' : 'contacts';
+    $label = $kind === 'org' ? "organisation" : "contact";
+    \store\insert_log($table, $id, ($creating ? "Created" : "Updated") . " $label.", 'user')
+      or fail("Could not create audit entry.");
 
     $_GET['kind'] = $kind;
     $_GET['id'] = $id;

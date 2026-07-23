@@ -7,6 +7,8 @@
 
     \store\update_habit($_POST['id'], cast_string($_POST['title']), cast_string($_POST['every']), cast_color($_POST['color']), $icon)
       or fail("Could not save habit #" . $_POST['id'] . ".");
+    \store\insert_log('habits', $_POST['id'], "Updated habit.", 'user')
+      or fail("Could not create audit entry.");
 
     include __DIR__ . "/listing.php"; exit;
   }

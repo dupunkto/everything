@@ -708,7 +708,7 @@ function delete_quota($tag_id) {
 function create_tag($label, $color, $parent_id) {
   if($parent_id) get_tag($parent_id) or die("tag with ID $parent_id does not exist");
 
-  return exec_query('INSERT INTO tags (
+  $ok = exec_query('INSERT INTO tags (
     label,
     color,
     parent_id,
@@ -719,6 +719,8 @@ function create_tag($label, $color, $parent_id) {
     $parent_id,
     prepend_order('tags')
   ]);
+
+  return $ok ? DBH->lastInsertId() : null;
 }
 
 function update_tag($id, $label, $color, $parent_id) {
@@ -831,19 +833,21 @@ function append_order($table) {
 // Calendars
 
 function create_calendar($title, $subtitle, $color) {
-  return exec_query('INSERT INTO calendars (
+  $ok = exec_query('INSERT INTO calendars (
     id,
     title,
     subtitle,
     color,
     position
   ) VALUES (?, ?, ?, ?, ?)', [
-    generate_humid(),
+    $id = generate_humid(),
     $title,
     $subtitle,
     $color,
     append_order('sources')
   ]);
+
+  return $ok ? $id : null;
 }
 
 function update_calendar($id, $title, $subtitle, $color) {
@@ -873,7 +877,7 @@ function delete_calendar($id) {
 // Subscriptions
 
 function create_subscription($title, $subtitle, $url, $color, $filter = null) {
-  return exec_query('INSERT INTO subscriptions (
+  $ok = exec_query('INSERT INTO subscriptions (
     id,
     title,
     subtitle,
@@ -882,7 +886,7 @@ function create_subscription($title, $subtitle, $url, $color, $filter = null) {
     filter,
     position
   ) VALUES (?, ?, ?, ?, ?, ?, ?)', [
-    generate_humid(),
+    $id = generate_humid(),
     $title,
     $subtitle,
     $url,
@@ -890,6 +894,8 @@ function create_subscription($title, $subtitle, $url, $color, $filter = null) {
     $filter,
     append_order('sources')
   ]);
+
+  return $ok ? $id : null;
 }
 
 function update_subscription($id, $title, $subtitle, $url, $color, $filter = null) {
@@ -955,19 +961,21 @@ function reorder_source_by_type($type, $ids) {
 // Habits
 
 function create_habit($title, $every, $color, $icon) {
-  return exec_query('INSERT INTO habits (
+  $ok = exec_query('INSERT INTO habits (
     id,
     title,
     every,
     color,
     icon
   ) VALUES (?, ?, ?, ?, ?)', [
-    generate_humid(),
+    $id = generate_humid(),
     $title,
     $every,
     $color,
     $icon
   ]);
+
+  return $ok ? $id : null;
 }
 
 function update_habit($id, $title, $every, $color, $icon) {
@@ -1722,6 +1730,23 @@ function update_config($property, $value) {
   if($value === null) return true;
 
   return exec_query('INSERT INTO config (property, value) VALUES (?, ?)', [$property, $value]);
+}
+
+// Audit log
+
+function insert_log($table_name, $record_id, $message, $author) {
+  return exec_query('INSERT INTO audit_log (
+    table_name,
+    record_id,
+    message,
+    author
+  ) VALUES (?, ?, ?, ?)', [$table_name, $record_id, $message, $author]);
+}
+
+function list_logs($table_name, $record_id) {
+  return all('SELECT * FROM audit_log
+    WHERE table_name = ? AND record_id = ?
+    ORDER BY changed_at ASC, id ASC', [$table_name, $record_id]) ?? [];
 }
 
 // Migrations

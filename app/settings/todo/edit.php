@@ -13,6 +13,11 @@
       or fail("Could not update ToDo layout.");
   }
 
+  if($_POST) {
+    \store\insert_log('config', 'todo', "Updated ToDo settings.", 'user')
+      or fail("Could not create audit entry.");
+  }
+
 ?>
 <form class="settings-form settings-form--spaced" x-post="/settings/todo/edit" x-on="change" x-target="#todo-settings">
   <label>

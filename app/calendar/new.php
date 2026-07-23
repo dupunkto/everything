@@ -9,6 +9,8 @@
   $id = \store\create_calendar_appointment(CALENDAR_DEFAULT_CALENDAR, "New event", null, $starts_at, $ends_at,
     all_day: cast_boolean(@$_POST['all_day']))
     or fail("Could not create appointment.");
+  \store\insert_log('appointments', $id, "Created appointment.", 'user')
+    or fail("Could not create audit entry.");
 
   header("Content-Type: text/plain");
   echo $id; // Return the ID. The frontend will use this to open an edit modal.
