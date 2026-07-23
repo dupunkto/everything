@@ -86,7 +86,7 @@
       \store\set_contact_phone_numbers($id, unfold($_POST, 'phone', 'phone_number'));
       \store\set_contact_urls($id, unfold($_POST, 'url', 'url'));
       \store\set_contact_socials($id, unfold($_POST, 'social', 'handle'));
-      \store\set_contact_roles($id, unfold($_POST, 'role', 'name'));
+      \store\set_contact_roles($id, unfold($_POST, 'role', 'organisation'));
       \store\set_contact_addresses($id, unfold($_POST, 'address', 'street_name'));
       \store\set_contact_tags($id, $_POST['tags'] ?? []);
     }
@@ -127,8 +127,8 @@
   <?php };
 
   $roles_field = function($row) { ?>
-    <input name="role_name[]" placeholder="organisation" required value="<?= esc_attr(@$row['name']) ?>" data-value>
-    <input name="role_function[]" placeholder="function" value="<?= esc_attr(@$row['function']) ?>">
+    <input name="role_organisation[]" placeholder="organisation" required value="<?= esc_attr(@$row['organisation']) ?>" data-value>
+    <input name="role_role[]" placeholder="role" value="<?= esc_attr(@$row['role']) ?>">
   <?php };
 
   $address_field = function($row) { ?>

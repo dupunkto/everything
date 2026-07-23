@@ -53,8 +53,8 @@
           <div class="field bookmark-editor__saved">
             <label for="date">Saved on</label>
             <span class="datetime-pair">
-              <input type="date" id="date" name="date" value="<?= esc_attr(local_date("Y-m-d", $bookmark['date'])) ?>" required>
-              <input type="time" name="time" value="<?= esc_attr(local_date("H:i", $bookmark['date'])) ?>" required>
+              <input type="date" id="date" name="date" value="<?= esc_attr(local_date("Y-m-d", $bookmark['saved_at'])) ?>" required>
+              <input type="time" name="time" value="<?= esc_attr(local_date("H:i", $bookmark['saved_at'])) ?>" required>
             </span>
           </div>
         </div>

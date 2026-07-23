@@ -245,9 +245,9 @@
       <ul class="detail__roles">
         <?php foreach($item['roles'] as $r): ?>
           <li>
-            <strong><?= esc_inner($r['name']) ?></strong>
-            <?php if(trim($r['function'] ?? '')): ?>
-              <br><?= esc_inner($r['function']) ?>
+            <strong><?= esc_inner($r['organisation']) ?></strong>
+            <?php if(trim($r['role'] ?? '')): ?>
+              <br><?= esc_inner($r['role']) ?>
             <?php endif ?>
           </li>
         <?php endforeach ?>

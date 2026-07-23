@@ -99,8 +99,8 @@
           <div class="field wishlist-editor__added">
             <label for="date">added on</label>
             <span class="datetime-pair">
-              <input type="date" id="date" name="date" value="<?= esc_attr(local_date("Y-m-d", $wish['date'])) ?>" required>
-              <input type="time" name="time" value="<?= esc_attr(local_date("H:i", $wish['date'])) ?>" required>
+              <input type="date" id="date" name="date" value="<?= esc_attr(local_date("Y-m-d", $wish['added_at'])) ?>" required>
+              <input type="time" name="time" value="<?= esc_attr(local_date("H:i", $wish['added_at'])) ?>" required>
             </span>
           </div>
         </div>

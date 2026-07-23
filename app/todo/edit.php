@@ -13,7 +13,7 @@
       cast_datetime_utc($_POST['open_date'], $_POST['open_time']),
       cast_datetime_utc($_POST['due_date'], @$_POST['due_time'] ?: "00:00"),
       $all_day,
-      cast_datetime_utc($_POST['expiration_date'], @$_POST['expiration_time'] ?: "00:00")
+      cast_datetime_utc($_POST['expire_date'], @$_POST['expire_time'] ?: "00:00")
     ) or fail("Could not update task.");
 
     if(isset($_POST['amend'])) {
@@ -93,7 +93,7 @@
                 <?php if($change): ?>
                   Status is <b><?= esc_inner($entry['status']) ?></b><?php if($entry['comment']) echo ", with comment:" ?>
                   <span class="log-entry__meta">
-                    <time><?= esc_attr(local_date("Y-m-d H:i", $entry['date'])) ?></time>
+                    <time><?= esc_attr(local_date("Y-m-d H:i", $entry['changed_at'])) ?></time>
                     <?php if($undo && $key == $last): ?>
                       <button class="log-entry__undo" type="button" title="Undo status change" aria-label="Undo status change" x-delete="/todo/undo?id=<?= esc_attr($task['id']) ?>&amp;log_id=<?= esc_attr($entry['id']) ?>" x-target="@document">
                         <i class="fa-solid fa-rotate-left"></i>
@@ -104,7 +104,7 @@
                 <?php if($entry['comment']): ?>
                   <div class="log-entry__message">
                     <?php if(!$change): ?>
-                      <time><?= esc_attr(local_date("Y-m-d H:i", $entry['date'])) ?></time>
+                      <time><?= esc_attr(local_date("Y-m-d H:i", $entry['changed_at'])) ?></time>
                     <?php endif; ?>
                     <p><?= esc_inner($entry['comment']) ?></p>
                   </div>
@@ -140,24 +140,24 @@
           <div class="field">
             <label for="open_date">Open</label>
             <span class="datetime-pair">
-              <input type="date" id="open_date" name="open_date" value="<?= esc_attr(local_date("Y-m-d", $task['open_date'])) ?>" required>
-              <input type="time" name="open_time" value="<?= esc_attr(local_date("H:i", $task['open_date'])) ?>" required>
+              <input type="date" id="open_date" name="open_date" value="<?= esc_attr(local_date("Y-m-d", $task['open_at'])) ?>" required>
+              <input type="time" name="open_time" value="<?= esc_attr(local_date("H:i", $task['open_at'])) ?>" required>
             </span>
           </div>
 
           <div class="field">
             <label for="due_date">Due</label>
             <span class="datetime-pair">
-              <input type="date" id="due_date" name="due_date" value="<?= esc_attr($task['due_date'] ? local_date("Y-m-d", $task['due_date']) : '') ?>">
-              <input type="time" name="due_time" value="<?= esc_attr($task['due_date'] && !cast_boolean($task['due_all_day']) ? local_date("H:i", $task['due_date']) : '') ?>">
+              <input type="date" id="due_date" name="due_date" value="<?= esc_attr($task['due_at'] ? local_date("Y-m-d", $task['due_at']) : '') ?>">
+              <input type="time" name="due_time" value="<?= esc_attr($task['due_at'] && !cast_boolean($task['due_all_day']) ? local_date("H:i", $task['due_at']) : '') ?>">
             </span>
           </div>
 
           <div class="field">
-            <label for="expiration_date">Expire</label>
+            <label for="expire_date">Expire</label>
             <span class="datetime-pair">
-              <input type="date" id="expiration_date" name="expiration_date" value="<?= esc_attr($task['expiration_date'] ? local_date("Y-m-d", $task['expiration_date']) : '') ?>">
-              <input type="time" name="expiration_time" value="<?= esc_attr($task['expiration_date'] ? local_date("H:i", $task['expiration_date']) : '') ?>">
+              <input type="date" id="expire_date" name="expire_date" value="<?= esc_attr($task['expire_at'] ? local_date("Y-m-d", $task['expire_at']) : '') ?>">
+              <input type="time" name="expire_time" value="<?= esc_attr($task['expire_at'] ? local_date("H:i", $task['expire_at']) : '') ?>">
             </span>
           </div>
 

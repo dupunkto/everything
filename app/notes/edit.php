@@ -43,8 +43,8 @@
           <div class="field note-editor__saved">
             <label for="date">Written at</label>
             <span class="datetime-pair">
-              <input type="date" id="date" name="date" value="<?= esc_attr(local_date("Y-m-d", $note['date'])) ?>" required>
-              <input type="time" name="time" value="<?= esc_attr(local_date("H:i", $note['date'])) ?>" required>
+              <input type="date" id="date" name="date" value="<?= esc_attr(local_date("Y-m-d", $note['written_at'])) ?>" required>
+              <input type="time" name="time" value="<?= esc_attr(local_date("H:i", $note['written_at'])) ?>" required>
             </span>
           </div>
         </div>

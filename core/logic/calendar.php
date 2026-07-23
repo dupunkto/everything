@@ -47,9 +47,6 @@ function appointments($from, $to) {
     $base = new \DateTimeImmutable(wall($series['starts_at']));
     $duration = (new \DateTimeImmutable(wall($series['ends_at'])))->getTimestamp() - $base->getTimestamp();
 
-    $until = $series['recurrence_until'] ? new \DateTimeImmutable(wall($series['recurrence_until'])) : null;
-    $count = $series['recurrence_count'] !== null ? (int) $series['recurrence_count'] : null;
-
     // The lower bound is widened by the duration so occurrences starting just
     // before the window but spilling into it aren't dropped; the upper bound
     // stays exclusive.
@@ -57,7 +54,7 @@ function appointments($from, $to) {
       $series['recurrence'], $base,
       $window_from->modify("-$duration seconds"),
       $window_to->modify('-1 second'),
-      $until, $count
+      null, null
     ) as $occurrence) {
       $series['starts_at'] = $occurrence->format("Y-m-d H:i:s");
       $series['ends_at'] = $occurrence->modify("+$duration seconds")->format("Y-m-d H:i:s");

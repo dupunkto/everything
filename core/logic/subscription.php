@@ -5,18 +5,13 @@
 namespace subscription;
 
 // Pulls a subscription's iCal feed, mirrors its events into appointments,
-// and translates RRULEs into the native (int|cron) recurrence column plus
-// the recurrence_until / recurrence_count siblings.
+// and translates RRULEs into the native recurrence column.
 //
 // Sync rules:
 //   1. Past appointments (ends_at < now) missing from the feed are left
 //      alone (historical record).
-//   2. Future appointments missing from the feed are deleted. A recurring
-//      series is never deleted outright — its past occurrences are history —
-//      but ended by clamping recurrence_until to the current moment.
-//      Count-limited series are left alone entirely: without expanding the
-//      recurrence there is no way to tell whether they already finished,
-//      and rewriting them into until-form could resurrect them.
+//   2. Future appointments missing from the feed are deleted. Recurring
+//      series are kept because recurrence exceptions are not represented.
 //   3. Appointments still in the feed get their mirrored fields refreshed:
 //      title, content, location, meeting, starts_at, ends_at, all_day and
 //      the recurrence trio.
@@ -46,7 +41,7 @@ function sync($id) {
   $existing = \store\list_appointments_by_subscription($id) ?: [];
 
   $now = gmdate('Y-m-d\TH:i:sP');
-  $stats = ['inserted' => 0, 'updated' => 0, 'deleted' => 0, 'ended' => 0, 'kept' => 0, 'errors' => 0];
+  $stats = ['inserted' => 0, 'updated' => 0, 'deleted' => 0, 'kept' => 0, 'errors' => 0];
   $seen = [];
 
   foreach($existing as $row) {
@@ -65,16 +60,10 @@ function sync($id) {
         $data['location'],
         $data['meeting'],
         $data['all_day'],
-        $data['recurrence'],
-        $data['recurrence_until'],
-        $data['recurrence_count']
+        $data['recurrence']
       ) ? $stats['updated']++ : $stats['errors']++;
     }
-    elseif(recurs_beyond($row, $now)) {
-      \store\end_appointment_recurrence($row['id'], $now)
-        ? $stats['ended']++ : $stats['errors']++;
-    }
-    elseif($row['ends_at'] < $now || $row['recurrence_count']) {
+    elseif($row['ends_at'] < $now || $row['recurrence']) {
       $stats['kept']++;
     }
     else {
@@ -96,9 +85,7 @@ function sync($id) {
       $data['location'],
       $data['meeting'],
       $data['all_day'],
-      $data['recurrence'],
-      $data['recurrence_until'],
-      $data['recurrence_count']
+      $data['recurrence']
     ) ? $stats['inserted']++ : $stats['errors']++;
   }
 
@@ -106,7 +93,7 @@ function sync($id) {
 }
 
 function normalize_feed_event($event) {
-  [$recurrence, $until, $count] = translate_rrule(
+  [$recurrence] = translate_rrule(
     $event['rrule'], $event['starts_at'], $event['uid']);
 
   // Timed events spanning more than two full days (multi-day vacations
@@ -124,8 +111,6 @@ function normalize_feed_event($event) {
     'ends_at' => gmdate('Y-m-d\TH:i:sP', $event['ends_at']),
     'all_day' => $all_day,
     'recurrence' => $recurrence,
-    'recurrence_until' => $until,
-    'recurrence_count' => $count,
   ];
 }
 
@@ -137,20 +122,11 @@ function appointment_differs($row, $data) {
     || $row['starts_at'] != $data['starts_at']
     || $row['ends_at'] != $data['ends_at']
     || cast_boolean($row['all_day']) != $data['all_day']
-    || $row['recurrence'] != $data['recurrence']
-    || $row['recurrence_until'] != $data['recurrence_until']
-    || $row['recurrence_count'] != $data['recurrence_count'];
+    || $row['recurrence'] != $data['recurrence'];
 }
 
-function recurs_beyond($row, $moment) {
-  return $row['recurrence']
-    && !$row['recurrence_count']
-    && (!$row['recurrence_until'] || $row['recurrence_until'] > $moment);
-}
-
-// Returns [recurrence, recurrence_until, recurrence_count]. When the RRULE
-// can't be cleanly expressed in cron/int, we emit a warning and return
-// all-nulls — the caller will store the first occurrence only.
+// Returns the translated recurrence as the first item. When the RRULE can't
+// be cleanly expressed in cron/int, the first occurrence is stored alone.
 function translate_rrule($rrule, $starts_unix, $uid) {
   if(!$rrule) return [null, null, null];
 

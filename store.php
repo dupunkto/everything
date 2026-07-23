@@ -26,11 +26,11 @@ define('ENUM_WISH_STATUS', ['dream', 'bought', 'nvm']);
 // Notes
 
 function create_note($title, $content, $date = null) {
-  $ok = exec_query('INSERT INTO `notes` (
-    `id`,
-    `title`,
-    `content`,
-    `date`
+  $ok = exec_query('INSERT INTO notes (
+    id,
+    title,
+    content,
+    written_at
   ) VALUES (?, ?, ?, ?)', [
     $id = generate_humid(),
     $title,
@@ -42,15 +42,15 @@ function create_note($title, $content, $date = null) {
 }
 
 function update_note($id, $title, $content, $date = null) {
-  return exec_query('UPDATE `notes` SET
-    `title` = ?,
-    `content` = ?,
-    `date` = ?
+  return exec_query('UPDATE notes SET
+    title = ?,
+    content = ?,
+    written_at = ?
   WHERE id = ?', [$title, $content, $date, $id]);
 }
 
 function get_note($id) {
-  return one('SELECT * FROM `notes` WHERE `id` = ?', [$id]);
+  return one('SELECT * FROM notes WHERE id = ?', [$id]);
 }
 
 function get_note_tags($id) {
@@ -68,27 +68,27 @@ function list_notes($query = "") {
   $params = [];
 
   foreach($terms as $term) {
-    $where[] = '(LOWER(`title`) LIKE ? OR LOWER(`content`) LIKE ?)';
+    $where[] = '(LOWER(title) LIKE ? OR LOWER(content) LIKE ?)';
     $like = "%" . mb_strtolower($term) . "%";
     $params[] = $like;
     $params[] = $like;
   }
 
   foreach($tags as $id) {
-    $where[] = 'EXISTS (SELECT 1 FROM `notes_tags` nt
+    $where[] = 'EXISTS (SELECT 1 FROM notes_tags nt
       WHERE nt.note_id = notes.id AND nt.tag_id = ?)';
     $params[] = $id;
   }
 
-  $sql = 'SELECT * FROM `notes`';
+  $sql = 'SELECT * FROM notes';
   if($where) $sql .= ' WHERE ' . join(' AND ', $where);
-  $sql .= ' ORDER BY CASE WHEN `date` IS NULL THEN 1 ELSE 0 END, `date` DESC';
+  $sql .= ' ORDER BY CASE WHEN written_at IS NULL THEN 1 ELSE 0 END, written_at DESC';
 
   return all($sql, $params) ?? [];
 }
 
 function delete_note($id) {
-  return exec_query('DELETE FROM `notes` WHERE `id` = ?', [$id]);
+  return exec_query('DELETE FROM notes WHERE id = ?', [$id]);
 }
 
 // Tasks
@@ -99,45 +99,45 @@ function create_task(
   $status,
   $urgent = false,
   $recurrence = null,
-  $open_date = null,
-  $due_date = null,
+  $open_at = null,
+  $due_at = null,
   $due_all_day = false,
-  $expiration_date = null,
+  $expire_at = null,
   $comment = null
 ) {
   in_array($status, ENUM_TASK_STATUS) or die("status $status does not exist");
 
-  $open_date ??= gmdate('c');
+  $open_at ??= gmdate('c');
 
-  $ok = exec_query('INSERT INTO `tasks` (
-    `id`,
-    `title`,
-    `content`,
-    `urgent`,
-    `recurrence`,
-    `open_date`,
-    `due_date`,
-    `due_all_day`,
-    `expiration_date`
+  $ok = exec_query('INSERT INTO tasks (
+    id,
+    title,
+    content,
+    urgent,
+    recurrence,
+    open_at,
+    due_at,
+    due_all_day,
+    expire_at
   ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [
     $id = generate_humid(),
     $title,
     $content,
     $urgent,
     $recurrence,
-    $open_date,
-    $due_date,
+    $open_at,
+    $due_at,
     $due_all_day,
-    $expiration_date
+    $expire_at
   ]);
 
   if(!$ok) return $ok;
 
-  $ok = exec_query('INSERT INTO `task_log` (
-    `task_id`,
-    `date`,
-    `status`,
-    `comment`
+  $ok = exec_query('INSERT INTO task_log (
+    task_id,
+    changed_at,
+    status,
+    comment
   ) VALUES (?, ?, ?, ?)', [
     $id,
     gmdate('c'),
@@ -154,35 +154,35 @@ function update_task(
   $content,
   $urgent,
   $recurrence,
-  $open_date,
-  $due_date,
+  $open_at,
+  $due_at,
   $due_all_day,
-  $expiration_date
+  $expire_at
 ) {
-  return exec_query('UPDATE `tasks` SET
-    `title` = ?,
-    `content` = ?,
-    `urgent` = ?,
-    `recurrence` = ?,
-    `open_date` = ?,
-    `due_date` = ?,
-    `due_all_day` = ?,
-    `expiration_date` = ?
+  return exec_query('UPDATE tasks SET
+    title = ?,
+    content = ?,
+    urgent = ?,
+    recurrence = ?,
+    open_at = ?,
+    due_at = ?,
+    due_all_day = ?,
+    expire_at = ?
   WHERE id = ?', [
     $title,
     $content,
     $urgent,
     $recurrence,
-    $open_date,
-    $due_date,
+    $open_at,
+    $due_at,
     $due_all_day,
-    $expiration_date,
+    $expire_at,
     $id
   ]);
 }
 
 function set_task_urgent($id, $urgent) {
-  return exec_query('UPDATE `tasks` SET `urgent` = ? WHERE `id` = ?', [$urgent, $id]);
+  return exec_query('UPDATE tasks SET urgent = ? WHERE id = ?', [$urgent, $id]);
 }
 
 function set_task_status($id, $status, $comment = "") {
@@ -192,15 +192,15 @@ function set_task_status($id, $status, $comment = "") {
   // no comment is being added, there is nothing new to record. This stops rapid
   // toggles from the listing (which race the async re-render) from stacking up
   // empty log events.
-  $latest = one('SELECT `status` FROM `task_log`
-    WHERE `task_id` = ? ORDER BY `date` DESC, `id` DESC', [$id]);
+  $latest = one('SELECT status FROM task_log
+    WHERE task_id = ? ORDER BY changed_at DESC, id DESC', [$id]);
   if($latest && $latest['status'] === $status && !$comment) return true;
 
-  return exec_query('INSERT INTO `task_log` (
-    `task_id`,
-    `date`,
-    `status`,
-    `comment`
+  return exec_query('INSERT INTO task_log (
+    task_id,
+    changed_at,
+    status,
+    comment
   ) VALUES (?, ?, ?, ?)', [
     $id,
     gmdate('c'),
@@ -247,25 +247,25 @@ function list_tasks($query = "", $override = [], $respect_horizon = true) {
       tags.parent_id as tag_parent_id,
       log.status,
       log.comment,
-      log.date as updated_date,
-      (SELECT done.date FROM `task_log` done
+      log.changed_at as updated_date,
+      (SELECT done.changed_at FROM task_log done
         WHERE done.task_id = tasks.id AND done.status = 'done'
-        ORDER BY done.date DESC, done.id DESC LIMIT 1) AS last_done
-    FROM `tasks`
-    LEFT JOIN `task_log` log
+        ORDER BY done.changed_at DESC, done.id DESC LIMIT 1) AS last_done
+    FROM tasks
+    LEFT JOIN task_log log
       ON log.id = (
         SELECT ranked.id
-        FROM `task_log` ranked
+        FROM task_log ranked
         WHERE ranked.task_id = tasks.id
-        ORDER BY ranked.date DESC, ranked.id DESC
+        ORDER BY ranked.changed_at DESC, ranked.id DESC
         LIMIT 1
       )
-    LEFT JOIN `tasks_tags` tt ON tt.task_id = tasks.id
-    LEFT JOIN `tags` ON tags.id = tt.tag_id
+    LEFT JOIN tasks_tags tt ON tt.task_id = tasks.id
+    LEFT JOIN tags ON tags.id = tt.tag_id
     ORDER BY
-      `due_date` NULLS LAST,
-      `expiration_date` NULLS LAST,
-      `open_date`");
+      due_at NULLS LAST,
+      expire_at NULLS LAST,
+      open_at");
 
   if(!$rows) return $rows;
 
@@ -303,27 +303,27 @@ function get_task($id) {
     task.content,
     task.urgent,
     task.recurrence,
-    task.open_date,
-    task.due_date,
+    task.open_at,
+    task.due_at,
     task.due_all_day,
-    task.expiration_date,
+    task.expire_at,
     log.status,
     log.comment,
-    log.date as updated_date,
-    (SELECT done.date FROM `task_log` done
+    log.changed_at as updated_date,
+    (SELECT done.changed_at FROM task_log done
       WHERE done.task_id = task.id AND done.status = \'done\'
-      ORDER BY done.date DESC, done.id DESC LIMIT 1) AS last_done
-  FROM `tasks` task
-  LEFT JOIN `task_log` log ON log.task_id = task.id
+      ORDER BY done.changed_at DESC, done.id DESC LIMIT 1) AS last_done
+  FROM tasks task
+  LEFT JOIN task_log log ON log.task_id = task.id
   WHERE task.id = ?
-  ORDER BY log.date DESC, log.id DESC', [$id]);
+  ORDER BY log.changed_at DESC, log.id DESC', [$id]);
 
   if($task === false) return $task;
 
   $task = array_merge($task, \recurrence\task_state($task));
 
-  $tags = all('SELECT tags.label FROM `tags`
-    JOIN `tasks_tags` tt ON tt.tag_id = tags.id
+  $tags = all('SELECT tags.label FROM tags
+    JOIN tasks_tags tt ON tt.tag_id = tags.id
     WHERE tt.task_id = ?', [$id]);
 
   if($tags === false) return $tags;
@@ -334,31 +334,31 @@ function get_task($id) {
 }
 
 function get_task_log($id) {
-  return all('SELECT * FROM `task_log` WHERE `task_id` = ? ORDER BY `date` ASC, `id` ASC', [$id]) ?? [];
+  return all('SELECT * FROM task_log WHERE task_id = ? ORDER BY changed_at ASC, id ASC', [$id]) ?? [];
 }
 
 function amend_task_status($id, $comment) {
-  $log = all('SELECT * FROM `task_log`
-    WHERE `task_id` = ? ORDER BY `date` DESC, `id` DESC LIMIT 2', [$id]);
+  $log = all('SELECT * FROM task_log
+    WHERE task_id = ? ORDER BY changed_at DESC, id DESC LIMIT 2', [$id]);
 
   if(!$log) return $log;
 
-  return exec_query('UPDATE `task_log` SET `comment` = ?
-    WHERE `id` = ? AND `task_id` = ?', [$comment, $log[0]['id'], $id]);
+  return exec_query('UPDATE task_log SET comment = ?
+    WHERE id = ? AND task_id = ?', [$comment, $log[0]['id'], $id]);
 }
 
 function undo_task_status($id, $log_id) {
-  $log = all('SELECT `id`, `status` FROM `task_log`
-    WHERE `task_id` = ? ORDER BY `date` DESC, `id` DESC LIMIT 2', [$id]);
+  $log = all('SELECT id, status FROM task_log
+    WHERE task_id = ? ORDER BY changed_at DESC, id DESC LIMIT 2', [$id]);
 
   if(!$log || count($log) < 2 || $log[0]['id'] != $log_id ||
     $log[0]['status'] == $log[1]['status']) return false;
 
-  $query = exec_query('DELETE FROM `task_log`
-    WHERE `id` = ? AND `task_id` = ? AND `id` = (
+  $query = exec_query('DELETE FROM task_log
+    WHERE id = ? AND task_id = ? AND id = (
       SELECT latest.id FROM (
-        SELECT `id` FROM `task_log`
-        WHERE `task_id` = ? ORDER BY `date` DESC, `id` DESC LIMIT 1
+        SELECT id FROM task_log
+        WHERE task_id = ? ORDER BY changed_at DESC, id DESC LIMIT 1
       ) latest
     )', [$log_id, $id, $id]);
 
@@ -366,7 +366,7 @@ function undo_task_status($id, $log_id) {
 }
 
 function delete_task($id) {
-  return exec_query('DELETE FROM `tasks` WHERE `id` = ?', [$id]);
+  return exec_query('DELETE FROM tasks WHERE id = ?', [$id]);
 }
 
 // Wishes
@@ -374,12 +374,12 @@ function delete_task($id) {
 function create_wish($title, $content, $status, $urgent = false, $date = null) {
   in_array($status, ENUM_WISH_STATUS) or die("status $status does not exist");
 
-  $ok = exec_query('INSERT INTO `wishes` (
-    `id`,
-    `title`,
-    `content`,
-    `urgent`,
-    `date`
+  $ok = exec_query('INSERT INTO wishes (
+    id,
+    title,
+    content,
+    urgent,
+    added_at
   ) VALUES (?, ?, ?, ?, ?)', [
     $id = generate_humid(),
     $title,
@@ -390,9 +390,9 @@ function create_wish($title, $content, $status, $urgent = false, $date = null) {
 
   if(!$ok) return $ok;
 
-  $ok = exec_query('INSERT INTO `wish_log` (
-    `wish_id`,
-    `status`
+  $ok = exec_query('INSERT INTO wish_log (
+    wish_id,
+    status
   ) VALUES (?, ?)', [$id, $status]);
 
   return $ok ? $id : $ok;
@@ -403,23 +403,23 @@ function set_wish_status($id, $status, $comment = "") {
 
   // Skip redundant transitions (see set_task_status): the wish listing has the
   // same toggle, so rapid clicks would otherwise stack up empty log events.
-  $latest = one('SELECT `status` FROM `wish_log`
-    WHERE `wish_id` = ? ORDER BY `date` DESC, `id` DESC', [$id]);
+  $latest = one('SELECT status FROM wish_log
+    WHERE wish_id = ? ORDER BY changed_at DESC, id DESC', [$id]);
   if($latest && $latest['status'] === $status && !$comment) return true;
 
-  return exec_query('INSERT INTO `wish_log` (
-    `wish_id`,
-    `status`,
-    `comment`
+  return exec_query('INSERT INTO wish_log (
+    wish_id,
+    status,
+    comment
   ) VALUES (?, ?, ?)', [$id, $status, $comment]);
 }
 
 function update_wish($id, $title, $content, $urgent, $date = null) {
-  return exec_query('UPDATE `wishes` SET
-    `title` = ?,
-    `content` = ?,
-    `urgent` = ?,
-    `date` = ?
+  return exec_query('UPDATE wishes SET
+    title = ?,
+    content = ?,
+    urgent = ?,
+    added_at = ?
   WHERE id = ?', [$title, $content, $urgent, $date, $id]);
 }
 
@@ -428,14 +428,14 @@ function get_wish($id) {
     wishes.*,
     log.status,
     log.comment,
-    log.date as updated_date
-  FROM `wishes`
-  LEFT JOIN `wish_log` log
+    log.changed_at as updated_date
+  FROM wishes
+  LEFT JOIN wish_log log
     ON log.id = (
       SELECT ranked.id
-      FROM `wish_log` ranked
+      FROM wish_log ranked
       WHERE ranked.wish_id = wishes.id
-      ORDER BY ranked.date DESC, ranked.id DESC
+      ORDER BY ranked.changed_at DESC, ranked.id DESC
       LIMIT 1
     )
   WHERE wishes.id = ?', [$id]);
@@ -448,7 +448,7 @@ function get_wish($id) {
 }
 
 function list_wish_urls($id) {
-  return all('SELECT * FROM `wish_urls` WHERE wish_id = ?', [$id]);
+  return all('SELECT * FROM wish_urls WHERE wish_id = ?', [$id]);
 }
 
 function set_wish_urls($id, $rows) {
@@ -464,7 +464,7 @@ function set_wish_tags($id, $tag_ids) {
 }
 
 function get_wish_log($id) {
-  return all('SELECT * FROM `wish_log` WHERE `wish_id` = ? ORDER BY `date` ASC', [$id]) ?? [];
+  return all('SELECT * FROM wish_log WHERE wish_id = ? ORDER BY changed_at ASC', [$id]) ?? [];
 }
 
 function list_wishes($statuses = [], $override = []) {
@@ -472,18 +472,18 @@ function list_wishes($statuses = [], $override = []) {
       wishes.*,
       log.status,
       log.comment,
-      log.date as updated_date,
-      (SELECT SUM(price) FROM `wish_urls` WHERE wish_urls.wish_id = wishes.id) as total_price
-    FROM `wishes`
-    LEFT JOIN `wish_log` log
+      log.changed_at as updated_date,
+      (SELECT SUM(price) FROM wish_urls WHERE wish_urls.wish_id = wishes.id) as total_price
+    FROM wishes
+    LEFT JOIN wish_log log
       ON log.id = (
         SELECT ranked.id
-        FROM `wish_log` ranked
+        FROM wish_log ranked
         WHERE ranked.wish_id = wishes.id
-        ORDER BY ranked.date DESC, ranked.id DESC
+        ORDER BY ranked.changed_at DESC, ranked.id DESC
         LIMIT 1
       )
-    ORDER BY wishes.`date` DESC, wishes.`id` DESC");
+    ORDER BY wishes.added_at DESC, wishes.id DESC");
 
   if(!$rows) return $rows;
 
@@ -500,19 +500,19 @@ function list_wishes($statuses = [], $override = []) {
 }
 
 function delete_wish($id) {
-  return exec_query('DELETE FROM `wishes` WHERE `id` = ?', [$id]);
+  return exec_query('DELETE FROM wishes WHERE id = ?', [$id]);
 }
 
 // Bookmarks
 
 function create_bookmark($url, $label = null, $note = null, $favicon = null, $date = null) {
-  $ok = exec_query('INSERT INTO `bookmarks` (
-    `id`,
-    `label`,
-    `url`,
-    `note`,
-    `favicon`,
-    `date`
+  $ok = exec_query('INSERT INTO bookmarks (
+    id,
+    label,
+    url,
+    note,
+    favicon,
+    saved_at
   ) VALUES (?, ?, ?, ?, ?, ?)', [
     $id = generate_humid(),
     $label,
@@ -526,16 +526,16 @@ function create_bookmark($url, $label = null, $note = null, $favicon = null, $da
 }
 
 function update_bookmark($id, $label, $url, $note = null, $date = null) {
-  return exec_query('UPDATE `bookmarks` SET
-    `label` = ?,
-    `url` = ?,
-    `note` = ?,
-    `date` = ?
+  return exec_query('UPDATE bookmarks SET
+    label = ?,
+    url = ?,
+    note = ?,
+    saved_at = ?
   WHERE id = ?', [$label, $url, $note, $date, $id]);
 }
 
 function update_bookmark_favicon($id, $favicon) {
-  return exec_query('UPDATE `bookmarks` SET `favicon` = ? WHERE `id` = ?', [$favicon, $id]);
+  return exec_query('UPDATE bookmarks SET favicon = ? WHERE id = ?', [$favicon, $id]);
 }
 
 function get_bookmark_tags($id) {
@@ -547,7 +547,7 @@ function set_bookmark_tags($id, $tag_ids) {
 }
 
 function get_bookmark($id) {
-  return one('SELECT * FROM `bookmarks` WHERE `id` = ?', [$id]);
+  return one('SELECT * FROM bookmarks WHERE id = ?', [$id]);
 }
 
 function list_bookmarks($query = "") {
@@ -557,7 +557,7 @@ function list_bookmarks($query = "") {
   $params = [];
 
   foreach($terms as $term) {
-    $where[] = '(LOWER(`label`) LIKE ? OR LOWER(`url`) LIKE ? OR LOWER(`note`) LIKE ?)';
+    $where[] = '(LOWER(label) LIKE ? OR LOWER(url) LIKE ? OR LOWER(note) LIKE ?)';
     $like = "%" . mb_strtolower($term) . "%";
     $params[] = $like;
     $params[] = $like;
@@ -565,20 +565,20 @@ function list_bookmarks($query = "") {
   }
 
   foreach($tags as $id) {
-    $where[] = 'EXISTS (SELECT 1 FROM `bookmarks_tags` bt
+    $where[] = 'EXISTS (SELECT 1 FROM bookmarks_tags bt
       WHERE bt.bookmark_id = bookmarks.id AND bt.tag_id = ?)';
     $params[] = $id;
   }
 
-  $sql = 'SELECT * FROM `bookmarks`';
+  $sql = 'SELECT * FROM bookmarks';
   if($where) $sql .= ' WHERE ' . join(' AND ', $where);
-  $sql .= ' ORDER BY CASE WHEN `date` IS NULL THEN 1 ELSE 0 END, `date` DESC';
+  $sql .= ' ORDER BY CASE WHEN saved_at IS NULL THEN 1 ELSE 0 END, saved_at DESC';
 
   return all($sql, $params) ?? [];
 }
 
 function delete_bookmark($id) {
-  return exec_query('DELETE FROM `bookmarks` WHERE `id` = ?', [$id]);
+  return exec_query('DELETE FROM bookmarks WHERE id = ?', [$id]);
 }
 
 // Tracker
@@ -586,12 +586,12 @@ function delete_bookmark($id) {
 function create_timing($description, $starts_at, $ends_at, $task_id = null) {
   if($task_id) get_task($task_id) or die("task with ID $task_id does not exist");
 
-  $ok = exec_query('INSERT INTO `timings` (
-    `id`,
-    `description`,
-    `starts_at`,
-    `ends_at`,
-    `task_id`
+  $ok = exec_query('INSERT INTO timings (
+    id,
+    description,
+    starts_at,
+    ends_at,
+    task_id
   ) VALUES (?, ?, ?, ?, ?)', [
     $id = generate_humid(),
     $description,
@@ -606,11 +606,11 @@ function create_timing($description, $starts_at, $ends_at, $task_id = null) {
 function update_timing($id, $description, $starts_at, $ends_at, $task_id) {
   if($task_id) get_task($task_id) or die("task with ID $task_id does not exist");
 
-  return exec_query('UPDATE `timings` SET
-    `description` = ?,
-    `starts_at` = ?,
-    `ends_at` = ?,
-    `task_id` = ?
+  return exec_query('UPDATE timings SET
+    description = ?,
+    starts_at = ?,
+    ends_at = ?,
+    task_id = ?
   WHERE id = ?', [
     $description,
     $starts_at,
@@ -629,7 +629,7 @@ function set_timing_tags($id, $tag_ids) {
 }
 
 function list_timings() {
-  return all('SELECT * FROM `timings` ORDER BY `starts_at` DESC');
+  return all('SELECT * FROM timings ORDER BY starts_at DESC');
 }
 
 // Timings overlapping [$from, $to), each carrying its first tag (lowest id).
@@ -638,26 +638,26 @@ function list_timings() {
 function list_timings_between($from, $to) {
   return all('SELECT
     t.*,
-    (SELECT tt.tag_id FROM `timings_tags` tt
+    (SELECT tt.tag_id FROM timings_tags tt
       WHERE tt.timing_id = t.id
       ORDER BY tt.tag_id ASC LIMIT 1) AS first_tag_id
-  FROM `timings` t
+  FROM timings t
   WHERE t.starts_at < ? AND t.ends_at > ?
   ORDER BY t.starts_at', [$to, $from]);
 }
 
 function get_timing($id) {
-  return one('SELECT * FROM `timings` WHERE `id` = ?', [$id]);
+  return one('SELECT * FROM timings WHERE id = ?', [$id]);
 }
 
 function delete_timing($id) {
-  return exec_query('DELETE FROM `timings` WHERE `id` = ?', [$id]);
+  return exec_query('DELETE FROM timings WHERE id = ?', [$id]);
 }
 
 function list_timing_tags($from, $to) {
   return all('SELECT t.id, t.starts_at, t.ends_at, tt.tag_id
-    FROM `timings` t
-    JOIN `timings_tags` tt ON tt.timing_id = t.id
+    FROM timings t
+    JOIN timings_tags tt ON tt.timing_id = t.id
     WHERE t.starts_at < ? AND t.ends_at > ?', [$to, $from]) ?? [];
 }
 
@@ -665,9 +665,9 @@ function list_timing_tags($from, $to) {
 
 function list_quotas() {
   $quotas = all('SELECT q.*, t.label, t.color
-    FROM `quotas` q
-    JOIN `tags` t ON t.id = q.tag_id
-    ORDER BY t.`order` ASC, t.id DESC') ?? [];
+    FROM quotas q
+    JOIN tags t ON t.id = q.tag_id
+    ORDER BY t.position ASC, t.id DESC') ?? [];
 
   return inherit_tag_colors($quotas, id_key: 'tag_id');
 }
@@ -686,7 +686,7 @@ function create_quota($tag_id, $period, $hours, $minutes, $start_date) {
   $duration = quota_minutes($tag_id, $period, $hours, $minutes, $start_date);
   if(!$duration) return false;
 
-  return exec_query('INSERT INTO `quotas` (`tag_id`, `period`, `minutes`, `start_date`)
+  return exec_query('INSERT INTO quotas (tag_id, period, minutes, start_date)
     VALUES (?, ?, ?, ?)', [$tag_id, $period, $duration, $start_date]);
 }
 
@@ -694,13 +694,13 @@ function update_quota($tag_id, $period, $hours, $minutes, $start_date) {
   $duration = quota_minutes($tag_id, $period, $hours, $minutes, $start_date);
   if(!$duration) return false;
 
-  return exec_query('UPDATE `quotas`
-    SET `period` = ?, `minutes` = ?, `start_date` = ? WHERE `tag_id` = ?',
+  return exec_query('UPDATE quotas
+    SET period = ?, minutes = ?, start_date = ? WHERE tag_id = ?',
     [$period, $duration, $start_date, $tag_id]);
 }
 
 function delete_quota($tag_id) {
-  return exec_query('DELETE FROM `quotas` WHERE `tag_id` = ?', [$tag_id]);
+  return exec_query('DELETE FROM quotas WHERE tag_id = ?', [$tag_id]);
 }
 
 // Tags
@@ -708,11 +708,11 @@ function delete_quota($tag_id) {
 function create_tag($label, $color, $parent_id) {
   if($parent_id) get_tag($parent_id) or die("tag with ID $parent_id does not exist");
 
-  return exec_query('INSERT INTO `tags` (
-    `label`,
-    `color`,
-    `parent_id`,
-    `order`
+  return exec_query('INSERT INTO tags (
+    label,
+    color,
+    parent_id,
+    position
   ) VALUES (?, ?, ?, ?)', [
     $label,
     $color,
@@ -731,10 +731,10 @@ function update_tag($id, $label, $color, $parent_id) {
     }
   }
 
-  return exec_query('UPDATE `tags` SET
-    `label` = ?,
-    `color` = COALESCE(?, `color`),
-    `parent_id` = ?
+  return exec_query('UPDATE tags SET
+    label = ?,
+    color = COALESCE(?, color),
+    parent_id = ?
   WHERE id = ?', [
     $label,
     $color,
@@ -744,7 +744,7 @@ function update_tag($id, $label, $color, $parent_id) {
 }
 
 function list_tags() {
-  $tags = all('SELECT * FROM `tags` ORDER BY `order` ASC, `id` DESC');
+  $tags = all('SELECT * FROM tags ORDER BY position ASC, id DESC');
 
   $children = [];
   foreach($tags as $tag) $children[$tag['parent_id']][] = $tag;
@@ -773,8 +773,8 @@ function inherit_tag_colors($items, $id_key = 'id') {
 
 function reorder_tags($ids) {
   foreach(array_values($ids) as $order => $id) {
-    $ok = exec_query('UPDATE `tags`
-      SET `order` = ? WHERE `id` = ?', [$order, $id]);
+    $ok = exec_query('UPDATE tags
+      SET position = ? WHERE id = ?', [$order, $id]);
 
     if(!$ok) return false;
   }
@@ -783,10 +783,10 @@ function reorder_tags($ids) {
 }
 
 function tags_of($table, $fk, $id) {
-  $tags = all("SELECT tags.* FROM `tags`
-    JOIN `$table` link ON link.tag_id = tags.id
-    WHERE link.`$fk` = ?
-    ORDER BY tags.`order` ASC, tags.id DESC", [$id]);
+  $tags = all("SELECT tags.* FROM tags
+    JOIN $table link ON link.tag_id = tags.id
+    WHERE link.$fk = ?
+    ORDER BY tags.position ASC, tags.id DESC", [$id]);
 
   return $tags === false ? false : inherit_tag_colors($tags);
 }
@@ -797,46 +797,46 @@ function set_tags($table, $fk, $id, $tag_ids) {
 }
 
 function get_tag($id) {
-  return one('SELECT * FROM `tags` WHERE `id` = ?', [$id]);
+  return one('SELECT * FROM tags WHERE id = ?', [$id]);
 }
 
 function get_tag_by_label($label) {
-  return one('SELECT * FROM `tags` WHERE `label` = ?', [$label]);
+  return one('SELECT * FROM tags WHERE label = ?', [$label]);
 }
 
 function delete_tag($id) {
-  return exec_query('DELETE FROM `tags` WHERE `id` = ?', [$id]);
+  return exec_query('DELETE FROM tags WHERE id = ?', [$id]);
 }
 
 // Ordering
 
 function prepend_order($table) {
-  $first = one('SELECT MIN(`order`) AS `order` FROM ' . $table);
+  $first = one('SELECT MIN(position) AS position FROM ' . $table);
 
-  if($first['order'] === false) return 0;
-  if($first['order'] > 0) return $first['order'] - 1;
+  if($first['position'] === false) return 0;
+  if($first['position'] > 0) return $first['position'] - 1;
 
   // If this fails, too bad, the ordering is a bit messed up, but
   // not the end of the world.
-  exec_query('UPDATE ' . $table . ' SET `order` = `order` + 1', []);
+  exec_query('UPDATE ' . $table . ' SET position = position + 1', []);
   
   return 0;
 }
 
 function append_order($table) {
-  $last = one('SELECT COALESCE(MAX(`order`), 0) AS `order` FROM ' . $table);
-  return $last['order'] + 1;
+  $last = one('SELECT COALESCE(MAX(position), 0) AS position FROM ' . $table);
+  return $last['position'] + 1;
 }
 
 // Calendars
 
 function create_calendar($title, $subtitle, $color) {
-  return exec_query('INSERT INTO `calendars` (
-    `id`,
-    `title`,
-    `subtitle`,
-    `color`,
-    `order`
+  return exec_query('INSERT INTO calendars (
+    id,
+    title,
+    subtitle,
+    color,
+    position
   ) VALUES (?, ?, ?, ?, ?)', [
     generate_humid(),
     $title,
@@ -847,40 +847,40 @@ function create_calendar($title, $subtitle, $color) {
 }
 
 function update_calendar($id, $title, $subtitle, $color) {
-  return exec_query('UPDATE `calendars` SET
-    `title` = ?,
-    `subtitle` = ?,
-    `color` = ?
+  return exec_query('UPDATE calendars SET
+    title = ?,
+    subtitle = ?,
+    color = ?
   WHERE id = ?', [$title, $subtitle, $color, $id]);
 }
 
 function list_calendars() {
-  return all('SELECT * FROM `calendars` ORDER BY `order` ASC, `title` ASC');
+  return all('SELECT * FROM calendars ORDER BY position ASC, title ASC');
 }
 
 function get_calendar($id) {
-  return one('SELECT * FROM `calendars` WHERE `id` = ?', [$id]);
+  return one('SELECT * FROM calendars WHERE id = ?', [$id]);
 }
 
 function get_oldest_calendar() {
-  return one('SELECT `id` FROM `calendars` ORDER BY `rowid`');
+  return one('SELECT id FROM calendars ORDER BY rowid');
 }
 
 function delete_calendar($id) {
-  return exec_query('DELETE FROM `calendars` WHERE `id` = ?', [$id]);
+  return exec_query('DELETE FROM calendars WHERE id = ?', [$id]);
 }
 
 // Subscriptions
 
 function create_subscription($title, $subtitle, $url, $color, $filter = null) {
-  return exec_query('INSERT INTO `subscriptions` (
-    `id`,
-    `title`,
-    `subtitle`,
-    `url`,
-    `color`,
-    `filter`,
-    `order`
+  return exec_query('INSERT INTO subscriptions (
+    id,
+    title,
+    subtitle,
+    url,
+    color,
+    filter,
+    position
   ) VALUES (?, ?, ?, ?, ?, ?, ?)', [
     generate_humid(),
     $title,
@@ -893,31 +893,31 @@ function create_subscription($title, $subtitle, $url, $color, $filter = null) {
 }
 
 function update_subscription($id, $title, $subtitle, $url, $color, $filter = null) {
-  return exec_query('UPDATE `subscriptions` SET
-    `title` = ?,
-    `subtitle` = ?,
-    `url` = ?,
-    `color` = ?,
-    `filter` = ?
+  return exec_query('UPDATE subscriptions SET
+    title = ?,
+    subtitle = ?,
+    url = ?,
+    color = ?,
+    filter = ?
   WHERE id = ?', [$title, $subtitle, $url, $color, $filter, $id]);
 }
 
 function list_subscriptions() {
-  return all('SELECT * FROM `subscriptions` ORDER BY `order` ASC, `title` ASC');
+  return all('SELECT * FROM subscriptions ORDER BY position ASC, title ASC');
 }
 
 function get_subscription($id) {
-  return one('SELECT * FROM `subscriptions` WHERE `id` = ?', [$id]);
+  return one('SELECT * FROM subscriptions WHERE id = ?', [$id]);
 }
 
 function delete_subscription($id) {
-  return exec_query('DELETE FROM `subscriptions` WHERE `id` = ?', [$id]);
+  return exec_query('DELETE FROM subscriptions WHERE id = ?', [$id]);
 }
 
 // Calendar sources
 
 function list_sources() {
-  return all('SELECT * FROM `sources` ORDER BY `order` ASC, `title` ASC');
+  return all('SELECT * FROM sources ORDER BY position ASC, title ASC');
 }
 
 function reorder_sources($sources) {
@@ -930,8 +930,8 @@ function reorder_sources($sources) {
       default => null
     };
 
-    if(!$table || !exec_query("UPDATE `$table`
-      SET `order` = ? WHERE `id` = ?", [$order, $id])) return false;
+    if(!$table || !exec_query("UPDATE $table
+      SET position = ? WHERE id = ?", [$order, $id])) return false;
   }
 
   return true;
@@ -940,11 +940,11 @@ function reorder_sources($sources) {
 function reorder_source_by_type($type, $ids) {
   in_array($type, ['calendars', 'subscriptions']) or die("type $type does not exist");
 
-  $slots = array_column(all("SELECT `order` FROM `$type` ORDER BY `order` ASC, `title` ASC") ?: [], 'order');
+  $slots = array_column(all("SELECT position FROM $type ORDER BY position ASC, title ASC") ?: [], 'position');
 
   foreach(array_values($ids) as $i => $id) {
-    $ok = exec_query("UPDATE `$type`
-      SET `order` = ? WHERE `id` = ?", [$slots[$i] ?? $i, $id]);
+    $ok = exec_query("UPDATE $type
+      SET position = ? WHERE id = ?", [$slots[$i] ?? $i, $id]);
 
     if(!$ok) return false;
   }
@@ -955,12 +955,12 @@ function reorder_source_by_type($type, $ids) {
 // Habits
 
 function create_habit($title, $every, $color, $icon) {
-  return exec_query('INSERT INTO `habits` (
-    `id`,
-    `title`,
-    `every`,
-    `color`,
-    `icon`
+  return exec_query('INSERT INTO habits (
+    id,
+    title,
+    every,
+    color,
+    icon
   ) VALUES (?, ?, ?, ?, ?)', [
     generate_humid(),
     $title,
@@ -971,53 +971,53 @@ function create_habit($title, $every, $color, $icon) {
 }
 
 function update_habit($id, $title, $every, $color, $icon) {
-  return exec_query('UPDATE `habits` SET
-    `title` = ?,
-    `every` = ?,
-    `color` = ?,
-    `icon` = ?
+  return exec_query('UPDATE habits SET
+    title = ?,
+    every = ?,
+    color = ?,
+    icon = ?
   WHERE id = ?', [$title, $every, $color, $icon, $id]);
 }
 
 function list_habits() {
-  return all('SELECT * FROM `habits` ORDER BY `title`');
+  return all('SELECT * FROM habits ORDER BY title');
 }
 
 function get_habit($id) {
-  return one('SELECT * FROM `habits` WHERE `id` = ?', [$id]);
+  return one('SELECT * FROM habits WHERE id = ?', [$id]);
 }
 
 function delete_habit($id) {
-  return exec_query('DELETE FROM `habits` WHERE `id` = ?', [$id]);
+  return exec_query('DELETE FROM habits WHERE id = ?', [$id]);
 }
 
 function list_habit_logs($from, $to) {
-  return all('SELECT `habit_id`, DATE(`date`) AS `date`
-    FROM `habit_log`
-    WHERE `date` >= ? AND `date` < ?
-    ORDER BY `date`', [$from, $to]);
+  return all('SELECT habit_id, DATE(changed_at) AS date
+    FROM habit_log
+    WHERE changed_at >= ? AND changed_at < ?
+    ORDER BY changed_at', [$from, $to]);
 }
 
 function get_habit_log($habit_id, $date) {
-  return one('SELECT * FROM `habit_log`
-    WHERE `habit_id` = ? AND DATE(`date`) = ?', [$habit_id, $date]);
+  return one('SELECT * FROM habit_log
+    WHERE habit_id = ? AND DATE(changed_at) = ?', [$habit_id, $date]);
 }
 
 function log_habit($habit_id, $date) {
   if(get_habit_log($habit_id, $date)) return true;
 
-  $id = @one('SELECT MAX(`id`) + 1 AS `id` FROM `habit_log`')['id'] ?: 1;
+  $id = @one('SELECT MAX(id) + 1 AS id FROM habit_log')['id'] ?: 1;
 
-  return exec_query('INSERT INTO `habit_log` (
-    `id`,
-    `habit_id`,
-    `date`
+  return exec_query('INSERT INTO habit_log (
+    id,
+    habit_id,
+    changed_at
   ) VALUES (?, ?, ?)', [$id, $habit_id, "$date 00:00:00"]);
 }
 
 function unlog_habit($habit_id, $date) {
-  return exec_query('DELETE FROM `habit_log`
-    WHERE `habit_id` = ? AND DATE(`date`) = ?', [$habit_id, $date]);
+  return exec_query('DELETE FROM habit_log
+    WHERE habit_id = ? AND DATE(changed_at) = ?', [$habit_id, $date]);
 }
 
 // Appointments
@@ -1037,22 +1037,22 @@ function create_calendar_appointment(
   $travel_before = 0,
   $travel_after = 0,
 ) {
-  return exec_query('INSERT INTO `appointments` (
-    `id`,
-    `calendar_id`,
-    `subscription_id`,
-    `title`,
-    `content`,
-    `starts_at`,
-    `ends_at`,
-    `location`,
-    `meeting`,
-    `recurrence`,
-    `all_day`,
-    `going`,
-    `urgent`,
-    `travel_before`,
-    `travel_after`
+  return exec_query('INSERT INTO appointments (
+    id,
+    calendar_id,
+    subscription_id,
+    title,
+    content,
+    starts_at,
+    ends_at,
+    location,
+    meeting,
+    recurrence,
+    all_day,
+    going,
+    urgent,
+    travel_before,
+    travel_after
   ) VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
     $id = generate_humid(),
     $calendar_id,
@@ -1081,24 +1081,20 @@ function create_subscription_appointment(
   $location,
   $meeting,
   $all_day,
-  $recurrence,
-  $recurrence_until,
-  $recurrence_count
+  $recurrence
 ) {
-  return exec_query('INSERT INTO `appointments` (
-    `id`,
-    `subscription_id`,
-    `title`,
-    `content`,
-    `starts_at`,
-    `ends_at`,
-    `location`,
-    `meeting`,
-    `all_day`,
-    `recurrence`,
-    `recurrence_until`,
-    `recurrence_count`
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+  return exec_query('INSERT INTO appointments (
+    id,
+    subscription_id,
+    title,
+    content,
+    starts_at,
+    ends_at,
+    location,
+    meeting,
+    all_day,
+    recurrence
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
     $id,
     $subscription_id,
     $title,
@@ -1108,9 +1104,7 @@ function create_subscription_appointment(
     $location,
     $meeting,
     $all_day,
-    $recurrence,
-    $recurrence_until,
-    $recurrence_count
+    $recurrence
   ]);
 }
 
@@ -1132,20 +1126,20 @@ function update_appointment(
 ) {
   // calendar_id is COALESCEd so callers that don't touch it (passing null)
   // leave the appointment on its current calendar.
-  return exec_query('UPDATE `appointments` SET
-    `calendar_id` = COALESCE(?, `calendar_id`),
-    `title` = ?,
-    `content` = ?,
-    `starts_at` = ?,
-    `ends_at` = ?,
-    `location` = ?,
-    `meeting` = ?,
-    `recurrence` = ?,
-    `all_day` = ?,
-    `going` = ?,
-    `urgent` = ?,
-    `travel_before` = ?,
-    `travel_after` = ?
+  return exec_query('UPDATE appointments SET
+    calendar_id = COALESCE(?, calendar_id),
+    title = ?,
+    content = ?,
+    starts_at = ?,
+    ends_at = ?,
+    location = ?,
+    meeting = ?,
+    recurrence = ?,
+    all_day = ?,
+    going = ?,
+    urgent = ?,
+    travel_before = ?,
+    travel_after = ?
   WHERE id = ?', [
     $calendar_id,
     $title,
@@ -1165,18 +1159,18 @@ function update_appointment(
 }
 
 function update_appointment_times($id, $starts_at, $ends_at) {
-  return exec_query('UPDATE `appointments` SET
-    `starts_at` = ?,
-    `ends_at` = ?
+  return exec_query('UPDATE appointments SET
+    starts_at = ?,
+    ends_at = ?
   WHERE id = ?', [$starts_at, $ends_at, $id]);
 }
 
 function update_appointment_meta($id, $going, $urgent, $travel_before = 0, $travel_after = 0) {
-  return exec_query('UPDATE `appointments` SET
-    `going` = ?,
-    `urgent` = ?,
-    `travel_before` = ?,
-    `travel_after` = ?
+  return exec_query('UPDATE appointments SET
+    going = ?,
+    urgent = ?,
+    travel_before = ?,
+    travel_after = ?
   WHERE id = ?', [$going, $urgent, $travel_before, $travel_after, $id]);
 }
 
@@ -1189,21 +1183,17 @@ function update_appointment_body(
   $location,
   $meeting,
   $all_day,
-  $recurrence,
-  $recurrence_until,
-  $recurrence_count
+  $recurrence
 ) {
-  return exec_query('UPDATE `appointments` SET
-    `title` = ?,
-    `content` = ?,
-    `starts_at` = ?,
-    `ends_at` = ?,
-    `location` = ?,
-    `meeting` = ?,
-    `all_day` = ?,
-    `recurrence` = ?,
-    `recurrence_until` = ?,
-    `recurrence_count` = ?
+  return exec_query('UPDATE appointments SET
+    title = ?,
+    content = ?,
+    starts_at = ?,
+    ends_at = ?,
+    location = ?,
+    meeting = ?,
+    all_day = ?,
+    recurrence = ?
   WHERE id = ?', [
     $title,
     $content,
@@ -1213,19 +1203,8 @@ function update_appointment_body(
     $meeting,
     $all_day,
     $recurrence,
-    $recurrence_until,
-    $recurrence_count,
     $id
   ]);
-}
-
-// Stops a recurring appointment at the given moment without deleting it,
-// preserving its past occurrences.
-function end_appointment_recurrence($id, $moment) {
-  return exec_query('UPDATE `appointments` SET
-    `recurrence_until` = ?,
-    `recurrence_count` = NULL
-  WHERE id = ?', [$moment, $id]);
 }
 
 // Non-recurring appointments overlapping [$from, $to). Recurring ones are
@@ -1240,17 +1219,17 @@ function list_appointments($from, $to) {
     s.title AS subscription_title,
     s.subtitle AS subscription_subtitle,
     s.color AS subscription_color,
-    s.`filter` AS subscription_filter
-  FROM `appointments` a
-  LEFT JOIN `calendars` c ON c.id = a.calendar_id
-  LEFT JOIN `subscriptions` s ON s.id = a.subscription_id
+    s.filter AS subscription_filter
+  FROM appointments a
+  LEFT JOIN calendars c ON c.id = a.calendar_id
+  LEFT JOIN subscriptions s ON s.id = a.subscription_id
   WHERE a.recurrence IS NULL AND a.starts_at < ? AND a.ends_at > ?
   ORDER BY a.starts_at', [$to, $from]);
 }
 
 function list_appointments_by_subscription($subscription_id) {
-  return all('SELECT * FROM `appointments`
-    WHERE `subscription_id` = ?', [$subscription_id]);
+  return all('SELECT * FROM appointments
+    WHERE subscription_id = ?', [$subscription_id]);
 }
 
 function list_recurring_appointments($from, $to) {
@@ -1262,14 +1241,13 @@ function list_recurring_appointments($from, $to) {
     s.title AS subscription_title,
     s.subtitle AS subscription_subtitle,
     s.color AS subscription_color,
-    s.`filter` AS subscription_filter
-  FROM `appointments` a
-  LEFT JOIN `calendars` c ON c.id = a.calendar_id
-  LEFT JOIN `subscriptions` s ON s.id = a.subscription_id
+    s.filter AS subscription_filter
+  FROM appointments a
+  LEFT JOIN calendars c ON c.id = a.calendar_id
+  LEFT JOIN subscriptions s ON s.id = a.subscription_id
   WHERE a.recurrence IS NOT NULL
     AND a.starts_at < ?
-    AND (a.recurrence_until IS NULL OR a.recurrence_until >= ?)
-  ORDER BY a.starts_at', [$to, $from]);
+  ORDER BY a.starts_at', [$to]);
 }
 
 function get_appointment($id) {
@@ -1281,15 +1259,15 @@ function get_appointment($id) {
     s.title AS subscription_title,
     s.subtitle AS subscription_subtitle,
     s.color AS subscription_color,
-    s.`filter` AS subscription_filter
-  FROM `appointments` a
-  LEFT JOIN `calendars` c ON c.id = a.calendar_id
-  LEFT JOIN `subscriptions` s ON s.id = a.subscription_id
+    s.filter AS subscription_filter
+  FROM appointments a
+  LEFT JOIN calendars c ON c.id = a.calendar_id
+  LEFT JOIN subscriptions s ON s.id = a.subscription_id
   WHERE a.id = ?', [$id]);
 }
 
 function delete_appointment($id) {
-  return exec_query('DELETE FROM `appointments` WHERE `id` = ?', [$id]);
+  return exec_query('DELETE FROM appointments WHERE id = ?', [$id]);
 }
 
 define('ENUM_SSL_MODE', ['plain', 'tls', 'ssl']);
@@ -1321,14 +1299,14 @@ function list_contacts() {
       FROM contact_socials
       WHERE contact_socials.contact_id = contacts.id
     ) AS handles,
-    (SELECT GROUP_CONCAT(contact_roles.name, ' ')
+    (SELECT GROUP_CONCAT(contact_roles.organisation, ' ')
       FROM contact_roles
       WHERE contact_roles.contact_id = contacts.id
     ) AS org_names FROM contacts") ?? [];
 }
 
 function get_contact($id) {
-  $contact = one('SELECT * FROM `contacts` WHERE id = ?', [$id]);
+  $contact = one('SELECT * FROM contacts WHERE id = ?', [$id]);
 
   if(!$contact) return $contact;
 
@@ -1344,34 +1322,34 @@ function get_contact($id) {
 }
 
 function list_contact_emails($id) {
-  return all('SELECT * FROM `contact_emails` WHERE contact_id = ?', [$id]);
+  return all('SELECT * FROM contact_emails WHERE contact_id = ?', [$id]);
 }
 
 function list_contact_phone_numbers($id) {
-  return all('SELECT * FROM `contact_phone_numbers` WHERE contact_id = ?', [$id]);
+  return all('SELECT * FROM contact_phone_numbers WHERE contact_id = ?', [$id]);
 }
 
 function list_contact_urls($id) {
-  return all('SELECT * FROM `contact_urls` WHERE contact_id = ?', [$id]);
+  return all('SELECT * FROM contact_urls WHERE contact_id = ?', [$id]);
 }
 
 function list_contact_socials($id) {
-  return all('SELECT * FROM `contact_socials` WHERE contact_id = ?', [$id]);
+  return all('SELECT * FROM contact_socials WHERE contact_id = ?', [$id]);
 }
 
 function list_contact_roles($id) {
-  return all('SELECT * FROM `contact_roles` WHERE contact_id = ?', [$id]);
+  return all('SELECT * FROM contact_roles WHERE contact_id = ?', [$id]);
 }
 
 function list_contact_addresses($id) {
-  return all('SELECT a.*, ca.label AS link_label FROM `contact_addresses` ca
-    JOIN `addresses` a ON a.id = ca.address_id WHERE ca.contact_id = ?', [$id]);
+  return all('SELECT a.*, ca.label AS link_label FROM contact_addresses ca
+    JOIN addresses a ON a.id = ca.address_id WHERE ca.contact_id = ?', [$id]);
 }
 
 function list_contact_tags($id) {
-  $tags = all('SELECT t.* FROM `tags` t
-    JOIN `contacts_tags` ct ON ct.tag_id = t.id WHERE ct.contact_id = ?
-    ORDER BY t.`order` ASC, t.id DESC', [$id]);
+  $tags = all('SELECT t.* FROM tags t
+    JOIN contacts_tags ct ON ct.tag_id = t.id WHERE ct.contact_id = ?
+    ORDER BY t.position ASC, t.id DESC', [$id]);
 
   return $tags === false ? false : inherit_tag_colors($tags);
 }
@@ -1393,8 +1371,8 @@ function create_contact(
 
   [$birth_day, $birth_month, $birth_year] = $birthday;
 
-  $ok = exec_query('INSERT INTO `contacts`
-    (`display_name`, `first_name`, `middle_name`, `infix`, `last_name`, `birth_day`, `birth_month`, `birth_year`, `note`)
+  $ok = exec_query('INSERT INTO contacts
+    (display_name, first_name, middle_name, infix, last_name, birth_day, birth_month, birth_year, note)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
     [$display_name, $first_name, $middle_name, $infix, $last_name, $birth_day, $birth_month, $birth_year, $note]);
 
@@ -1419,14 +1397,14 @@ function update_contact(
 
   [$birth_day, $birth_month, $birth_year] = $birthday;
 
-  return exec_query('UPDATE `contacts` SET
-    `display_name` = ?, `first_name` = ?, `middle_name` = ?,
-    `infix` = ?, `last_name` = ?, `birth_day` = ?, `birth_month` = ?, `birth_year` = ?, `note` = ? WHERE id = ?',
+  return exec_query('UPDATE contacts SET
+    display_name = ?, first_name = ?, middle_name = ?,
+    infix = ?, last_name = ?, birth_day = ?, birth_month = ?, birth_year = ?, note = ? WHERE id = ?',
     [$display_name, $first_name, $middle_name, $infix, $last_name, $birth_day, $birth_month, $birth_year, $note, $id]);
 }
 
 function update_contact_note($id, $note) {
-  return exec_query('UPDATE `contacts` SET `note` = ? WHERE id = ?', [$note, $id]);
+  return exec_query('UPDATE contacts SET note = ? WHERE id = ?', [$note, $id]);
 }
 
 function set_contact_emails($id, $rows) {
@@ -1458,7 +1436,7 @@ function set_contact_tags($id, $tag_ids) {
 }
 
 function set_contact_addresses($id, $rows) {
-  exec_query('DELETE FROM `contact_addresses` WHERE contact_id = ?', [$id]);
+  exec_query('DELETE FROM contact_addresses WHERE contact_id = ?', [$id]);
 
   foreach($rows as $row) {
     $address_id = create_address(
@@ -1472,13 +1450,13 @@ function set_contact_addresses($id, $rows) {
       timezone: $row['timezone']
     );
 
-    exec_query('INSERT INTO `contact_addresses` (contact_id, label, address_id) VALUES (?, ?, ?)',
+    exec_query('INSERT INTO contact_addresses (contact_id, label, address_id) VALUES (?, ?, ?)',
       [$id, $row['label'], $address_id]);
   }
 }
 
 function delete_contact($id) {
-  return exec_query('DELETE FROM `contacts` WHERE id = ?', [$id]);
+  return exec_query('DELETE FROM contacts WHERE id = ?', [$id]);
 }
 
 function validate_birthday($day, $month, $year) {
@@ -1515,7 +1493,7 @@ function list_organisations() {
 }
 
 function get_organisation($id) {
-  $organisation = one('SELECT * FROM `organisations` WHERE id = ?', [$id]);
+  $organisation = one('SELECT * FROM organisations WHERE id = ?', [$id]);
 
   if(!$organisation) return $organisation;
 
@@ -1530,37 +1508,37 @@ function get_organisation($id) {
 }
 
 function list_organisation_emails($id) {
-  return all('SELECT * FROM `org_emails` WHERE org_id = ?', [$id]);
+  return all('SELECT * FROM org_emails WHERE org_id = ?', [$id]);
 }
 
 function list_organisation_phone_numbers($id) {
-  return all('SELECT * FROM `org_phone_numbers` WHERE org_id = ?', [$id]);
+  return all('SELECT * FROM org_phone_numbers WHERE org_id = ?', [$id]);
 }
 
 function list_organisation_urls($id) {
-  return all('SELECT * FROM `org_urls` WHERE org_id = ?', [$id]);
+  return all('SELECT * FROM org_urls WHERE org_id = ?', [$id]);
 }
 
 function list_organisation_socials($id) {
-  return all('SELECT * FROM `org_socials` WHERE org_id = ?', [$id]);
+  return all('SELECT * FROM org_socials WHERE org_id = ?', [$id]);
 }
 
 function list_organisation_addresses($id) {
-  return all('SELECT a.*, oa.label AS link_label FROM `org_addresses` oa
-    JOIN `addresses` a ON a.id = oa.address_id WHERE oa.org_id = ?', [$id]);
+  return all('SELECT a.*, oa.label AS link_label FROM org_addresses oa
+    JOIN addresses a ON a.id = oa.address_id WHERE oa.org_id = ?', [$id]);
 }
 
 function list_organisation_tags($id) {
-  $tags = all('SELECT t.* FROM `tags` t
-    JOIN `orgs_tags` ot ON ot.tag_id = t.id WHERE ot.org_id = ?
-    ORDER BY t.`order` ASC, t.id DESC', [$id]);
+  $tags = all('SELECT t.* FROM tags t
+    JOIN orgs_tags ot ON ot.tag_id = t.id WHERE ot.org_id = ?
+    ORDER BY t.position ASC, t.id DESC', [$id]);
 
   return $tags === false ? false : inherit_tag_colors($tags);
 }
 
 function create_organisation($display_name, $legal_name, $registration_number, $vat_number, $note) {
-  $ok = exec_query('INSERT INTO `organisations`
-    (`display_name`, `legal_name`, `registration_number`, `vat_number`, `note`)
+  $ok = exec_query('INSERT INTO organisations
+    (display_name, legal_name, registration_number, vat_number, note)
     VALUES (?, ?, ?, ?, ?)',
     [$display_name, $legal_name, $registration_number, $vat_number, $note]);
 
@@ -1568,17 +1546,17 @@ function create_organisation($display_name, $legal_name, $registration_number, $
 }
 
 function update_organisation($id, $display_name, $legal_name, $registration_number, $vat_number, $note) {
-  return exec_query('UPDATE `organisations` SET
-    `display_name` = ?,
-    `legal_name` = ?,
-    `registration_number` = ?,
-    `vat_number` = ?,
-    `note` = ? WHERE id = ?',
+  return exec_query('UPDATE organisations SET
+    display_name = ?,
+    legal_name = ?,
+    registration_number = ?,
+    vat_number = ?,
+    note = ? WHERE id = ?',
     [$display_name, $legal_name, $registration_number, $vat_number, $note, $id]);
 }
 
 function update_organisation_note($id, $note) {
-  return exec_query('UPDATE `organisations` SET `note` = ? WHERE id = ?', [$note, $id]);
+  return exec_query('UPDATE organisations SET note = ? WHERE id = ?', [$note, $id]);
 }
 
 function set_organisation_emails($id, $rows) {
@@ -1598,7 +1576,7 @@ function set_organisation_socials($id, $rows) {
 }
 
 function set_organisation_addresses($id, $rows) {
-  exec_query('DELETE FROM `org_addresses` WHERE org_id = ?', [$id]);
+  exec_query('DELETE FROM org_addresses WHERE org_id = ?', [$id]);
 
   foreach($rows as $row) {
     $address_id = create_address(
@@ -1612,35 +1590,35 @@ function set_organisation_addresses($id, $rows) {
       timezone: $row['timezone']
     );
 
-    exec_query('INSERT INTO `org_addresses` (org_id, label, address_id) VALUES (?, ?, ?)',
+    exec_query('INSERT INTO org_addresses (org_id, label, address_id) VALUES (?, ?, ?)',
       [$id, $row['label'], $address_id]);
   }
 }
 
 function delete_organisation($id) {
-  return exec_query('DELETE FROM `organisations` WHERE id = ?', [$id]);
+  return exec_query('DELETE FROM organisations WHERE id = ?', [$id]);
 }
 
 function set_children($table, $fk, $id, $rows) {
-  exec_query("DELETE FROM `$table` WHERE `$fk` = ?", [$id]);
+  exec_query("DELETE FROM $table WHERE $fk = ?", [$id]);
 
   foreach($rows as $row) {
     $cols = array_keys($row);
-    $names = implode(", ", array_map(fn($c) => "`$c`", [$fk, ...$cols]));
+    $names = implode(", ", array_map(fn($c) => "$c", [$fk, ...$cols]));
     $marks = implode(", ", array_fill(0, count($cols) + 1, "?"));
-    exec_query("INSERT INTO `$table` ($names) VALUES ($marks)", [$id, ...array_values($row)]);
+    exec_query("INSERT INTO $table ($names) VALUES ($marks)", [$id, ...array_values($row)]);
   }
 }
 
 // Addresses
 
 function list_addresses() {
-  return all("SELECT * FROM `addresses`
-    ORDER BY CASE WHEN `label` IS NULL OR `label` = '' THEN 1 ELSE 0 END, `city`, `street_name`");
+  return all("SELECT * FROM addresses
+    ORDER BY CASE WHEN label IS NULL OR label = '' THEN 1 ELSE 0 END, city, street_name");
 }
 
 function get_address($id) {
-  return one("SELECT * FROM `addresses` WHERE id = ?", [$id]);
+  return one("SELECT * FROM addresses WHERE id = ?", [$id]);
 }
 
 function create_address(
@@ -1656,21 +1634,21 @@ function create_address(
   // If an address already exists verbatim, we reuse the existing address row.
   // This keeps the database free of duplicates.
 
-  $existing = one('SELECT id FROM `addresses`
+  $existing = one('SELECT id FROM addresses
     WHERE street_name = ? AND street_number = ? AND postal_code = ? AND city = ? AND country = ?',
     [$street_name, $street_number, $postal_code, $city, $country]);
 
   if($existing) return $existing['id'];
 
-  exec_query('INSERT INTO `addresses` (
-    `label`,
-    `street_name`,
-    `street_number`,
-    `postal_code`,
-    `city`,
-    `province`,
-    `country`,
-    `timezone`
+  exec_query('INSERT INTO addresses (
+    label,
+    street_name,
+    street_number,
+    postal_code,
+    city,
+    province,
+    country,
+    timezone
   ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [
     $label,
     $street_name,
@@ -1696,15 +1674,15 @@ function update_address(
   $country,
   $timezone
 ) {
-  return exec_query('UPDATE `addresses` SET
-    `label` = ?,
-    `street_name` = ?,
-    `street_number` = ?,
-    `postal_code` = ?,
-    `city` = ?,
-    `province` = ?,
-    `country` = ?,
-    `timezone` = ?
+  return exec_query('UPDATE addresses SET
+    label = ?,
+    street_name = ?,
+    street_number = ?,
+    postal_code = ?,
+    city = ?,
+    province = ?,
+    country = ?,
+    timezone = ?
   WHERE id = ?', [
     $label,
     $street_name,
@@ -1719,14 +1697,14 @@ function update_address(
 }
 
 function delete_address($id) {
-  return exec_query('DELETE FROM `addresses` WHERE id = ?', [$id]);
+  return exec_query('DELETE FROM addresses WHERE id = ?', [$id]);
 }
 
 // Configuration
 
 function config() {
   $map = [];
-  $rows = all("SELECT * FROM `config`");
+  $rows = all("SELECT * FROM config");
 
   foreach($rows as $row)
     $map[$row['property']] = $row['value'];
@@ -1739,17 +1717,17 @@ function update_config($property, $value) {
   // use different syntax (ON CONFLICT, ON DUPLICATE KEY etc.) and that is a headache.
   // We also don't care if this first query succeeds (bc yk it might not exist).
 
-  exec_query('DELETE FROM `config` WHERE `property` = ?', [$property]);
+  exec_query('DELETE FROM config WHERE property = ?', [$property]);
 
   if($value === null) return true;
 
-  return exec_query('INSERT INTO `config` (`property`, `value`) VALUES (?, ?)', [$property, $value]);
+  return exec_query('INSERT INTO config (property, value) VALUES (?, ?)', [$property, $value]);
 }
 
 // Migrations
 
 function version() {
-  $latest = one('SELECT * FROM `migrations` ORDER BY `version` DESC');
+  $latest = one('SELECT * FROM migrations ORDER BY version DESC');
   return @$latest['version'] ?? -1;
 }
 
@@ -1778,7 +1756,7 @@ function migrate($from, $to) {
     // NOTE(robin): if the STORE_VERSION value is higher than any migration file
     // (aka the migration file has not been committed or is missing), this function
     // will run on EVERY REQUEST, because the database never catches up. Bad?
-    exec_query('INSERT INTO `migrations` (`version`) VALUES (?)', [$version])
+    exec_query('INSERT INTO migrations (version) VALUES (?)', [$version])
       or die("Failed to bump store version to v" . $version . ".");
   }
 }
@@ -1794,7 +1772,7 @@ function unique_slug($table, $seed) {
 }
 
 function slug_taken($table, $slug) {
-  return !!one("SELECT slug FROM `$table` WHERE slug = ?", [$slug]);
+  return !!one("SELECT slug FROM $table WHERE slug = ?", [$slug]);
 }
 
 // SQL helpers

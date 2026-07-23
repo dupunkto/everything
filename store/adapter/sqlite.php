@@ -50,7 +50,7 @@ function execute($path) {
     if(empty($query)) continue;
 
     if(str_contains($query, "AUTO_INCREMENT"))
-      $query = str_replace(",\n  PRIMARY KEY (`id`)", "", $query);
+      $query = str_replace(",\n  PRIMARY KEY (id)", "", $query);
 
     $query = str_replace(
       ["int(11)", "NOT NULL AUTO_INCREMENT"],

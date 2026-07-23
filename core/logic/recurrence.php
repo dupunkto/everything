@@ -211,7 +211,7 @@ function cron_occurrences($cron, $base, $from, $to, $until, $count) {
 // TODO_RECURRENCE_HORIZON days of its next deadline.
 //
 // Expects the store-shaped row: recurrence, status + updated_date (latest log,
-// UTC), last_done (UTC, nullable), due_date + open_date (UTC, nullable).
+// UTC), last_done (UTC, nullable), due_at + open_at (UTC, nullable).
 // Returns ['status', 'next', 'previous', 'visible']; 'next'/'previous' are UTC
 // strings (or null).
 function task_state($task) {
@@ -226,7 +226,7 @@ function task_state($task) {
 
   // Non-recurring tasks keep their raw latest status and stay always visible.
   if($recurrence === "") {
-    return ['status' => $latest_status, 'next' => $task['due_date'], 'previous' => null, 'visible' => true];
+    return ['status' => $latest_status, 'next' => $task['due_at'], 'previous' => null, 'visible' => true];
   }
 
   $now = new \DateTimeImmutable('now', $tz);
@@ -234,8 +234,8 @@ function task_state($task) {
 
   if(is_interval($recurrence)) {
     $anchor = $from_utc(@$task['last_done'])
-      ?? $from_utc(@$task['due_date'])
-      ?? $from_utc(@$task['open_date'])
+      ?? $from_utc(@$task['due_at'])
+      ?? $from_utc(@$task['open_at'])
       ?? $now;
     $next = $anchor->modify("+" . (int)$recurrence . " days");
     $previous = $anchor;

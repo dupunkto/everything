@@ -1,6 +1,6 @@
 <?php
 
-  if(isset($_POST["status"], $_POST["recurrence"], $_POST["urgent"], $_POST["open_date"], $_POST["open_time"], $_POST["due_date"], $_POST["due_time"], $_POST["expiration_date"], $_POST["expiration_time"])) {
+  if(isset($_POST["status"], $_POST["recurrence"], $_POST["urgent"], $_POST["open_date"], $_POST["open_time"], $_POST["due_date"], $_POST["due_time"], $_POST["expire_date"], $_POST["expire_time"])) {
     $all_day = cast_string($_POST['due_date']) != null
       && cast_string(@$_POST['due_time']) == null;
 
@@ -13,7 +13,7 @@
       cast_datetime_utc($_POST['open_date'], $_POST['open_time']),
       cast_datetime_utc($_POST['due_date'], @$_POST['due_time'] ?: "00:00"),
       $all_day,
-      cast_datetime_utc($_POST['expiration_date'], @$_POST['expiration_time'] ?: "00:00"),
+      cast_datetime_utc($_POST['expire_date'], @$_POST['expire_time'] ?: "00:00"),
       cast_string($_POST['comment'])
     ) or fail("Could not save task '" . $_POST['title'] . "'.");
 
@@ -88,10 +88,10 @@
           </div>
 
           <div class="field">
-            <label for="expiration_date">Expire</label>
+            <label for="expire_date">Expire</label>
             <span class="datetime-pair">
-              <input type="date" id="expiration_date" name="expiration_date">
-              <input type="time" name="expiration_time">
+              <input type="date" id="expire_date" name="expire_date">
+              <input type="time" name="expire_time">
             </span>
           </div>
         </div>
