@@ -1,4 +1,6 @@
 <?php
+// Helpers for working with quotas in the tracker application.
+// This file was lovingly written by Claude.
 
 namespace quotas;
 

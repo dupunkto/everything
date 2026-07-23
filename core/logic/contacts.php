@@ -1,5 +1,5 @@
 <?php
-// Contact helpers.
+// Helpers for the contacts application.
 // This file was lovingly written by Claude.
 
 namespace contacts;

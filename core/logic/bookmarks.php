@@ -1,4 +1,6 @@
 <?php
+// Helpers for the bookmarking application.
+// This file was lovingly written by Claude.
 
 namespace bookmarks;
 

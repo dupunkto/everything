@@ -11,10 +11,10 @@
   // is currently active.
   $include = $include ? explode(",", $include) : [];
 
-  $tasks = \store\list_tasks($query, $include);
   $tags = \store\list_tags();
+  $tasks = \store\list_tasks($query, $include);
 
-  $query_tags = array_map('tag_slug', extract_match($query, '/(?:^|\s)\+(\S+)/'));
+  [$query_tags, $query_terms] = \query\parse($query, $tags);
 
   $depth_of = function($tag) use ($tags) {
     $depth = 0;
@@ -28,12 +28,13 @@
   };
 
   foreach($tasks as $task) {
-    $task_tags = array_map('tag_slug', array_column($task['tags'], 'label'));
-    if($query_tags && !overlap($task_tags, $query_tags)) continue;
-
-    // A task lands in the column of its tag closest to the root, and of those,
-    // the first in the configured order.
     $ids = array_column($task['tags'], 'id');
+
+    if($query_tags && array_diff($query_tags, $ids)) continue;
+    if(!\query\matches_terms("{$task['title']} {$task['content']}", $query_terms)) continue;
+
+    // A task is placed in the column of the tag closest to root.
+    // (and of those, the first in the configured order)
     $best = null;
 
     foreach($tags as $tag) {
@@ -46,14 +47,12 @@
 
   // Columns follow the configured order, with ~all always leading.
   $ordered = [];
+
   foreach(['all', ...array_map(fn($tag) => tag_slug($tag['label']), $tags)] as $key) {
     if(isset($lists[$key])) $ordered[$key] = $lists[$key];
   }
-  $lists = $ordered;
 
-  function overlap($array_a, $array_b) {
-    return count(array_intersect($array_a, $array_b));
-  }
+  $lists = $ordered;
 
   $tokens = str_explode($query);
   $finished = in_array("is:done", $tokens);
@@ -65,9 +64,6 @@
     if(!isset($views[$token])) continue;
     $view = $views[$token]; break;
   }
-
-  // The status a shortcut moves a task to; pressing it again reverts.
-  $status_for = fn($task, $target) => $task['status'] == $target ? "todo" : $target;
 
 ?>
 <h1 class="page-header__title"><strong><?= $view ?></strong></h1>
@@ -90,7 +86,7 @@
   <?php endif ?>
 </nav>
 
-<div class="listing listing--masonry">
+<div class="listing listing--<?= TODO_LAYOUT == 'horizontal' ? 'horizontal' : 'masonry' ?>">
   <?php foreach($lists as $list => $tasks): ?>
     <section>
       <h3 class="listing__heading">~<?= $list ?></h3>
@@ -122,6 +118,8 @@
                 <?php if(in_array($task['status'], ['done', 'nvm'])) echo "checked" ?>
                 <?php if($task['status'] == "nvm") echo "disabled" ?>
               >
+
+              <?php $status_for = fn($task, $target) => $task['status'] == $target ? "todo" : $target ?>
 
               <button name="status" value="<?= $status_for($task, 'backlog') ?>" z-key="b" hidden></button>
               <button name="status" value="<?= $status_for($task, 'wip') ?>" z-key="w" hidden></button>

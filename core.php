@@ -20,6 +20,7 @@ require __DIR__ . "/core/astro.php";
 require __DIR__ . "/core/ical.php";
 require __DIR__ . "/core/utils.php";
 
+require __DIR__ . "/core/logic/query.php";
 require __DIR__ . "/core/logic/recurrence.php";
 require __DIR__ . "/core/logic/contacts.php";
 require __DIR__ . "/core/logic/calendar.php";

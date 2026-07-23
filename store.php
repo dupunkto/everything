@@ -62,30 +62,22 @@ function set_note_tags($id, $tag_ids) {
 }
 
 function list_notes($query = "") {
+  [$tags, $terms] = \query\parse($query);
+
   $where = [];
   $params = [];
-  $tags = [];
 
-  foreach(preg_split('/\s+/', trim($query)) ?: [] as $token) {
-    if($token == "") continue;
-
-    if($token[0] == "+") {
-      $tags[] = mb_strtolower(substr($token, 1));
-      continue;
-    }
-
+  foreach($terms as $term) {
     $where[] = '(LOWER(`title`) LIKE ? OR LOWER(`content`) LIKE ?)';
-    $params[] = "%" . mb_strtolower($token) . "%";
-    $params[] = "%" . mb_strtolower($token) . "%";
+    $like = "%" . mb_strtolower($term) . "%";
+    $params[] = $like;
+    $params[] = $like;
   }
 
-  foreach(array_filter($tags) as $tag) {
-    $where[] = 'EXISTS (
-      SELECT 1 FROM `notes_tags` nt
-      JOIN `tags` t ON t.id = nt.tag_id
-      WHERE nt.note_id = notes.id AND LOWER(t.label) = ?
-    )';
-    $params[] = $tag;
+  foreach($tags as $id) {
+    $where[] = 'EXISTS (SELECT 1 FROM `notes_tags` nt
+      WHERE nt.note_id = notes.id AND nt.tag_id = ?)';
+    $params[] = $id;
   }
 
   $sql = 'SELECT * FROM `notes`';
@@ -559,31 +551,23 @@ function get_bookmark($id) {
 }
 
 function list_bookmarks($query = "") {
+  [$tags, $terms] = \query\parse($query);
+
   $where = [];
   $params = [];
-  $tags = [];
 
-  foreach(preg_split('/\s+/', trim($query)) ?: [] as $token) {
-    if($token == "") continue;
-
-    if($token[0] == "+") {
-      $tags[] = mb_strtolower(substr($token, 1));
-      continue;
-    }
-
+  foreach($terms as $term) {
     $where[] = '(LOWER(`label`) LIKE ? OR LOWER(`url`) LIKE ? OR LOWER(`note`) LIKE ?)';
-    $params[] = "%" . mb_strtolower($token) . "%";
-    $params[] = "%" . mb_strtolower($token) . "%";
-    $params[] = "%" . mb_strtolower($token) . "%";
+    $like = "%" . mb_strtolower($term) . "%";
+    $params[] = $like;
+    $params[] = $like;
+    $params[] = $like;
   }
 
-  foreach(array_filter($tags) as $tag) {
-    $where[] = 'EXISTS (
-      SELECT 1 FROM `bookmarks_tags` bt
-      JOIN `tags` t ON t.id = bt.tag_id
-      WHERE bt.bookmark_id = bookmarks.id AND LOWER(t.label) = ?
-    )';
-    $params[] = $tag;
+  foreach($tags as $id) {
+    $where[] = 'EXISTS (SELECT 1 FROM `bookmarks_tags` bt
+      WHERE bt.bookmark_id = bookmarks.id AND bt.tag_id = ?)';
+    $params[] = $id;
   }
 
   $sql = 'SELECT * FROM `bookmarks`';
@@ -1321,6 +1305,10 @@ function list_contacts() {
       JOIN contacts_tags ON contacts_tags.tag_id = tags.id
       WHERE contacts_tags.contact_id = contacts.id
     ) AS tag_labels,
+    (SELECT GROUP_CONCAT(contacts_tags.tag_id, ' ')
+      FROM contacts_tags
+      WHERE contacts_tags.contact_id = contacts.id
+    ) AS tag_ids,
     (SELECT GROUP_CONCAT(contact_emails.email, ' ')
       FROM contact_emails
       WHERE contact_emails.contact_id = contacts.id
@@ -1329,6 +1317,10 @@ function list_contacts() {
       FROM contact_phone_numbers
       WHERE contact_phone_numbers.contact_id = contacts.id
     ) AS phone_numbers,
+    (SELECT GROUP_CONCAT(contact_socials.handle, ' ')
+      FROM contact_socials
+      WHERE contact_socials.contact_id = contacts.id
+    ) AS handles,
     (SELECT GROUP_CONCAT(contact_roles.name, ' ')
       FROM contact_roles
       WHERE contact_roles.contact_id = contacts.id
@@ -1504,6 +1496,10 @@ function list_organisations() {
       JOIN orgs_tags ON orgs_tags.tag_id = tags.id
       WHERE orgs_tags.org_id = organisations.id
     ) AS tag_labels,
+    (SELECT GROUP_CONCAT(orgs_tags.tag_id, ' ')
+      FROM orgs_tags
+      WHERE orgs_tags.org_id = organisations.id
+    ) AS tag_ids,
     (SELECT GROUP_CONCAT(org_emails.email, ' ')
       FROM org_emails
       WHERE org_emails.org_id = organisations.id
@@ -1511,7 +1507,11 @@ function list_organisations() {
     (SELECT GROUP_CONCAT(org_phone_numbers.phone_number, ' ')
       FROM org_phone_numbers
       WHERE org_phone_numbers.org_id = organisations.id
-    ) AS phone_numbers FROM organisations") ?? [];
+    ) AS phone_numbers,
+    (SELECT GROUP_CONCAT(org_socials.handle, ' ')
+      FROM org_socials
+      WHERE org_socials.org_id = organisations.id
+    ) AS handles FROM organisations") ?? [];
 }
 
 function get_organisation($id) {

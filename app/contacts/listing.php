@@ -3,37 +3,17 @@
 
   $query = $_GET['q'] ?? $_POST['q'] ?? "";
 
+  [$tags, $terms, $selectors] = \query\parse($query);
+
   $kinds = [];
-  $selectors = [];
+  $fields = [];
 
-  foreach(str_explode($query) as $token) {
-    if($token == "is:person") { 
-      $kinds['person'] = true;
-      continue;
-    }
-
-    if($token == "is:org") {
-      $kinds['org'] = true;
-      continue;
-    }
-
-    if($token[0] == "+") {
-      $selectors[] = ['tag', substr($token, 1)];
-      continue;
-    }
-
-    [$key, $value] = array_pad(explode(":", $token, 2), 2, null);
-
-    // Bare words should fuzzy search
-    if($value === null) {
-      $selectors[] = ['fuzzy', $token];
-      continue;
-    }
+  foreach($selectors as [$key, $value]) {
+    if($key == "is" && $value == "person") { $kinds['person'] = true; continue; }
+    if($key == "is" && $value == "org") { $kinds['org'] = true; continue; }
 
     // Unrecognised selectors should be ignored
-    if(!in_array($key, ['org', 'phone', 'email'])) continue;
-
-    $selectors[] = [$key, $value];
+    if(in_array($key, ['org', 'phone', 'email'])) $fields[] = [$key, $value];
   }
 
   if(!$kinds) $kinds = ['person' => true]; // Show people by default
@@ -46,9 +26,11 @@
       'kind' => 'person',
       'sort' => \contacts\contact_sort_name($contact),
       'display' => \contacts\contact_display_name($contact),
+      'tags' => str_explode($contact['tag_ids']),
       'search' => [
-        'fuzzy' => "{$contact['first_name']} {$contact['middle_name']} {$contact['last_name']} {$contact['note']}",
-        'tag' => $contact['tag_labels'],
+        'fuzzy' => str_implode(" ", [$contact['first_name'], $contact['middle_name'],
+          $contact['infix'], $contact['last_name'], $contact['note'],
+          $contact['emails'], $contact['handles']]),
         'email' => $contact['emails'],
         'phone' => $contact['phone_numbers'],
         'org' => $contact['org_names'],
@@ -62,9 +44,11 @@
       'kind' => 'org',
       'sort' => $organisation['display_name'],
       'display' => $organisation['display_name'],
+      'tags' => str_explode($organisation['tag_ids']),
       'search' => [
-        'fuzzy' => "{$organisation['display_name']} {$organisation['legal_name']} {$organisation['note']}",
-        'tag' => $organisation['tag_labels'],
+        'fuzzy' => str_implode(" ", [$organisation['display_name'],
+          $organisation['legal_name'], $organisation['note'],
+          $organisation['emails'], $organisation['handles']]),
         'email' => $organisation['emails'],
         'phone' => $organisation['phone_numbers'],
         'org' => $organisation['display_name'],
@@ -72,29 +56,57 @@
     ], \store\list_organisations()));
   }
 
-  $rows = array_filter($rows, function($row) use ($selectors) {
-    foreach($selectors as [$field, $needle])
-      if(!($needle === "" || mb_stripos($row['search'][$field] ?? "", $needle) !== false)) return false;
+  $rows = array_filter($rows, function($row) use ($tags, $terms, $fields) {
+    if($tags && array_diff($tags, $row['tags'])) return false;
+    if(!\query\matches_terms($row['search']['fuzzy'], $terms)) return false;
+
+    foreach($fields as [$field, $needle]) {
+      if($needle !== "" && mb_stripos($row['search'][$field] ?? "", $needle) === false)
+        return false;
+    }
+
     return true;
   });
 
-  usort($rows, fn($a, $b) =>
-    strcasecmp($a['sort'], $b['sort']) ?:
-    strcasecmp($a['display'], $b['display']));
+  $searching = $tags || $terms || $fields;
+
+  // Sort by relevance, matches in names first,
+  // matches in notes or description later.
+  if($searching) {
+    $score = function($row) use ($terms) {
+      $name = mb_strtolower($row['display']);
+      $total = 0;
+
+      foreach($terms as $term) {
+        $pos = mb_stripos($name, $term);
+        $total += $pos === false ? 1000 : $pos;
+      }
+
+      return $total;
+    };
+
+    usort($rows, fn($a, $b) =>
+      $score($a) <=> $score($b) ?:
+      strcasecmp($a['sort'], $b['sort']));
+  } else {
+    usort($rows, fn($a, $b) =>
+      strcasecmp($a['sort'], $b['sort']) ?:
+      strcasecmp($a['display'], $b['display']));
+  }
 
   // A tab replaces the is: filters with its own, keeping the rest of the
   // query (tags, free text) intact.
-  $canned = fn($kind) => join(" ", ["is:$kind", ...array_filter(str_explode($query),
+  $tab_query = fn($kind) => join(" ", ["is:$kind", ...array_filter(str_explode($query),
     fn($token) => $token != "is:person" && $token != "is:org")]);
 
 ?>
 <nav class="contacts__tabs">
   <button type="button" <?php if(isset($kinds['person'])) echo 'class="is-active"' ?>
-    z-set=".contacts__search" value="<?= esc_attr($canned('person')) ?>">
+    z-set=".contacts__search" value="<?= esc_attr($tab_query('person')) ?>">
     <i class="fa-solid fa-people-group"></i> People
   </button>
   <button type="button" <?php if(isset($kinds['org'])) echo 'class="is-active"' ?>
-    z-set=".contacts__search" value="<?= esc_attr($canned('org')) ?>">
+    z-set=".contacts__search" value="<?= esc_attr($tab_query('org')) ?>">
     <i class="fa-solid fa-building-columns"></i> Organisations
   </button>
 </nav>
@@ -102,9 +114,11 @@
 <div class="contacts__list">
 <?php $letter = null ?>
 <?php foreach($rows as $row): ?>
-  <?php $initial = mb_strtoupper(mb_substr($row['sort'], 0, 1)) ?: "#" ?>
-  <?php if($initial !== $letter): $letter = $initial ?>
-    <h3 class="contacts__letter"><?= esc_inner($letter) ?></h3>
+  <?php if(!$searching): ?>
+    <?php $initial = mb_strtoupper(mb_substr($row['sort'], 0, 1)) ?: "#" ?>
+    <?php if($initial !== $letter): $letter = $initial ?>
+      <h3 class="contacts__letter"><?= esc_inner($letter) ?></h3>
+    <?php endif ?>
   <?php endif ?>
   <div
     class="contact-item"

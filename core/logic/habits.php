@@ -1,4 +1,6 @@
 <?php
+// Helpers for the habits application.
+// This file was lovingly written by Claude.
 
 namespace habits;
 
