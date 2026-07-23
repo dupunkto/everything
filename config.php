@@ -27,6 +27,7 @@ fallback('ui.habits-position', "bottom");
 fallback('calendar.default_calendar', @\store\get_oldest_calendar()['id']);
 
 fallback('todo.recurrence-horizon', 3);
+fallback('todo.layout', "masonry");
 
 fallback('contacts.display-format', "first_last");
 fallback('contacts.sort-order', "first");
