@@ -3,6 +3,8 @@
   if(isset($_POST['recurrence_horizon'])) {
     \store\update_config('todo.recurrence-horizon', cast_int($_POST['recurrence_horizon']))
       or fail("Could not update recurrence horizon.");
+    \store\put_audit_log('config', 'todo', "Set todo.recurrence-horizon to '{$_POST['recurrence_horizon']}'.", 'user')
+      or fail("Could not create audit entry.");
   }
 
   if(isset($_POST['layout'])) {
@@ -11,10 +13,7 @@
 
     \store\update_config('todo.layout', $_POST['layout'])
       or fail("Could not update ToDo layout.");
-  }
-
-  if($_POST) {
-    \store\put_log('config', 'todo', "Updated ToDo settings.", 'user')
+    \store\put_audit_log('config', 'todo', "Set todo.layout to '{$_POST['layout']}'.", 'user')
       or fail("Could not create audit entry.");
   }
 

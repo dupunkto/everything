@@ -9,7 +9,7 @@
 
     \store\update_config('ui.panel-position', $_POST['panel-position'])
       or fail("Could not update panel position.");
-    \store\put_log('config', 'ui', "Updated UI settings.", 'user')
+    \store\put_audit_log('config', 'ui', "Set ui.panel-position to '{$_POST['panel-position']}'.", 'user')
       or fail("Could not create audit entry.");
 
     // We need to do a full reload for the panel to change place.
@@ -24,6 +24,8 @@
 
     \store\update_config('ui.sidebar-position', $_POST['sidebar-position'])
       or fail("Could not update sidebar position.");
+    \store\put_audit_log('config', 'ui', "Set ui.sidebar-position to '{$_POST['sidebar-position']}'.", 'user')
+      or fail("Could not create audit entry.");
   }
 
   if(isset($_POST['habits-position'])) {
@@ -32,10 +34,7 @@
 
     \store\update_config('ui.habits-position', $_POST['habits-position'])
       or fail("Could not update habits position.");
-  }
-
-  if($_POST) {
-    \store\put_log('config', 'ui', "Updated UI settings.", 'user')
+    \store\put_audit_log('config', 'ui', "Set ui.habits-position to '{$_POST['habits-position']}'.", 'user')
       or fail("Could not create audit entry.");
   }
 

@@ -16,6 +16,12 @@
 
     \store\transaction(function() use ($appointment, $is_subscription, $going, $urgent, $travel_before, $travel_after) {
       if($is_subscription) {
+        $fields = \core\diff($appointment,
+          going: $going,
+          urgent: $urgent,
+          travel_before: $travel_before,
+          travel_after: $travel_after);
+
         \store\update_appointment_meta(
           $appointment['id'], $going, $urgent, $travel_before, $travel_after
         ) or fail("Could not update appointment.");
@@ -30,6 +36,21 @@
         $recurrence_start = (new \DateTimeImmutable($starts_at))->setTimezone(new \DateTimeZone(TIMEZONE));
         if($recurrence && !\recurrence\valid($recurrence, $recurrence_start))
           fail("Invalid recurrence rule.", status: 400);
+
+        $fields = \core\diff($appointment,
+          title: $_POST['title'],
+          content: $_POST['content'],
+          starts_at: $starts_at, 
+          ends_at: $ends_at,
+          location: $_POST['location'],
+          meeting: $_POST['meeting'],
+          recurrence: $recurrence,
+          all_day: cast_boolean(@$_POST['all_day']),
+          going: $going,
+          urgent: $urgent,
+          travel_before: $travel_before,
+          travel_after: $travel_after,
+          calendar_id: @$_POST['calendar_id'] ?: null);
 
         \store\update_appointment(
           $appointment['id'],
@@ -49,7 +70,8 @@
         ) or fail("Could not update appointment.");
       }
 
-      \store\put_log('appointments', $appointment['id'], "Updated appointment.", 'user')
+      \store\put_audit_log('appointments', $appointment['id'],
+        "Updated [" . join(", ", $fields) . "] for appointments/{$appointment['id']}.", 'user')
         or fail("Could not create audit entry.");
 
       \caldav\mark_resource_changed('appointment', $appointment['id']);

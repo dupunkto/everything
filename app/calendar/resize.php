@@ -17,7 +17,8 @@
     \store\update_appointment_times($appointment['id'], $starts_at, $ends_at)
       or fail("Could not move or resize appointment.");
 
-    \store\put_log('appointments', $appointment['id'], "Moved or resized appointment.", 'user')
+    $fields = \core\diff($appointment, starts_at: $starts_at, ends_at: $ends_at);
+    \store\put_audit_log('appointments', $appointment['id'], "Updated [" . join(", ", $fields) . "] for appointments/{$appointment['id']}.", 'user')
       or fail("Could not create audit entry.");
 
     \caldav\mark_resource_changed('appointment', $appointment['id']);

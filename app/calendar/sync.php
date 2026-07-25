@@ -67,7 +67,8 @@ foreach($subscriptions as $subscription) {
         && cast_boolean($row['all_day']) == $data['all_day']
         && $row['recurrence'] == $data['recurrence']) continue;
 
-      $updated = \store\transaction(function() use ($row, $data) {
+      $fields = \core\diff($row, ...$data);
+      $updated = \store\transaction(function() use ($row, $data, $fields) {
         \store\update_appointment_body(
           $row['id'],
           $data['title'],
@@ -80,7 +81,7 @@ foreach($subscriptions as $subscription) {
           $data['recurrence']
         ) or throw new \RuntimeException("Could not update subscription appointment.");
         \caldav\mark_resource_changed('appointment', $row['id']);
-        \store\put_log('appointments', $row['id'], "Updated appointment from subscription.", 'syncer')
+        \store\put_audit_log('appointments', $row['id'], "Updated [" . join(", ", $fields) . "] for appointments/{$row['id']}.", 'syncer')
           or throw new \RuntimeException("Could not create audit entry.");
         return true;
       });
@@ -94,7 +95,7 @@ foreach($subscriptions as $subscription) {
         \store\delete_appointment($row['id'])
           or throw new \RuntimeException("Could not delete subscription appointment.");
         \caldav\mark_resource_deleted('appointment', $row['id']);
-        \store\put_log('appointments', $row['id'], "Deleted appointment from subscription.", 'syncer', operation: 'delete')
+        \store\put_audit_log('appointments', $row['id'], "Deleted appointments/{$row['id']}.", 'syncer', operation: 'delete')
           or throw new \RuntimeException("Could not create audit entry.");
         return true;
       });
@@ -118,16 +119,18 @@ foreach($subscriptions as $subscription) {
         $data['all_day'],
         $data['recurrence']
       ) or throw new \RuntimeException("Could not create subscription appointment.");
-      \store\put_log('appointments', $uid, "Created appointment from subscription.", 'syncer', operation: 'insert')
+      \store\put_audit_log('appointments', $uid, "Created appointments/$uid.", 'syncer', operation: 'insert')
         or throw new \RuntimeException("Could not create audit entry.");
       return true;
     });
     $inserted ? $stats['inserted']++ : $stats['errors']++;
   }
 
-  // TODO(robin): also log stats here.
-  \store\put_log('subscriptions', $subscription['id'], "Synced subscription.", 'syncer')
-    or fail("Could not create audit entry.");
+  \logger\info("Subscription synced.", [
+    'subscription_id' => $subscription['id'],
+    'url' => $subscription['url'],
+    'stats' => $stats,
+  ]);
 }
 
 function normalize_feed_event($event) {

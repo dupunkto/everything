@@ -32,6 +32,16 @@ function xml_body() {
 }
 
 function dav_error($status, $message, $condition = null) {
+  $context = [
+    'status' => $status,
+    'message' => $message,
+    'condition' => $condition,
+    'method' => @$_SERVER['REQUEST_METHOD'],
+    'uri' => @$_SERVER['REQUEST_URI'],
+  ];
+  $status >= 500
+    ? \logger\error("CalDAV request failed.", $context)
+    : \logger\warn("CalDAV request denied.", $context);
   http_response_code($status);
   if($condition) {
     header("Content-Type: application/xml; charset=utf-8");
@@ -404,6 +414,7 @@ function put() {
       $old_collection = @$resource['collection'];
       $old_href = @$resource['href'];
 
+      $fields = [];
       if($created) {
         if($type == 'appointment') {
           $id = \store\put_calendar_appointment(
@@ -429,6 +440,12 @@ function put() {
         $id = $resource['entity_id'];
         $current = \caldav\entity($resource);
         if($type == 'appointment') {
+          $fields = \core\diff($current,
+            title: $data['title'], content: $data['content'],
+            starts_at: $data['starts_at'], ends_at: $data['ends_at'],
+            location: $data['location'], meeting: $data['meeting'],
+            recurrence: $data['recurrence'], all_day: $data['all_day'],
+            urgent: $data['urgent'], calendar_id: $collection['id']);
           \store\update_appointment(
             $id, $data['title'], $data['content'], $data['starts_at'], $data['ends_at'],
             $data['location'], $data['meeting'], $data['recurrence'], $data['all_day'],
@@ -436,23 +453,32 @@ function put() {
           ) or throw new \RuntimeException("Could not update appointment.");
         }
         elseif($type == 'task') {
+          $status = \caldav\task_status($collection['id'], $data['status'], $current['status']);
+          $fields = \core\diff($current,
+            title: $data['title'], content: $data['content'], urgent: $data['urgent'],
+            recurrence: $data['recurrence'], open_at: $data['open_at'],
+            due_at: $data['due_at'], due_all_day: $data['due_all_day'], status: $status);
           \store\update_task(
             $id, $data['title'], $data['content'], $data['urgent'], $data['recurrence'],
             $data['open_at'], $data['due_at'], $data['due_all_day'], $current['expire_at']
           ) or throw new \RuntimeException("Could not update task.");
-          $status = \caldav\task_status($collection['id'], $data['status'], $current['status']);
           $saved_collection = \caldav\task_collection($status);
           \store\set_task_status($id, $status) or throw new \RuntimeException("Could not update task status.");
         }
         else {
+          $status = $data['status'] == 'COMPLETED' ? 'bought' : 'dream';
+          $fields = \core\diff($current,
+            title: $data['title'], content: $data['content'], urgent: $data['urgent'],
+            added_at: $data['open_at'], status: $status);
           \store\update_wish($id, $data['title'], $data['content'], $data['urgent'], $data['open_at'])
             or throw new \RuntimeException("Could not update wish.");
-          \store\set_wish_status($id, $data['status'] == 'COMPLETED' ? 'bought' : 'dream')
+          \store\set_wish_status($id, $status)
             or throw new \RuntimeException("Could not update wish status.");
         }
       }
 
       save_properties($type, $id, $data);
+      if(!$created) $fields = [...$fields, 'properties', 'alarms'];
       $occupied = \store\get_caldav_resource_by_href($saved_collection, $saved_name);
       if($occupied && ($occupied['entity_type'] != $type || $occupied['entity_id'] != $id))
         $saved_name = $id . ".ics";
@@ -460,7 +486,10 @@ function put() {
         or throw new \RuntimeException("Could not save resource href.");
       \store\touch_caldav_resource($type, $id) or throw new \RuntimeException("Could not update revision.");
       $table = $type == 'appointment' ? 'appointments' : $type . 's';
-      \store\put_log($table, $id, $created ? "Created through CalDAV." : "Updated through CalDAV.", 'caldav', operation: $created ? 'insert' : 'update')
+      $message = $created
+        ? "Created $table/$id."
+        : "Updated [" . join(", ", $fields) . "] for $table/$id.";
+      \store\put_audit_log($table, $id, $message, 'caldav', operation: $created ? 'insert' : 'update')
         or throw new \RuntimeException("Could not create audit entry.");
       if($type == 'appointment') \caldav\mark_travel_changed($id);
 
@@ -493,11 +522,13 @@ function delete_resource() {
       $type = $resource['entity_type'];
       $id = $resource['entity_id'];
       if($type == 'appointment') {
+        $operation = 'delete';
         \store\delete_appointment($id)
           or throw new \RuntimeException("Could not delete resource.");
         \caldav\mark_resource_deleted($type, $id);
       }
       else {
+        $operation = 'update';
         $changed = $type == 'task'
           ? \store\set_task_status($id, 'nvm')
           : \store\set_wish_status($id, 'nvm');
@@ -506,7 +537,10 @@ function delete_resource() {
       }
 
       $table = $type == 'appointment' ? 'appointments' : $type . 's';
-      \store\put_log($table, $id, "Deleted through CalDAV.", 'caldav', operation: 'delete')
+      $message = $operation == 'delete'
+        ? "Deleted $table/$id."
+        : "Updated [status] for $table/$id.";
+      \store\put_audit_log($table, $id, $message, 'caldav', operation: $operation)
         or throw new \RuntimeException("Could not create audit entry.");
     });
   }
@@ -538,6 +572,7 @@ function move() {
       $id = $resource['entity_id'];
       if($resource['entity_type'] == 'appointment') {
         $row = \caldav\entity($resource);
+        $fields = \core\diff($row, calendar_id: $target['id']);
         \store\update_appointment(
           $id, $row['title'], $row['content'], $row['starts_at'], $row['ends_at'], $row['location'],
           $row['meeting'], $row['recurrence'], $row['all_day'], $row['going'], $row['urgent'],
@@ -547,12 +582,13 @@ function move() {
       else {
         $row = \caldav\entity($resource);
         $status = \caldav\task_status($target['id'], $row['status'] == 'done' ? 'COMPLETED' : 'NEEDS-ACTION', $row['status']);
+        $fields = \core\diff($row, status: $status);
         \store\set_task_status($id, $status) or throw new \RuntimeException("Could not move task.");
       }
       \store\touch_caldav_resource($resource['entity_type'], $id)
         or throw new \RuntimeException("Could not update revision.");
       $table = $resource['entity_type'] == 'appointment' ? 'appointments' : 'tasks';
-      \store\put_log($table, $id, "Moved through CalDAV.", 'caldav')
+      \store\put_audit_log($table, $id, "Updated [" . join(", ", $fields) . "] for $table/$id.", 'caldav')
         or throw new \RuntimeException("Could not create audit entry.");
       if($resource['entity_type'] == 'appointment') \caldav\mark_travel_changed($id);
       \store\update_caldav_resource($resource['entity_type'], $id, $target_name, $target['id'])
@@ -586,11 +622,14 @@ function proppatch() {
     elseif($element->namespaceURI == CALDAV_XML_APPLE && $element->localName == 'calendar-order') $position = (int)$element->textContent;
   }
   if(!$title || !preg_match('/^#[0-9a-fA-F]{6}$/', $color)) dav_error(409, "Invalid calendar properties.");
-  \store\transaction(function() use ($collection, $title, $subtitle, $color, $position) {
+  $fields = \core\diff($collection,
+    title: $title, subtitle: $subtitle, color: strtolower($color), position: $position);
+  \store\transaction(function() use ($collection, $title, $subtitle, $color, $position, $fields) {
     \store\update_calendar(
       $collection['id'], $title, $subtitle, strtolower($color), position: $position
     ) or dav_error(500, "Could not update calendar.");
-    \store\put_log('calendars', $collection['id'], "Updated calendar through CalDAV.", 'caldav')
+    \store\put_audit_log('calendars', $collection['id'],
+      "Updated [" . join(", ", $fields) . "] for calendars/{$collection['id']}.", 'caldav')
       or dav_error(500, "Could not create audit entry.");
   });
   multistatus([response(collection_href($collection['id']), collection_properties(\caldav\collection($collection['id'])), null)]);

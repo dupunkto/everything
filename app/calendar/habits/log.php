@@ -20,7 +20,7 @@ if(!$ok) {
   fail("Could not update habit log.");
 }
 
-\store\put_log('habits', $habit['id'], $done ? "Removed habit log." : "Created habit log.", 'user')
+\store\put_audit_log('habits', $habit['id'], "Updated [log] for habits/{$habit['id']}.", 'user')
   or fail("Could not create audit entry.");
 
 $habit['date'] = $_POST['date'];

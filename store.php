@@ -52,8 +52,12 @@ function get_note($id) {
   return one('SELECT * FROM notes WHERE id = ?', [$id]);
 }
 
-function get_note_tags($id) {
+function list_note_tags($id) {
   return tags_of('notes_tags', 'note_id', $id);
+}
+
+function list_note_tag_ids($id) {
+  return array_column(list_note_tags($id), 'id');
 }
 
 function set_note_tags($id, $tag_ids) {
@@ -61,7 +65,7 @@ function set_note_tags($id, $tag_ids) {
 }
 
 function list_notes($query = "") {
-  [$tags, $terms] = \query\parse($query);
+  [$tags, $terms] = \core\parse_query($query);
 
   $where = [];
   $params = [];
@@ -208,8 +212,12 @@ function set_task_status($id, $status, $comment = "") {
   ]);
 }
 
-function get_task_tags($id) {
+function list_task_tags($id) {
   return tags_of('tasks_tags', 'task_id', $id);
+}
+
+function list_task_tag_ids($id) {
+  return array_column(list_task_tags($id), 'id');
 }
 
 function set_task_tags($id, $tag_ids) {
@@ -451,15 +459,19 @@ function get_wish($id) {
 }
 
 function list_wish_urls($id) {
-  return all('SELECT * FROM wish_urls WHERE wish_id = ?', [$id]);
+  return all('SELECT url, price FROM wish_urls WHERE wish_id = ?', [$id]) ?? [];
 }
 
 function set_wish_urls($id, $rows) {
   set_children('wish_urls', 'wish_id', $id, $rows);
 }
 
-function get_wish_tags($id) {
+function list_wish_tags($id) {
   return tags_of('wishes_tags', 'wish_id', $id);
+}
+
+function list_wish_tag_ids($id) {
+  return array_column(list_wish_tags($id), 'id');
 }
 
 function set_wish_tags($id, $tag_ids) {
@@ -541,8 +553,12 @@ function update_bookmark_favicon($id, $favicon) {
   return exec_query('UPDATE bookmarks SET favicon = ? WHERE id = ?', [$favicon, $id]);
 }
 
-function get_bookmark_tags($id) {
+function list_bookmark_tags($id) {
   return tags_of('bookmarks_tags', 'bookmark_id', $id);
+}
+
+function list_bookmark_tag_ids($id) {
+  return array_column(list_bookmark_tags($id), 'id');
 }
 
 function set_bookmark_tags($id, $tag_ids) {
@@ -554,7 +570,7 @@ function get_bookmark($id) {
 }
 
 function list_bookmarks($query = "") {
-  [$tags, $terms] = \query\parse($query);
+  [$tags, $terms] = \core\parse_query($query);
 
   $where = [];
   $params = [];
@@ -623,8 +639,12 @@ function update_timing($id, $description, $starts_at, $ends_at, $task_id) {
   ]);
 }
 
-function get_timing_tags($id) {
+function list_timing_tags($id) {
   return tags_of('timings_tags', 'timing_id', $id);
+}
+
+function list_timing_tag_ids($id) {
+  return array_column(list_timing_tags($id), 'id');
 }
 
 function set_timing_tags($id, $tag_ids) {
@@ -649,19 +669,19 @@ function list_timings_between($from, $to) {
   ORDER BY t.starts_at', [$to, $from]);
 }
 
+function list_timing_tags_between($from, $to) {
+  return all('SELECT t.id, t.starts_at, t.ends_at, tt.tag_id
+    FROM timings t
+    JOIN timings_tags tt ON tt.timing_id = t.id
+    WHERE t.starts_at < ? AND t.ends_at > ?', [$to, $from]) ?? [];
+}
+
 function get_timing($id) {
   return one('SELECT * FROM timings WHERE id = ?', [$id]);
 }
 
 function delete_timing($id) {
   return exec_query('DELETE FROM timings WHERE id = ?', [$id]);
-}
-
-function list_timing_tags($from, $to) {
-  return all('SELECT t.id, t.starts_at, t.ends_at, tt.tag_id
-    FROM timings t
-    JOIN timings_tags tt ON tt.timing_id = t.id
-    WHERE t.starts_at < ? AND t.ends_at > ?', [$to, $from]) ?? [];
 }
 
 // Quotas
@@ -675,31 +695,19 @@ function list_quotas() {
   return inherit_tag_colors($quotas, id_key: 'tag_id');
 }
 
-function quota_minutes($tag_id, $period, $hours, $minutes, $start_date) {
-  if(!$tag_id || !get_tag($tag_id)) return null;
-  if(!in_array($period, ['week', 'month'])) return null;
-  if($hours === null || $minutes === null || $hours < 0 || $minutes < 0 || $minutes > 59) return null;
-  if(!$start_date || \cast_date($start_date) != $start_date) return null;
-
-  $duration = $hours * 60 + $minutes;
-  return $duration > 0 ? $duration : null;
+function get_quota_by_tag($tag_id) {
+  return one('SELECT * FROM quotas WHERE tag_id = ?', [$tag_id]);
 }
 
-function put_quota($tag_id, $period, $hours, $minutes, $start_date) {
-  $duration = quota_minutes($tag_id, $period, $hours, $minutes, $start_date);
-  if(!$duration) return false;
-
+function put_quota($tag_id, $period, $minutes, $start_date) {
   return exec_query('INSERT INTO quotas (tag_id, period, minutes, start_date)
-    VALUES (?, ?, ?, ?)', [$tag_id, $period, $duration, $start_date]);
+    VALUES (?, ?, ?, ?)', [$tag_id, $period, $minutes, $start_date]);
 }
 
-function update_quota($tag_id, $period, $hours, $minutes, $start_date) {
-  $duration = quota_minutes($tag_id, $period, $hours, $minutes, $start_date);
-  if(!$duration) return false;
-
+function update_quota($tag_id, $period, $minutes, $start_date) {
   return exec_query('UPDATE quotas
     SET period = ?, minutes = ?, start_date = ? WHERE tag_id = ?',
-    [$period, $duration, $start_date, $tag_id]);
+    [$period, $minutes, $start_date, $tag_id]);
 }
 
 function delete_quota($tag_id) {
@@ -1457,8 +1465,8 @@ function set_contact_roles($id, $rows) {
   set_children('contact_roles', 'contact_id', $id, $rows);
 }
 
-function get_contact_tags($id) {
-  return tags_of('contacts_tags', 'contact_id', $id);
+function list_contact_tag_ids($id) {
+  return array_column(list_contact_tags($id), 'id');
 }
 
 function set_contact_tags($id, $tag_ids) {
@@ -1946,9 +1954,9 @@ function update_config($property, $value) {
   return exec_query('INSERT INTO config (property, value) VALUES (?, ?)', [$property, $value]);
 }
 
-// Audit log
+// Logging
 
-function put_log($table_name, $record_id, $message, $author, $operation = 'update') {
+function put_audit_log($table_name, $record_id, $message, $author, $operation = 'update') {
   return exec_query('INSERT INTO audit_log (
     table_name,
     record_id,
@@ -1958,7 +1966,31 @@ function put_log($table_name, $record_id, $message, $author, $operation = 'updat
   ) VALUES (?, ?, ?, ?, ?)', [$table_name, $record_id, $message, $author, $operation]);
 }
 
-function list_all_logs() {
+function put_system_log($level, $message, $context = []) {
+  $json = $context ? json_encode($context, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) : null;
+  return exec_query('INSERT INTO system_logs (level, message, context) VALUES (?, ?, ?)', [$level, $message, $json]);
+}
+
+function put_http_log($request) {
+  return exec_query('INSERT INTO http_logs (
+    method, uri, status, authenticated, remote_addr, user_agent, referer,
+    content_type, request_bytes, response_bytes, duration_ms
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+    $request['method'],
+    $request['uri'],
+    $request['status'],
+    $request['authenticated'],
+    $request['remote_addr'],
+    $request['user_agent'],
+    $request['referer'],
+    $request['content_type'],
+    $request['request_bytes'],
+    $request['response_bytes'],
+    $request['duration_ms'],
+  ]);
+}
+
+function list_logs() {
   return all("SELECT changed_at, message, operation, author, table_name, record_id,
       'audit_log' AS source
     FROM audit_log
@@ -1969,10 +2001,18 @@ function list_all_logs() {
     ORDER BY changed_at DESC") ?? [];
 }
 
-function list_logs($table_name, $record_id) {
+function list_audit_logs($table_name, $record_id) {
   return all('SELECT * FROM audit_log
     WHERE table_name = ? AND record_id = ?
     ORDER BY changed_at ASC, id ASC', [$table_name, $record_id]) ?? [];
+}
+
+function list_system_logs() {
+  return all('SELECT * FROM system_logs ORDER BY changed_at DESC, id DESC') ?? [];
+}
+
+function list_http_logs() {
+  return all('SELECT * FROM http_logs ORDER BY changed_at DESC, id DESC') ?? [];
 }
 
 function get_log_dates($table, $id) {
@@ -1995,8 +2035,6 @@ function seed() {
 
 function migrate($from, $to) {
   if($from == $to) return; // Skip migrations altogether if store is up-to-date.
-  syslog(LOG_INFO, "Running migrations for version: " . $to);
-
   $pending = [];
   $migrations = glob(__DIR__ . "/store/migrations/v*.sql") ?: [];
 
@@ -2008,8 +2046,8 @@ function migrate($from, $to) {
   ksort($pending, SORT_NUMERIC);
 
   foreach ($pending as $version => $path) {
-    syslog(LOG_INFO, "Migrating store schema to v$version");
     \adapter\execute($path);
+    put_system_log('info', "Store schema migrated.", ['version' => $version]);
 
     // NOTE(robin): if the STORE_VERSION value is higher than any migration file
     // (aka the migration file has not been committed or is missing), this function
@@ -2050,6 +2088,10 @@ function exec_query($sql, $params) {
     return $query;
   }
   catch(\PDOException $e) {
+    if(function_exists('logger\\error') && !str_starts_with(ltrim($sql), 'INSERT INTO system_logs')) \logger\error("Database query failed.", [
+      'error' => $e->getMessage(),
+      'query' => $sql,
+    ]);
     trigger_error($e, E_USER_WARNING);
     return null;
   }

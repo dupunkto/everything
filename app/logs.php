@@ -1,4 +1,4 @@
-<?php $logs = \store\list_all_logs() ?>
+<?php $logs = \store\list_logs() ?>
 <!DOCTYPE html>
 <html lang="en">
   <head>

@@ -4,11 +4,17 @@
     $starts_at = cast_datetime_utc($_POST['start_date'], $_POST['start_time']);
     $ends_at = cast_datetime_utc($_POST['end_date'], $_POST['end_time']);
 
+    $timing = \store\get_timing($_POST['id']);
+    $fields = \core\diff([...$timing, 'tags' => \store\list_timing_tag_ids($_POST['id'])],
+      description: $_POST['description'], starts_at: $starts_at, ends_at: $ends_at,
+      task_id: null, tags: $_POST['tags'] ?? []);
+
     \store\update_timing($_POST['id'], $_POST['description'], $starts_at, $ends_at, null)
       or fail("Could not save timing " . $_POST['id'] . " from " . $starts_at . " to " . $ends_at . " with description '" . $_POST['description'] . "'.");
 
     \store\set_timing_tags($_POST['id'], $_POST['tags'] ?? []);
-    \store\put_log('timings', $_POST['id'], "Updated timing.", 'user')
+    \store\put_audit_log('timings', $_POST['id'],
+      "Updated [" . join(", ", $fields) . "] for timings/{$_POST['id']}.", 'user')
       or fail("Could not create audit entry.");
 
     include __DIR__ . "/listing.php"; exit;
@@ -26,7 +32,7 @@
 
   <textarea name="description" placeholder="What were you up to?" rows="2" autofocus><?= esc_inner($timing['description']) ?></textarea>
 
-  <?php tags_field(\store\get_timing_tags($_GET['id'])) ?>
+  <?php tags_field(\store\list_timing_tags($_GET['id'])) ?>
 
   <div class="tracker-editor__times">
     <label>

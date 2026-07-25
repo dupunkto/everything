@@ -18,7 +18,7 @@
       all_day: cast_boolean(@$_POST['all_day'])
     ) or fail("Could not create appointment.");
 
-    \store\put_log('appointments', $id, "Created appointment.", 'user', operation: 'insert')
+    \store\put_audit_log('appointments', $id, "Created appointments/$id.", 'user', operation: 'insert')
       or fail("Could not create audit entry.");
 
     \caldav\mark_resource_changed('appointment', $id);

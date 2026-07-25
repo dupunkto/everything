@@ -70,7 +70,7 @@ function worked_by_tag($by_tag, \DateTimeImmutable $from, \DateTimeImmutable $to
   $to_utc = $to->setTimezone(new \DateTimeZone("UTC"))->format('c');
   $timings = [];
 
-  foreach(\store\list_timing_tags($from_utc, $to_utc) as $link) {
+  foreach(\store\list_timing_tags_between($from_utc, $to_utc) as $link) {
     $tag_id = $link['tag_id'];
     while($tag_id) {
       if(isset($by_tag[$tag_id])) $timings[$link['id']]['quotas'][$tag_id] = true;

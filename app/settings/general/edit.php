@@ -11,6 +11,8 @@
 
     \store\update_config('timezone', $_POST['timezone'])
       or fail("Could not update timezone.");
+    \store\put_audit_log('config', 'general', "Set timezone to '{$_POST['timezone']}'.", 'user')
+      or fail("Could not create audit entry.");
   }
 
   if(isset($_POST['map-provider'])) {
@@ -19,6 +21,8 @@
 
     \store\update_config('map-provider', $_POST['map-provider'])
       or fail("Could not update map provider.");
+    \store\put_audit_log('config', 'general', "Set map-provider to '{$_POST['map-provider']}'.", 'user')
+      or fail("Could not create audit entry.");
   }
 
   if(isset($_POST['currency'])) {
@@ -27,12 +31,10 @@
 
     \store\update_config('currency', $_POST['currency'])
       or fail("Could not update currency.");
-  }
-
-  if($_POST) {
-    \store\put_log('config', 'general', "Updated general settings.", 'user')
+    \store\put_audit_log('config', 'general', "Set currency to '{$_POST['currency']}'.", 'user')
       or fail("Could not create audit entry.");
   }
+
 
   $timezones = [];
 

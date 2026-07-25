@@ -13,7 +13,7 @@
 
   $table = $kind == 'org' ? 'organisations' : 'contacts';
   $label = $kind == 'org' ? "organisation" : "contact";
-  \store\put_log($table, $_GET['id'], "Deleted $label.", 'user', operation: 'delete')
+  \store\put_audit_log($table, $_GET['id'], "Deleted $table/{$_GET['id']}.", 'user', operation: 'delete')
     or fail("Could not create audit entry.");
 
   http_response_code(303);

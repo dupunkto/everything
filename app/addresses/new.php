@@ -13,18 +13,20 @@
     ];
 
     if($_POST['addr_id']) {
+      $address = \store\get_address($_POST['addr_id']);
       \store\update_address($_POST['addr_id'], ...$fields);
       $id = $_POST['addr_id'];
-      $message = "Updated address.";
+      $changed = \core\diff($address, ...$fields);
+      $message = "Updated [" . join(", ", $changed) . "] for addresses/$id.";
       $operation = 'update';
     }
     else {
       $id = \store\put_address(...$fields);
-      $message = "Created address.";
+      $message = "Created addresses/$id.";
       $operation = 'insert';
     }
 
-    \store\put_log('addresses', $id, $message, 'user', operation: $operation)
+    \store\put_audit_log('addresses', $id, $message, 'user', operation: $operation)
       or fail("Could not create audit entry.");
   }
 

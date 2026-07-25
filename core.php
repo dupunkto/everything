@@ -14,6 +14,7 @@ require __DIR__ . "/git.php";
 
 require __DIR__ . "/core/core.php";
 require __DIR__ . "/core/neuro.php";
+require __DIR__ . "/core/logger.php";
 require __DIR__ . "/core/cast.php";
 require __DIR__ . "/core/ui.php";
 require __DIR__ . "/core/forms.php";
@@ -24,7 +25,6 @@ require __DIR__ . "/core/icalendar.php";
 require __DIR__ . "/core/caldav.php";
 require __DIR__ . "/core/utils.php";
 
-require __DIR__ . "/core/logic/query.php";
 require __DIR__ . "/core/logic/recurrence.php";
 require __DIR__ . "/core/logic/contacts.php";
 require __DIR__ . "/core/logic/calendar.php";

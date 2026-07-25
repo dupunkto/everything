@@ -80,6 +80,16 @@ function serve_error($code) {
 }
 
 function fail($message, $status = 500) {
+  $context = [
+    'status' => $status,
+    'method' => @$_SERVER['REQUEST_METHOD'],
+    'uri' => @$_SERVER['REQUEST_URI'],
+  ];
+
+  $status >= 500
+    ? \logger\error("Request failed: $message", $context)
+    : \logger\warn("Request failed: $message", $context);
+
   http_response_code($status);
   header("Content-Type: text/plain");
   echo $message;

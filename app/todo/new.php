@@ -29,7 +29,7 @@
 
       \store\set_task_tags($id, $_POST['tags'] ?? []);
       
-      \store\put_log('tasks', $id, "Created task.", 'user', operation: 'insert')
+      \store\put_audit_log('tasks', $id, "Created tasks/$id.", 'user', operation: 'insert')
         or fail("Could not create audit entry.");
       
       \caldav\mark_resource_changed('task', $id);

@@ -11,9 +11,36 @@ CREATE TABLE IF NOT EXISTS audit_log (
   record_id text NOT NULL,
   message text NOT NULL,
   operation text NOT NULL DEFAULT 'update',
-  author text NOT NULL,
+  author text NOT NULL, -- user|system|syncer|caldav|agent
   PRIMARY KEY (id),
   CHECK (operation IN ('insert', 'update', 'delete'))
+);
+
+CREATE TABLE IF NOT EXISTS system_logs (
+  id int(11) NOT NULL AUTO_INCREMENT,
+  changed_at datetime NOT NULL DEFAULT current_timestamp,
+  level text NOT NULL,
+  message text NOT NULL,
+  context text,
+  PRIMARY KEY (id),
+  CHECK (level IN ('info', 'warn', 'error'))
+);
+
+CREATE TABLE IF NOT EXISTS http_logs (
+  id int(11) NOT NULL AUTO_INCREMENT,
+  changed_at datetime NOT NULL DEFAULT current_timestamp,
+  method text NOT NULL,
+  uri text NOT NULL,
+  status int(11) NOT NULL,
+  authenticated boolean NOT NULL,
+  remote_addr text,
+  user_agent text,
+  referer text,
+  content_type text,
+  request_bytes int(11),
+  response_bytes int(11),
+  duration_ms int(11) NOT NULL,
+  PRIMARY KEY (id)
 );
 
 CREATE TABLE IF NOT EXISTS config (
@@ -532,3 +559,5 @@ CREATE TABLE IF NOT EXISTS bookmarks_tags (
 
 CREATE INDEX audit_log_lookup ON audit_log (table_name, record_id, changed_at);
 CREATE INDEX caldav_changes_lookup ON caldav_changes (collection, revision);
+CREATE INDEX http_logs_lookup ON http_logs (authenticated, changed_at);
+CREATE INDEX system_logs_lookup ON system_logs (changed_at);

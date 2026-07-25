@@ -1,6 +1,11 @@
 <?php
 
   if(isset($_POST['id'])) {
+    $note = \store\get_note($_POST['id']);
+    $fields = \core\diff([...$note, 'tags' => \store\list_note_tag_ids($_POST['id'])],
+      title: $_POST['title'], content: $_POST['content'],
+      written_at: cast_datetime_utc($_POST['date'], $_POST['time']), tags: $_POST['tags'] ?? []);
+
     \store\update_note(
       $_POST['id'],
       $_POST['title'],
@@ -9,7 +14,8 @@
     ) or fail("Could not update note.");
 
     \store\set_note_tags($_POST['id'], $_POST['tags'] ?? []);
-    \store\put_log('notes', $_POST['id'], "Updated note.", 'user')
+    \store\put_audit_log('notes', $_POST['id'],
+      "Updated [" . join(", ", $fields) . "] for notes/{$_POST['id']}.", 'user')
       or fail("Could not create audit entry.");
 
     if(isset($_POST['close'])) {
@@ -37,7 +43,7 @@
         <button type="submit" name="close" value="1" z-key="escape mod+enter" hidden></button>
 
         <input name="title" type="text" placeholder="Title" value="<?= esc_attr($note['title']) ?>">
-        <?php tags_field(\store\get_note_tags($note['id'])) ?>
+        <?php tags_field(\store\list_note_tags($note['id'])) ?>
         <textarea name="content" placeholder="What do you want to remember?"><?= esc_inner($note['content']) ?></textarea>
 
         <div class="actions">

@@ -29,9 +29,16 @@
 
   if($kind === "org" ? isset($_POST['display_name']) : isset($_POST['first_name'])) {
     $creating = !$id;
+    $item = $id ? ($kind == 'org' ? \store\get_organisation($id) : \store\get_contact($id)) : [];
 
     if($kind === "org") {
       if($id) {
+        $fields = \core\diff($item,
+          display_name: cast_string($_POST['display_name']),
+          legal_name: cast_string($_POST['legal_name']),
+          registration_number: cast_string($_POST['registration_number']),
+          vat_number: cast_string($_POST['vat_number']), note: cast_string($_POST['note']));
+
         \store\update_organisation(
           $id,
           cast_string($_POST['display_name']),
@@ -55,9 +62,18 @@
       \store\set_organisation_urls($id, unfold($_POST, 'url', 'url'));
       \store\set_organisation_socials($id, unfold($_POST, 'social', 'handle'));
       \store\set_organisation_addresses($id, unfold($_POST, 'address', 'street_name'));
+
+      if(!$creating) $fields = [...$fields, 'emails', 'phone_numbers', 'urls', 'socials', 'addresses'];
     }
     else {
       if($id) {
+        $fields = \core\diff($item,
+          display_name: cast_string($_POST['display_name']), first_name: cast_string($_POST['first_name']),
+          middle_name: cast_string($_POST['middle_name']), infix: cast_string($_POST['infix']),
+          last_name: cast_string($_POST['last_name']), birth_day: cast_int($_POST['birth_day']),
+          birth_month: cast_int($_POST['birth_month']), birth_year: cast_int($_POST['birth_year']),
+          note: cast_string($_POST['note']));
+
         \store\update_contact(
           $id,
           cast_string($_POST['display_name']),
@@ -91,11 +107,15 @@
       \store\set_contact_roles($id, unfold($_POST, 'role', 'organisation'));
       \store\set_contact_addresses($id, unfold($_POST, 'address', 'street_name'));
       \store\set_contact_tags($id, $_POST['tags'] ?? []);
+
+      if(!$creating) $fields = [...$fields, 'emails', 'phone_numbers', 'urls', 'socials', 'roles', 'addresses', 'tags'];
     }
 
     $table = $kind === 'org' ? 'organisations' : 'contacts';
-    $label = $kind === 'org' ? "organisation" : "contact";
-    \store\put_log($table, $id, ($creating ? "Created" : "Updated") . " $label.", 'user', operation: $creating ? 'insert' : 'update')
+    $message = $creating
+      ? "Created $table/$id."
+      : "Updated [" . join(", ", $fields) . "] for $table/$id.";
+    \store\put_audit_log($table, $id, $message, 'user', operation: $creating ? 'insert' : 'update')
       or fail("Could not create audit entry.");
 
     $_GET['kind'] = $kind;
@@ -204,7 +224,7 @@
       </span>
     </div>
     <div class="field">
-      <?php tags_field(isset($item['id']) ? \store\get_contact_tags($item['id']) : []) ?>
+      <?php tags_field(isset($item['id']) ? \store\list_contact_tags($item['id']) : []) ?>
     </div>
   <?php endif ?>
 

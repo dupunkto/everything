@@ -15,7 +15,7 @@
       or fail("Could not save note.");
 
     $table = $kind == 'org' ? 'organisations' : 'contacts';
-    \store\put_log($table, $id, "Updated note.", 'user')
+    \store\put_audit_log($table, $id, "Updated [note] for $table/$id.", 'user')
       or fail("Could not create audit entry.");
   }
 

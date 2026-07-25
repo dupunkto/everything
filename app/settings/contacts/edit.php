@@ -9,6 +9,8 @@
 
     \store\update_config('contacts.display-format', $_POST['display-format'])
       or fail("Could not update display format.");
+    \store\put_audit_log('config', 'contacts', "Set contacts.display-format to '{$_POST['display-format']}'.", 'user')
+      or fail("Could not create audit entry.");
   }
 
   if(isset($_POST['sort-order'])) {
@@ -17,12 +19,10 @@
 
     \store\update_config('contacts.sort-order', $_POST['sort-order'])
       or fail("Could not update sort order.");
-  }
-
-  if($_POST) {
-    \store\put_log('config', 'contacts', "Updated contact settings.", 'user')
+    \store\put_audit_log('config', 'contacts', "Set contacts.sort-order to '{$_POST['sort-order']}'.", 'user')
       or fail("Could not create audit entry.");
   }
+
 
   $display = \config\fresh_value('contacts.display-format');
   $sort = \config\fresh_value('contacts.sort-order');

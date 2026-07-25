@@ -13,7 +13,16 @@
       $recurrence_start->setTimezone(new \DateTimeZone(TIMEZONE))))
       fail("Invalid recurrence rule.", status: 400);
 
-    \store\transaction(function() use ($recurrence, $open_at, $due_at, $all_day) {
+    $task = \store\get_task($_POST['id']);
+    $fields = \core\diff([...$task, 'tags' => \store\list_task_tag_ids($_POST['id'])],
+      title: $_POST['title'], content: $_POST['content'], urgent: $_POST['urgent'],
+      recurrence: $recurrence, open_at: $open_at, due_at: $due_at,
+      due_all_day: $all_day,
+      expire_at: cast_datetime_utc($_POST['expire_date'], @$_POST['expire_time'] ?: "00:00"),
+      status: $_POST['status'],
+      comment: $_POST['comment'], tags: $_POST['tags'] ?? []);
+
+    \store\transaction(function() use ($recurrence, $open_at, $due_at, $all_day, $fields) {
       \store\update_task(
         $_POST['id'],
         $_POST['title'],
@@ -37,7 +46,8 @@
 
       \store\set_task_tags($_POST['id'], $_POST['tags'] ?? []);
 
-      \store\put_log('tasks', $_POST['id'], "Updated task.", 'user')
+      \store\put_audit_log('tasks', $_POST['id'],
+        "Updated [" . join(", ", $fields) . "] for tasks/{$_POST['id']}.", 'user')
         or fail("Could not create audit entry.");
 
       \caldav\mark_resource_changed('task', $_POST['id']);
@@ -92,7 +102,7 @@
           </div>
           <textarea name="content" placeholder="What to do...?"><?= esc_inner($task['content']) ?></textarea>
 
-          <?php tags_field(\store\get_task_tags($task['id'])) ?>
+          <?php tags_field(\store\list_task_tags($task['id'])) ?>
 
           <?php if($log): ?>
             <h2>History</h2>

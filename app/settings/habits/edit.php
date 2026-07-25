@@ -5,9 +5,14 @@
     $icon = end($icons);
     if(!str_starts_with($icon, 'fa-')) $icon = 'fa-' . $icon;
 
+    $habit = \store\get_habit($_POST['id']);
+    $fields = \core\diff($habit,
+      title: cast_string($_POST['title']), every: cast_string($_POST['every']),
+      color: cast_color($_POST['color']), icon: $icon);
+
     \store\update_habit($_POST['id'], cast_string($_POST['title']), cast_string($_POST['every']), cast_color($_POST['color']), $icon)
       or fail("Could not save habit #" . $_POST['id'] . ".");
-    \store\put_log('habits', $_POST['id'], "Updated habit.", 'user')
+    \store\put_audit_log('habits', $_POST['id'], "Updated [" . join(", ", $fields) . "] for habits/{$_POST['id']}.", 'user')
       or fail("Could not create audit entry.");
 
     include __DIR__ . "/listing.php"; exit;

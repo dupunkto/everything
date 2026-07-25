@@ -1,7 +1,16 @@
 <?php
 
   if(isset($_POST['id'])) {
-    \store\transaction(function() {
+    $wish = \store\get_wish($_POST['id']);
+    $fields = \core\diff([...$wish, 'tags' => \store\list_wish_tag_ids($_POST['id'])],
+      title: cast_string($_POST['title']), content: cast_string($_POST['content']),
+      urgent: cast_boolean($_POST['urgent']), added_at: cast_datetime_utc($_POST['date'], $_POST['time']),
+      status: $_POST['status'], comment: cast_string(@$_POST['comment']),
+      tags: $_POST['tags'] ?? [],
+      urls: array_map(fn($row) => [...$row, 'price' => cast_float(@$row['price'])],
+        unfold($_POST, 'url', 'url')));
+
+    \store\transaction(function() use ($fields) {
       \store\update_wish(
         $_POST['id'],
         cast_string($_POST['title']),
@@ -13,13 +22,13 @@
       \store\set_wish_status($_POST['id'], $_POST['status'], cast_string(@$_POST['comment']))
         or fail("Could not update wish status.");
 
-      $urls = array_map(fn($row) => [...$row, 'price' => cast_float(@$row['price'])],
-        unfold($_POST, 'url', 'url'));
-
-      \store\set_wish_urls($_POST['id'], $urls);
+      \store\set_wish_urls($_POST['id'],
+        array_map(fn($row) => [...$row, 'price' => cast_float(@$row['price'])],
+          unfold($_POST, 'url', 'url')));
       \store\set_wish_tags($_POST['id'], $_POST['tags'] ?? []);
       
-      \store\put_log('wishes', $_POST['id'], "Updated wish.", 'user')
+      \store\put_audit_log('wishes', $_POST['id'],
+        "Updated [" . join(", ", $fields) . "] for wishes/{$_POST['id']}.", 'user')
         or fail("Could not create audit entry.");
       
       \caldav\mark_resource_changed('wish', $_POST['id']);
@@ -88,7 +97,7 @@
             ["dream", "bought", "nvm"], selected: $wish['status'], capitalize: false) ?>
         </div>
 
-        <?php tags_field(\store\get_wish_tags($wish['id'])) ?>
+        <?php tags_field(\store\list_wish_tags($wish['id'])) ?>
 
         <?php if($wish['status'] == 'nvm' && $wish['comment']): ?>
           <p class="status-comment"><?= esc_inner($wish['comment']) ?></p>

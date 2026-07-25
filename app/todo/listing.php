@@ -14,7 +14,7 @@
   $tags = \store\list_tags();
   $tasks = \store\list_tasks($query, $include);
 
-  [$query_tags, $query_terms] = \query\parse($query, $tags);
+  [$query_tags, $query_terms] = \core\parse_query($query, $tags);
 
   $depth_of = function($tag) use ($tags) {
     $depth = 0;
@@ -31,7 +31,7 @@
     $ids = array_column($task['tags'], 'id');
 
     if($query_tags && array_diff($query_tags, $ids)) continue;
-    if(!\query\matches_terms("{$task['title']} {$task['content']}", $query_terms)) continue;
+    if(!str_contains_terms("{$task['title']} {$task['content']}", $query_terms)) continue;
 
     // A task is placed in the column of the tag closest to root.
     // (and of those, the first in the configured order)

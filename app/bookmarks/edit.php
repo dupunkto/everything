@@ -1,6 +1,14 @@
 <?php
 
   if(isset($_POST['id'])) {
+    $bookmark = \store\get_bookmark($_POST['id']);
+    $fields = \core\diff([...$bookmark, 'tags' => \store\list_bookmark_tag_ids($_POST['id'])],
+      label: cast_string(@$_POST['label']),
+      url: cast_string($_POST['url']),
+      note: cast_string(@$_POST['note']),
+      saved_at: cast_datetime_utc($_POST['date'], $_POST['time']),
+      tags: $_POST['tags'] ?? []);
+
     \store\update_bookmark(
       $_POST['id'],
       cast_string(@$_POST['label']),
@@ -10,7 +18,8 @@
     ) or fail("Could not update bookmark.");
 
     \store\set_bookmark_tags($_POST['id'], $_POST['tags'] ?? []);
-    \store\put_log('bookmarks', $_POST['id'], "Updated bookmark.", 'user')
+    \store\put_audit_log('bookmarks', $_POST['id'],
+      "Updated [" . join(", ", $fields) . "] for bookmarks/{$_POST['id']}.", 'user')
       or fail("Could not create audit entry.");
 
     if(isset($_POST['close'])) {
@@ -43,7 +52,7 @@
           <a class="button" href="<?= esc_attr($bookmark['url']) ?>" z-key="g">&rarr;</a>
         </div>
 
-        <?php tags_field(\store\get_bookmark_tags($bookmark['id'])) ?>
+        <?php tags_field(\store\list_bookmark_tags($bookmark['id'])) ?>
 
         <label>
           Note

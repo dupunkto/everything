@@ -6,7 +6,7 @@
   $favicon = \bookmarks\fetch_meta($bookmark['url'])['favicon'];
   \store\update_bookmark_favicon($bookmark['id'], $favicon)
     or fail("Could not refresh favicon.");
-  \store\put_log('bookmarks', $bookmark['id'], "Refreshed bookmark favicon.", 'system')
+  \store\put_audit_log('bookmarks', $bookmark['id'], "Updated [favicon] for bookmarks/{$bookmark['id']}.", 'system')
     or fail("Could not create audit entry.");
 
   http_response_code(303);

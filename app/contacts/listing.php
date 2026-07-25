@@ -3,7 +3,7 @@
 
   $query = $_GET['q'] ?? $_POST['q'] ?? "";
 
-  [$tags, $terms, $selectors] = \query\parse($query);
+  [$tags, $terms, $selectors] = \core\parse_query($query);
 
   $kinds = [];
   $fields = [];
@@ -58,7 +58,7 @@
 
   $rows = array_filter($rows, function($row) use ($tags, $terms, $fields) {
     if($tags && array_diff($tags, $row['tags'])) return false;
-    if(!\query\matches_terms($row['search']['fuzzy'], $terms)) return false;
+    if(!str_contains_terms($row['search']['fuzzy'], $terms)) return false;
 
     foreach($fields as [$field, $needle]) {
       if($needle !== "" && mb_stripos($row['search'][$field] ?? "", $needle) === false)
