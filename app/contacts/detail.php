@@ -208,12 +208,14 @@
                 'bsky' => "https://bsky.app/profile/$enc",
                 default => null,
               };
+
+              $label = $social['type'] == 'linkedin' ? preg_replace('/-[a-z0-9]*\d[a-z0-9]*$/i', "", $raw) : $raw;
             ?>
 
             <?php if($url): ?>
-              <a href="<?= esc_attr($url) ?>"><i class="<?= $icon ?>"></i> <?= esc_inner($social['handle']) ?></a>
+              <a href="<?= esc_attr($url) ?>"><i class="<?= $icon ?>"></i> <?= esc_inner($label) ?></a>
             <?php else: ?>
-              <span><i class="<?= $icon ?>"></i> <?= esc_inner($social['handle']) ?></span>
+              <span><i class="<?= $icon ?>"></i> <?= esc_inner($label) ?></span>
             <?php endif ?>
           </li>
         <?php endforeach ?>
