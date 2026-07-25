@@ -87,7 +87,7 @@
         <select name="calendar_id" required>
           <?php foreach($calendars as $c): ?>
             <option value="<?= esc_attr($c['id']) ?>" data-color="<?= esc_attr($c['color']) ?>" <?= $c['id'] == $appointment['calendar_id'] ? 'selected' : '' ?>>
-              <?= esc_inner($c['title']) ?><?php if($c['subtitle']) echo " (" . esc_inner($c['subtitle']) . ")" ?>
+              <?= esc_inner($c['title']) ?><?php if($c['subtitle']) echo " (" . esc_inner(mb_strtolower($c['subtitle'])) . ")" ?>
             </option>
           <?php endforeach ?>
         </select>

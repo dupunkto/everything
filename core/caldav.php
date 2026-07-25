@@ -20,7 +20,7 @@ function collections() {
       'component' => 'VEVENT',
       'title' => $calendar['title'],
       'displayname' => $calendar['subtitle']
-        ? "{$calendar['title']} ({$calendar['subtitle']})"
+        ? "{$calendar['title']} (" . mb_strtolower($calendar['subtitle']) . ")"
         : $calendar['title'],
       'color' => $calendar['color'],
       'position' => $calendar['position'],

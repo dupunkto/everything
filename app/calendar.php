@@ -36,7 +36,7 @@
                       <input type="checkbox" name="visible[]" value="<?= esc_attr($source['id']) ?>"
                         checked style="accent-color: <?= esc_attr($source['color'] ?? '#cccccc') ?>">
                       <span class="calendar-sidebar__label" data-drag-handle>
-                        <?= esc_inner($source['title']) ?><?php if($source['subtitle']): ?> (<?= esc_inner($source['subtitle']) ?>)<?php endif ?>
+                        <?= esc_inner($source['title']) ?><?php if($source['subtitle']): ?> (<?= esc_inner(mb_strtolower($source['subtitle'])) ?>)<?php endif ?>
                       </span>
                     </label>
                   </li>
