@@ -9,7 +9,7 @@ use Sabre\VObject\Property;
 use Sabre\VObject\Reader;
 
 define('CALDAV_PRINCIPAL', 'everything');
-define('CALDAV_VIRTUAL_COLLECTIONS', ['reminders', 'backlog', 'blocked', 'wishlist']);
+define('CALDAV_VIRTUAL_COLLECTIONS', ['reminders', 'backlog', 'blocked', 'wishlist', 'travel']);
 
 function collections() {
   $collections = [];
@@ -33,15 +33,20 @@ function collections() {
     'backlog' => "Backlog",
     'blocked' => "Blocked",
     'wishlist' => "Wishlist",
+    'travel' => "Travel time",
   ];
   foreach($virtual as $id => $title) {
     $collections[$id] = [
       'id' => $id,
-      'type' => $id == 'wishlist' ? 'wish' : 'task',
-      'component' => 'VTODO',
+      'type' => match($id) {
+        'wishlist' => 'wish',
+        'travel' => 'travel',
+        default => 'task',
+      },
+      'component' => $id == 'travel' ? 'VEVENT' : 'VTODO',
       'title' => $title,
       'displayname' => $title,
-      'color' => null,
+      'color' => $id == 'travel' ? "#808080" : null,
       'position' => null,
       'calendar' => null,
     ];
@@ -108,32 +113,41 @@ function reconcile() {
     $seen = [];
     $changes = [];
 
-    $visit = function($type, $row, $desired) use (&$existing, &$seen, &$changes) {
+    $visit = function($type, $row, $desired, $default_href = null, $uid = null) use (&$existing, &$seen, &$changes) {
       $key = "$type:{$row['id']}";
       $seen[$key] = true;
       $resource = @$existing[$key];
-      $href = @$resource['href'] ?: $row['id'] . ".ics";
+      if(!$resource && !$desired) return;
+      $href = @$resource['href'] ?: $default_href ?: $row['id'] . ".ics";
       $old_href = @$resource['href'];
       $current = @$resource['collection'];
       $occupied = $desired ? \store\get_caldav_resource_by_href($desired, $href) : null;
       if($occupied && ($occupied['entity_type'] != $type || $occupied['entity_id'] != $row['id']))
-        $href = $row['id'] . ".ics";
+        $href = $row['id'] . "-$type.ics";
 
       if(!$resource) {
-        \store\update_caldav_resource($type, $row['id'], $href, $desired)
+        \store\update_caldav_resource($type, $row['id'], $href, $desired, uid: $uid)
           or throw new \RuntimeException("Could not register CalDAV resource.");
         if($desired) $changes[] = ['collection' => $desired, 'href' => $href, 'operation' => 'upsert'];
       }
       elseif($current != $desired) {
         if($current) $changes[] = ['collection' => $current, 'href' => $old_href, 'operation' => 'delete'];
         if($desired) $changes[] = ['collection' => $desired, 'href' => $href, 'operation' => 'upsert'];
-        \store\update_caldav_resource($type, $row['id'], $href, $desired)
+        \store\update_caldav_resource($type, $row['id'], $href, $desired, uid: $uid)
           or throw new \RuntimeException("Could not move CalDAV resource.");
       }
     };
 
-    foreach(\store\list_calendar_appointments() as $row)
+    foreach(\store\list_calendar_appointments() as $row) {
       $visit('appointment', $row, $row['calendar_id']);
+      $travel = !\cast_boolean($row['all_day']);
+      $before = $travel && (int)$row['travel_before'] > 0 ? 'travel' : null;
+      $after = $travel && (int)$row['travel_after'] > 0 ? 'travel' : null;
+      $visit('travel_before', $row, $before,
+        $row['id'] . "-travel-before.ics", $row['id'] . "-travel-before");
+      $visit('travel_after', $row, $after,
+        $row['id'] . "-travel-after.ics", $row['id'] . "-travel-after");
+    }
 
     foreach(\store\list_tasks("", [], respect_horizon: false) as $row) {
       $expired = $row['expire_at'] && strtotime($row['expire_at']) <= time();
@@ -171,6 +185,22 @@ function mark_resource_changed($type, $id) {
       'href' => $resource['href'],
       'operation' => 'upsert',
     ]]) or throw new \RuntimeException("Could not update CalDAV sync state.");
+  if($type == 'appointment') mark_travel_changed($id);
+  return true;
+}
+
+function mark_travel_changed($id) {
+  foreach(['travel_before', 'travel_after'] as $type) {
+    $resource = \store\get_caldav_resource($type, $id);
+    if(!$resource || !$resource['collection']) continue;
+    \store\touch_caldav_resource($type, $id)
+      or throw new \RuntimeException("Could not update travel revision.");
+    \store\put_caldav_changes([[
+      'collection' => $resource['collection'],
+      'href' => $resource['href'],
+      'operation' => 'upsert',
+    ]]) or throw new \RuntimeException("Could not update CalDAV sync state.");
+  }
   return true;
 }
 
@@ -192,6 +222,11 @@ function hide_resource($type, $id) {
 }
 
 function mark_resource_deleted($type, $id) {
+  if($type == 'appointment') {
+    mark_resource_deleted('travel_before', $id);
+    mark_resource_deleted('travel_after', $id);
+  }
+
   $resource = \store\get_caldav_resource($type, $id);
   if(!$resource) return true;
 
@@ -208,7 +243,7 @@ function mark_resource_deleted($type, $id) {
 
 function entity($resource) {
   return match($resource['entity_type']) {
-    'appointment' => \store\get_appointment($resource['entity_id']),
+    'appointment', 'travel_before', 'travel_after' => \store\get_appointment($resource['entity_id']),
     'task' => \store\get_task($resource['entity_id']),
     'wish' => \store\get_wish($resource['entity_id']),
   };
@@ -314,9 +349,10 @@ function serialize($resource) {
   if(!$row) return null;
 
   $type = $resource['entity_type'];
-  $table = $type == 'appointment' ? 'appointments' : $type . 's';
+  $is_travel = in_array($type, ['travel_before', 'travel_after']);
+  $table = $type == 'appointment' || $is_travel ? 'appointments' : $type . 's';
   $dates = \store\get_log_dates($table, $row['id']);
-  $component = $type == 'appointment' ? 'VEVENT' : 'VTODO';
+  $component = $type == 'appointment' || $is_travel ? 'VEVENT' : 'VTODO';
 
   $body = "BEGIN:VCALENDAR\r\n";
   $body .= line('PRODID', '-//Everything//CalDAV//EN');
@@ -329,14 +365,36 @@ function serialize($resource) {
   $body .= line('SEQUENCE', (string)$resource['revision']);
   if($dates['created_at']) $body .= line('CREATED', utc($dates['created_at']));
   if($dates['modified_at']) $body .= line('LAST-MODIFIED', utc($dates['modified_at']));
-  $body .= line('SUMMARY', \icalendar\escape_text($row['title']));
-  if($row['content'] !== null && $row['content'] !== "")
+  $body .= line('SUMMARY', $is_travel ? "Travel time" : \icalendar\escape_text($row['title']));
+  if(!$is_travel && $row['content'] !== null && $row['content'] !== "")
     $body .= line('DESCRIPTION', \icalendar\escape_text($row['content']));
-  $body .= line('PRIORITY', (string)priority($type, $row['id'], \cast_boolean($row['urgent'])));
+  if(!$is_travel)
+    $body .= line('PRIORITY', (string)priority($type, $row['id'], \cast_boolean($row['urgent'])));
 
   $skip = ['UID', 'DTSTAMP', 'SEQUENCE', 'CREATED', 'LAST-MODIFIED', 'SUMMARY', 'DESCRIPTION', 'PRIORITY'];
 
-  if($type == 'appointment') {
+  if($is_travel) {
+    if($type == 'travel_before') {
+      $ends_at = new \DateTimeImmutable($row['starts_at']);
+      $starts_at = $ends_at->modify('-' . (int)$row['travel_before'] . ' minutes');
+    }
+    else {
+      $starts_at = new \DateTimeImmutable($row['ends_at']);
+      $ends_at = $starts_at->modify('+' . (int)$row['travel_after'] . ' minutes');
+    }
+
+    if($row['recurrence']) {
+      $timezone = [['name' => 'TZID', 'values' => [TIMEZONE]]];
+      $body .= line('DTSTART', local_time($starts_at->format('c')), $timezone);
+      $body .= line('DTEND', local_time($ends_at->format('c')), $timezone);
+      $body .= line('RRULE', $row['recurrence']);
+    }
+    else {
+      $body .= line('DTSTART', utc($starts_at->format('c')));
+      $body .= line('DTEND', utc($ends_at->format('c')));
+    }
+  }
+  elseif($type == 'appointment') {
     if(\cast_boolean($row['all_day'])) {
       $body .= line('DTSTART', local_day($row['starts_at']), [['name' => 'VALUE', 'values' => ['DATE']]]);
       $body .= line('DTEND', local_day($row['ends_at']), [['name' => 'VALUE', 'values' => ['DATE']]]);
@@ -386,8 +444,10 @@ function serialize($resource) {
     $skip = [...$skip, 'DTSTART', 'STATUS', 'COMPLETED'];
   }
 
-  $body .= unknown_lines($type, $row['id'], $skip);
-  $body .= alarm_lines($type, $row['id']);
+  if(!$is_travel) {
+    $body .= unknown_lines($type, $row['id'], $skip);
+    $body .= alarm_lines($type, $row['id']);
+  }
   $body .= "END:$component\r\nEND:VCALENDAR\r\n";
   return $body;
 }

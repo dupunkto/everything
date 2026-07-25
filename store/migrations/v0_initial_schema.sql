@@ -442,7 +442,7 @@ CREATE TABLE IF NOT EXISTS caldav_revision (
 );
 
 CREATE TABLE IF NOT EXISTS caldav_resources (
-  entity_type text NOT NULL, -- appointment|task|wish
+  entity_type text NOT NULL, -- appointment|task|wish|travel_before|travel_after
   entity_id text NOT NULL,
   uid text NOT NULL,
   href text NOT NULL,

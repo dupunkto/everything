@@ -358,6 +358,7 @@ function put() {
   $location = locate();
   if($location[0] != 'resource') dav_error(405, "PUT requires a resource URL.");
   [$kind, $collection, $name, $resource] = $location;
+  if($collection['type'] == 'travel') dav_error(403, "Travel time is read-only.");
   precondition($resource);
 
   try { $data = \caldav\parse(file_get_contents('php://input'), $collection['component'], $collection['type']); }
@@ -443,6 +444,7 @@ function put() {
       $table = $type == 'appointment' ? 'appointments' : $type . 's';
       \store\put_log($table, $id, $created ? "Created through CalDAV." : "Updated through CalDAV.", 'caldav')
         or throw new \RuntimeException("Could not create audit entry.");
+      if($type == 'appointment') \caldav\mark_travel_changed($id);
 
       $changes = [];
       if($old_collection && ($old_collection != $saved_collection || $old_href != $saved_name))
@@ -465,6 +467,7 @@ function delete_resource() {
   $location = locate();
   if($location[0] != 'resource' || !$location[3]) dav_error(404, "Resource not found.");
   [$kind, $collection, $name, $resource] = $location;
+  if($collection['type'] == 'travel') dav_error(403, "Travel time is read-only.");
   precondition($resource);
 
   try {
@@ -506,6 +509,8 @@ function move() {
     dav_error(403, "Invalid destination.");
   $target = \caldav\collection(rawurldecode($match[1])) or dav_error(404, "Destination collection not found.");
   $target_name = rawurldecode($match[2]);
+  if($source['type'] == 'travel' || $target['type'] == 'travel')
+    dav_error(403, "Travel time is read-only.");
   if($target['type'] != $source['type']) dav_error(403, "Wishlist and task resources cannot be moved.");
   if($target['type'] == 'wish') dav_error(403, "Wishlist cannot be moved.");
   if(\store\get_caldav_resource_by_href($target['id'], $target_name)) dav_error(412, "Destination exists.");
@@ -531,6 +536,7 @@ function move() {
       $table = $resource['entity_type'] == 'appointment' ? 'appointments' : 'tasks';
       \store\put_log($table, $id, "Moved through CalDAV.", 'caldav')
         or throw new \RuntimeException("Could not create audit entry.");
+      if($resource['entity_type'] == 'appointment') \caldav\mark_travel_changed($id);
       \store\update_caldav_resource($resource['entity_type'], $id, $target_name, $target['id'])
         or throw new \RuntimeException("Could not move resource href.");
       \store\put_caldav_changes([
