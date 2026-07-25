@@ -1,15 +1,28 @@
 #!/usr/bin/env bash
 
 PORT=4000
+TLS_PORT=4443
 ENTRYPOINT=index.php
 STORE=data.db
+
+export AUTH_PROVIDER=basic
+export AUTH_PASSWORD=pannekoek
 
 # Configure the PHP server to start two
 # concurrent threads.
 export PHP_CLI_SERVER_WORKERS=2
 
 serve() {
-  ENV=dev php -S 0.0.0.0:$PORT $ENTRYPOINT
+  case ${SECURE:-} in
+    1|true|on|yes)
+      spawn \
+        "env ENV=dev php -S 0.0.0.0:$PORT $ENTRYPOINT" \
+        "env PORT=$PORT TLS_PORT=$TLS_PORT node proxy.js"
+      ;;
+    *)
+      ENV=dev php -S 0.0.0.0:$PORT $ENTRYPOINT
+      ;;
+  esac
 }
 
 clean() {
