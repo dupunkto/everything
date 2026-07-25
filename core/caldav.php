@@ -25,13 +25,35 @@ function collections() {
       'color' => $calendar['color'],
       'position' => $calendar['position'],
       'calendar' => $calendar,
+      'subscription' => null,
+      'readonly' => false,
     ];
   }
 
+  foreach(\store\list_subscriptions() as $subscription) {
+    $collections[$subscription['id']] = [
+      'id' => $subscription['id'],
+      'type' => 'appointment',
+      'component' => 'VEVENT',
+      'title' => $subscription['title'],
+      'displayname' => $subscription['subtitle']
+        ? "{$subscription['title']} (" . mb_strtolower($subscription['subtitle']) . ")"
+        : $subscription['title'],
+      'color' => $subscription['color'],
+      'position' => $subscription['position'],
+      'calendar' => null,
+      'subscription' => $subscription,
+      'readonly' => true,
+    ];
+  }
+
+  $position = $collections
+    ? max(array_column($collections, 'position')) + 1
+    : 0;
   $virtual = [
     'reminders' => "Reminders",
-    'backlog' => "Backlog",
     'blocked' => "Blocked",
+    'backlog' => "Backlog",
     'wishlist' => "Wishlist",
     'travel' => "Travel time",
   ];
@@ -47,8 +69,10 @@ function collections() {
       'title' => $title,
       'displayname' => $title,
       'color' => $id == 'travel' ? "#808080" : null,
-      'position' => null,
+      'position' => $position++,
       'calendar' => null,
+      'subscription' => null,
+      'readonly' => $id == 'travel',
     ];
   }
 
@@ -138,9 +162,18 @@ function reconcile() {
       }
     };
 
-    foreach(\store\list_calendar_appointments() as $row) {
-      $visit('appointment', $row, $row['calendar_id']);
-      $travel = !\cast_boolean($row['all_day']);
+    $appointments = [
+      ...\store\list_calendar_appointments(),
+      ...\store\list_subscription_appointments(),
+    ];
+    foreach($appointments as $row) {
+      $going = \cast_boolean($row['going']);
+      $filtered = $row['subscription_id'] && $row['subscription_filter']
+        && stripos($row['title'], $row['subscription_filter']) === false;
+      $visible = $going && !$filtered;
+      $collection = $row['calendar_id'] ?: $row['subscription_id'];
+      $visit('appointment', $row, $visible ? $collection : null);
+      $travel = $visible && !\cast_boolean($row['all_day']);
       $before = $travel && (int)$row['travel_before'] > 0 ? 'travel' : null;
       $after = $travel && (int)$row['travel_after'] > 0 ? 'travel' : null;
       $visit('travel_before', $row, $before,

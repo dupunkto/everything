@@ -1175,8 +1175,13 @@ function list_calendar_appointments() {
 }
 
 function list_subscription_appointments() {
-  return all('SELECT * FROM appointments
-    WHERE calendar_id IS NULL ORDER BY id') ?? [];
+  return all('SELECT
+    appointments.*,
+    subscriptions.filter AS subscription_filter
+  FROM appointments
+  JOIN subscriptions ON subscriptions.id = appointments.subscription_id
+  WHERE appointments.calendar_id IS NULL
+  ORDER BY appointments.id') ?? [];
 }
 
 function list_appointments_by_calendar($calendar_id) {

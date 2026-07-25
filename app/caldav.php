@@ -1,5 +1,5 @@
 <?php
-// CalDAV server for calendars, reminders and wishlists.
+// CalDAV server for calendars, subscriptions, reminders and wishlists.
 // Written by Claude. (dont judge me ok.)
 
 define('CALDAV_XML_DAV', 'DAV:');
@@ -147,6 +147,10 @@ function sync_token($collection, $revision) {
 
 function collection_properties($collection) {
   $revision = \store\caldav_collection_revision($collection['id']);
+  $privileges = '<D:privilege><D:read/></D:privilege>';
+  if(!$collection['readonly']) $privileges .= $collection['calendar']
+    ? '<D:privilege><D:write/></D:privilege>'
+    : '<D:privilege><D:write-content/></D:privilege>';
   $properties = [
     CALDAV_XML_DAV . '|resourcetype' => ['raw' => '<D:collection/><C:calendar/>'],
     CALDAV_XML_DAV . '|displayname' => ['text' => $collection['displayname']],
@@ -156,6 +160,7 @@ function collection_properties($collection) {
       . '<D:supported-report><D:report><D:sync-collection/></D:report></D:supported-report>'],
     CALDAV_XML_CALDAV . '|supported-calendar-component-set' => ['raw' => '<C:comp name="' . $collection['component'] . '"/>'],
     CALDAV_XML_SERVER . '|getctag' => ['text' => (string)$revision],
+    CALDAV_XML_DAV . '|current-user-privilege-set' => ['raw' => $privileges],
   ];
   if($collection['color']) $properties[CALDAV_XML_APPLE . '|calendar-color'] = ['text' => $collection['color'] . 'FF'];
   if($collection['position'] !== null) $properties[CALDAV_XML_APPLE . '|calendar-order'] = ['text' => (string)$collection['position']];
@@ -229,19 +234,32 @@ function propfind() {
 }
 
 function in_time_range($resource, $start, $end) {
-  if($resource['entity_type'] != 'appointment' || !$start || !$end) return true;
+  $events = ['appointment', 'travel_before', 'travel_after'];
+  if(!in_array($resource['entity_type'], $events) || !$start || !$end) return true;
   $row = \caldav\entity($resource);
   $from = \DateTimeImmutable::createFromFormat('!Ymd\THis\Z', $start, new \DateTimeZone("UTC"));
   $to = \DateTimeImmutable::createFromFormat('!Ymd\THis\Z', $end, new \DateTimeZone("UTC"));
   if(!$from || !$to) return true;
 
+  if($resource['entity_type'] == 'travel_before') {
+    $event_end = new \DateTimeImmutable($row['starts_at']);
+    $event_start = $event_end->modify('-' . (int)$row['travel_before'] . ' minutes');
+  }
+  elseif($resource['entity_type'] == 'travel_after') {
+    $event_start = new \DateTimeImmutable($row['ends_at']);
+    $event_end = $event_start->modify('+' . (int)$row['travel_after'] . ' minutes');
+  }
+  else {
+    $event_start = new \DateTimeImmutable($row['starts_at']);
+    $event_end = new \DateTimeImmutable($row['ends_at']);
+  }
+
   if(!$row['recurrence'])
-    return strtotime($row['starts_at']) < $to->getTimestamp()
-      && strtotime($row['ends_at']) > $from->getTimestamp();
+    return $event_start < $to && $event_end > $from;
 
   $zone = new \DateTimeZone(TIMEZONE);
-  $base = (new \DateTimeImmutable($row['starts_at']))->setTimezone($zone);
-  $duration = strtotime($row['ends_at']) - strtotime($row['starts_at']);
+  $base = $event_start->setTimezone($zone);
+  $duration = $event_end->getTimestamp() - $event_start->getTimestamp();
   $window_from = $from->setTimezone($zone)->modify("-$duration seconds");
   $window_to = $to->setTimezone($zone)->modify('-1 second');
   return !!\recurrence\occurrences($row['recurrence'], $base, $window_from, $window_to);
@@ -358,7 +376,7 @@ function put() {
   $location = locate();
   if($location[0] != 'resource') dav_error(405, "PUT requires a resource URL.");
   [$kind, $collection, $name, $resource] = $location;
-  if($collection['type'] == 'travel') dav_error(403, "Travel time is read-only.");
+  if($collection['readonly']) dav_error(403, "Collection is read-only.");
   precondition($resource);
 
   try { $data = \caldav\parse(file_get_contents('php://input'), $collection['component'], $collection['type']); }
@@ -467,7 +485,7 @@ function delete_resource() {
   $location = locate();
   if($location[0] != 'resource' || !$location[3]) dav_error(404, "Resource not found.");
   [$kind, $collection, $name, $resource] = $location;
-  if($collection['type'] == 'travel') dav_error(403, "Travel time is read-only.");
+  if($collection['readonly']) dav_error(403, "Collection is read-only.");
   precondition($resource);
 
   try {
@@ -509,8 +527,8 @@ function move() {
     dav_error(403, "Invalid destination.");
   $target = \caldav\collection(rawurldecode($match[1])) or dav_error(404, "Destination collection not found.");
   $target_name = rawurldecode($match[2]);
-  if($source['type'] == 'travel' || $target['type'] == 'travel')
-    dav_error(403, "Travel time is read-only.");
+  if($source['readonly'] || $target['readonly'])
+    dav_error(403, "Collection is read-only.");
   if($target['type'] != $source['type']) dav_error(403, "Wishlist and task resources cannot be moved.");
   if($target['type'] == 'wish') dav_error(403, "Wishlist cannot be moved.");
   if(\store\get_caldav_resource_by_href($target['id'], $target_name)) dav_error(412, "Destination exists.");
@@ -554,7 +572,7 @@ function proppatch() {
   $location = locate();
   if($location[0] != 'collection') dav_error(405, "PROPPATCH requires a collection.");
   $collection = $location[1];
-  if(!$collection['calendar']) dav_error(403, "Virtual collection properties are read-only.", 'D:cannot-modify-protected-property');
+  if(!$collection['calendar']) dav_error(403, "Collection properties are read-only.", 'D:cannot-modify-protected-property');
   $document = xml_body() or dav_error(400, "PROPPATCH body is required.");
   $title = $collection['title'];
   $subtitle = $collection['calendar']['subtitle'];

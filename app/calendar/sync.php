@@ -67,8 +67,48 @@ foreach($subscriptions as $subscription) {
         && cast_boolean($row['all_day']) == $data['all_day']
         && $row['recurrence'] == $data['recurrence']) continue;
 
-      \store\update_appointment_body(
-        $row['id'],
+      $updated = \store\transaction(function() use ($row, $data) {
+        \store\update_appointment_body(
+          $row['id'],
+          $data['title'],
+          $data['content'],
+          $data['starts_at'],
+          $data['ends_at'],
+          $data['location'],
+          $data['meeting'],
+          $data['all_day'],
+          $data['recurrence']
+        ) or throw new \RuntimeException("Could not update subscription appointment.");
+        \caldav\mark_resource_changed('appointment', $row['id']);
+        \store\put_log('appointments', $row['id'], "Updated appointment from subscription.", 'syncer')
+          or throw new \RuntimeException("Could not create audit entry.");
+        return true;
+      });
+      $updated ? $stats['updated']++ : $stats['errors']++;
+    }
+    elseif($row['ends_at'] < $now || $row['recurrence']) {
+      $stats['kept']++;
+    }
+    else {
+      $deleted = \store\transaction(function() use ($row) {
+        \store\delete_appointment($row['id'])
+          or throw new \RuntimeException("Could not delete subscription appointment.");
+        \caldav\mark_resource_deleted('appointment', $row['id']);
+        \store\put_log('appointments', $row['id'], "Deleted appointment from subscription.", 'syncer')
+          or throw new \RuntimeException("Could not create audit entry.");
+        return true;
+      });
+      $deleted ? $stats['deleted']++ : $stats['errors']++;
+    }
+  }
+
+  foreach($upstream as $uid => $data) {
+    if(isset($seen[$uid])) continue;
+
+    $inserted = \store\transaction(function() use ($uid, $subscription, $data) {
+      \store\put_subscription_appointment(
+        $uid,
+        $subscription['id'],
         $data['title'],
         $data['content'],
         $data['starts_at'],
@@ -77,32 +117,12 @@ foreach($subscriptions as $subscription) {
         $data['meeting'],
         $data['all_day'],
         $data['recurrence']
-      ) ? $stats['updated']++ : $stats['errors']++;
-    }
-    elseif($row['ends_at'] < $now || $row['recurrence']) {
-      $stats['kept']++;
-    }
-    else {
-      \store\delete_appointment($row['id'])
-        ? $stats['deleted']++ : $stats['errors']++;
-    }
-  }
-
-  foreach($upstream as $uid => $data) {
-    if(isset($seen[$uid])) continue;
-
-    \store\put_subscription_appointment(
-      $uid,
-      $subscription['id'],
-      $data['title'],
-      $data['content'],
-      $data['starts_at'],
-      $data['ends_at'],
-      $data['location'],
-      $data['meeting'],
-      $data['all_day'],
-      $data['recurrence']
-    ) ? $stats['inserted']++ : $stats['errors']++;
+      ) or throw new \RuntimeException("Could not create subscription appointment.");
+      \store\put_log('appointments', $uid, "Created appointment from subscription.", 'syncer')
+        or throw new \RuntimeException("Could not create audit entry.");
+      return true;
+    });
+    $inserted ? $stats['inserted']++ : $stats['errors']++;
   }
 
   // TODO(robin): also log stats here.
@@ -134,7 +154,7 @@ function normalize_feed_event($event) {
     'title' => $event['summary'],
     'content' => $event['description'],
     'location' => $event['location'],
-    'meeting' => $event['conference'] || extract_meeting($event),
+    'meeting' => $event['conference'] ?: extract_meeting($event),
     'starts_at' => gmdate('Y-m-d\TH:i:sP', $event['starts_at']),
     'ends_at' => gmdate('Y-m-d\TH:i:sP', $event['ends_at']),
     'all_day' => $all_day,
