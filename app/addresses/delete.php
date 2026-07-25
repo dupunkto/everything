@@ -1,7 +1,7 @@
 <?php
 
   \store\delete_address($_GET['id']) or fail("Could not delete address.");
-  \store\put_log('addresses', $_GET['id'], "Deleted address.", 'user')
+  \store\put_log('addresses', $_GET['id'], "Deleted address.", 'user', operation: 'delete')
     or fail("Could not create audit entry.");
 
   include __DIR__ . "/listing.php"; exit;

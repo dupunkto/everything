@@ -94,7 +94,7 @@ foreach($subscriptions as $subscription) {
         \store\delete_appointment($row['id'])
           or throw new \RuntimeException("Could not delete subscription appointment.");
         \caldav\mark_resource_deleted('appointment', $row['id']);
-        \store\put_log('appointments', $row['id'], "Deleted appointment from subscription.", 'syncer')
+        \store\put_log('appointments', $row['id'], "Deleted appointment from subscription.", 'syncer', operation: 'delete')
           or throw new \RuntimeException("Could not create audit entry.");
         return true;
       });
@@ -118,7 +118,7 @@ foreach($subscriptions as $subscription) {
         $data['all_day'],
         $data['recurrence']
       ) or throw new \RuntimeException("Could not create subscription appointment.");
-      \store\put_log('appointments', $uid, "Created appointment from subscription.", 'syncer')
+      \store\put_log('appointments', $uid, "Created appointment from subscription.", 'syncer', operation: 'insert')
         or throw new \RuntimeException("Could not create audit entry.");
       return true;
     });

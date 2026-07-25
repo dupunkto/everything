@@ -9,7 +9,7 @@
   \store\transaction(function() use ($appointment) {
     \store\delete_appointment($appointment['id'])
       or fail("Could not delete appointment.");
-    \store\put_log('appointments', $appointment['id'], "Deleted appointment.", 'user')
+    \store\put_log('appointments', $appointment['id'], "Deleted appointment.", 'user', operation: 'delete')
       or fail("Could not create audit entry.");
 
     \caldav\mark_resource_deleted('appointment', $appointment['id']);

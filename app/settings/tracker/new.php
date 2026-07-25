@@ -12,7 +12,7 @@
       0,
       local_date("Y-m-d")
     ) or fail("Could not create tracker quota.", status: 400);
-    \store\put_log('quotas', $_POST['tag_id'], "Created tracker quota.", 'user')
+    \store\put_log('quotas', $_POST['tag_id'], "Created tracker quota.", 'user', operation: 'insert')
       or fail("Could not create audit entry.");
 
     include __DIR__ . "/listing.php"; exit;

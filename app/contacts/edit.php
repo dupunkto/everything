@@ -95,7 +95,7 @@
 
     $table = $kind === 'org' ? 'organisations' : 'contacts';
     $label = $kind === 'org' ? "organisation" : "contact";
-    \store\put_log($table, $id, ($creating ? "Created" : "Updated") . " $label.", 'user')
+    \store\put_log($table, $id, ($creating ? "Created" : "Updated") . " $label.", 'user', operation: $creating ? 'insert' : 'update')
       or fail("Could not create audit entry.");
 
     $_GET['kind'] = $kind;

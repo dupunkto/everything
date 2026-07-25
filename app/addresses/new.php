@@ -16,13 +16,15 @@
       \store\update_address($_POST['addr_id'], ...$fields);
       $id = $_POST['addr_id'];
       $message = "Updated address.";
+      $operation = 'update';
     }
     else {
       $id = \store\put_address(...$fields);
       $message = "Created address.";
+      $operation = 'insert';
     }
 
-    \store\put_log('addresses', $id, $message, 'user')
+    \store\put_log('addresses', $id, $message, 'user', operation: $operation)
       or fail("Could not create audit entry.");
   }
 

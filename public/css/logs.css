@@ -1,0 +1,49 @@
+.logs__table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.logs__table th {
+  width: 10%;
+}
+
+.logs__table th:nth-child(2) {
+  width: 45%;
+}
+
+.logs__table th:nth-child(5) {
+  width: 25%;
+}
+
+.logs__table th,
+.logs__table td {
+  border-bottom: 1px solid light-dark(#ccc, #444);
+  padding: 3px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.logs__table th {
+  background: light-dark(white, #1c1b22);
+  position: sticky;
+  top: 0;
+}
+
+.logs__table td:first-child {
+  font-size: 0.7em;
+}
+
+.logs__table td:first-child,
+.logs__table td:nth-child(3),
+.logs__table td:nth-child(4) {
+  white-space: nowrap;
+}
+
+.logs__entity {
+  display: block;
+  font-family: monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -2,7 +2,7 @@
 
   \store\transaction(function() use ($id) {
     \store\delete_task($_GET['id']) or fail("Could not delete task.");
-    \store\put_log('tasks', $_GET['id'], "Deleted task.", 'user')
+    \store\put_log('tasks', $_GET['id'], "Deleted task.", 'user', operation: 'delete')
       or fail("Could not create audit entry.");
 
     \caldav\mark_resource_deleted('task', $_GET['id']);

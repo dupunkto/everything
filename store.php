@@ -1948,13 +1948,25 @@ function update_config($property, $value) {
 
 // Audit log
 
-function put_log($table_name, $record_id, $message, $author) {
+function put_log($table_name, $record_id, $message, $author, $operation = 'update') {
   return exec_query('INSERT INTO audit_log (
     table_name,
     record_id,
     message,
-    author
-  ) VALUES (?, ?, ?, ?)', [$table_name, $record_id, $message, $author]);
+    author,
+    operation
+  ) VALUES (?, ?, ?, ?, ?)', [$table_name, $record_id, $message, $author, $operation]);
+}
+
+function list_all_logs() {
+  return all("SELECT changed_at, message, operation, author, table_name, record_id,
+      'audit_log' AS source
+    FROM audit_log
+    UNION ALL
+    SELECT changed_at, 'CalDAV resource changed.', operation, 'caldav', collection, href,
+      'caldav_changes'
+    FROM caldav_changes
+    ORDER BY changed_at DESC") ?? [];
 }
 
 function list_logs($table_name, $record_id) {

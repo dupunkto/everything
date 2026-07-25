@@ -10,8 +10,10 @@ CREATE TABLE IF NOT EXISTS audit_log (
   table_name text NOT NULL,
   record_id text NOT NULL,
   message text NOT NULL,
+  operation text NOT NULL DEFAULT 'update',
   author text NOT NULL,
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  CHECK (operation IN ('insert', 'update', 'delete'))
 );
 
 CREATE TABLE IF NOT EXISTS config (

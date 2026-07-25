@@ -32,7 +32,7 @@
       cast_color($feed['color'] ?? "#efefef")
     ) or fail("Could not create new subscription.");
 
-    \store\put_log('subscriptions', $id, "Created subscription.", 'user')
+    \store\put_log('subscriptions', $id, "Created subscription.", 'user', operation: 'insert')
       or fail("Could not create audit entry.");
 
     ?>

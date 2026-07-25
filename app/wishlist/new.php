@@ -15,7 +15,7 @@
       \store\set_wish_urls($id, $urls);
       \store\set_wish_tags($id, $_POST['tags'] ?? []);
 
-      \store\put_log('wishes', $id, "Created wish.", 'user')
+      \store\put_log('wishes', $id, "Created wish.", 'user', operation: 'insert')
         or fail("Could not create audit entry.");
 
       \caldav\mark_resource_changed('wish', $id);

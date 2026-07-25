@@ -460,7 +460,7 @@ function put() {
         or throw new \RuntimeException("Could not save resource href.");
       \store\touch_caldav_resource($type, $id) or throw new \RuntimeException("Could not update revision.");
       $table = $type == 'appointment' ? 'appointments' : $type . 's';
-      \store\put_log($table, $id, $created ? "Created through CalDAV." : "Updated through CalDAV.", 'caldav')
+      \store\put_log($table, $id, $created ? "Created through CalDAV." : "Updated through CalDAV.", 'caldav', operation: $created ? 'insert' : 'update')
         or throw new \RuntimeException("Could not create audit entry.");
       if($type == 'appointment') \caldav\mark_travel_changed($id);
 
@@ -506,7 +506,7 @@ function delete_resource() {
       }
 
       $table = $type == 'appointment' ? 'appointments' : $type . 's';
-      \store\put_log($table, $id, "Deleted through CalDAV.", 'caldav')
+      \store\put_log($table, $id, "Deleted through CalDAV.", 'caldav', operation: 'delete')
         or throw new \RuntimeException("Could not create audit entry.");
     });
   }
