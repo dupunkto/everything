@@ -9,7 +9,7 @@ use Sabre\VObject\Property;
 use Sabre\VObject\Reader;
 
 define('CALDAV_PRINCIPAL', 'everything');
-define('CALDAV_VIRTUAL_COLLECTIONS', ['reminders', 'backlog', 'blocked', 'archive', 'wishlist']);
+define('CALDAV_VIRTUAL_COLLECTIONS', ['reminders', 'backlog', 'blocked', 'wishlist']);
 
 function collections() {
   $collections = [];
@@ -32,7 +32,6 @@ function collections() {
     'reminders' => "Reminders",
     'backlog' => "Backlog",
     'blocked' => "Blocked",
-    'archive' => "Archive",
     'wishlist' => "Wishlist",
   ];
   foreach($virtual as $id => $title) {
@@ -76,7 +75,6 @@ function task_collection($status) {
     'todo', 'wip', 'done' => 'reminders',
     'backlog' => 'backlog',
     'blocked' => 'blocked',
-    'nvm' => 'archive',
     default => null,
   };
 }
@@ -87,7 +85,6 @@ function task_status($collection, $incoming, $current) {
     return $collection == task_collection($current) ? $current : match($collection) {
       'backlog' => 'backlog',
       'blocked' => 'blocked',
-      'archive' => 'nvm',
       default => 'todo',
     };
   }
@@ -98,7 +95,6 @@ function task_status($collection, $incoming, $current) {
   return match($collection) {
     'backlog' => 'backlog',
     'blocked' => 'blocked',
-    'archive' => 'nvm',
     default => 'todo',
   };
 }
@@ -174,6 +170,23 @@ function mark_resource_changed($type, $id) {
       'collection' => $resource['collection'],
       'href' => $resource['href'],
       'operation' => 'upsert',
+    ]]) or throw new \RuntimeException("Could not update CalDAV sync state.");
+  return true;
+}
+
+function hide_resource($type, $id) {
+  $resource = \store\get_caldav_resource($type, $id);
+  if(!$resource) return true;
+
+  \store\update_caldav_resource($type, $id, $resource['href'], null)
+    or throw new \RuntimeException("Could not hide CalDAV resource.");
+  \store\touch_caldav_resource($type, $id)
+    or throw new \RuntimeException("Could not update CalDAV revision.");
+  if($resource['collection'])
+    \store\put_caldav_changes([[
+      'collection' => $resource['collection'],
+      'href' => $resource['href'],
+      'operation' => 'delete',
     ]]) or throw new \RuntimeException("Could not update CalDAV sync state.");
   return true;
 }

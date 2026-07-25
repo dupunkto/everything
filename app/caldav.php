@@ -2,9 +2,6 @@
 // CalDAV server for calendars, reminders and wishlists.
 // Written by Claude. (dont judge me ok.)
 
-use DOMDocument;
-use DOMElement;
-
 define('CALDAV_XML_DAV', 'DAV:');
 define('CALDAV_XML_CALDAV', 'urn:ietf:params:xml:ns:caldav');
 define('CALDAV_XML_SERVER', 'http://calendarserver.org/ns/');
@@ -474,17 +471,22 @@ function delete_resource() {
     \store\transaction(function() use ($resource) {
       $type = $resource['entity_type'];
       $id = $resource['entity_id'];
-      $deleted = match($type) {
-        'appointment' => \store\delete_appointment($id),
-        'task' => \store\delete_task($id),
-        'wish' => \store\delete_wish($id),
-      };
-      if(!$deleted) throw new \RuntimeException("Could not delete resource.");
+      if($type == 'appointment') {
+        \store\delete_appointment($id)
+          or throw new \RuntimeException("Could not delete resource.");
+        \caldav\mark_resource_deleted($type, $id);
+      }
+      else {
+        $changed = $type == 'task'
+          ? \store\set_task_status($id, 'nvm')
+          : \store\set_wish_status($id, 'nvm');
+        $changed or throw new \RuntimeException("Could not delete resource.");
+        \caldav\hide_resource($type, $id);
+      }
 
       $table = $type == 'appointment' ? 'appointments' : $type . 's';
       \store\put_log($table, $id, "Deleted through CalDAV.", 'caldav')
         or throw new \RuntimeException("Could not create audit entry.");
-      \caldav\mark_resource_deleted($type, $id);
     });
   }
   catch(\Throwable $e) { dav_error(500, $e->getMessage()); }
@@ -584,13 +586,13 @@ function get_resource($head = false) {
   exit;
 }
 
-if($method == 'OPTIONS') {
+function options() {
   header("Allow: OPTIONS, PROPFIND, REPORT, GET, HEAD, PUT, DELETE, MOVE, PROPPATCH");
   header("DAV: 1, 3, calendar-access, sync-collection");
   http_response_code(204); exit;
 }
 
-match($method) {
+match($_SERVER['REQUEST_METHOD']) {
   'PROPFIND' => propfind(),
   'REPORT' => report(),
   'GET' => get_resource(),
@@ -599,5 +601,6 @@ match($method) {
   'DELETE' => delete_resource(),
   'MOVE' => move(),
   'PROPPATCH' => proppatch(),
+  'OPTIONS' => options(),
   default => dav_error(405, "Method not allowed."),
 };
