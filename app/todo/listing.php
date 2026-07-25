@@ -82,7 +82,7 @@
     <button type="button" z-set="#todo-search" value="is:nvm"><i class="fa-regular fa-box-archive"></i> Shelves</button>
     <button type="button" z-set="#todo-search" value="is:backlog"><i class="fa-regular fa-folder-open"></i> Backlog</button>
   <?php else: ?>
-    <button type="button" z-set="#todo-search" value="is:open">&larr; Back to todo</button>
+    <button type="button" z-set="#todo-search" value="is:open not:expired">&larr; Back to todo</button>
   <?php endif ?>
 </nav>
 

@@ -4,30 +4,44 @@
     $all_day = cast_string($_POST['due_date']) != null
       && cast_string(@$_POST['due_time']) == null;
 
-    \store\update_task(
-      $_POST['id'],
-      $_POST['title'],
-      $_POST['content'],
-      $_POST['urgent'],
-      $_POST['recurrence'],
-      cast_datetime_utc($_POST['open_date'], $_POST['open_time']),
-      cast_datetime_utc($_POST['due_date'], @$_POST['due_time'] ?: "00:00"),
-      $all_day,
-      cast_datetime_utc($_POST['expire_date'], @$_POST['expire_time'] ?: "00:00")
-    ) or fail("Could not update task.");
+    $open_at = cast_datetime_utc($_POST['open_date'], $_POST['open_time']);
+    $due_at = cast_datetime_utc($_POST['due_date'], @$_POST['due_time'] ?: "00:00");
 
-    if(isset($_POST['amend'])) {
-      \store\amend_task_status($_POST['id'], $_POST['comment'])
-        or fail("Could not amend task status.");
-    }
-    else {
-      \store\set_task_status($_POST['id'], $_POST['status'], $_POST['comment'])
-        or fail("Could not update task status.");
-    }
+    $recurrence = cast_string($_POST['recurrence']);
+    $recurrence_start = new \DateTimeImmutable($due_at ?: $open_at);
+    if($recurrence && !\recurrence\valid($recurrence,
+      $recurrence_start->setTimezone(new \DateTimeZone(TIMEZONE))))
+      fail("Invalid recurrence rule.", status: 400);
 
-    \store\set_task_tags($_POST['id'], $_POST['tags'] ?? []);
-    \store\insert_log('tasks', $_POST['id'], "Updated task.", 'user')
-      or fail("Could not create audit entry.");
+    \store\transaction(function() use ($recurrence, $open_at, $due_at, $all_day) {
+      \store\update_task(
+        $_POST['id'],
+        $_POST['title'],
+        $_POST['content'],
+        $_POST['urgent'],
+        $recurrence,
+        $open_at,
+        $due_at,
+        $all_day,
+        cast_datetime_utc($_POST['expire_date'], @$_POST['expire_time'] ?: "00:00")
+      ) or fail("Could not update task.");
+
+      if(isset($_POST['amend'])) {
+        \store\amend_task_status($_POST['id'], $_POST['comment'])
+          or fail("Could not amend task status.");
+      }
+      else {
+        \store\set_task_status($_POST['id'], $_POST['status'], $_POST['comment'])
+          or fail("Could not update task status.");
+      }
+
+      \store\set_task_tags($_POST['id'], $_POST['tags'] ?? []);
+
+      \store\put_log('tasks', $_POST['id'], "Updated task.", 'user')
+        or fail("Could not create audit entry.");
+
+      \caldav\mark_resource_changed('task', $_POST['id']);
+    });
 
     if(isset($_POST['close'])) {
       http_response_code(303);
@@ -165,7 +179,7 @@
 
           <div class="field">
             <label for="recurrence">Repeat</label>
-            <input type="text" id="recurrence" name="recurrence" placeholder="cron or number of days" value="<?= esc_attr($task['recurrence'] ?? '') ?>">
+            <input type="text" id="recurrence" name="recurrence" placeholder="FREQ=WEEKLY;BYDAY=MO,WE,FR" value="<?= esc_attr($task['recurrence'] ?? '') ?>">
           </div>
 
           <?php if($task['recurrence'] && $task['status'] == 'done' && $task['next']): ?>

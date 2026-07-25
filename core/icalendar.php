@@ -1,29 +1,11 @@
 <?php
 // Minimal iCalendar (RFC 5545) parser.
-// This file was lovingly written by Claude.
 
-namespace ical;
+namespace icalendar;
 
-// Fetches and parses an iCalendar feed. Returns what parse_feed returns,
-// or null when the URL is unreachable or not an iCalendar feed.
-function fetch_feed($url) {
-  $response = \http\get($url);
-  if($response['state'] != 'success' || $response['status'] >= 400) {
-    \logger\warn("ical: fetch failed for $url (status {$response['status']})");
-    return null;
-  }
-
-  $feed = parse_feed($response['body']);
-  if($feed === null) \logger\warn("ical: $url is not an iCalendar feed");
-
-  return $feed;
-}
-
-// Parses an iCalendar document into the calendar's display name and color
-// (null when the feed doesn't carry them) plus a list of events. Returns
-// null when the body is not an iCalendar feed at all (e.g. a captive portal
-// or login page).
 function parse_feed($body) {
+  // The body is not an iCalendar feed at all (probably a captive
+  // portal or login page or something...)
   if(!str_contains($body, "BEGIN:VCALENDAR")) return null;
 
   // RFC 5545 folds long lines across multiple physical lines using
@@ -44,8 +26,8 @@ function parse_feed($body) {
       $event = []; continue;
     }
 
-    // Subcomponents (VALARM, VTIMEZONE, ...) carry their own DESCRIPTION
-    // and friends; skip them wholesale so they don't clobber anything.
+    // Subcomponents (VALARM, VTIMEZONE, ...) have their own DESCRIPTION etc.
+    // So we skip them entirely so those don't accidentally leak into events.
     if(str_starts_with($marker, "BEGIN:")) { $depth++; continue; }
 
     if($marker == "END:VEVENT" && $event !== null && $depth == 0) {
@@ -68,20 +50,12 @@ function parse_feed($body) {
     else $calendar[$property['name']] = $property;
   }
 
-  return normalize_calendar($calendar, $events);
-}
-
-function normalize_calendar($props, $events) {
-  $value = fn($name) => isset($props[$name]) ? trim($props[$name]['value']) : null;
-
-  $title = $value("X-WR-CALNAME");
-
-  // Apple publishes a hex color; RFC 7986 prescribes CSS named colors.
-  $color = hex_color($value("X-APPLE-CALENDAR-COLOR") ?? "")
-    ?? css_named_to_hex($value("COLOR") ?? "");
+  $title = unescape_text(@$calendar["X-WR-CALNAME"]['value']);
+  $color = normalize_color(@$calendar["X-APPLE-CALENDAR-COLOR"]['value'])
+    ?? named_color(@$calendar["COLOR"]['value']);
 
   return [
-    'title' => $title ? unescape_text($title) : null,
+    'title' => $title,
     'color' => $color,
     'events' => $events,
   ];
@@ -129,7 +103,11 @@ function normalize_event($props) {
 
   // Per RFC 5545, an all-day event without an end lasts one day,
   // a timed one ends immediately.
-  $ends_at ??= $all_day ? $starts_at + 86400 : $starts_at;
+  if($ends_at === null) {
+    $ends_at = $all_day
+      ? (new \DateTimeImmutable("@$starts_at"))->setTimezone(new \DateTimeZone(TIMEZONE))->modify('+1 day')->getTimestamp()
+      : $starts_at;
+  }
 
   return [
     'uid' => unescape_text($value("UID")),
@@ -174,29 +152,11 @@ function resolve_datetime($prop) {
   return [$datetime ? $datetime->getTimestamp() : null, false];
 }
 
+function escape_text($value) {
+  return strtr($value, ["\\" => "\\\\", "\n" => "\\n", "," => "\\,", ";" => "\\;"]);
+}
+
 function unescape_text($value) {
   return strtr($value, ['\\\\' => "\\", '\\n' => "\n", '\\N' => "\n", '\\,' => ",", '\\;' => ";"]);
 }
 
-// Apple ships #RRGGBBAA; strip the alpha so color inputs accept the value.
-function hex_color($value) {
-  if(!preg_match('/^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/', $value)) return null;
-  return strtolower(substr($value, 0, 7));
-}
-
-// The CSS3 extended palette subset RFC 7986 expects.
-// Returns null if the name is unrecognised.
-function css_named_to_hex($name) {
-  static $map = [
-    "black" => "#000000", "silver" => "#c0c0c0", "gray" => "#808080",
-    "white" => "#ffffff", "maroon" => "#800000", "red" => "#ff0000",
-    "purple" => "#800080", "fuchsia" => "#ff00ff", "green" => "#008000",
-    "lime" => "#00ff00", "olive" => "#808000", "yellow" => "#ffff00",
-    "navy" => "#000080", "blue" => "#0000ff", "teal" => "#008080",
-    "aqua" => "#00ffff", "orange" => "#ffa500", "pink" => "#ffc0cb",
-    "cyan" => "#00ffff", "magenta" => "#ff00ff", "indigo" => "#4b0082",
-    "violet" => "#ee82ee", "gold" => "#ffd700", "coral" => "#ff7f50",
-    "tomato" => "#ff6347", "salmon" => "#fa8072", "khaki" => "#f0e68c",
-  ];
-  return $map[strtolower($name)] ?? null;
-}

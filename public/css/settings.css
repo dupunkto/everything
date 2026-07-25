@@ -223,7 +223,7 @@
 
 .shortcuts-table th,
 .shortcuts-table td {
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid light-dark(#ccc, #444);
   padding: 0.4em 0.6em;
   text-align: left;
   vertical-align: top;
@@ -253,7 +253,7 @@
 
 .about-info th,
 .about-info td {
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid light-dark(#ccc, #444);
   padding: 0.4em 0.6em;
 }
 

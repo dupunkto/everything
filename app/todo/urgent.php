@@ -1,8 +1,12 @@
 <?php
 
-  \store\set_task_urgent($_POST['id'], cast_boolean($_POST['urgent']))
-    or fail("Could not update task urgency.");
-  \store\insert_log('tasks', $_POST['id'], "Changed task urgency.", 'user')
-    or fail("Could not create audit entry.");
+  \store\transaction(function() {
+    \store\set_task_urgent($_POST['id'], cast_boolean($_POST['urgent']))
+      or fail("Could not update task urgency.");
+    \store\put_log('tasks', $_POST['id'], "Changed task urgency.", 'user')
+      or fail("Could not create audit entry.");
+
+    \caldav\mark_resource_changed('task', $_POST['id']);
+  });
 
   include "listing.php"; exit;

@@ -13,9 +13,14 @@
   $starts_at = cast_datetime_utc($_POST['start_date'], $_POST['start_time']);
   $ends_at = cast_datetime_utc($_POST['end_date'], $_POST['end_time']);
 
-  \store\update_appointment_times($appointment['id'], $starts_at, $ends_at)
-    or fail("Could not move or resize appointment.");
-  \store\insert_log('appointments', $appointment['id'], "Moved or resized appointment.", 'user')
-    or fail("Could not create audit entry.");
+  \store\transaction(function() use ($appointment, $starts_at, $ends_at) {
+    \store\update_appointment_times($appointment['id'], $starts_at, $ends_at)
+      or fail("Could not move or resize appointment.");
+
+    \store\put_log('appointments', $appointment['id'], "Moved or resized appointment.", 'user')
+      or fail("Could not create audit entry.");
+
+    \caldav\mark_resource_changed('appointment', $appointment['id']);
+  });
 
   http_response_code(204); exit;

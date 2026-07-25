@@ -10,7 +10,7 @@
     ) or fail("Could not update bookmark.");
 
     \store\set_bookmark_tags($_POST['id'], $_POST['tags'] ?? []);
-    \store\insert_log('bookmarks', $_POST['id'], "Updated bookmark.", 'user')
+    \store\put_log('bookmarks', $_POST['id'], "Updated bookmark.", 'user')
       or fail("Could not create audit entry.");
 
     if(isset($_POST['close'])) {

@@ -30,7 +30,7 @@
   }
 
   if($_POST) {
-    \store\insert_log('config', 'general', "Updated general settings.", 'user')
+    \store\put_log('config', 'general', "Updated general settings.", 'user')
       or fail("Could not create audit entry.");
   }
 

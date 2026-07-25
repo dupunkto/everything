@@ -5,7 +5,6 @@
     or fail("Appointment not found.", status: 404);
 
   $is_subscription = !empty($appointment['subscription_id']);
-  $source_color = $appointment['calendar_color'] ?? $appointment['subscription_color'];
 
   if(isset($_POST['id'])) {
     $going = cast_boolean(@$_POST['going']);
@@ -15,35 +14,46 @@
     $travel_before = $travel ? max(0, (int) $_POST['travel_before']) : 0;
     $travel_after = $travel ? max(0, (int) $_POST['travel_after']) : 0;
 
-    if($is_subscription) {
-      \store\update_appointment_meta(
-        $appointment['id'], $going, $urgent, $travel_before, $travel_after
-      ) or fail("Could not update appointment.");
-    }
-    else {
-      $recurrence = !empty($_POST['repeating'])
-        && !empty($_POST['recurrence']) ? $_POST['recurrence'] : null;
+    \store\transaction(function() use ($appointment, $is_subscription, $going, $urgent, $travel_before, $travel_after) {
+      if($is_subscription) {
+        \store\update_appointment_meta(
+          $appointment['id'], $going, $urgent, $travel_before, $travel_after
+        ) or fail("Could not update appointment.");
+      }
+      else {
+        $recurrence = isset($_POST['repeating']) && isset($_POST['recurrence']) ? 
+          $_POST['recurrence'] : null;
 
-      \store\update_appointment(
-        $appointment['id'],
-        $_POST['title'],
-        $_POST['content'],
-        cast_datetime_utc($_POST['start_date'], $_POST['start_time']),
-        cast_datetime_utc($_POST['end_date'], $_POST['end_time']),
-        $_POST['location'],
-        $_POST['meeting'],
-        $recurrence,
-        cast_boolean(@$_POST['all_day']),
-        $going,
-        $urgent,
-        $travel_before,
-        $travel_after,
-        @$_POST['calendar_id'] ?: null
-      ) or fail("Could not update appointment.");
-    }
+        $starts_at = cast_datetime_utc($_POST['start_date'], $_POST['start_time']);
+        $ends_at = cast_datetime_utc($_POST['end_date'], $_POST['end_time']);
 
-    \store\insert_log('appointments', $appointment['id'], "Updated appointment.", 'user')
-      or fail("Could not create audit entry.");
+        $recurrence_start = (new \DateTimeImmutable($starts_at))->setTimezone(new \DateTimeZone(TIMEZONE));
+        if($recurrence && !\recurrence\valid($recurrence, $recurrence_start))
+          fail("Invalid recurrence rule.", status: 400);
+
+        \store\update_appointment(
+          $appointment['id'],
+          $_POST['title'],
+          $_POST['content'],
+          $starts_at,
+          $ends_at,
+          $_POST['location'],
+          $_POST['meeting'],
+          $recurrence,
+          cast_boolean(@$_POST['all_day']),
+          $going,
+          $urgent,
+          $travel_before,
+          $travel_after,
+          @$_POST['calendar_id'] ?: null
+        ) or fail("Could not update appointment.");
+      }
+
+      \store\put_log('appointments', $appointment['id'], "Updated appointment.", 'user')
+        or fail("Could not create audit entry.");
+
+      \caldav\mark_resource_changed('appointment', $appointment['id']);
+    });
 
     // The caller refreshes the week itself; nothing to render back.
     http_response_code(204); exit;
@@ -55,7 +65,7 @@
   $is_repeating = !empty($appointment['recurrence']);
   $has_travel = (int) $appointment['travel_before'] || (int) $appointment['travel_after'];
 
-  $calendars = $is_subscription ? [] : (\store\list_calendars() ?: []);
+  $calendars = $is_subscription ? [] : \store\list_calendars();
 ?>
 <form id="calendar-edit" x-post="/calendar/edit" x-on="change" x-refresh="#calendar-view">
   <input type="hidden" name="id" value="<?= esc_attr($appointment['id']) ?>">
@@ -81,7 +91,7 @@
             </option>
           <?php endforeach ?>
         </select>
-        <input type="color" value="<?= esc_attr($source_color) ?>" tabindex="-1" readonly>
+        <input type="color" value="<?= esc_attr($appointment['calendar_color'] ?? $appointment['subscription_color']) ?>" tabindex="-1" readonly>
       </div>
     <?php endif ?>
 
@@ -112,7 +122,7 @@
     </label>
 
     <div id="calendar-edit-recurrence" <?= $is_repeating ? '' : 'hidden' ?>>
-      <input name="recurrence" type="text" placeholder="cron or number of days" value="<?= esc_attr($appointment['recurrence'] ?? '') ?>">
+      <input name="recurrence" type="text" placeholder="FREQ=WEEKLY;BYDAY=MO,WE,FR" value="<?= esc_attr($appointment['recurrence'] ?? '') ?>">
     </div>
   <?php endif ?>
 

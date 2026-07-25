@@ -4,14 +4,14 @@
     $starts_at = cast_datetime_utc($_POST['start_date'], $_POST['start_time']);
     $ends_at = cast_datetime_utc($_POST['end_date'], $_POST['end_time']);
 
-    $id = \store\create_timing(
+    $id = \store\put_timing(
       $_POST['description'],
       $starts_at,
       $ends_at
     ) or fail("Could not save timing from $starts_at to $ends_at with description '" . $_POST['description'] . "'.");
 
     \store\set_timing_tags($id, $_POST['tags'] ?? []);
-    \store\insert_log('timings', $id, "Created timing.", 'user')
+    \store\put_log('timings', $id, "Created timing.", 'user')
       or fail("Could not create audit entry.");
 
     include __DIR__ . "/listing.php"; exit;

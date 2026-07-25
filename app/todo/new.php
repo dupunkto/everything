@@ -4,22 +4,38 @@
     $all_day = cast_string($_POST['due_date']) != null
       && cast_string(@$_POST['due_time']) == null;
 
-    $id = \store\create_task(
-      cast_string($_POST['title']),
-      cast_string(@$_POST['content']),
-      cast_string($_POST['status']),
-      cast_boolean($_POST['urgent']),
-      cast_string($_POST['recurrence']),
-      cast_datetime_utc($_POST['open_date'], $_POST['open_time']),
-      cast_datetime_utc($_POST['due_date'], @$_POST['due_time'] ?: "00:00"),
-      $all_day,
-      cast_datetime_utc($_POST['expire_date'], @$_POST['expire_time'] ?: "00:00"),
-      cast_string($_POST['comment'])
-    ) or fail("Could not save task '" . $_POST['title'] . "'.");
+    $open_at = cast_datetime_utc($_POST['open_date'], $_POST['open_time']);
+    $due_at = cast_datetime_utc($_POST['due_date'], @$_POST['due_time'] ?: "00:00");
 
-    \store\set_task_tags($id, $_POST['tags'] ?? []);
-    \store\insert_log('tasks', $id, "Created task.", 'user')
-      or fail("Could not create audit entry.");
+    $recurrence = cast_string($_POST['recurrence']);
+    $recurrence_start = new \DateTimeImmutable($due_at ?: $open_at);
+    if($recurrence && !\recurrence\valid($recurrence,
+      $recurrence_start->setTimezone(new \DateTimeZone(TIMEZONE))))
+      fail("Invalid recurrence rule.", status: 400);
+
+    $id = \store\transaction(function() use ($recurrence, $open_at, $due_at, $all_day) {
+      $id = \store\put_task(
+        cast_string($_POST['title']),
+        cast_string(@$_POST['content']),
+        cast_string($_POST['status']),
+        cast_boolean($_POST['urgent']),
+        $recurrence,
+        $open_at,
+        $due_at,
+        $all_day,
+        cast_datetime_utc($_POST['expire_date'], @$_POST['expire_time'] ?: "00:00"),
+        cast_string($_POST['comment'])
+      ) or fail("Could not save task '" . $_POST['title'] . "'.");
+
+      \store\set_task_tags($id, $_POST['tags'] ?? []);
+      
+      \store\put_log('tasks', $id, "Created task.", 'user')
+        or fail("Could not create audit entry.");
+      
+      \caldav\mark_resource_changed('task', $id);
+      
+      return $id;
+    });
 
     http_response_code(303);
     header("Location: /todo"); exit;
@@ -70,7 +86,7 @@
 
           <div class="field">
             <label for="recurrence">Repeat</label>
-            <input type="text" id="recurrence" name="recurrence" placeholder="cron or number of days">
+            <input type="text" id="recurrence" name="recurrence" placeholder="FREQ=WEEKLY;BYDAY=MO,WE,FR">
           </div>
 
           <div class="field">

@@ -1,11 +1,11 @@
 <?php
 
   if(isset($_POST["title"], $_POST["content"])) {
-    $id = \store\create_note($_POST['title'], $_POST['content'], gmdate('c'))
+    $id = \store\put_note($_POST['title'], $_POST['content'], gmdate('c'))
       or fail("Could not save note '" . $_POST['title'] . "'.");
 
     \store\set_note_tags($id, $_POST['tags'] ?? []);
-    \store\insert_log('notes', $id, "Created note.", 'user')
+    \store\put_log('notes', $id, "Created note.", 'user')
       or fail("Could not create audit entry.");
 
     http_response_code(303);

@@ -14,8 +14,6 @@ CREATE TABLE IF NOT EXISTS audit_log (
   PRIMARY KEY (id)
 );
 
-CREATE INDEX audit_log_record ON audit_log (table_name, record_id, changed_at);
-
 CREATE TABLE IF NOT EXISTS config (
   property text NOT NULL,
   value text NOT NULL,
@@ -230,8 +228,6 @@ CREATE TABLE IF NOT EXISTS tasks (
   due_all_day boolean NOT NULL DEFAULT false,
   expire_at datetime,
   -- status is a virtual field, derived from task_log
-  revision int(11) NOT NULL DEFAULT 0,
-  touched_at datetime NOT NULL DEFAULT current_timestamp,
   PRIMARY KEY (id)
 );
 
@@ -262,8 +258,6 @@ CREATE TABLE IF NOT EXISTS wishes (
   added_at datetime NOT NULL,
   -- this name was chosen to stay consistent with the tasks schema
   urgent boolean NOT NULL,
-  revision int(11) NOT NULL DEFAULT 0,
-  touched_at datetime NOT NULL DEFAULT current_timestamp,
   PRIMARY KEY (id)
 );
 
@@ -358,8 +352,6 @@ CREATE TABLE IF NOT EXISTS appointments (
   travel_after int(11) NOT NULL DEFAULT 0, -- minutes
   starts_at datetime NOT NULL,
   ends_at datetime NOT NULL,
-  revision int(11) NOT NULL DEFAULT 0,
-  touched_at datetime NOT NULL DEFAULT current_timestamp,
   FOREIGN KEY (calendar_id) REFERENCES calendars (id) ON DELETE CASCADE,
   FOREIGN KEY (subscription_id) REFERENCES subscriptions (id) ON DELETE CASCADE,
   FOREIGN KEY (address_id) REFERENCES addresses (id) ON DELETE SET NULL,
@@ -443,6 +435,35 @@ CREATE TABLE IF NOT EXISTS properties (
   PRIMARY KEY (id)
 );
 
+CREATE TABLE IF NOT EXISTS caldav_revision (
+  id int(11) NOT NULL,
+  revision int(11) NOT NULL DEFAULT 0,
+  PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS caldav_resources (
+  entity_type text NOT NULL, -- appointment|task|wish
+  entity_id text NOT NULL,
+  uid text NOT NULL,
+  href text NOT NULL,
+  collection text,
+  revision int(11) NOT NULL DEFAULT 0,
+  touched_at datetime NOT NULL DEFAULT current_timestamp,
+  PRIMARY KEY (entity_type, entity_id),
+  UNIQUE (uid),
+  UNIQUE (collection, href)
+);
+
+CREATE TABLE IF NOT EXISTS caldav_changes (
+  revision int(11) NOT NULL,
+  collection text NOT NULL,
+  href text NOT NULL,
+  operation text NOT NULL, -- upsert|delete
+  changed_at datetime NOT NULL DEFAULT current_timestamp,
+  CHECK (operation IN ('upsert', 'delete')),
+  PRIMARY KEY (revision, collection, href)
+);
+
 CREATE TABLE IF NOT EXISTS timings (
   id text NOT NULL, -- humid
   description text NOT NULL,
@@ -475,7 +496,7 @@ CREATE TABLE IF NOT EXISTS quotas (
   PRIMARY KEY (tag_id)
 );
 
-CREATE TABLE IF NOT EXISTS imap_connections (
+CREATE TABLE IF NOT EXISTS imap_credentials (
   id int(11) NOT NULL,
   email text NOT NULL,
   name text NOT NULL,
@@ -506,3 +527,6 @@ CREATE TABLE IF NOT EXISTS bookmarks_tags (
   UNIQUE (bookmark_id, tag_id),
   PRIMARY KEY (id)
 );
+
+CREATE INDEX audit_log_lookup ON audit_log (table_name, record_id, changed_at);
+CREATE INDEX caldav_changes_lookup ON caldav_changes (collection, revision);

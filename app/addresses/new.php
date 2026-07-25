@@ -18,11 +18,11 @@
       $message = "Updated address.";
     }
     else {
-      $id = \store\create_address(...$fields);
+      $id = \store\put_address(...$fields);
       $message = "Created address.";
     }
 
-    \store\insert_log('addresses', $id, $message, 'user')
+    \store\put_log('addresses', $id, $message, 'user')
       or fail("Could not create audit entry.");
   }
 

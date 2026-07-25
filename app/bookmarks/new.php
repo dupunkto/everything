@@ -4,7 +4,7 @@
     $url = cast_string($_POST['url']) or fail("URL is required.");
     $meta = \bookmarks\fetch_meta($url);
 
-    $id = \store\create_bookmark(
+    $id = \store\put_bookmark(
       $url,
       $meta['label'],
       cast_string(@$_POST['note']),
@@ -13,7 +13,7 @@
     ) or fail("Could not save bookmark.");
 
     \store\set_bookmark_tags($id, $_POST['tags'] ?? []);
-    \store\insert_log('bookmarks', $id, "Created bookmark.", 'user')
+    \store\put_log('bookmarks', $id, "Created bookmark.", 'user')
       or fail("Could not create audit entry.");
 
     http_response_code(303);

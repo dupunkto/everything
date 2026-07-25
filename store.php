@@ -18,14 +18,13 @@ switch($_DATABASE['scheme']) {
   case 'sqlite': require __DIR__ . "/store/adapter/sqlite.php"; break;
 }
 
-// Tasks
-
+define('ENUM_SSL_MODE', ['plain', 'tls', 'ssl']);
 define('ENUM_TASK_STATUS', ['todo', 'wip', 'backlog', 'blocked', 'done', 'nvm']);
 define('ENUM_WISH_STATUS', ['dream', 'bought', 'nvm']);
 
 // Notes
 
-function create_note($title, $content, $date = null) {
+function put_note($title, $content, $date = null) {
   $ok = exec_query('INSERT INTO notes (
     id,
     title,
@@ -93,7 +92,7 @@ function delete_note($id) {
 
 // Tasks
 
-function create_task(
+function put_task(
   $title,
   $content,
   $status,
@@ -227,6 +226,7 @@ function list_tasks($query = "", $override = [], $respect_horizon = true) {
   $include = [];
   $exclude = [];
   $urgent = null;
+  $expired = null;
 
   foreach(explode(" ", $query) as $segment) {
     $parts = explode(":", $segment);
@@ -234,6 +234,7 @@ function list_tasks($query = "", $override = [], $respect_horizon = true) {
     [$selector, $value] = $parts;
 
     if($value == 'urgent') $urgent = $selector == "is";
+    elseif($value == 'expired') $expired = $selector == 'is';
     elseif($selector == "is" && $value == 'open') $include = [...$include, 'todo', 'wip', 'blocked'];
     elseif($selector == "is" && in_array($value, ENUM_TASK_STATUS)) $include[] = $value;
     elseif($selector == "not" && in_array($value, ENUM_TASK_STATUS)) $exclude[] = $value;
@@ -285,7 +286,9 @@ function list_tasks($query = "", $override = [], $respect_horizon = true) {
 
     if(in_array($task['id'], $override, true)) { $result[] = $task; continue; }
 
-    if($respect_horizon && !$state['visible']) continue;
+    $is_expired = $task['expire_at'] && strtotime($task['expire_at']) <= time();
+    if($expired !== null && $is_expired != $expired) continue;
+    if($respect_horizon && !$is_expired && !$state['visible']) continue;
     if($urgent !== null && filter_var($task['urgent'], FILTER_VALIDATE_BOOLEAN) != $urgent) continue;
     if($include && !in_array($state['status'], $include)) continue;
     if($exclude && in_array($state['status'], $exclude)) continue;
@@ -371,7 +374,7 @@ function delete_task($id) {
 
 // Wishes
 
-function create_wish($title, $content, $status, $urgent = false, $date = null) {
+function put_wish($title, $content, $status, $urgent = false, $date = null) {
   in_array($status, ENUM_WISH_STATUS) or die("status $status does not exist");
 
   $ok = exec_query('INSERT INTO wishes (
@@ -505,7 +508,7 @@ function delete_wish($id) {
 
 // Bookmarks
 
-function create_bookmark($url, $label = null, $note = null, $favicon = null, $date = null) {
+function put_bookmark($url, $label = null, $note = null, $favicon = null, $date = null) {
   $ok = exec_query('INSERT INTO bookmarks (
     id,
     label,
@@ -583,7 +586,7 @@ function delete_bookmark($id) {
 
 // Tracker
 
-function create_timing($description, $starts_at, $ends_at, $task_id = null) {
+function put_timing($description, $starts_at, $ends_at, $task_id = null) {
   if($task_id) get_task($task_id) or die("task with ID $task_id does not exist");
 
   $ok = exec_query('INSERT INTO timings (
@@ -682,7 +685,7 @@ function quota_minutes($tag_id, $period, $hours, $minutes, $start_date) {
   return $duration > 0 ? $duration : null;
 }
 
-function create_quota($tag_id, $period, $hours, $minutes, $start_date) {
+function put_quota($tag_id, $period, $hours, $minutes, $start_date) {
   $duration = quota_minutes($tag_id, $period, $hours, $minutes, $start_date);
   if(!$duration) return false;
 
@@ -705,7 +708,7 @@ function delete_quota($tag_id) {
 
 // Tags
 
-function create_tag($label, $color, $parent_id) {
+function put_tag($label, $color, $parent_id) {
   if($parent_id) get_tag($parent_id) or die("tag with ID $parent_id does not exist");
 
   $ok = exec_query('INSERT INTO tags (
@@ -832,7 +835,7 @@ function append_order($table) {
 
 // Calendars
 
-function create_calendar($title, $subtitle, $color) {
+function put_calendar($title, $subtitle, $color) {
   $ok = exec_query('INSERT INTO calendars (
     id,
     title,
@@ -850,12 +853,13 @@ function create_calendar($title, $subtitle, $color) {
   return $ok ? $id : null;
 }
 
-function update_calendar($id, $title, $subtitle, $color) {
+function update_calendar($id, $title, $subtitle, $color, $position = null) {
   return exec_query('UPDATE calendars SET
     title = ?,
     subtitle = ?,
-    color = ?
-  WHERE id = ?', [$title, $subtitle, $color, $id]);
+    color = ?,
+    position = COALESCE(?, position)
+  WHERE id = ?', [$title, $subtitle, $color, $position, $id]);
 }
 
 function list_calendars() {
@@ -876,7 +880,7 @@ function delete_calendar($id) {
 
 // Subscriptions
 
-function create_subscription($title, $subtitle, $url, $color, $filter = null) {
+function put_subscription($title, $subtitle, $url, $color, $filter = null) {
   $ok = exec_query('INSERT INTO subscriptions (
     id,
     title,
@@ -920,7 +924,7 @@ function delete_subscription($id) {
   return exec_query('DELETE FROM subscriptions WHERE id = ?', [$id]);
 }
 
-// Calendar sources
+// Sources
 
 function list_sources() {
   return all('SELECT * FROM sources ORDER BY position ASC, title ASC');
@@ -958,79 +962,9 @@ function reorder_source_by_type($type, $ids) {
   return true;
 }
 
-// Habits
-
-function create_habit($title, $every, $color, $icon) {
-  $ok = exec_query('INSERT INTO habits (
-    id,
-    title,
-    every,
-    color,
-    icon
-  ) VALUES (?, ?, ?, ?, ?)', [
-    $id = generate_humid(),
-    $title,
-    $every,
-    $color,
-    $icon
-  ]);
-
-  return $ok ? $id : null;
-}
-
-function update_habit($id, $title, $every, $color, $icon) {
-  return exec_query('UPDATE habits SET
-    title = ?,
-    every = ?,
-    color = ?,
-    icon = ?
-  WHERE id = ?', [$title, $every, $color, $icon, $id]);
-}
-
-function list_habits() {
-  return all('SELECT * FROM habits ORDER BY title');
-}
-
-function get_habit($id) {
-  return one('SELECT * FROM habits WHERE id = ?', [$id]);
-}
-
-function delete_habit($id) {
-  return exec_query('DELETE FROM habits WHERE id = ?', [$id]);
-}
-
-function list_habit_logs($from, $to) {
-  return all('SELECT habit_id, DATE(changed_at) AS date
-    FROM habit_log
-    WHERE changed_at >= ? AND changed_at < ?
-    ORDER BY changed_at', [$from, $to]);
-}
-
-function get_habit_log($habit_id, $date) {
-  return one('SELECT * FROM habit_log
-    WHERE habit_id = ? AND DATE(changed_at) = ?', [$habit_id, $date]);
-}
-
-function log_habit($habit_id, $date) {
-  if(get_habit_log($habit_id, $date)) return true;
-
-  $id = @one('SELECT MAX(id) + 1 AS id FROM habit_log')['id'] ?: 1;
-
-  return exec_query('INSERT INTO habit_log (
-    id,
-    habit_id,
-    changed_at
-  ) VALUES (?, ?, ?)', [$id, $habit_id, "$date 00:00:00"]);
-}
-
-function unlog_habit($habit_id, $date) {
-  return exec_query('DELETE FROM habit_log
-    WHERE habit_id = ? AND DATE(changed_at) = ?', [$habit_id, $date]);
-}
-
 // Appointments
 
-function create_calendar_appointment(
+function put_calendar_appointment(
   $calendar_id,
   $title,
   $content,
@@ -1079,7 +1013,7 @@ function create_calendar_appointment(
   ]) ? $id : null;
 }
 
-function create_subscription_appointment(
+function put_subscription_appointment(
   $id,
   $subscription_id,
   $title,
@@ -1235,6 +1169,21 @@ function list_appointments($from, $to) {
   ORDER BY a.starts_at', [$to, $from]);
 }
 
+function list_calendar_appointments() {
+  return all('SELECT * FROM appointments
+    WHERE subscription_id IS NULL ORDER BY id') ?? [];
+}
+
+function list_subscription_appointments() {
+  return all('SELECT * FROM appointments
+    WHERE calendar_id IS NULL ORDER BY id') ?? [];
+}
+
+function list_appointments_by_calendar($calendar_id) {
+  return all('SELECT * FROM appointments
+    WHERE calendar_id = ?', [$calendar_id]);
+}
+
 function list_appointments_by_subscription($subscription_id) {
   return all('SELECT * FROM appointments
     WHERE subscription_id = ?', [$subscription_id]);
@@ -1278,7 +1227,75 @@ function delete_appointment($id) {
   return exec_query('DELETE FROM appointments WHERE id = ?', [$id]);
 }
 
-define('ENUM_SSL_MODE', ['plain', 'tls', 'ssl']);
+// Habits
+
+function put_habit($title, $every, $color, $icon) {
+  $ok = exec_query('INSERT INTO habits (
+    id,
+    title,
+    every,
+    color,
+    icon
+  ) VALUES (?, ?, ?, ?, ?)', [
+    $id = generate_humid(),
+    $title,
+    $every,
+    $color,
+    $icon
+  ]);
+
+  return $ok ? $id : null;
+}
+
+function update_habit($id, $title, $every, $color, $icon) {
+  return exec_query('UPDATE habits SET
+    title = ?,
+    every = ?,
+    color = ?,
+    icon = ?
+  WHERE id = ?', [$title, $every, $color, $icon, $id]);
+}
+
+function list_habits() {
+  return all('SELECT * FROM habits ORDER BY title');
+}
+
+function get_habit($id) {
+  return one('SELECT * FROM habits WHERE id = ?', [$id]);
+}
+
+function delete_habit($id) {
+  return exec_query('DELETE FROM habits WHERE id = ?', [$id]);
+}
+
+function list_habit_logs($from, $to) {
+  return all('SELECT habit_id, DATE(changed_at) AS date
+    FROM habit_log
+    WHERE changed_at >= ? AND changed_at < ?
+    ORDER BY changed_at', [$from, $to]);
+}
+
+function get_habit_log($habit_id, $date) {
+  return one('SELECT * FROM habit_log
+    WHERE habit_id = ? AND DATE(changed_at) = ?', [$habit_id, $date]);
+}
+
+function log_habit($habit_id, $date) {
+  if(get_habit_log($habit_id, $date)) return true;
+
+  $id = @one('SELECT MAX(id) + 1 AS id FROM habit_log')['id'] ?: 1;
+
+  return exec_query('INSERT INTO habit_log (
+    id,
+    habit_id,
+    changed_at
+  ) VALUES (?, ?, ?)', [$id, $habit_id, "$date 00:00:00"]);
+}
+
+function unlog_habit($habit_id, $date) {
+  return exec_query('DELETE FROM habit_log
+    WHERE habit_id = ? AND DATE(changed_at) = ?', [$habit_id, $date]);
+}
 
 // Contacts
 
@@ -1362,7 +1379,7 @@ function list_contact_tags($id) {
   return $tags === false ? false : inherit_tag_colors($tags);
 }
 
-function create_contact(
+function put_contact(
   $display_name,
   $first_name,
   $middle_name,
@@ -1447,7 +1464,7 @@ function set_contact_addresses($id, $rows) {
   exec_query('DELETE FROM contact_addresses WHERE contact_id = ?', [$id]);
 
   foreach($rows as $row) {
-    $address_id = create_address(
+    $address_id = put_address(
       label: null,
       street_name: $row['street_name'],
       street_number: $row['street_number'],
@@ -1544,7 +1561,7 @@ function list_organisation_tags($id) {
   return $tags === false ? false : inherit_tag_colors($tags);
 }
 
-function create_organisation($display_name, $legal_name, $registration_number, $vat_number, $note) {
+function put_organisation($display_name, $legal_name, $registration_number, $vat_number, $note) {
   $ok = exec_query('INSERT INTO organisations
     (display_name, legal_name, registration_number, vat_number, note)
     VALUES (?, ?, ?, ?, ?)',
@@ -1587,7 +1604,7 @@ function set_organisation_addresses($id, $rows) {
   exec_query('DELETE FROM org_addresses WHERE org_id = ?', [$id]);
 
   foreach($rows as $row) {
-    $address_id = create_address(
+    $address_id = put_address(
       label: null,
       street_name: $row['street_name'],
       street_number: $row['street_number'],
@@ -1629,7 +1646,7 @@ function get_address($id) {
   return one("SELECT * FROM addresses WHERE id = ?", [$id]);
 }
 
-function create_address(
+function put_address(
   $label,
   $street_name,
   $street_number,
@@ -1708,6 +1725,198 @@ function delete_address($id) {
   return exec_query('DELETE FROM addresses WHERE id = ?', [$id]);
 }
 
+// CalDAV helpers
+
+function list_caldav_resources() {
+  return all('SELECT * FROM caldav_resources ORDER BY entity_type, entity_id');
+}
+
+function list_caldav_resources_by_collection($collection) {
+  return all('SELECT * FROM caldav_resources
+    WHERE collection = ? ORDER BY href', [$collection]);
+}
+
+function get_caldav_resource($type, $id) {
+  return one('SELECT * FROM caldav_resources
+    WHERE entity_type = ? AND entity_id = ?', [$type, $id]);
+}
+
+function get_caldav_resource_by_uid($uid) {
+  return one('SELECT * FROM caldav_resources WHERE uid = ?', [$uid]);
+}
+
+function get_caldav_resource_by_href($collection, $href) {
+  return one('SELECT * FROM caldav_resources
+    WHERE collection = ? AND href = ?', [$collection, $href]);
+}
+
+function update_caldav_resource($type, $id, $href, $collection, $uid = null) {
+  $resource = get_caldav_resource($type, $id);
+  $uid ??= @$resource['uid'] ?: $id;
+  $revision = @$resource['revision'] ?: 0;
+  $touched_at = @$resource['touched_at'] ?: gmdate('c');
+
+  exec_query('DELETE FROM caldav_resources
+    WHERE entity_type = ? AND entity_id = ?', [$type, $id]);
+
+  return exec_query('INSERT INTO caldav_resources (
+    entity_type, entity_id, uid, href, collection, revision, touched_at
+  ) VALUES (?, ?, ?, ?, ?, ?, ?)', [
+    $type, $id, $uid, $href, $collection, $revision, $touched_at
+  ]);
+}
+
+function touch_caldav_resource($type, $id) {
+  return exec_query('UPDATE caldav_resources SET
+    revision = revision + 1,
+    touched_at = ?
+    WHERE entity_type = ? AND entity_id = ?', [gmdate('c'), $type, $id]);
+}
+
+function delete_caldav_resource($type, $id) {
+  return exec_query('DELETE FROM caldav_resources
+    WHERE entity_type = ? AND entity_id = ?', [$type, $id]);
+}
+
+// CalDAV alarms
+
+function list_alarms($type, $id) {
+  $key = match($type) {
+    'appointment' => 'appointment_id',
+    'task' => 'task_id',
+    'wish' => 'wish_id',
+    default => null
+  };
+  return $key ? all("SELECT * FROM alarms WHERE $key = ? ORDER BY id", [$id]) ?? [] : [];
+}
+
+function replace_alarms($type, $id, $alarms) {
+  $key = match($type) {
+    'appointment' => 'appointment_id',
+    'task' => 'task_id',
+    'wish' => 'wish_id',
+    default => null
+  };
+  if(!$key || !exec_query("DELETE FROM alarms WHERE $key = ?", [$id])) return false;
+
+  foreach($alarms as $alarm) {
+    $values = [
+      'appointment_id' => null,
+      'task_id' => null,
+      'wish_id' => null,
+    ];
+    $values[$key] = $id;
+
+    if(!exec_query('INSERT INTO alarms (
+      id, appointment_id, task_id, wish_id, trigger_at,
+      trigger_offset, relative_to, description
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [
+      @$alarm['id'] ?: generate_humid(),
+      $values['appointment_id'],
+      $values['task_id'],
+      $values['wish_id'],
+      $alarm['trigger_at'],
+      $alarm['trigger_offset'],
+      $alarm['relative_to'],
+      $alarm['description'],
+    ])) return false;
+  }
+
+  return true;
+}
+
+// CalDAV properties
+
+function list_properties($type, $id) {
+  $key = match($type) {
+    'appointment' => 'appointment_id',
+    'task' => 'task_id',
+    'wish' => 'wish_id',
+    'alarm' => 'alarm_id',
+    default => null
+  };
+  return $key ? all("SELECT * FROM properties WHERE $key = ? ORDER BY position, id", [$id]) ?? [] : [];
+}
+
+function replace_properties($type, $id, $properties) {
+  $key = match($type) {
+    'appointment' => 'appointment_id',
+    'task' => 'task_id',
+    'wish' => 'wish_id',
+    'alarm' => 'alarm_id',
+    default => null
+  };
+  if(!$key || !exec_query("DELETE FROM properties WHERE $key = ?", [$id])) return false;
+
+  foreach(array_values($properties) as $position => $property) {
+    $values = [
+      'appointment_id' => null,
+      'task_id' => null,
+      'wish_id' => null,
+      'alarm_id' => null,
+    ];
+    $values[$key] = $id;
+
+    if(!exec_query('INSERT INTO properties (
+      appointment_id, task_id, wish_id, alarm_id,
+      name, parameters, value, position
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [
+      $values['appointment_id'],
+      $values['task_id'],
+      $values['wish_id'],
+      $values['alarm_id'],
+      strtoupper($property['name']),
+      json_encode($property['parameters'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+      $property['value'],
+      $position,
+    ])) return false;
+  }
+
+  return true;
+}
+
+// CalDAV change tracking
+
+function caldav_global_revision() {
+  return (int) (@one('SELECT revision FROM caldav_revision WHERE id = 1')['revision'] ?: 0);
+}
+
+function caldav_collection_revision($collection) {
+  return (int) (@one('SELECT MAX(revision) AS revision FROM caldav_changes
+    WHERE collection = ?', [$collection])['revision'] ?: 0);
+}
+
+function put_caldav_changes($changes) {
+  if(!exec_query('UPDATE caldav_revision SET revision = revision + 1 WHERE id = 1', [])) return false;
+  $revision = caldav_global_revision();
+
+  foreach($changes as $change) {
+    if(!exec_query('INSERT INTO caldav_changes (
+      revision, collection, href, operation
+    ) VALUES (?, ?, ?, ?)', [
+      $revision,
+      $change['collection'],
+      $change['href'],
+      $change['operation'],
+    ])) return false;
+
+  }
+
+  return $revision;
+}
+
+function list_caldav_changes($collection, $revision) {
+  return all('SELECT c.* FROM caldav_changes c
+    WHERE c.collection = ? AND c.revision > ?
+      AND NOT EXISTS (
+        SELECT 1 FROM caldav_changes newer
+        WHERE newer.collection = c.collection
+          AND newer.href = c.href
+          AND newer.revision > c.revision
+      )
+    ORDER BY c.revision, c.href', [$collection, $revision]) ?? [];
+}
+
 // Configuration
 
 function config() {
@@ -1734,7 +1943,7 @@ function update_config($property, $value) {
 
 // Audit log
 
-function insert_log($table_name, $record_id, $message, $author) {
+function put_log($table_name, $record_id, $message, $author) {
   return exec_query('INSERT INTO audit_log (
     table_name,
     record_id,
@@ -1747,6 +1956,13 @@ function list_logs($table_name, $record_id) {
   return all('SELECT * FROM audit_log
     WHERE table_name = ? AND record_id = ?
     ORDER BY changed_at ASC, id ASC', [$table_name, $record_id]) ?? [];
+}
+
+function get_log_dates($table, $id) {
+  return one('SELECT
+    MIN(changed_at) AS created_at,
+    MAX(changed_at) AS modified_at
+    FROM audit_log WHERE table_name = ? AND record_id = ?', [$table, $id]);
 }
 
 // Migrations
@@ -1819,6 +2035,23 @@ function exec_query($sql, $params) {
   catch(\PDOException $e) {
     trigger_error($e, E_USER_WARNING);
     return null;
+  }
+}
+
+// Transactions
+
+function transaction($callback) {
+  $nested = DBH->inTransaction();
+  if(!$nested) DBH->beginTransaction();
+
+  try {
+    $result = $callback();
+    if(!$nested) DBH->commit();
+    return $result;
+  }
+  catch(\Throwable $e) {
+    if(!$nested && DBH->inTransaction()) DBH->rollBack();
+    throw $e;
   }
 }
 

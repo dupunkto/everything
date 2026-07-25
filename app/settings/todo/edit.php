@@ -14,7 +14,7 @@
   }
 
   if($_POST) {
-    \store\insert_log('config', 'todo', "Updated ToDo settings.", 'user')
+    \store\put_log('config', 'todo', "Updated ToDo settings.", 'user')
       or fail("Could not create audit entry.");
   }
 

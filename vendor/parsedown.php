@@ -1,5 +1,5 @@
 <?php
-// Parsedown <http://parsedown.org>
+// Parsedown 1.7.4 <https://parsedown.org>
 // Written by Emanuil Rusev, MIT licensed.
 
 // Vendored because I hate PHP package management.

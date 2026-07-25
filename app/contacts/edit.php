@@ -41,7 +41,7 @@
           cast_string($_POST['note'])
         ) or fail("Could not update organisation.");
       } else {
-        $id = \store\create_organisation(
+        $id = \store\put_organisation(
           cast_string($_POST['display_name']),
           cast_string($_POST['legal_name']),
           cast_string($_POST['registration_number']),
@@ -71,7 +71,7 @@
           cast_string($_POST['note'])
         ) or fail("Could not update contact.");
       } else {
-        $id = \store\create_contact(
+        $id = \store\put_contact(
           cast_string($_POST['display_name']),
           cast_string($_POST['first_name']),
           cast_string($_POST['middle_name']),
@@ -95,7 +95,7 @@
 
     $table = $kind === 'org' ? 'organisations' : 'contacts';
     $label = $kind === 'org' ? "organisation" : "contact";
-    \store\insert_log($table, $id, ($creating ? "Created" : "Updated") . " $label.", 'user')
+    \store\put_log($table, $id, ($creating ? "Created" : "Updated") . " $label.", 'user')
       or fail("Could not create audit entry.");
 
     $_GET['kind'] = $kind;

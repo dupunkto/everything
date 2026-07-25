@@ -9,7 +9,7 @@
     ) or fail("Could not update note.");
 
     \store\set_note_tags($_POST['id'], $_POST['tags'] ?? []);
-    \store\insert_log('notes', $_POST['id'], "Updated note.", 'user')
+    \store\put_log('notes', $_POST['id'], "Updated note.", 'user')
       or fail("Could not create audit entry.");
 
     if(isset($_POST['close'])) {

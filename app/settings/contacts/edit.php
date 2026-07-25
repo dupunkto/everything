@@ -20,7 +20,7 @@
   }
 
   if($_POST) {
-    \store\insert_log('config', 'contacts', "Updated contact settings.", 'user')
+    \store\put_log('config', 'contacts', "Updated contact settings.", 'user')
       or fail("Could not create audit entry.");
   }
 

@@ -4,6 +4,9 @@
 define('EVERYTHING_VERSION', "0.1-preview");
 define('STORE_VERSION', 0);
 
+require __DIR__ . "/vendor/sabre.php";
+require __DIR__ . "/vendor/parsedown.php";
+
 require __DIR__ . "/store.php";
 require __DIR__ . "/config.php";
 require __DIR__ . "/init.php";
@@ -17,7 +20,8 @@ require __DIR__ . "/core/forms.php";
 require __DIR__ . "/core/dates.php";
 require __DIR__ . "/core/geo.php";
 require __DIR__ . "/core/astro.php";
-require __DIR__ . "/core/ical.php";
+require __DIR__ . "/core/icalendar.php";
+require __DIR__ . "/core/caldav.php";
 require __DIR__ . "/core/utils.php";
 
 require __DIR__ . "/core/logic/query.php";
@@ -27,6 +31,3 @@ require __DIR__ . "/core/logic/calendar.php";
 require __DIR__ . "/core/logic/habits.php";
 require __DIR__ . "/core/logic/quotas.php";
 require __DIR__ . "/core/logic/bookmarks.php";
-require __DIR__ . "/core/logic/subscription.php";
-
-require __DIR__ . "/vendor/parsedown.php";

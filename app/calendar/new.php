@@ -1,16 +1,30 @@
 <?php
   // Drag-to-create target for the week view.
 
-  CALENDAR_DEFAULT_CALENDAR or fail("No calendar to create appointments on.", status: 409);
+  if(!CALENDAR_DEFAULT_CALENDAR) {
+    fail("No default calendar available.", status: 409);
+  }
 
   $starts_at = cast_datetime_utc($_POST['start_date'], $_POST['start_time']);
   $ends_at = cast_datetime_utc($_POST['end_date'], $_POST['end_time']);
 
-  $id = \store\create_calendar_appointment(CALENDAR_DEFAULT_CALENDAR, "New event", null, $starts_at, $ends_at,
-    all_day: cast_boolean(@$_POST['all_day']))
-    or fail("Could not create appointment.");
-  \store\insert_log('appointments', $id, "Created appointment.", 'user')
-    or fail("Could not create audit entry.");
+  $id = \store\transaction(function() use ($starts_at, $ends_at) {
+    $id = \store\put_calendar_appointment(
+      CALENDAR_DEFAULT_CALENDAR,
+      "New event",
+      null,
+      $starts_at,
+      $ends_at,
+      all_day: cast_boolean(@$_POST['all_day'])
+    ) or fail("Could not create appointment.");
+
+    \store\put_log('appointments', $id, "Created appointment.", 'user')
+      or fail("Could not create audit entry.");
+
+    \caldav\mark_resource_changed('appointment', $id);
+
+    return $id;
+  });
 
   header("Content-Type: text/plain");
   echo $id; // Return the ID. The frontend will use this to open an edit modal.

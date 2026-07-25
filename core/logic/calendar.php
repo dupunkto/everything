@@ -53,8 +53,7 @@ function appointments($from, $to) {
     foreach(\recurrence\occurrences(
       $series['recurrence'], $base,
       $window_from->modify("-$duration seconds"),
-      $window_to->modify('-1 second'),
-      null, null
+      $window_to->modify('-1 second')
     ) as $occurrence) {
       $series['starts_at'] = $occurrence->format("Y-m-d H:i:s");
       $series['ends_at'] = $occurrence->modify("+$duration seconds")->format("Y-m-d H:i:s");

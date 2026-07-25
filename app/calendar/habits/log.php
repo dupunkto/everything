@@ -16,8 +16,11 @@ $ok = $done
   ? \store\unlog_habit($habit['id'], $_POST['date'])
   : \store\log_habit($habit['id'], $_POST['date']);
 
-$ok or fail("Could not update habit log.");
-\store\insert_log('habits', $habit['id'], $done ? "Removed habit log." : "Created habit log.", 'user')
+if(!$ok) {
+  fail("Could not update habit log.");
+}
+
+\store\put_log('habits', $habit['id'], $done ? "Removed habit log." : "Created habit log.", 'user')
   or fail("Could not create audit entry.");
 
 $habit['date'] = $_POST['date'];

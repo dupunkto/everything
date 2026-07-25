@@ -1,24 +1,29 @@
 <?php
 
   if(isset($_POST['id'])) {
-    \store\update_wish(
-      $_POST['id'],
-      cast_string($_POST['title']),
-      cast_string($_POST['content']),
-      cast_boolean($_POST['urgent']),
-      cast_datetime_utc($_POST['date'], $_POST['time'])
-    ) or fail("Could not update wish.");
+    \store\transaction(function() {
+      \store\update_wish(
+        $_POST['id'],
+        cast_string($_POST['title']),
+        cast_string($_POST['content']),
+        cast_boolean($_POST['urgent']),
+        cast_datetime_utc($_POST['date'], $_POST['time'])
+      ) or fail("Could not update wish.");
 
-    \store\set_wish_status($_POST['id'], $_POST['status'], cast_string(@$_POST['comment']))
-      or fail("Could not update wish status.");
+      \store\set_wish_status($_POST['id'], $_POST['status'], cast_string(@$_POST['comment']))
+        or fail("Could not update wish status.");
 
-    $urls = array_map(fn($row) => [...$row, 'price' => cast_float(@$row['price'])],
-      unfold($_POST, 'url', 'url'));
+      $urls = array_map(fn($row) => [...$row, 'price' => cast_float(@$row['price'])],
+        unfold($_POST, 'url', 'url'));
 
-    \store\set_wish_urls($_POST['id'], $urls);
-    \store\set_wish_tags($_POST['id'], $_POST['tags'] ?? []);
-    \store\insert_log('wishes', $_POST['id'], "Updated wish.", 'user')
-      or fail("Could not create audit entry.");
+      \store\set_wish_urls($_POST['id'], $urls);
+      \store\set_wish_tags($_POST['id'], $_POST['tags'] ?? []);
+      
+      \store\put_log('wishes', $_POST['id'], "Updated wish.", 'user')
+        or fail("Could not create audit entry.");
+      
+      \caldav\mark_resource_changed('wish', $_POST['id']);
+    });
 
     if(isset($_POST['close'])) {
       http_response_code(303);
