@@ -46,7 +46,7 @@
     strtoupper($c) . " (" . CURRENCY_SYMBOLS[$c] . ")", ENUM_CURRENCY));
 
 ?>
-<form class="settings-form" x-post="/settings/general/edit" x-on="change" x-target="#general-settings">
+<form class="settings-form" x-post="/settings/locales/edit" x-on="change" x-target="#locale-settings">
   <label>
     Timezone
     <?php \forms\options('timezone', $timezones, \config\fresh_value('timezone'), flat: true) ?>

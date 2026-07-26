@@ -1,9 +1,36 @@
+.settings-menu a:not([href]) {
+  color: light-dark(#888, #999);
+}
+
+.settings-menu a:not([href]):hover {
+  opacity: 1;
+  cursor: default;
+  user-select: none;
+}
+
+.settings-back {
+  color: inherit;
+  flex: 0 0 auto;
+}
+
+.settings-back + h2 {
+  flex: 1;
+}
+
 .settings-listing {
   margin: 1em 0;
 }
 
 .settings-form--spaced {
   margin-bottom: 10px;
+}
+
+.settings-form__phrase {
+  align-items: center;
+  display: flex;
+  font-weight: normal;
+  gap: 0.25em;
+  text-transform: lowercase;
 }
 
 .settings-listing li {
@@ -70,6 +97,7 @@
   margin-inline: 1.5em;
 }
 
+.settings-form__phrase input,
 .settings-editor__phrase input {
   flex: 0 0 3ch;
   width: calc(3ch + 2em); /* the 2em is to compensate for
@@ -234,9 +262,13 @@
   width: 12em;
 }
 
-
 .about {
   text-align: center;
+}
+
+.about-licenses {
+  display: block;
+  margin: 2em 0;
 }
 
 .about-version {

@@ -3,4 +3,4 @@
 <?php elseif(\store\list_quotas()): ?>
   <a href="/tracker/quotas" class="nav__action" title="Quota overview"><i class="fa-solid fa-chart-simple"></i></a>
 <?php endif ?>
-<a href="/settings/tracker?back=/tracker" class="nav__action" title="Tracker settings"><i class="fa-regular fa-gear"></i></a>
+<a href="/settings/quotas?back=/tracker" class="nav__action" title="Tracker settings"><i class="fa-regular fa-gear"></i></a>

@@ -19,12 +19,15 @@
 
 ?>
 <form class="settings-form settings-form--spaced" x-post="/settings/todo/edit" x-on="change" x-target="#todo-settings">
-  <label>
-    Recurrence horizon (days)
-    <input name="recurrence_horizon" type="number" min="0"
-      placeholder="<?= esc_attr(TODO_RECURRENCE_HORIZON) ?>"
-      value="<?= esc_attr(\config\canonical_value('todo.recurrence-horizon') ?? '') ?>">
-  </label>
+  <div>
+    <label for="recurrence-horizon">Recurrence horizon</label>
+    <div class="settings-form__phrase">
+      Tasks reappear
+      <input id="recurrence-horizon" name="recurrence_horizon" type="number" min="0"
+        placeholder="<?= esc_attr(TODO_RECURRENCE_HORIZON) ?>"
+        value="<?= esc_attr(\config\canonical_value('todo.recurrence-horizon') ?? '') ?>"> days before their deadline
+    </div>
+  </div>
 </form>
 
 <form class="settings-form" x-post="/settings/todo/edit" x-on="change" x-target="#todo-settings">
@@ -32,7 +35,7 @@
     Layout
     <?php \forms\options('layout', [
       'masonry' => 'Masonry',
-      'horizontal' => 'Horizontal scroll',
+      'horizontal' => 'Horizontal',
     ], \config\fresh_value('todo.layout'), flat: true) ?>
   </label>
 </form>

@@ -70,13 +70,18 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <?php include __DIR__ . "/../shell/head.php" ?>
+    <?php include __DIR__ . "/shell/head.php" ?>
     <title>Shortcuts</title>
     <link rel="stylesheet" href="<?= CANONICAL ?>/css/settings.css">
   </head>
   <body>
-    <?php include __DIR__ . "/../shell/menu.php" ?>
+    <?php include __DIR__ . "/shell/menu.php" ?>
     <main class="main main--semi-wide">
+      <header class="page-header">
+        <?php $parent = "/settings"; include __DIR__ . "/settings/back.php" ?>
+        <h2>Shortcuts</h2>
+      </header>
+
       <?php foreach(array_filter($groups) as $title => $shortcuts): ?>
         <section class="shortcuts-group">
           <h3><?= esc_inner($title) ?></h3>

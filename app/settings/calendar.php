@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <?php include __DIR__ . "/../shell/head.php" ?>
-    <title>Settings</title>
+    <title>Calendar settings</title>
     <link rel="stylesheet" href="<?= CANONICAL ?>/css/settings.css">
   </head>
   <body>
@@ -10,10 +10,15 @@
     <main class="main">
       <header class="page-header">
         <?php $parent = "/settings/applications"; include __DIR__ . "/back.php" ?>
-        <h2>Contacts</h2>
+        <h2>Calendar</h2>
       </header>
 
-      <section id="contacts-settings" x-get="/settings/contacts/edit"><?php fragment("settings/contacts/edit") ?></section>
+      <ul class="settings-menu">
+        <li><a href="<?= CANONICAL ?>/settings/calendars">Calendars</a></li>
+        <li><a href="<?= CANONICAL ?>/settings/subscriptions">Subscriptions</a></li>
+        <li><a href="<?= CANONICAL ?>/settings/habits">Habits</a></li>
+        <li><a>Sharing</a></li>
+      </ul>
     </main>
   </body>
 </html>

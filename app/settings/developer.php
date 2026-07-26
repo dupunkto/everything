@@ -2,18 +2,20 @@
 <html lang="en">
   <head>
     <?php include __DIR__ . "/../shell/head.php" ?>
-    <title>Settings</title>
+    <title>Developer settings</title>
     <link rel="stylesheet" href="<?= CANONICAL ?>/css/settings.css">
   </head>
   <body>
     <?php include __DIR__ . "/../shell/menu.php" ?>
     <main class="main">
       <header class="page-header">
-        <?php $parent = "/settings/applications"; include __DIR__ . "/back.php" ?>
-        <h2>Contacts</h2>
+        <?php $parent = "/settings"; include __DIR__ . "/back.php" ?>
+        <h2>Developer</h2>
       </header>
 
-      <section id="contacts-settings" x-get="/settings/contacts/edit"><?php fragment("settings/contacts/edit") ?></section>
+      <ul class="settings-menu">
+        <li><a href="<?= CANONICAL ?>/logs">Logs</a></li>
+      </ul>
     </main>
   </body>
 </html>

@@ -2,18 +2,20 @@
 <html lang="en">
   <head>
     <?php include __DIR__ . "/../shell/head.php" ?>
-    <title>Quotas</title>
+    <title>Tracker settings</title>
     <link rel="stylesheet" href="<?= CANONICAL ?>/css/settings.css">
   </head>
   <body>
     <?php include __DIR__ . "/../shell/menu.php" ?>
     <main class="main">
       <header class="page-header">
-        <h2>Quotas</h2>
-        <section id="quota-new" x-get="/settings/tracker/new"><?php fragment("settings/tracker/new") ?></section>
+        <?php $parent = "/settings/applications"; include __DIR__ . "/back.php" ?>
+        <h2>Tracker</h2>
       </header>
 
-      <section id="quotas-listing" x-get="/settings/tracker/listing"><?php fragment("settings/tracker/listing") ?></section>
+      <ul class="settings-menu">
+        <li><a href="<?= CANONICAL ?>/settings/quotas">Quotas</a></li>
+      </ul>
     </main>
   </body>
 </html>

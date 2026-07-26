@@ -32,8 +32,8 @@
   <label>
     Display
     <?php \forms\options('display-format', [
-      'first_last' => 'First Last',
-      'last_first' => 'Last, First',
+      'first_last' => 'John Doe',
+      'last_first' => 'Doe, John',
     ], $display, flat: true) ?>
   </label>
   <label>

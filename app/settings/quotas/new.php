@@ -19,7 +19,7 @@
 
 ?>
 <?php if($tags): ?>
-  <form class="settings-editor settings-editor--quota-new" x-post="/settings/tracker/new" x-target="#quotas-listing" x-refresh="#quota-new">
+  <form class="settings-editor settings-editor--quota-new" x-post="/settings/quotas/new" x-target="#quotas-listing" x-refresh="#quota-new">
     <select name="tag_id" required>
       <?php foreach($tags as $tag): ?>
         <option value="<?= esc_attr($tag['id']) ?>"><?= esc_inner($tag['label']) ?></option>

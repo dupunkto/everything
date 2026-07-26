@@ -12,18 +12,13 @@
         <h2>Settings</h2>
       </header>
 
-      <ul>
+      <ul class="settings-menu">
         <li><a href="<?= CANONICAL ?>/settings/general">General</a></li>
-        <li><a href="<?= CANONICAL ?>/settings/ui">User interface</a></li>
-        <li><a href="<?= CANONICAL ?>/settings/tags">Tags</a></li>
-        <li><a href="<?= CANONICAL ?>/settings/calendars">Calendars</a></li>
-        <li><a href="<?= CANONICAL ?>/settings/subscriptions">Subscriptions</a></li>
-        <li><a href="<?= CANONICAL ?>/settings/todo">ToDo</a></li>
-        <li><a href="<?= CANONICAL ?>/settings/tracker">Quotas</a></li>
-        <li><a href="<?= CANONICAL ?>/settings/habits">Habits</a></li>
-        <li><a href="<?= CANONICAL ?>/settings/contacts">Contacts</a></li>
-        <li><a href="<?= CANONICAL ?>/settings/shortcuts">Shortcuts</a></li>
-        <li><a href="<?= CANONICAL ?>/logs">Logs</a></li>
+        <li><a href="<?= CANONICAL ?>/settings/accounts">Accounts</a></li>
+        <li><a href="<?= CANONICAL ?>/settings/applications">Applications</a></li>
+        <li><a href="<?= CANONICAL ?>/settings/developer">Developer</a></li>
+        <li><a href="<?= CANONICAL ?>/shortcuts">Shortcuts</a></li>
+        <li><a>Updates</a></li>
         <li><a href="<?= CANONICAL ?>/settings/about">About</a></li>
       </ul>
     </main>

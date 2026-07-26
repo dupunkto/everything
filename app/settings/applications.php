@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <?php include __DIR__ . "/../shell/head.php" ?>
-    <title>General settings</title>
+    <title>Applications</title>
     <link rel="stylesheet" href="<?= CANONICAL ?>/css/settings.css">
   </head>
   <body>
@@ -10,13 +10,14 @@
     <main class="main">
       <header class="page-header">
         <?php $parent = "/settings"; include __DIR__ . "/back.php" ?>
-        <h2>General</h2>
+        <h2>Applications</h2>
       </header>
 
       <ul class="settings-menu">
-        <li><a href="<?= CANONICAL ?>/settings/ui">Interface</a></li>
-        <li><a href="<?= CANONICAL ?>/settings/tags">Tags</a></li>
-        <li><a href="<?= CANONICAL ?>/settings/locales">Localisation</a></li>
+        <li><a href="<?= CANONICAL ?>/settings/calendar">Calendar</a></li>
+        <li><a href="<?= CANONICAL ?>/settings/todo">ToDo</a></li>
+        <li><a href="<?= CANONICAL ?>/settings/tracker">Tracker</a></li>
+        <li><a href="<?= CANONICAL ?>/settings/contacts">Contacts</a></li>
       </ul>
     </main>
   </body>

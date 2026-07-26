@@ -38,7 +38,7 @@ $about_rows = [
         <h1>Everything</h1>
         <p>a <a href="//dupunkto.org">{du}punkto</a> project</p>
       </hgroup>
-      
+
       <p class="about-version">
         <span>v<?= EVERYTHING_VERSION ?>-<?= STORE_VERSION ?></span> &middot;
         <?php if(defined('GIT_SHA')): ?>
@@ -58,6 +58,8 @@ $about_rows = [
           <?php endforeach; ?>
         </tbody>
       </table>
+
+      <a class="about-licenses">License information &rarr;</a>
     </main>
   </body>
 </html>

@@ -1,15 +1,34 @@
-<?php $logs = \store\list_logs() ?>
+<?php
+  $logs = \store\list_logs();
+  $edit_url = function($log) {
+    $id = rawurlencode($log['record_id']);
+
+    return match($log['table_name']) {
+      'addresses' => "/addresses?edit=$id",
+      'bookmarks' => "/bookmarks/edit?id=$id",
+      'contacts' => "/contacts?kind=person&edit=$id",
+      'notes' => "/notes/edit?id=$id",
+      'organisations' => "/contacts?kind=org&edit=$id",
+      'tasks' => "/todo/edit?id=$id",
+      'timings' => "/tracker?edit=$id",
+      'wishes' => "/wishlist/edit?id=$id",
+      default => null,
+    };
+  };
+?>
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <?php include __DIR__ . "/shell/head.php" ?>
     <title>Logs</title>
     <link rel="stylesheet" href="<?= CANONICAL ?>/css/logs.css">
+    <link rel="stylesheet" href="<?= CANONICAL ?>/css/settings.css">
   </head>
   <body>
     <?php include __DIR__ . "/shell/menu.php" ?>
     <main class="main main--wide main--scrollable logs">
       <header class="page-header">
+        <?php $parent = "/settings/developer"; include __DIR__ . "/settings/back.php" ?>
         <h1 class="page-header__title"><strong>Logs</strong></h1>
       </header>
 
@@ -28,13 +47,20 @@
             <?php foreach($logs as $log): ?>
               <?php if($log['source'] == 'caldav_changes') continue ?>
               <?php $entity = $log['table_name'] . "/" . $log['record_id'] ?>
+              <?php $url = $edit_url($log) ?>
               <?php $datetime = (new \DateTimeImmutable($log['changed_at'], timezone: new \DateTimeZone("UTC")))->format('c') ?>
               <tr>
                 <td><time datetime="<?= esc_attr($datetime) ?>" local><?= esc_inner($log['changed_at']) ?> UTC</time></td>
                 <td><?= esc_inner($log['message']) ?></td>
                 <td><?= esc_inner($log['operation']) ?></td>
                 <td><?= esc_inner($log['author']) ?></td>
-                <td><span class="logs__entity" title="<?= esc_attr($entity) ?>"><?= esc_inner($entity) ?></span></td>
+                <td>
+                  <?php if($url): ?>
+                    <a class="logs__entity" href="<?= esc_attr($url) ?>" title="<?= esc_attr($entity) ?>"><?= esc_inner($entity) ?></a>
+                  <?php else: ?>
+                    <span class="logs__entity" title="<?= esc_attr($entity) ?>"><?= esc_inner($entity) ?></span>
+                  <?php endif ?>
+                </td>
               </tr>
             <?php endforeach ?>
           </tbody>
