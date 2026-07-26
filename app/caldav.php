@@ -523,6 +523,10 @@ function delete_resource() {
   if($collection['readonly']) dav_error(403, "Collection is read-only.");
   precondition($resource);
 
+  $row = \caldav\entity($resource);
+  if($resource['entity_type'] == 'task' && @$row['status'] == 'done')
+    dav_error(403, "Completed tasks cannot be deleted through CalDAV.");
+
   try {
     \store\transaction(function() use ($resource) {
       $type = $resource['entity_type'];
