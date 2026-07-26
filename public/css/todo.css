@@ -33,6 +33,16 @@
   align-self: stretch;
 }
 
+.todo__item--overdue {
+  background: light-dark(#f4b4b4, #681f1f);
+  color: light-dark(#7f1d1d, #ffc1c1);
+}
+
+.todo__item--overdue .listing__link {
+  color: inherit;
+  background: transparent;
+}
+
 .todo__badges {
   display: flex;
   gap: 0.25em;

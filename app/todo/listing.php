@@ -13,8 +13,17 @@
 
   $tags = \store\list_tags();
   $tasks = \store\list_tasks($query, $include);
+  $today = local_date("Y-m-d");
+  $now = time();
 
   [$query_tags, $query_terms] = \core\parse_query($query, $tags);
+
+  $is_overdue = fn($task) =>
+    in_array($task['status'], ['todo', 'wip', 'blocked'])
+    && $task['next']
+    && (cast_boolean($task['due_all_day'])
+      ? local_date("Y-m-d", $task['next']) < $today
+      : strtotime($task['next']) < $now);
 
   $depth_of = function($tag) use ($tags) {
     $depth = 0;
@@ -42,8 +51,17 @@
       if(!$best || $depth_of($tag) < $depth_of($best)) $best = $tag;
     }
 
+    $task['overdue'] = $is_overdue($task);
     $lists[$best ? tag_slug($best['label']) : 'all'][] = $task;
   }
+
+  $status_rank = array_flip(['wip', 'todo', 'blocked', 'backlog', 'done', 'nvm']);
+  $sort_rank = fn($task) => $task['overdue'] ? 0 : $status_rank[$task['status']] + 1;
+
+  foreach($lists as &$tasks) {
+    usort($tasks, fn($a, $b) => $sort_rank($a) <=> $sort_rank($b));
+  }
+  unset($tasks);
 
   // Columns follow the configured order, with ~all always leading.
   $ordered = [];
@@ -82,7 +100,7 @@
     <button type="button" z-set="#todo-search" value="is:nvm"><i class="fa-regular fa-box-archive"></i> Shelves</button>
     <button type="button" z-set="#todo-search" value="is:backlog"><i class="fa-regular fa-folder-open"></i> Backlog</button>
   <?php else: ?>
-    <button type="button" z-set="#todo-search" value="is:open not:expired">&larr; Back to todo</button>
+    <button type="button" z-set="#todo-search" value="<?= esc_attr(TODO_DEFAULT_QUERY) ?>">&larr; Back to todo</button>
   <?php endif ?>
 </nav>
 
@@ -93,7 +111,7 @@
 
       <ul>
         <?php foreach($tasks as $task): ?>
-          <li class="listing__item" tabindex="0">
+          <li class="listing__item<?= $task['overdue'] ? " todo__item--overdue" : "" ?>" tabindex="0">
             <?php if(cast_boolean($task['urgent'])) circle() ?>
             <form x-post="/todo/urgent" x-target="#todo-listing" x-on="change" hidden>
               <input type="hidden" name="id" value="<?= $task['id'] ?>">
