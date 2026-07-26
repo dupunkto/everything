@@ -118,7 +118,7 @@ $sidebar_right = UI_SIDEBAR_POSITION == 'right';
                style="--appointment-column: <?= $appointment['layout']['column'] ?>; --appointment-span: <?= $appointment['layout']['span'] ?>;
                       --appointment-row: <?= $appointment['layout']['row'] ?>;
                       --appointment-color: <?= $color($appointment) ?>">
-          <h3 class="appointment__title"><?php if($is_birthday): ?><i class="fa-solid fa-cake-candles"></i> <?php endif ?><?php if($is_task): ?><i class="fa-solid <?= $task_icon($appointment) ?>"></i> <?php endif ?><?= $appointment['title'] ?><?php if(cast_boolean(@$appointment['urgent'])) circle("circle--tight") ?></h3>
+          <h3 class="appointment__title" title="<?= esc_attr($appointment['title']) ?>"><?php if($is_birthday): ?><i class="fa-solid fa-cake-candles"></i> <?php endif ?><?php if($is_task): ?><i class="fa-solid <?= $task_icon($appointment) ?>"></i> <?php endif ?><?= esc_inner($appointment['title']) ?><?php if(cast_boolean(@$appointment['urgent'])) circle("circle--tight") ?></h3>
 
           <?php if($appointment['recurrence'] || $appointment['meeting']): ?>
             <span class="appointment__icons">
