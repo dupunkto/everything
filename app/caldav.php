@@ -161,8 +161,10 @@ function collection_properties($collection) {
   if(!$collection['readonly']) $privileges .= $collection['calendar']
     ? '<D:privilege><D:write/></D:privilege>'
     : '<D:privilege><D:write-content/></D:privilege>';
+  $resource_type = '<D:collection/><C:calendar/>';
+  if($collection['subscription']) $resource_type .= '<CS:subscribed/>';
   $properties = [
-    CALDAV_XML_DAV . '|resourcetype' => ['raw' => '<D:collection/><C:calendar/>'],
+    CALDAV_XML_DAV . '|resourcetype' => ['raw' => $resource_type],
     CALDAV_XML_DAV . '|displayname' => ['text' => $collection['displayname']],
     CALDAV_XML_DAV . '|sync-token' => ['text' => sync_token($collection['id'], $revision)],
     CALDAV_XML_DAV . '|supported-report-set' => ['raw' => '<D:supported-report><D:report><C:calendar-query/></D:report></D:supported-report>'
@@ -171,6 +173,9 @@ function collection_properties($collection) {
     CALDAV_XML_CALDAV . '|supported-calendar-component-set' => ['raw' => '<C:comp name="' . $collection['component'] . '"/>'],
     CALDAV_XML_SERVER . '|getctag' => ['text' => (string)$revision],
     CALDAV_XML_DAV . '|current-user-privilege-set' => ['raw' => $privileges],
+  ];
+  if($collection['subscription']) $properties[CALDAV_XML_SERVER . '|source'] = [
+    'raw' => '<D:href>' . href($collection['subscription']['url']) . '</D:href>',
   ];
   if($collection['color']) $properties[CALDAV_XML_APPLE . '|calendar-color'] = ['text' => $collection['color'] . 'FF'];
   if($collection['position'] !== null) $properties[CALDAV_XML_APPLE . '|calendar-order'] = ['text' => (string)$collection['position']];
