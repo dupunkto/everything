@@ -19,14 +19,41 @@
 .calendar-week__tools {
   display: flex;
   gap: 0.2em;
-  font-size: 0.9em;
   margin-left: 1em;
 }
 
+.calendar-week__tools button,
+.calendar-week__nav [data-sidebar] {
+  aspect-ratio: 1;
+  background: none;
+  border: 0;
+  border-radius: 0.65em;
+  color: inherit;
+  justify-content: center;
+  margin-block: 0;
+  padding: 0;
+  width: 3rem;
+}
+
+.calendar-week__tools button:hover,
+.calendar-week__nav [data-sidebar]:hover {
+  background: light-dark(#f6f6f6, #21262d);
+}
+
+.calendar-week__tools button i,
+.calendar-week__nav [data-sidebar] i {
+  font-size: 1.25rem;
+}
+
 .calendar-week__nav {
+  align-items: center;
   display: flex;
   gap: 0.2em;
   font-size: 0.9em;
+}
+
+.calendar-week__nav button:not([data-sidebar]) {
+  height: 2.25em;
 }
 
 .calendar-week__nav [data-sync] {

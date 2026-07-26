@@ -1,0 +1,10 @@
+button,
+input,
+select,
+.button,
+.listing__item,
+.contact-item,
+.note-card,
+ul li a {
+  border-radius: 0;
+}

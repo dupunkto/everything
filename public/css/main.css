@@ -385,7 +385,6 @@ button,
 
 .nav {
   position: fixed;
-  right: var(--sidebar-padding);
   top: 4.5em;
   bottom: var(--sidebar-padding);
   font-size: 1.1em;
@@ -405,7 +404,6 @@ button,
 .nav__actions {
   position: fixed;
   top: 0;
-  right: var(--sidebar-padding);
   display: flex;
   align-items: flex-start;
   gap: 0.25em;
@@ -438,29 +436,51 @@ button,
   display: none;
 }
 
+.nav ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2em;
+}
+
 .nav ul li a {
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
-  padding-block: 0.9em;
+  margin: 0;
+  padding: 0.5em 20px;
+  color: currentColor;
+  background: none;
+  font-size: 1.2em;
+  font-weight: 500;
 }
 
-.nav--expanded .nav ul li a {
-  justify-content: flex-start;
+.nav ul li a:hover {
+  background: light-dark(#f6f6f6, #21262d);
+}
+
+html:not(.nav--expanded) .nav ul li a {
+  aspect-ratio: 1;
+  margin-inline: auto;
+  padding: 0;
+  width: 2.2em;
 }
 
 .nav ul li a span {
   position: absolute;
-  right: 1em;
+  right: 20px;
   top: 50%;
   transform: translateY(-50%);
+}
+
+.nav--expanded .nav ul li a span {
+  position: static;
+  transform: none;
 }
 
 .nav__toggle {
   margin-top: auto;
   padding: 0.7em 1em;
-  justify-content: flex-end;
   cursor: pointer;
   background: none;
   color: currentColor;
@@ -470,18 +490,8 @@ button,
   transition: transform 0.3s ease;
 }
 
-.nav--expanded .nav__toggle i {
-  transform: rotate(180deg);
-}
-
 body {
   overflow-x: hidden;
-  padding-right: calc(var(--sidebar-collapsed) + 2 * var(--sidebar-padding));
-  transition: padding-right 0.3s ease;
-}
-
-.nav--expanded body {
-  padding-right: calc(var(--sidebar-expanded) + 2 * var(--sidebar-padding));
 }
 
 .nav span {

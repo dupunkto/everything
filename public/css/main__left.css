@@ -1,16 +1,17 @@
 .nav {
   left: var(--sidebar-padding);
-  right: auto;
 }
 
 .nav__actions {
   left: var(--sidebar-padding);
-  right: auto;
+}
+
+.nav--expanded .nav ul li a {
+  flex-direction: row;
+  justify-content: flex-start;
 }
 
 .nav--expanded .nav ul li a span {
-  position: static;
-  transform: none;
   margin-left: 0.75em;
 }
 
@@ -28,11 +29,9 @@
 
 body {
   padding-left: calc(var(--sidebar-collapsed) + 2 * var(--sidebar-padding));
-  padding-right: 0;
   transition: padding-left 0.3s ease;
 }
 
 .nav--expanded body {
   padding-left: calc(var(--sidebar-expanded) + 2 * var(--sidebar-padding));
-  padding-right: 0;
 }

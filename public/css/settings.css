@@ -8,9 +8,27 @@
   user-select: none;
 }
 
+.page-header:has(.settings-back) {
+  position: relative;
+}
+
 .settings-back {
+  align-items: center;
+  aspect-ratio: 1;
+  border-radius: 0.65em;
   color: inherit;
-  flex: 0 0 auto;
+  display: inline-flex;
+  justify-content: center;
+  position: absolute;
+  top: 50%;
+  left: -3em;
+  text-decoration: none;
+  transform: translateY(-50%);
+  width: 2.5em;
+}
+
+.settings-back:hover {
+  background: light-dark(#f6f6f6, #21262d);
 }
 
 .settings-back + h2 {

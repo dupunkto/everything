@@ -5,9 +5,8 @@
 <link rel="stylesheet" href="https://cdn.dupunkto.org/tools.css">
 <link rel="stylesheet" href="https://cdn.dupunkto.org/icons/fontawesome/css/all.css">
 <link rel="stylesheet" href="<?= CANONICAL ?>/css/main.css">
-<?php if(UI_PANEL_POSITION == 'left'): ?>
-  <link rel="stylesheet" href="<?= CANONICAL ?>/css/main__left.css">
-<?php endif ?>
+<link rel="stylesheet" href="<?= CANONICAL ?>/css/main__<?= esc_attr(UI_BORDER_RADIUS) ?>.css">
+<link rel="stylesheet" href="<?= CANONICAL ?>/css/main__<?= esc_attr(UI_PANEL_POSITION) ?>.css">
 
 <!-- NOTE: Order is significant, zhtml must load before xhtml to restore persisted state before onload requests fire -->
 

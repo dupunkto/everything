@@ -25,6 +25,7 @@ fallback('map-provider', "google_maps");
 fallback('ui.panel-position', "right");
 fallback('ui.sidebar-position', "left");
 fallback('ui.habits-position', "bottom");
+fallback('ui.border-radius', "subtle");
 
 fallback('calendar.default_calendar', @\store\get_oldest_calendar()['id']);
 
