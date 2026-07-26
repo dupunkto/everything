@@ -14,11 +14,11 @@
 
       <ul class="settings-menu">
         <li><a href="<?= CANONICAL ?>/settings/general">General</a></li>
+        <li><a>Updates</a></li>
         <li><a href="<?= CANONICAL ?>/settings/accounts">Accounts</a></li>
         <li><a href="<?= CANONICAL ?>/settings/applications">Applications</a></li>
-        <li><a>Updates</a></li>
-        <li><a href="<?= CANONICAL ?>/shortcuts">Shortcuts</a></li>
         <li><a href="<?= CANONICAL ?>/settings/developer">Developer</a></li>
+        <li><a href="<?= CANONICAL ?>/shortcuts">Shortcuts</a></li>
         <li><a href="<?= CANONICAL ?>/about">About</a></li>
       </ul>
     </main>
