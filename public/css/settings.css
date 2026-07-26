@@ -271,6 +271,24 @@
   margin: 2em 0;
 }
 
+.license + .license {
+  margin-top: 2em;
+}
+
+.license__header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.license__header h3 {
+  margin: 0;
+}
+
+.license pre {
+  overflow-x: auto;
+}
+
 .about-version {
   font-size: 0.9em;
   margin-top: 2em;

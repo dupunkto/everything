@@ -59,7 +59,7 @@ $about_rows = [
         </tbody>
       </table>
 
-      <a class="about-licenses">License information &rarr;</a>
+      <a class="about-licenses" href="<?= CANONICAL ?>/about/licenses">Licenses &rarr;</a>
     </main>
   </body>
 </html>

@@ -77,6 +77,12 @@ if(file_exists($controller)) {
   include $controller; exit;
 }
 
+$controller = path_join(__DIR__, "app", $path, "index.php");
+
+if(file_exists($controller)) {
+  include $controller; exit;
+}
+
 // If no response has been served yet, the requested resource
 // does not exist.
 serve_error(404);
