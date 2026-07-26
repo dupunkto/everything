@@ -73,7 +73,11 @@
   $lists = $ordered;
 
   $tokens = str_explode($query);
-  $finished = in_array("is:done", $tokens);
+  $default_tokens = str_explode(TODO_DEFAULT_QUERY);
+  $unfinished_tokens = array_values(array_diff($default_tokens, ["is:done"]));
+  $finished_tokens = [...$unfinished_tokens, "is:done"];
+  $is_default = $tokens == $unfinished_tokens || $tokens == $finished_tokens;
+  $is_finished = in_array("is:done", $tokens);
 
   $views = ["is:todo" => "ToDo", "is:nvm" => "Shelves", "is:backlog" => "Backlog"];
   $view = "ToDo";
@@ -88,7 +92,11 @@
 
 <nav class="view-nav">
   <?php if($view == "ToDo"): ?>
-    <?php if($finished): ?>
+    <?php if(!$is_default): ?>
+      <button type="button" z-set="#todo-search" value="<?= esc_attr(TODO_DEFAULT_QUERY) ?>">
+        <i class="fa-solid fa-rotate-left"></i> Reset
+      </button>
+    <?php elseif($is_finished): ?>
       <button type="button" z-set="#todo-search" value="<?= esc_attr(join(" ", array_diff($tokens, ["is:done"]))) ?>">
         <i class="fa-regular fa-eye"></i> Hide finished
       </button>
