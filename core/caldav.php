@@ -662,6 +662,7 @@ function parse($body, $expected, $type = null) {
   }
   else {
     $start = prop($component, 'DTSTART');
+    $data['has_start'] = (bool)$start;
     $data['open_at'] = $start ? datetime($start)[0] : gmdate('c');
     $due = prop($component, 'DUE');
     if($due) [$data['due_at'], $data['due_all_day']] = datetime($due, allow_date: true);

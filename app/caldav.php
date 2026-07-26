@@ -454,13 +454,14 @@ function put() {
         }
         elseif($type == 'task') {
           $status = \caldav\task_status($collection['id'], $data['status'], $current['status']);
+          $open_at = $data['has_start'] ? $data['open_at'] : $current['open_at'];
           $fields = \core\diff($current,
             title: $data['title'], content: $data['content'], urgent: $data['urgent'],
-            recurrence: $data['recurrence'], open_at: $data['open_at'],
+            recurrence: $data['recurrence'], open_at: $open_at,
             due_at: $data['due_at'], due_all_day: $data['due_all_day'], status: $status);
           \store\update_task(
             $id, $data['title'], $data['content'], $data['urgent'], $data['recurrence'],
-            $data['open_at'], $data['due_at'], $data['due_all_day'], $current['expire_at']
+            $open_at, $data['due_at'], $data['due_all_day'], $current['expire_at']
           ) or throw new \RuntimeException("Could not update task.");
           $saved_collection = \caldav\task_collection($status);
           \store\set_task_status($id, $status) or throw new \RuntimeException("Could not update task status.");
