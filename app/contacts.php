@@ -16,7 +16,7 @@
       if(@$_GET['edit']) $url = "/contacts/edit?kind=" . rawurlencode($kind) . "&id=" . rawurlencode($_GET['edit']);
       elseif(@$_GET['view']) $url = "/contacts/detail?kind=" . rawurlencode($kind) . "&id=" . rawurlencode($_GET['view']);
     ?>
-    <main class="main main--wide main--scrollable contacts" z-nav=".contacts__search, .contact-item">
+    <main class="main main--wide main--scrollable contacts <?= UI_SIDEBAR_POSITION == 'right' ? 'contacts--sidebar-right' : '' ?>" z-nav=".contacts__search, .contact-item">
       <aside class="contacts__sidebar">
         <form id="contacts-controls" class="contacts__controls">
           <input

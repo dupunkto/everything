@@ -1,11 +1,18 @@
 .contacts {
   display: grid;
   grid-template-columns: 280px minmax(0, 1fr);
+  grid-template-areas: "sidebar panel";
   gap: 1.5em;
   align-items: start;
 }
 
+.contacts--sidebar-right {
+  grid-template-columns: minmax(0, 1fr) 280px;
+  grid-template-areas: "panel sidebar";
+}
+
 .contacts__sidebar {
+  grid-area: sidebar;
   display: flex;
   flex-direction: column;
   gap: 0.5em;
@@ -82,6 +89,7 @@
 
 
 .contacts__panel {
+  grid-area: panel;
   max-width: 700px;
   max-height: 100%;
   overflow-y: auto;
