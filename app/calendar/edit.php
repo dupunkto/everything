@@ -125,14 +125,14 @@
       Starts
       <span class="datetime-pair">
         <input name="start_date" type="date" value="<?= $starts->format('Y-m-d') ?>" required>
-        <input name="start_time" type="time" value="<?= $starts->format('H:i') ?>" required>
+        <input name="start_time" type="time" lang="<?= TIME_LANG ?>" value="<?= $starts->format('H:i') ?>" required>
       </span>
     </label>
     <label class="field">
       Ends
       <span class="datetime-pair">
         <input name="end_date" type="date" value="<?= $ends->format('Y-m-d') ?>" required>
-        <input name="end_time" type="time" value="<?= $ends->format('H:i') ?>" required>
+        <input name="end_time" type="time" lang="<?= TIME_LANG ?>" value="<?= $ends->format('H:i') ?>" required>
       </span>
     </label>
 

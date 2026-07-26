@@ -65,7 +65,7 @@
             <label for="date">Saved on</label>
             <span class="datetime-pair">
               <input type="date" id="date" name="date" value="<?= esc_attr(local_date("Y-m-d", $bookmark['saved_at'])) ?>" required>
-              <input type="time" name="time" value="<?= esc_attr(local_date("H:i", $bookmark['saved_at'])) ?>" required>
+              <input type="time" name="time" lang="<?= TIME_LANG ?>" value="<?= esc_attr(local_date("H:i", $bookmark['saved_at'])) ?>" required>
             </span>
           </div>
         </div>

@@ -38,7 +38,7 @@
     <label>
       Start
       <span class="tracker-editor__datetime">
-        <input name="start_time" type="time" step="1" value="<?= $starts->format('H:i:s') ?>">
+        <input name="start_time" type="time" lang="<?= TIME_LANG ?>" step="1" value="<?= $starts->format('H:i:s') ?>">
         <input class="tracker-editor__date" name="start_date" type="date" value="<?= $starts->format('Y-m-d') ?>" <?= $show_dates ? '' : 'hidden' ?>>
       </span>
     </label>
@@ -46,7 +46,7 @@
       End
       <span class="tracker-editor__datetime">
         <span class="tracker-editor__time">
-          <input name="end_time" type="time" step="1" value="<?= $ends->format('H:i:s') ?>">
+          <input name="end_time" type="time" lang="<?= TIME_LANG ?>" step="1" value="<?= $ends->format('H:i:s') ?>">
           <?php if(!$show_dates): ?>
             <button type="button" data-show-dates aria-label="Show dates">+</button>
           <?php endif ?>

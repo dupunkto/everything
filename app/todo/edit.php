@@ -167,7 +167,7 @@
             <label for="open_date">Open</label>
             <span class="datetime-pair">
               <input type="date" id="open_date" name="open_date" value="<?= esc_attr(local_date("Y-m-d", $task['open_at'])) ?>" required>
-              <input type="time" name="open_time" value="<?= esc_attr(local_date("H:i", $task['open_at'])) ?>" required>
+              <input type="time" name="open_time" lang="<?= TIME_LANG ?>" value="<?= esc_attr(local_date("H:i", $task['open_at'])) ?>" required>
             </span>
           </div>
 
@@ -175,7 +175,7 @@
             <label for="due_date">Due</label>
             <span class="datetime-pair">
               <input type="date" id="due_date" name="due_date" value="<?= esc_attr($task['due_at'] ? local_date("Y-m-d", $task['due_at']) : '') ?>">
-              <input type="time" name="due_time" value="<?= esc_attr($task['due_at'] && !cast_boolean($task['due_all_day']) ? local_date("H:i", $task['due_at']) : '') ?>">
+              <input type="time" name="due_time" lang="<?= TIME_LANG ?>" value="<?= esc_attr($task['due_at'] && !cast_boolean($task['due_all_day']) ? local_date("H:i", $task['due_at']) : '') ?>">
             </span>
           </div>
 
@@ -183,7 +183,7 @@
             <label for="expire_date">Expire</label>
             <span class="datetime-pair">
               <input type="date" id="expire_date" name="expire_date" value="<?= esc_attr($task['expire_at'] ? local_date("Y-m-d", $task['expire_at']) : '') ?>">
-              <input type="time" name="expire_time" value="<?= esc_attr($task['expire_at'] ? local_date("H:i", $task['expire_at']) : '') ?>">
+              <input type="time" name="expire_time" lang="<?= TIME_LANG ?>" value="<?= esc_attr($task['expire_at'] ? local_date("H:i", $task['expire_at']) : '') ?>">
             </span>
           </div>
 

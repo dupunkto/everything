@@ -4,6 +4,7 @@
   // the store loads, we define them here instead, since this is the only callsite at this point.
   define('ENUM_CURRENCY', array_keys(CURRENCY_SYMBOLS));
   define('ENUM_MAP_PROVIDER', array_keys(map_provider_options()));
+  define('ENUM_TIME_FORMAT', ['12-hour', '24-hour']);
 
   if(isset($_POST['timezone'])) {
     if(!in_array($_POST['timezone'], \DateTimeZone::listIdentifiers()))
@@ -12,6 +13,16 @@
     \store\update_config('timezone', $_POST['timezone'])
       or fail("Could not update timezone.");
     \store\put_audit_log('config', 'general', "Set timezone to '{$_POST['timezone']}'.", 'user')
+      or fail("Could not create audit entry.");
+  }
+
+  if(isset($_POST['time-format'])) {
+    if(!in_array($_POST['time-format'], ENUM_TIME_FORMAT))
+      fail("Invalid 'time-format' parameter.", status: 400);
+
+    \store\update_config('time-format', $_POST['time-format'])
+      or fail("Could not update time format.");
+    \store\put_audit_log('config', 'general', "Set time-format to '{$_POST['time-format']}'.", 'user')
       or fail("Could not create audit entry.");
   }
 
@@ -50,6 +61,10 @@
   <label>
     Timezone
     <?php \forms\options('timezone', $timezones, \config\fresh_value('timezone'), flat: true) ?>
+  </label>
+  <label>
+    Time format
+    <?php \forms\options('time-format', ENUM_TIME_FORMAT, \config\fresh_value('time-format')) ?>
   </label>
   <label>
     Map provider

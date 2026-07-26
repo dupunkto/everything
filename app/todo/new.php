@@ -93,7 +93,7 @@
             <label for="open_date">Open</label>
             <span class="datetime-pair">
               <input type="date" id="open_date" name="open_date" value="<?= local_date("Y-m-d") ?>" required>
-              <input type="time" name="open_time" value="<?= local_date("H:i") ?>" required>
+              <input type="time" name="open_time" lang="<?= TIME_LANG ?>" value="<?= local_date("H:i") ?>" required>
             </span>
           </div>
 
@@ -101,7 +101,7 @@
             <label for="due_date">Due</label>
             <span class="datetime-pair">
               <input type="date" id="due_date" name="due_date">
-              <input type="time" name="due_time">
+              <input type="time" name="due_time" lang="<?= TIME_LANG ?>">
             </span>
           </div>
 
@@ -109,7 +109,7 @@
             <label for="expire_date">Expire</label>
             <span class="datetime-pair">
               <input type="date" id="expire_date" name="expire_date">
-              <input type="time" name="expire_time">
+              <input type="time" name="expire_time" lang="<?= TIME_LANG ?>">
             </span>
           </div>
         </div>

@@ -17,6 +17,8 @@ fallback('prefered-proto', FORCE_HTTPS ? "https" : "http");
 fallback('secure', PREFERED_PROTO == "https");
 fallback('canonical', PREFERED_PROTO . "://" . HOST);
 fallback('timezone', getenv("TIMEZONE") ?: "Europe/Amsterdam");
+fallback('time-format', "24-hour");
+resolute('time-lang', TIME_FORMAT == '24-hour' ? 'nl' : 'en');
 fallback('currency', "eur");
 fallback('map-provider', "google_maps");
 

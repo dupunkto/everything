@@ -30,14 +30,14 @@
         Start
         <span class="tracker-time-popup__inputs">
           <input name="start_date" type="date" value="<?= local_date("Y-m-d") ?>">
-          <input name="start_time" type="time" step="1">
+          <input name="start_time" type="time" lang="<?= TIME_LANG ?>" step="1">
         </span>
       </label>
       <label>
         End
         <span class="tracker-time-popup__inputs">
           <input name="end_date" type="date" value="<?= local_date("Y-m-d") ?>">
-          <input name="end_time" type="time" step="1">
+          <input name="end_time" type="time" lang="<?= TIME_LANG ?>" step="1">
         </span>
       </label>
     </div>
