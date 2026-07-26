@@ -8,7 +8,7 @@
   </head>
   <body>
     <?php include __DIR__ . "/shell/menu.php" ?>
-    <?php $query = "is:open not:expired" ?>
+    <?php $query = TODO_DEFAULT_QUERY ?>
     <main class="main main--wide main--scrollable todo" z-nav="#todo-search, .listing__item">
       <input
         id="todo-search"
@@ -16,7 +16,7 @@
         type="search"
         name="q"
         z-key="/"
-        placeholder="is:open not:expired +acme"
+        placeholder="<?= esc_attr(TODO_DEFAULT_QUERY) ?> +acme"
         value="<?= esc_attr($query) ?>"
         x-get="/todo/listing"
         x-on="input"

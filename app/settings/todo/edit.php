@@ -1,5 +1,12 @@
 <?php
 
+  if(isset($_POST['default-query'])) {
+    \store\update_config('todo.default-query', $_POST['default-query'])
+      or fail("Could not update default query.");
+    \store\put_audit_log('config', 'todo', "Set todo.default-query to '{$_POST['default-query']}'.", 'user')
+      or fail("Could not create audit entry.");
+  }
+
   if(isset($_POST['recurrence_horizon'])) {
     \store\update_config('todo.recurrence-horizon', cast_int($_POST['recurrence_horizon']))
       or fail("Could not update recurrence horizon.");
@@ -18,6 +25,14 @@
   }
 
 ?>
+<form class="settings-form settings-form--spaced" x-post="/settings/todo/edit" x-on="change" x-target="#todo-settings">
+  <label>
+    Default query
+    <input name="default-query" type="text" placeholder="<?= esc_attr(TODO_DEFAULT_QUERY) ?>"
+      value="<?= esc_attr(\config\canonical_value('todo.default-query') ?? '') ?>">
+  </label>
+</form>
+
 <form class="settings-form settings-form--spaced" x-post="/settings/todo/edit" x-on="change" x-target="#todo-settings">
   <div>
     <label for="recurrence-horizon">Recurrence horizon</label>

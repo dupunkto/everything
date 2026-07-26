@@ -1,10 +1,17 @@
 <?php
 
-  $formats = ['first_last', 'last_first'];
-  $orders = ['first', 'last'];
+  define('ENUM_FORMATS', ['first_last', 'last_first']);
+  define('ENUM_ORDERS', ['first', 'last']);
+
+  if(isset($_POST['default-query'])) {
+    \store\update_config('contacts.default-query', $_POST['default-query'])
+      or fail("Could not update default query.");
+    \store\put_audit_log('config', 'contacts', "Set contacts.default-query to '{$_POST['default-query']}'.", 'user')
+      or fail("Could not create audit entry.");
+  }
 
   if(isset($_POST['display-format'])) {
-    if(!in_array($_POST['display-format'], $formats))
+    if(!in_array($_POST['display-format'], ENUM_FORMATS))
       fail("Invalid 'display-format' parameter.", status: 400);
 
     \store\update_config('contacts.display-format', $_POST['display-format'])
@@ -14,7 +21,7 @@
   }
 
   if(isset($_POST['sort-order'])) {
-    if(!in_array($_POST['sort-order'], $orders))
+    if(!in_array($_POST['sort-order'], ENUM_ORDERS))
       fail("Invalid 'sort-order' parameter.", status: 400);
 
     \store\update_config('contacts.sort-order', $_POST['sort-order'])
@@ -28,6 +35,14 @@
   $sort = \config\fresh_value('contacts.sort-order');
 
 ?>
+<form class="settings-form settings-form--spaced" x-post="/settings/contacts/edit" x-on="change" x-target="#contacts-settings">
+  <label>
+    Default query
+    <input name="default-query" type="text" placeholder="<?= esc_attr(CONTACTS_DEFAULT_QUERY) ?>"
+      value="<?= esc_attr(\config\canonical_value('contacts.default-query') ?? '') ?>">
+  </label>
+</form>
+
 <form class="settings-form" x-post="/settings/contacts/edit" x-on="change" x-target="#contacts-settings">
   <label>
     Display

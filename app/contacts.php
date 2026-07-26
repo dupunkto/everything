@@ -10,6 +10,7 @@
     <?php include __DIR__ . "/shell/menu.php" ?>
     <?php
       $kind = @$_GET['kind'] ?: 'person';
+      $query = isset($_GET['kind']) ? "is:$kind" : CONTACTS_DEFAULT_QUERY;
       $url = null;
 
       if(@$_GET['edit']) $url = "/contacts/edit?kind=" . rawurlencode($kind) . "&id=" . rawurlencode($_GET['edit']);
@@ -24,7 +25,7 @@
             class="contacts__search"
             z-key="/"
             placeholder="is:person +acme"
-            value="is:<?= esc_attr($kind) ?>"
+            value="<?= esc_attr($query) ?>"
             x-get="/contacts/listing"
             x-on="input"
             x-target="#contacts-list"
@@ -33,7 +34,7 @@
         </form>
 
         <section id="contacts-list" x-get="/contacts/listing" x-data="#contacts-controls">
-          <?php fragment("contacts/listing", ["q" => "is:$kind"]) ?>
+          <?php fragment("contacts/listing", ["q" => $query]) ?>
         </section>
       </aside>
 
