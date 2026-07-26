@@ -235,6 +235,7 @@ function list_tasks($query = "", $override = [], $respect_horizon = true) {
   $exclude = [];
   $urgent = null;
   $expired = null;
+  $overdue = null;
 
   foreach(explode(" ", $query) as $segment) {
     $parts = explode(":", $segment);
@@ -243,6 +244,7 @@ function list_tasks($query = "", $override = [], $respect_horizon = true) {
 
     if($value == 'urgent') $urgent = $selector == "is";
     elseif($value == 'expired') $expired = $selector == 'is';
+    elseif($value == 'overdue') $overdue = $selector == 'is';
     elseif($selector == "is" && $value == 'open') $include = [...$include, 'todo', 'wip', 'blocked'];
     elseif($selector == "is" && in_array($value, ENUM_TASK_STATUS)) $include[] = $value;
     elseif($selector == "not" && in_array($value, ENUM_TASK_STATUS)) $exclude[] = $value;
@@ -282,6 +284,7 @@ function list_tasks($query = "", $override = [], $respect_horizon = true) {
   $result = [];
 
   $colors = array_column(list_tags(), 'color', 'id');
+  $now = new \DateTimeImmutable("now", new \DateTimeZone(TIMEZONE));
 
   foreach(collect_by($rows, 'tag', 'tags') as $task) {
     foreach($task['tags'] as &$tag) {
@@ -297,6 +300,14 @@ function list_tasks($query = "", $override = [], $respect_horizon = true) {
     $is_expired = $task['expire_at'] && strtotime($task['expire_at']) <= time();
     if($expired !== null && $is_expired != $expired) continue;
     if($respect_horizon && !$is_expired && !$state['visible']) continue;
+
+    $due = $task['next'] ? new \DateTimeImmutable($task['next']) : null;
+    if($due && cast_boolean($task['due_all_day'])) {
+      $due = $due->setTimezone(new \DateTimeZone(TIMEZONE))->modify('+1 day');
+    }
+    $is_overdue = $due && $due <= $now;
+
+    if($overdue !== null && $is_overdue != $overdue) continue;
     if($urgent !== null && filter_var($task['urgent'], FILTER_VALIDATE_BOOLEAN) != $urgent) continue;
     if($include && !in_array($state['status'], $include)) continue;
     if($exclude && in_array($state['status'], $exclude)) continue;
