@@ -3,16 +3,10 @@
   $lists = [];
 
   $query = $_GET['q'] ?? $_POST['q'] ?? "";
-  $include = @$_GET['i'] ?: @$_POST['i'];
-
-  // This array includes IDs of items that have just been clicked.
-  // We do not want to have them disappear from under the users cursor,
-  // that is a very bad UX. So this 'skips' them from the query that
-  // is currently active.
-  $include = $include ? explode(",", $include) : [];
+  $pinned = json_decode(@$_GET['i'] ?: @$_POST['i'] ?: "[]", true);
 
   $tags = \store\list_tags();
-  $tasks = \store\list_tasks($query, $include);
+  $tasks = \store\list_tasks($query, array_keys($pinned));
   $today = local_date("Y-m-d");
   $now = time();
 
@@ -59,7 +53,21 @@
   $sort_rank = fn($task) => $task['overdue'] ? 0 : $status_rank[$task['status']] + 1;
 
   foreach($lists as &$tasks) {
-    usort($tasks, fn($a, $b) => $sort_rank($a) <=> $sort_rank($b));
+    $fixed = sorted(
+      array_filter($tasks, fn($task) => isset($pinned[$task['id']])),
+      fn($a, $b) => $pinned[$a['id']] <=> $pinned[$b['id']]
+    );
+
+    $tasks = sorted(
+      array_filter($tasks, fn($task) => !isset($pinned[$task['id']])),
+      fn($a, $b) => $sort_rank($a) <=> $sort_rank($b)
+    );
+
+    $tasks = array_reduce($fixed, fn($tasks, $task) => insert(
+      $tasks,
+      max(0, min($pinned[$task['id']], count($tasks))),
+      $task
+    ), $tasks);
   }
   unset($tasks);
 
@@ -118,14 +126,15 @@
       <h3 class="listing__heading">~<?= $list ?></h3>
 
       <ul>
-        <?php foreach($tasks as $task): ?>
+        <?php foreach($tasks as $position => $task): ?>
+          <?php $state = json_encode(array_replace($pinned, [$task['id'] => $position])) ?>
           <li class="listing__item<?= $task['overdue'] ? " todo__item--overdue" : "" ?>" tabindex="0">
             <?php if(cast_boolean($task['urgent'])) circle() ?>
             <form x-post="/todo/urgent" x-target="#todo-listing" x-on="change" hidden>
               <input type="hidden" name="id" value="<?= $task['id'] ?>">
               <input type="hidden" name="urgent" value="false">
               <input type="hidden" name="q" value="<?= esc_attr($query) ?>">
-              <input type="hidden" name="i" value="<?= esc_attr(join(",", array_unique([...$include, $task['id']]))) ?>">
+              <input type="hidden" name="i" value="<?= esc_attr($state) ?>">
               <input type="checkbox" name="urgent" value="true" z-key="m" <?php if(cast_boolean($task['urgent'])) echo "checked" ?> hidden>
             </form>
             <form x-post="/todo/status" x-target="#todo-listing" x-on="change">
@@ -133,7 +142,7 @@
               <input type="hidden" name="status" value="todo" />
               <input type="hidden" name="comment" value="" />
               <input type="hidden" name="q" value="<?= esc_attr($query) ?>" />
-              <input type="hidden" name="i" value="<?= esc_attr(join(",", array_unique([...$include, $task['id']]))) ?>" />
+              <input type="hidden" name="i" value="<?= esc_attr($state) ?>" />
 
               <input
                 type="checkbox"
