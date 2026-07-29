@@ -16,19 +16,14 @@ function establish_connection() {
     PDO::ATTR_EMULATE_PREPARES   => false,
   ];
 
-  try {
-    define('INITIAL_RUN', !file_exists($database));
-    $dbh = new PDO($dsn, options: $options);
+  define('INITIAL_RUN', !file_exists($database));
+  $dbh = new PDO($dsn, options: $options);
 
-    // SQLite ignores foreign keys (and their ON DELETE actions) unless
-    // enforcement is switched on per connection.
-    $dbh->exec("PRAGMA foreign_keys = ON");
+  // SQLite ignores foreign keys (and their ON DELETE actions) unless
+  // enforcement is switched on per connection.
+  $dbh->exec("PRAGMA foreign_keys = ON");
 
-    return $dbh;
-  }
-  catch(PDOException $e) {
-    die("Database connection failed: " . $e->getMessage());
-  }
+  return $dbh;
 }
 
 // Other adapters use a runtime check on the database schema to
@@ -58,8 +53,7 @@ function execute($path) {
       $query
     );
 
-    DBH->exec($query) !== false
-      or die("Could not execute query '$query'.");
+    DBH->exec($query);
   }
 }
 

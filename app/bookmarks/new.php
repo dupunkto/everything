@@ -10,11 +10,10 @@
       cast_string(@$_POST['note']),
       $meta['favicon'],
       gmdate('c')
-    ) or fail("Could not save bookmark.");
+    );
 
     \store\set_bookmark_tags($id, $_POST['tags'] ?? []);
-    \store\put_audit_log('bookmarks', $id, "Created bookmarks/$id.", 'user', operation: 'insert')
-      or fail("Could not create audit entry.");
+    \store\put_audit_log('bookmarks', $id, "Created bookmarks/$id.", 'user', operation: 'insert');
 
     http_response_code(303);
     header("Location: /bookmarks"); exit;

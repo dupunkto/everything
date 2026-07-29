@@ -12,16 +12,12 @@ if(!$date || $date->format('Y-m-d') != $_POST['date']) {
 }
 
 $done = \store\get_habit_log($habit['id'], $_POST['date']);
-$ok = $done
+
+$done
   ? \store\unlog_habit($habit['id'], $_POST['date'])
   : \store\log_habit($habit['id'], $_POST['date']);
 
-if(!$ok) {
-  fail("Could not update habit log.");
-}
-
-\store\put_audit_log('habits', $habit['id'], "Updated [log] for habits/{$habit['id']}.", 'user')
-  or fail("Could not create audit entry.");
+\store\put_audit_log('habits', $habit['id'], "Updated [log] for habits/{$habit['id']}.", 'user');
 
 $habit['date'] = $_POST['date'];
 $habit['done'] = !$done;

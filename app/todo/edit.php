@@ -13,7 +13,7 @@
       $recurrence_start->setTimezone(new \DateTimeZone(TIMEZONE))))
       fail("Invalid recurrence rule.", status: 400);
 
-    $task = \store\get_task($_POST['id']);
+    $task = \store\get_task($_POST['id']) or fail("Task not found.", status: 404);
     $fields = \core\diff([...$task, 'tags' => \store\list_task_tag_ids($_POST['id'])],
       title: $_POST['title'], content: $_POST['content'], urgent: $_POST['urgent'],
       recurrence: $recurrence, open_at: $open_at, due_at: $due_at,
@@ -22,36 +22,31 @@
       status: $_POST['status'],
       comment: $_POST['comment'], tags: $_POST['tags'] ?? []);
 
-    \store\transaction(function() use ($recurrence, $open_at, $due_at, $all_day, $fields) {
-      \store\update_task(
-        $_POST['id'],
-        $_POST['title'],
-        $_POST['content'],
-        $_POST['urgent'],
-        $recurrence,
-        $open_at,
-        $due_at,
-        $all_day,
-        cast_datetime_utc($_POST['expire_date'], @$_POST['expire_time'] ?: "00:00")
-      ) or fail("Could not update task.");
+    \store\update_task(
+      $_POST['id'],
+      $_POST['title'],
+      $_POST['content'],
+      $_POST['urgent'],
+      $recurrence,
+      $open_at,
+      $due_at,
+      $all_day,
+      cast_datetime_utc($_POST['expire_date'], @$_POST['expire_time'] ?: "00:00")
+    );
 
-      if(isset($_POST['amend'])) {
-        \store\amend_task_status($_POST['id'], $_POST['comment'])
-          or fail("Could not amend task status.");
-      }
-      else {
-        \store\set_task_status($_POST['id'], $_POST['status'], $_POST['comment'])
-          or fail("Could not update task status.");
-      }
+    if(isset($_POST['amend'])) {
+      \store\amend_task_status($_POST['id'], $_POST['comment']);
+    }
+    else {
+      \store\set_task_status($_POST['id'], $_POST['status'], $_POST['comment']);
+    }
 
-      \store\set_task_tags($_POST['id'], $_POST['tags'] ?? []);
+    \store\set_task_tags($_POST['id'], $_POST['tags'] ?? []);
 
-      \store\put_audit_log('tasks', $_POST['id'],
-        "Updated [" . join(", ", $fields) . "] for tasks/{$_POST['id']}.", 'user')
-        or fail("Could not create audit entry.");
+    \store\put_audit_log('tasks', $_POST['id'],
+      "Updated [" . join(", ", $fields) . "] for tasks/{$_POST['id']}.", 'user');
 
-      \caldav\mark_resource_changed('task', $_POST['id']);
-    });
+    \caldav\mark_resource_changed('task', $_POST['id']);
 
     if(isset($_POST['close'])) {
       http_response_code(303);

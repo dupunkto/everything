@@ -85,15 +85,21 @@
 
 .logs__table th:nth-child(1) { width: 5%; }
 .logs__table th:nth-child(2) { width: 13%; }
-.logs__table th:nth-child(3) { width: 48%; }
+.logs__table th:nth-child(3) { width: 52%; }
 .logs__table th:nth-child(4) { width: 8%; }
 .logs__table th:nth-child(5) { width: 8%; }
-.logs__table th:nth-child(6) { width: 18%; }
+.logs__table th:nth-child(6) { width: 14%; }
 
 .logs__row--debug { color: light-dark(#057caf, #62c9f5); }
 .logs__row--info { color: light-dark(#367c36, #71c271); }
 .logs__row--warn { color: light-dark(#956512, #e0ad4e); }
 .logs__row--error { color: light-dark(#a42d29, #ed716d); }
+
+.logs__message--compact {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 a.logs__entity {
   text-decoration-color: currentColor;

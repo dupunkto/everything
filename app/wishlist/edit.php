@@ -1,7 +1,7 @@
 <?php
 
   if(isset($_POST['id'])) {
-    $wish = \store\get_wish($_POST['id']);
+    $wish = \store\get_wish($_POST['id']) or fail("Wish not found.", status: 404);
     $fields = \core\diff([...$wish, 'tags' => \store\list_wish_tag_ids($_POST['id'])],
       title: cast_string($_POST['title']), content: cast_string($_POST['content']),
       urgent: cast_boolean($_POST['urgent']), added_at: cast_datetime_utc($_POST['date'], $_POST['time']),
@@ -10,29 +10,25 @@
       urls: array_map(fn($row) => [...$row, 'price' => cast_float(@$row['price'])],
         unfold($_POST, 'url', 'url')));
 
-    \store\transaction(function() use ($fields) {
-      \store\update_wish(
-        $_POST['id'],
-        cast_string($_POST['title']),
-        cast_string($_POST['content']),
-        cast_boolean($_POST['urgent']),
-        cast_datetime_utc($_POST['date'], $_POST['time'])
-      ) or fail("Could not update wish.");
+    \store\update_wish(
+      $_POST['id'],
+      cast_string($_POST['title']),
+      cast_string($_POST['content']),
+      cast_boolean($_POST['urgent']),
+      cast_datetime_utc($_POST['date'], $_POST['time'])
+    );
 
-      \store\set_wish_status($_POST['id'], $_POST['status'], cast_string(@$_POST['comment']))
-        or fail("Could not update wish status.");
+    \store\set_wish_status($_POST['id'], $_POST['status'], cast_string(@$_POST['comment']));
 
-      \store\set_wish_urls($_POST['id'],
-        array_map(fn($row) => [...$row, 'price' => cast_float(@$row['price'])],
-          unfold($_POST, 'url', 'url')));
-      \store\set_wish_tags($_POST['id'], $_POST['tags'] ?? []);
-      
-      \store\put_audit_log('wishes', $_POST['id'],
-        "Updated [" . join(", ", $fields) . "] for wishes/{$_POST['id']}.", 'user')
-        or fail("Could not create audit entry.");
-      
-      \caldav\mark_resource_changed('wish', $_POST['id']);
-    });
+    \store\set_wish_urls($_POST['id'],
+      array_map(fn($row) => [...$row, 'price' => cast_float(@$row['price'])],
+        unfold($_POST, 'url', 'url')));
+    \store\set_wish_tags($_POST['id'], $_POST['tags'] ?? []);
+
+    \store\put_audit_log('wishes', $_POST['id'],
+      "Updated [" . join(", ", $fields) . "] for wishes/{$_POST['id']}.", 'user');
+
+    \caldav\mark_resource_changed('wish', $_POST['id']);
 
     if(isset($_POST['close'])) {
       http_response_code(303);

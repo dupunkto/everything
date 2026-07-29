@@ -8,10 +8,8 @@
     if(!in_array($_POST['panel-position'], ENUM_UI_POSITION))
       fail("Invalid 'panel-position' parameter.", status: 400);
 
-    \store\update_config('ui.panel-position', $_POST['panel-position'])
-      or fail("Could not update panel position.");
-    \store\put_audit_log('config', 'ui', "Set ui.panel-position to '{$_POST['panel-position']}'.", 'user')
-      or fail("Could not create audit entry.");
+    \store\update_config('ui.panel-position', $_POST['panel-position']);
+    \store\put_audit_log('config', 'ui', "Set ui.panel-position to '{$_POST['panel-position']}'.", 'user');
 
     // We need to do a full reload for the panel to change place.
     http_response_code(303);
@@ -23,10 +21,8 @@
     if(!in_array($_POST['border-radius'], ENUM_UI_BORDER_RADIUS))
       fail("Invalid 'border-radius' parameter.", status: 400);
 
-    \store\update_config('ui.border-radius', $_POST['border-radius'])
-      or fail("Could not update border radius.");
-    \store\put_audit_log('config', 'ui', "Set ui.border-radius to '{$_POST['border-radius']}'.", 'user')
-      or fail("Could not create audit entry.");
+    \store\update_config('ui.border-radius', $_POST['border-radius']);
+    \store\put_audit_log('config', 'ui', "Set ui.border-radius to '{$_POST['border-radius']}'.", 'user');
 
     http_response_code(303);
     header("Location: /settings/ui");
@@ -37,20 +33,16 @@
     if(!in_array($_POST['sidebar-position'], ENUM_UI_POSITION))
       fail("Invalid 'sidebar-position' parameter.", status: 400);
 
-    \store\update_config('ui.sidebar-position', $_POST['sidebar-position'])
-      or fail("Could not update sidebar position.");
-    \store\put_audit_log('config', 'ui', "Set ui.sidebar-position to '{$_POST['sidebar-position']}'.", 'user')
-      or fail("Could not create audit entry.");
+    \store\update_config('ui.sidebar-position', $_POST['sidebar-position']);
+    \store\put_audit_log('config', 'ui', "Set ui.sidebar-position to '{$_POST['sidebar-position']}'.", 'user');
   }
 
   if(isset($_POST['habits-position'])) {
     if(!in_array($_POST['habits-position'], ENUM_UI_HABITS_POSITION))
       fail("Invalid 'habits-position' parameter.", status: 400);
 
-    \store\update_config('ui.habits-position', $_POST['habits-position'])
-      or fail("Could not update habits position.");
-    \store\put_audit_log('config', 'ui', "Set ui.habits-position to '{$_POST['habits-position']}'.", 'user')
-      or fail("Could not create audit entry.");
+    \store\update_config('ui.habits-position', $_POST['habits-position']);
+    \store\put_audit_log('config', 'ui', "Set ui.habits-position to '{$_POST['habits-position']}'.", 'user');
   }
 
 ?>

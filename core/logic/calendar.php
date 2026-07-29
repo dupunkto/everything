@@ -30,7 +30,7 @@ function appointments($from, $to) {
   $utc_from = \cast_datetime_utc($from->format('Y-m-d'), $from->format('H:i:s'));
   $utc_to = \cast_datetime_utc($to->format('Y-m-d'), $to->format('H:i:s'));
 
-  $appointments = \store\list_appointments($utc_from, $utc_to) ?: [];
+  $appointments = \store\list_appointments($utc_from, $utc_to);
 
   foreach($appointments as &$a) {
     $a['starts_at'] = wall($a['starts_at']);
@@ -43,7 +43,7 @@ function appointments($from, $to) {
   $window_from = new \DateTimeImmutable($from->format("Y-m-d H:i:s"));
   $window_to = new \DateTimeImmutable($to->format("Y-m-d H:i:s"));
 
-  foreach(\store\list_recurring_appointments($utc_from, $utc_to) ?: [] as $series) {
+  foreach(\store\list_recurring_appointments($utc_from, $utc_to) as $series) {
     $base = new \DateTimeImmutable(wall($series['starts_at']));
     $duration = (new \DateTimeImmutable(wall($series['ends_at'])))->getTimestamp() - $base->getTimestamp();
 
@@ -77,7 +77,7 @@ function chronological(&$appointments) {
 function task_deadlines($from, $to) {
   $deadlines = [];
 
-  foreach(\store\list_tasks("not:nvm", [], respect_horizon: false) ?: [] as $task) {
+  foreach(\store\list_tasks("not:nvm", [], respect_horizon: false) as $task) {
     if(!$task['next']) continue;
 
     $due = new \DateTime(wall($task['next']));
@@ -386,7 +386,7 @@ function travel_bands($appointments, $from, $to) {
 // coloured by their first tag's root, grey when untagged.
 function timing_lines($from, $to) {
   $tags = [];
-  foreach(\store\list_tags() ?: [] as $tag) $tags[$tag['id']] = $tag;
+  foreach(\store\list_tags() as $tag) $tags[$tag['id']] = $tag;
 
   $root_color = function($id) use ($tags) {
     $tag = $tags[$id] ?? null;
@@ -399,7 +399,7 @@ function timing_lines($from, $to) {
   foreach(\store\list_timings_between(
     \cast_datetime_utc($from->format('Y-m-d'), $from->format('H:i:s')),
     \cast_datetime_utc($to->format('Y-m-d'), $to->format('H:i:s'))
-  ) ?: [] as $timing) {
+  ) as $timing) {
     $start = new \DateTime(wall($timing['starts_at']));
     $end = new \DateTime(wall($timing['ends_at']));
 

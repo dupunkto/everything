@@ -1,6 +1,8 @@
 <?php
 // iCalendar subscription syncer.
 
+if($method != 'POST') fail("Method not allowed.", status: 405);
+
 // The syncer is idempotent. It optionally takes a specific subscription to sync,
 // and otherwise syncs all available subscriptions.
 
@@ -49,7 +51,7 @@ foreach($subscriptions as $subscription) {
   $existing = \store\list_appointments_by_subscription($subscription['id']);
 
   $now = gmdate('Y-m-d\TH:i:sP');
-  $stats = ['inserted' => 0, 'updated' => 0, 'deleted' => 0, 'kept' => 0, 'errors' => 0];
+  $stats = ['inserted' => 0, 'updated' => 0, 'deleted' => 0, 'kept' => 0];
   $seen = [];
 
   foreach($existing as $row) {
@@ -68,48 +70,8 @@ foreach($subscriptions as $subscription) {
         && $row['recurrence'] == $data['recurrence']) continue;
 
       $fields = \core\diff($row, ...$data);
-      $updated = \store\transaction(function() use ($row, $data, $fields) {
-        \store\update_appointment_body(
-          $row['id'],
-          $data['title'],
-          $data['content'],
-          $data['starts_at'],
-          $data['ends_at'],
-          $data['location'],
-          $data['meeting'],
-          $data['all_day'],
-          $data['recurrence']
-        ) or throw new \RuntimeException("Could not update subscription appointment.");
-        \caldav\mark_resource_changed('appointment', $row['id']);
-        \store\put_audit_log('appointments', $row['id'], "Updated [" . join(", ", $fields) . "] for appointments/{$row['id']}.", 'syncer')
-          or throw new \RuntimeException("Could not create audit entry.");
-        return true;
-      });
-      $updated ? $stats['updated']++ : $stats['errors']++;
-    }
-    elseif($row['ends_at'] < $now || $row['recurrence']) {
-      $stats['kept']++;
-    }
-    else {
-      $deleted = \store\transaction(function() use ($row) {
-        \store\delete_appointment($row['id'])
-          or throw new \RuntimeException("Could not delete subscription appointment.");
-        \caldav\mark_resource_deleted('appointment', $row['id']);
-        \store\put_audit_log('appointments', $row['id'], "Deleted appointments/{$row['id']}.", 'syncer', operation: 'delete')
-          or throw new \RuntimeException("Could not create audit entry.");
-        return true;
-      });
-      $deleted ? $stats['deleted']++ : $stats['errors']++;
-    }
-  }
-
-  foreach($upstream as $uid => $data) {
-    if(isset($seen[$uid])) continue;
-
-    $inserted = \store\transaction(function() use ($uid, $subscription, $data) {
-      \store\put_subscription_appointment(
-        $uid,
-        $subscription['id'],
+      \store\update_appointment_body(
+        $row['id'],
         $data['title'],
         $data['content'],
         $data['starts_at'],
@@ -118,12 +80,39 @@ foreach($subscriptions as $subscription) {
         $data['meeting'],
         $data['all_day'],
         $data['recurrence']
-      ) or throw new \RuntimeException("Could not create subscription appointment.");
-      \store\put_audit_log('appointments', $uid, "Created appointments/$uid.", 'syncer', operation: 'insert')
-        or throw new \RuntimeException("Could not create audit entry.");
-      return true;
-    });
-    $inserted ? $stats['inserted']++ : $stats['errors']++;
+      );
+      \caldav\mark_resource_changed('appointment', $row['id']);
+      \store\put_audit_log('appointments', $row['id'], "Updated [" . join(", ", $fields) . "] for appointments/{$row['id']}.", 'syncer');
+      $stats['updated']++;
+    }
+    elseif($row['ends_at'] < $now || $row['recurrence']) {
+      $stats['kept']++;
+    }
+    else {
+      \store\delete_appointment($row['id']);
+      \caldav\mark_resource_deleted('appointment', $row['id']);
+      \store\put_audit_log('appointments', $row['id'], "Deleted appointments/{$row['id']}.", 'syncer', operation: 'delete');
+      $stats['deleted']++;
+    }
+  }
+
+  foreach($upstream as $uid => $data) {
+    if(isset($seen[$uid])) continue;
+
+    \store\put_subscription_appointment(
+      $uid,
+      $subscription['id'],
+      $data['title'],
+      $data['content'],
+      $data['starts_at'],
+      $data['ends_at'],
+      $data['location'],
+      $data['meeting'],
+      $data['all_day'],
+      $data['recurrence']
+    );
+    \store\put_audit_log('appointments', $uid, "Created appointments/$uid.", 'syncer', operation: 'insert');
+    $stats['inserted']++;
   }
 
   \logger\info("Subscription synced.", [
@@ -181,4 +170,4 @@ function extract_meeting($event) {
   return null;
 }
 
-include __DIR__ . "/week.php"; exit;
+http_response_code(204);

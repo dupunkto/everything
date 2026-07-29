@@ -1,7 +1,7 @@
 <?php
 
   if(isset($_POST['id'])) {
-    $note = \store\get_note($_POST['id']);
+    $note = \store\get_note($_POST['id']) or fail("Note not found.", status: 404);
     $fields = \core\diff([...$note, 'tags' => \store\list_note_tag_ids($_POST['id'])],
       title: $_POST['title'], content: $_POST['content'],
       written_at: cast_datetime_utc($_POST['date'], $_POST['time']), tags: $_POST['tags'] ?? []);
@@ -11,12 +11,11 @@
       $_POST['title'],
       $_POST['content'],
       cast_datetime_utc($_POST['date'], $_POST['time'])
-    ) or fail("Could not update note.");
+    );
 
     \store\set_note_tags($_POST['id'], $_POST['tags'] ?? []);
     \store\put_audit_log('notes', $_POST['id'],
-      "Updated [" . join(", ", $fields) . "] for notes/{$_POST['id']}.", 'user')
-      or fail("Could not create audit entry.");
+      "Updated [" . join(", ", $fields) . "] for notes/{$_POST['id']}.", 'user');
 
     if(isset($_POST['close'])) {
       http_response_code(303);

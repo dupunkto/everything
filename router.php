@@ -3,9 +3,12 @@
 //
 // This files exposes two globals:
 //
+//   $method (string) is the request method, with fallback to GET.
 //   $path (string) is the request path, after applying normalization.
 //   $params (array) contains capture groups from the route regex.
 //
+
+$method = @$_SERVER['REQUEST_METHOD'] ?: 'GET';
 
 $path = $_SERVER['REQUEST_URI'];
 $path = explode("?", $path)[0];
@@ -40,7 +43,7 @@ function serve_file($path) {
   $mime_type = path_mime($path) ?? "text/html";
 
   if(in_array($mime_type, FORBIDDEN_MIMES)) {
-    serve_error(403);
+    fail("Forbidden.", status: 403);
   }
 
   if(in_array(path_ext($path), CACHEABLE_EXTENSIONS)) {
@@ -66,32 +69,4 @@ function serve_cached($path) {
     http_response_code(304);
     exit;
   }
-}
-
-function serve_error($code) {
-  $mapping = [
-    401 => "please dont :|",
-    403 => "bad boy >:(",
-    404 => "not found :(",
-    500 => "everything crashed :["
-  ];
-
-  fail($mapping[$code], $code);
-}
-
-function fail($message, $status = 500) {
-  $context = [
-    'status' => $status,
-    'method' => @$_SERVER['REQUEST_METHOD'],
-    'uri' => @$_SERVER['REQUEST_URI'],
-  ];
-
-  $status >= 500
-    ? \logger\error("Request failed: $message", $context)
-    : \logger\warn("Request failed: $message", $context);
-
-  http_response_code($status);
-  header("Content-Type: text/plain");
-  echo $message;
-  exit;
 }

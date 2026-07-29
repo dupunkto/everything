@@ -30,10 +30,9 @@
       null,
       cast_string($_POST['url']),
       cast_color($feed['color'] ?? "#efefef")
-    ) or fail("Could not create new subscription.");
+    );
 
-    \store\put_audit_log('subscriptions', $id, "Created subscriptions/$id.", 'user', operation: 'insert')
-      or fail("Could not create audit entry.");
+    \store\put_audit_log('subscriptions', $id, "Created subscriptions/$id.", 'user', operation: 'insert');
 
     ?>
     <section id="subscription-new" z-dismiss="escape" hidden>

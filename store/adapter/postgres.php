@@ -21,12 +21,7 @@ function establish_connection() {
 
   $dsn = "pgsql:host=$host;port=$port;dbname=$name";
 
-  try {
-    return new PDO($dsn, $user, $pass, $options);
-  }
-  catch(PDOException $e) {
-    die("Database connection failed: " . $e->getMessage());
-  }
+  return new PDO($dsn, $user, $pass, $options);
 }
 
 function initial_run() {
@@ -48,8 +43,7 @@ function execute($path) {
 
     $query = preg_replace('/int\(\d+\)/', "integer", $query);
 
-    DBH->exec($query) !== false
-      or die("Could not execute query '$query'.");
+    DBH->exec($query);
   }
 }
 

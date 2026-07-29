@@ -10,40 +10,32 @@
     if(!in_array($_POST['timezone'], \DateTimeZone::listIdentifiers()))
       fail("Invalid 'timezone' parameter.", status: 400);
 
-    \store\update_config('timezone', $_POST['timezone'])
-      or fail("Could not update timezone.");
-    \store\put_audit_log('config', 'general', "Set timezone to '{$_POST['timezone']}'.", 'user')
-      or fail("Could not create audit entry.");
+    \store\update_config('timezone', $_POST['timezone']);
+    \store\put_audit_log('config', 'general', "Set timezone to '{$_POST['timezone']}'.", 'user');
   }
 
   if(isset($_POST['time-format'])) {
     if(!in_array($_POST['time-format'], ENUM_TIME_FORMAT))
       fail("Invalid 'time-format' parameter.", status: 400);
 
-    \store\update_config('time-format', $_POST['time-format'])
-      or fail("Could not update time format.");
-    \store\put_audit_log('config', 'general', "Set time-format to '{$_POST['time-format']}'.", 'user')
-      or fail("Could not create audit entry.");
+    \store\update_config('time-format', $_POST['time-format']);
+    \store\put_audit_log('config', 'general', "Set time-format to '{$_POST['time-format']}'.", 'user');
   }
 
   if(isset($_POST['map-provider'])) {
     if(!in_array($_POST['map-provider'], ENUM_MAP_PROVIDER))
       fail("Invalid 'map-provider' parameter.", status: 400);
 
-    \store\update_config('map-provider', $_POST['map-provider'])
-      or fail("Could not update map provider.");
-    \store\put_audit_log('config', 'general', "Set map-provider to '{$_POST['map-provider']}'.", 'user')
-      or fail("Could not create audit entry.");
+    \store\update_config('map-provider', $_POST['map-provider']);
+    \store\put_audit_log('config', 'general', "Set map-provider to '{$_POST['map-provider']}'.", 'user');
   }
 
   if(isset($_POST['currency'])) {
     if(!in_array($_POST['currency'], ENUM_CURRENCY))
       fail("Invalid 'currency' parameter.", status: 400);
 
-    \store\update_config('currency', $_POST['currency'])
-      or fail("Could not update currency.");
-    \store\put_audit_log('config', 'general', "Set currency to '{$_POST['currency']}'.", 'user')
-      or fail("Could not create audit entry.");
+    \store\update_config('currency', $_POST['currency']);
+    \store\put_audit_log('config', 'general', "Set currency to '{$_POST['currency']}'.", 'user');
   }
 
 

@@ -18,7 +18,7 @@
         <li><a href="<?= CANONICAL ?>/settings/accounts">Accounts</a></li>
         <li><a href="<?= CANONICAL ?>/settings/applications">Applications</a></li>
         <li><a href="<?= CANONICAL ?>/shortcuts">Shortcuts</a></li>
-        <li><a href="<?= CANONICAL ?>/settings/developer">Developer</a></li>
+        <?php if(DEVELOPER_MODE): ?><li><a href="<?= CANONICAL ?>/settings/developer">Developer</a></li><?php endif ?>
         <li><a href="<?= CANONICAL ?>/about">About</a></li>
       </ul>
     </main>

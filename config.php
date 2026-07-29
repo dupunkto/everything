@@ -21,6 +21,7 @@ fallback('time-format', "24-hour");
 resolute('time-lang', TIME_FORMAT == '24-hour' ? 'nl' : 'en');
 fallback('currency', "eur");
 fallback('map-provider', "google_maps");
+fallback('developer-mode', $_ENV == "dev");
 
 fallback('ui.panel-position', "right");
 fallback('ui.sidebar-position', "left");
@@ -42,7 +43,7 @@ fallback('contacts.sort-order', "first");
 
 function required($key) {
   if(!defined(normalize_key($key))) {
-    die("Missing required key '$key' in config.");
+    fail("Missing required key '$key' in config.");
   }
 }
 
@@ -60,7 +61,7 @@ function resolute($key, $value) {
   $key = normalize_key($key);
   
   if(defined($key)) {
-    die("Resolute key '$key' cannot be overridden.");
+    fail("Resolute key '$key' cannot be overridden.");
   } else {
     define($key, $value);
   }

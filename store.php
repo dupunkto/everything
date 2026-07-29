@@ -9,13 +9,14 @@ if(str_starts_with($_URL, "sqlite://")) {
   $_DATABASE = ['scheme' => 'sqlite', 'path' => substr($_URL, strlen("sqlite://"))];
 }
 else {
-  $_DATABASE = parse_url($_URL) or die("Syntax error in database connection string.");
+  $_DATABASE = parse_url($_URL) or fail("Syntax error in database connection string.");
 }
 
 switch($_DATABASE['scheme']) {
   case 'mysql': require __DIR__ . "/store/adapter/mysql.php"; break;
   case 'postgres': require __DIR__ . "/store/adapter/postgres.php"; break;
   case 'sqlite': require __DIR__ . "/store/adapter/sqlite.php"; break;
+  default: fail("Unsupported database driver '{$_DATABASE['scheme']}'.");
 }
 
 define('ENUM_SSL_MODE', ['plain', 'tls', 'ssl']);
@@ -25,7 +26,7 @@ define('ENUM_WISH_STATUS', ['dream', 'bought', 'nvm']);
 // Notes
 
 function put_note($title, $content, $date = null) {
-  $ok = exec_query('INSERT INTO notes (
+  exec_query('INSERT INTO notes (
     id,
     title,
     content,
@@ -37,7 +38,7 @@ function put_note($title, $content, $date = null) {
     $date ?? gmdate('c')
   ]);
 
-  return $ok ? $id : $ok;
+  return $id;
 }
 
 function update_note($id, $title, $content, $date = null) {
@@ -98,7 +99,7 @@ function list_notes($query = "") {
 
 function list_notes_paginated($query, $limit, $offset = 0) {
   [$sql, $params] = notes_query($query, stable: true);
-  return paginate($sql, $limit, offset: $offset, params: $params) ?? [];
+  return paginate($sql, $limit, offset: $offset, params: $params);
 }
 
 function delete_note($id) {
@@ -119,11 +120,11 @@ function put_task(
   $expire_at = null,
   $comment = null
 ) {
-  in_array($status, ENUM_TASK_STATUS) or die("status $status does not exist");
+  if(!in_array($status, ENUM_TASK_STATUS)) fail("status $status does not exist");
 
   $open_at ??= gmdate('c');
 
-  $ok = exec_query('INSERT INTO tasks (
+  exec_query('INSERT INTO tasks (
     id,
     title,
     content,
@@ -145,9 +146,7 @@ function put_task(
     $expire_at
   ]);
 
-  if(!$ok) return $ok;
-
-  $ok = exec_query('INSERT INTO task_log (
+  exec_query('INSERT INTO task_log (
     task_id,
     changed_at,
     status,
@@ -159,7 +158,7 @@ function put_task(
     $comment
   ]);
 
-  return $ok ? $id : $ok;
+  return $id;
 }
 
 function update_task(
@@ -200,7 +199,7 @@ function set_task_urgent($id, $urgent) {
 }
 
 function set_task_status($id, $status, $comment = "") {
-  in_array($status, ENUM_TASK_STATUS) or die("status $status does not exist");
+  if(!in_array($status, ENUM_TASK_STATUS)) fail("status $status does not exist");
 
   // Skip redundant transitions: if the latest entry already has this status and
   // no comment is being added, there is nothing new to record. This stops rapid
@@ -359,8 +358,6 @@ function get_task($id) {
     JOIN tasks_tags tt ON tt.tag_id = tags.id
     WHERE tt.task_id = ?', [$id]);
 
-  if($tags === false) return $tags;
-
   $task['tags'] = array_column($tags, 'label');
 
   return $task;
@@ -405,9 +402,9 @@ function delete_task($id) {
 // Wishes
 
 function put_wish($title, $content, $status, $urgent = false, $date = null) {
-  in_array($status, ENUM_WISH_STATUS) or die("status $status does not exist");
+  if(!in_array($status, ENUM_WISH_STATUS)) fail("status $status does not exist");
 
-  $ok = exec_query('INSERT INTO wishes (
+  exec_query('INSERT INTO wishes (
     id,
     title,
     content,
@@ -421,18 +418,16 @@ function put_wish($title, $content, $status, $urgent = false, $date = null) {
     $date ?? gmdate('c')
   ]);
 
-  if(!$ok) return $ok;
-
-  $ok = exec_query('INSERT INTO wish_log (
+  exec_query('INSERT INTO wish_log (
     wish_id,
     status
   ) VALUES (?, ?)', [$id, $status]);
 
-  return $ok ? $id : $ok;
+  return $id;
 }
 
 function set_wish_status($id, $status, $comment = "") {
-  in_array($status, ENUM_WISH_STATUS) or die("status $status does not exist");
+  if(!in_array($status, ENUM_WISH_STATUS)) fail("status $status does not exist");
 
   // Skip redundant transitions (see set_task_status): the wish listing has the
   // same toggle, so rapid clicks would otherwise stack up empty log events.
@@ -559,7 +554,7 @@ function delete_wish($id) {
 // Bookmarks
 
 function put_bookmark($url, $label = null, $note = null, $favicon = null, $date = null) {
-  $ok = exec_query('INSERT INTO bookmarks (
+  exec_query('INSERT INTO bookmarks (
     id,
     label,
     url,
@@ -575,7 +570,7 @@ function put_bookmark($url, $label = null, $note = null, $favicon = null, $date 
     $date ?? gmdate('c')
   ]);
 
-  return $ok ? $id : $ok;
+  return $id;
 }
 
 function update_bookmark($id, $label, $url, $note = null, $date = null) {
@@ -652,9 +647,9 @@ function delete_bookmark($id) {
 // Tracker
 
 function put_timing($description, $starts_at, $ends_at, $task_id = null) {
-  if($task_id) get_task($task_id) or die("task with ID $task_id does not exist");
+  if($task_id) get_task($task_id) or fail("task with ID $task_id does not exist");
 
-  $ok = exec_query('INSERT INTO timings (
+  exec_query('INSERT INTO timings (
     id,
     description,
     starts_at,
@@ -668,11 +663,11 @@ function put_timing($description, $starts_at, $ends_at, $task_id = null) {
     $task_id
   ]);
 
-  return $ok ? $id : $ok;
+  return $id;
 }
 
 function update_timing($id, $description, $starts_at, $ends_at, $task_id) {
-  if($task_id) get_task($task_id) or die("task with ID $task_id does not exist");
+  if($task_id) get_task($task_id) or fail("task with ID $task_id does not exist");
 
   return exec_query('UPDATE timings SET
     description = ?,
@@ -770,9 +765,9 @@ function delete_quota($tag_id) {
 // Tags
 
 function put_tag($label, $color, $parent_id) {
-  if($parent_id) get_tag($parent_id) or die("tag with ID $parent_id does not exist");
+  if($parent_id) get_tag($parent_id) or fail("tag with ID $parent_id does not exist");
 
-  $ok = exec_query('INSERT INTO tags (
+  exec_query('INSERT INTO tags (
     label,
     color,
     parent_id,
@@ -784,15 +779,15 @@ function put_tag($label, $color, $parent_id) {
     prepend_order('tags')
   ]);
 
-  return $ok ? DBH->lastInsertId() : null;
+  return DBH->lastInsertId();
 }
 
 function update_tag($id, $label, $color, $parent_id) {
   if($parent_id) {
     $cursor = $parent_id;
     while($cursor) {
-      if($cursor == $id) die("illegal circular structure detected");
-      $tag = get_tag($cursor) or die("tag with ID $cursor does not exist");
+      if($cursor == $id) fail("illegal circular structure detected");
+      $tag = get_tag($cursor) or fail("tag with ID $cursor does not exist");
       $cursor = $tag['parent_id'];
     }
   }
@@ -839,10 +834,8 @@ function inherit_tag_colors($items, $id_key = 'id') {
 
 function reorder_tags($ids) {
   foreach(array_values($ids) as $order => $id) {
-    $ok = exec_query('UPDATE tags
+    exec_query('UPDATE tags
       SET position = ? WHERE id = ?', [$order, $id]);
-
-    if(!$ok) return false;
   }
 
   return true;
@@ -854,7 +847,7 @@ function tags_of($table, $fk, $id) {
     WHERE link.$fk = ?
     ORDER BY tags.position ASC, tags.id DESC", [$id]);
 
-  return $tags === false ? false : inherit_tag_colors($tags);
+  return inherit_tag_colors($tags);
 }
 
 function set_tags($table, $fk, $id, $tag_ids) {
@@ -879,11 +872,8 @@ function delete_tag($id) {
 function prepend_order($table) {
   $first = one('SELECT MIN(position) AS position FROM ' . $table);
 
-  if($first['position'] === false) return 0;
   if($first['position'] > 0) return $first['position'] - 1;
 
-  // If this fails, too bad, the ordering is a bit messed up, but
-  // not the end of the world.
   exec_query('UPDATE ' . $table . ' SET position = position + 1', []);
   
   return 0;
@@ -897,7 +887,7 @@ function append_order($table) {
 // Calendars
 
 function put_calendar($title, $subtitle, $color) {
-  $ok = exec_query('INSERT INTO calendars (
+  exec_query('INSERT INTO calendars (
     id,
     title,
     subtitle,
@@ -911,7 +901,7 @@ function put_calendar($title, $subtitle, $color) {
     append_order('sources')
   ]);
 
-  return $ok ? $id : null;
+  return $id;
 }
 
 function update_calendar($id, $title, $subtitle, $color, $position = null) {
@@ -942,7 +932,7 @@ function delete_calendar($id) {
 // Subscriptions
 
 function put_subscription($title, $subtitle, $url, $color, $filter = null) {
-  $ok = exec_query('INSERT INTO subscriptions (
+  exec_query('INSERT INTO subscriptions (
     id,
     title,
     subtitle,
@@ -960,7 +950,7 @@ function put_subscription($title, $subtitle, $url, $color, $filter = null) {
     append_order('sources')
   ]);
 
-  return $ok ? $id : null;
+  return $id;
 }
 
 function update_subscription($id, $title, $subtitle, $url, $color, $filter = null) {
@@ -1001,23 +991,21 @@ function reorder_sources($sources) {
       default => null
     };
 
-    if(!$table || !exec_query("UPDATE $table
-      SET position = ? WHERE id = ?", [$order, $id])) return false;
+    if(!$table) fail("type $type does not exist");
+    exec_query("UPDATE $table SET position = ? WHERE id = ?", [$order, $id]);
   }
 
   return true;
 }
 
 function reorder_source_by_type($type, $ids) {
-  in_array($type, ['calendars', 'subscriptions']) or die("type $type does not exist");
+  if(!in_array($type, ['calendars', 'subscriptions'])) fail("type $type does not exist");
 
-  $slots = array_column(all("SELECT position FROM $type ORDER BY position ASC, title ASC") ?: [], 'position');
+  $slots = array_column(all("SELECT position FROM $type ORDER BY position ASC, title ASC"), 'position');
 
   foreach(array_values($ids) as $i => $id) {
-    $ok = exec_query("UPDATE $type
+    exec_query("UPDATE $type
       SET position = ? WHERE id = ?", [$slots[$i] ?? $i, $id]);
-
-    if(!$ok) return false;
   }
 
   return true;
@@ -1040,7 +1028,7 @@ function put_calendar_appointment(
   $travel_before = 0,
   $travel_after = 0,
 ) {
-  return exec_query('INSERT INTO appointments (
+  exec_query('INSERT INTO appointments (
     id,
     calendar_id,
     subscription_id,
@@ -1071,7 +1059,9 @@ function put_calendar_appointment(
     $urgent,
     $travel_before,
     $travel_after
-  ]) ? $id : null;
+  ]);
+
+  return $id;
 }
 
 function put_subscription_appointment(
@@ -1296,7 +1286,7 @@ function delete_appointment($id) {
 // Habits
 
 function put_habit($title, $every, $color, $icon) {
-  $ok = exec_query('INSERT INTO habits (
+  exec_query('INSERT INTO habits (
     id,
     title,
     every,
@@ -1310,7 +1300,7 @@ function put_habit($title, $every, $color, $icon) {
     $icon
   ]);
 
-  return $ok ? $id : null;
+  return $id;
 }
 
 function update_habit($id, $title, $every, $color, $icon) {
@@ -1442,7 +1432,7 @@ function list_contact_tags($id) {
     JOIN contacts_tags ct ON ct.tag_id = t.id WHERE ct.contact_id = ?
     ORDER BY t.position ASC, t.id DESC', [$id]);
 
-  return $tags === false ? false : inherit_tag_colors($tags);
+  return inherit_tag_colors($tags);
 }
 
 function put_contact(
@@ -1456,18 +1446,14 @@ function put_contact(
   $birth_year,
   $note
 ) {
-  $birthday = validate_birthday($birth_day, $birth_month, $birth_year);
+  [$birth_day, $birth_month, $birth_year] = validate_birthday($birth_day, $birth_month, $birth_year);
 
-  if($birthday === null) return false;
-
-  [$birth_day, $birth_month, $birth_year] = $birthday;
-
-  $ok = exec_query('INSERT INTO contacts
+  exec_query('INSERT INTO contacts
     (display_name, first_name, middle_name, infix, last_name, birth_day, birth_month, birth_year, note)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
     [$display_name, $first_name, $middle_name, $infix, $last_name, $birth_day, $birth_month, $birth_year, $note]);
 
-  return $ok ? DBH->lastInsertId() : null;
+  return DBH->lastInsertId();
 }
 
 function update_contact(
@@ -1482,11 +1468,7 @@ function update_contact(
   $birth_year,
   $note
 ) {
-  $birthday = validate_birthday($birth_day, $birth_month, $birth_year);
-
-  if($birthday === null) return false;
-
-  [$birth_day, $birth_month, $birth_year] = $birthday;
+  [$birth_day, $birth_month, $birth_year] = validate_birthday($birth_day, $birth_month, $birth_year);
 
   return exec_query('UPDATE contacts SET
     display_name = ?, first_name = ?, middle_name = ?,
@@ -1551,9 +1533,9 @@ function delete_contact($id) {
 }
 
 function validate_birthday($day, $month, $year) {
-  if(($day === null) !== ($month === null)) return null;
-  if($year !== null && $day === null) return null;
-  if($day !== null && !checkdate($month, $day, $year ?: 2000)) return null;
+  if(($day === null) !== ($month === null)) fail("Invalid birthday.", status: 400);
+  if($year !== null && $day === null) fail("Invalid birthday.", status: 400);
+  if($day !== null && !checkdate($month, $day, $year ?: 2000)) fail("Invalid birthday.", status: 400);
 
   return [$day, $month, $year];
 }
@@ -1624,16 +1606,16 @@ function list_organisation_tags($id) {
     JOIN orgs_tags ot ON ot.tag_id = t.id WHERE ot.org_id = ?
     ORDER BY t.position ASC, t.id DESC', [$id]);
 
-  return $tags === false ? false : inherit_tag_colors($tags);
+  return inherit_tag_colors($tags);
 }
 
 function put_organisation($display_name, $legal_name, $registration_number, $vat_number, $note) {
-  $ok = exec_query('INSERT INTO organisations
+  exec_query('INSERT INTO organisations
     (display_name, legal_name, registration_number, vat_number, note)
     VALUES (?, ?, ?, ?, ?)',
     [$display_name, $legal_name, $registration_number, $vat_number, $note]);
 
-  return $ok ? DBH->lastInsertId() : null;
+  return DBH->lastInsertId();
 }
 
 function update_organisation($id, $display_name, $legal_name, $registration_number, $vat_number, $note) {
@@ -1864,7 +1846,8 @@ function replace_alarms($type, $id, $alarms) {
     'wish' => 'wish_id',
     default => null
   };
-  if(!$key || !exec_query("DELETE FROM alarms WHERE $key = ?", [$id])) return false;
+  if(!$key) fail("type $type does not support alarms");
+  exec_query("DELETE FROM alarms WHERE $key = ?", [$id]);
 
   foreach($alarms as $alarm) {
     $values = [
@@ -1874,7 +1857,7 @@ function replace_alarms($type, $id, $alarms) {
     ];
     $values[$key] = $id;
 
-    if(!exec_query('INSERT INTO alarms (
+    exec_query('INSERT INTO alarms (
       id, appointment_id, task_id, wish_id, trigger_at,
       trigger_offset, relative_to, description
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [
@@ -1886,7 +1869,7 @@ function replace_alarms($type, $id, $alarms) {
       $alarm['trigger_offset'],
       $alarm['relative_to'],
       $alarm['description'],
-    ])) return false;
+    ]);
   }
 
   return true;
@@ -1914,7 +1897,8 @@ function replace_properties($type, $id, $properties) {
     'alarm' => 'alarm_id',
     default => null
   };
-  if(!$key || !exec_query("DELETE FROM properties WHERE $key = ?", [$id])) return false;
+  if(!$key) fail("type $type does not support properties");
+  exec_query("DELETE FROM properties WHERE $key = ?", [$id]);
 
   foreach(array_values($properties) as $position => $property) {
     $values = [
@@ -1925,7 +1909,7 @@ function replace_properties($type, $id, $properties) {
     ];
     $values[$key] = $id;
 
-    if(!exec_query('INSERT INTO properties (
+    exec_query('INSERT INTO properties (
       appointment_id, task_id, wish_id, alarm_id,
       name, parameters, value, position
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [
@@ -1937,7 +1921,7 @@ function replace_properties($type, $id, $properties) {
       json_encode($property['parameters'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
       $property['value'],
       $position,
-    ])) return false;
+    ]);
   }
 
   return true;
@@ -1955,19 +1939,18 @@ function caldav_collection_revision($collection) {
 }
 
 function put_caldav_changes($changes) {
-  if(!exec_query('UPDATE caldav_revision SET revision = revision + 1 WHERE id = 1', [])) return false;
+  exec_query('UPDATE caldav_revision SET revision = revision + 1 WHERE id = 1', []);
   $revision = caldav_global_revision();
 
   foreach($changes as $change) {
-    if(!exec_query('INSERT INTO caldav_changes (
+    exec_query('INSERT INTO caldav_changes (
       revision, collection, href, operation
     ) VALUES (?, ?, ?, ?)', [
       $revision,
       $change['collection'],
       $change['href'],
       $change['operation'],
-    ])) return false;
-
+    ]);
   }
 
   return $revision;
@@ -2098,15 +2081,18 @@ function list_logs_filtered($sources, $levels, $message, $from, $to, $limit) {
 
   if(in_array('audit', $sources) && ($filters = $where('message', 'info')) !== null)
     $selects[] = "SELECT id AS source_id, changed_at, 'info' AS level, message, operation,
-      author, table_name, record_id, 'audit' AS source FROM audit_log$filters";
+      author, table_name, record_id, 'audit' AS source, NULL AS http_status,
+      NULL AS system_context FROM audit_log$filters";
 
   if(in_array('system', $sources) && ($filters = $where('message')) !== null)
     $selects[] = "SELECT id AS source_id, changed_at, level, message, '' AS operation,
-      'system' AS author, '' AS table_name, '' AS record_id, 'system' AS source FROM system_logs$filters";
+      'system' AS author, '' AS table_name, '' AS record_id, 'system' AS source,
+      NULL AS http_status, context AS system_context FROM system_logs$filters";
 
   if(in_array('http', $sources) && ($filters = $where('uri', 'debug')) !== null)
     $selects[] = "SELECT id AS source_id, changed_at, 'debug' AS level, uri AS message, method AS operation,
-      'http' AS author, '' AS table_name, '' AS record_id, 'http' AS source FROM http_logs$filters";
+      remote_addr AS author, '' AS table_name, '' AS record_id, 'http' AS source,
+      status AS http_status, NULL AS system_context FROM http_logs$filters";
 
   if(!$selects) return [];
 
@@ -2118,7 +2104,7 @@ function list_logs_filtered($sources, $levels, $message, $from, $to, $limit) {
         ORDER BY latest.changed_at DESC, latest.id DESC LIMIT 1) = 'delete') END AS deleted
       FROM ($query) AS logs
       ORDER BY changed_at DESC, source DESC, source_id DESC",
-    $limit, params: $params) ?? [];
+    $limit, params: $params);
 }
 
 function list_audit_logs($table_name, $record_id) {
@@ -2172,8 +2158,7 @@ function migrate($from, $to) {
     // NOTE(robin): if the STORE_VERSION value is higher than any migration file
     // (aka the migration file has not been committed or is missing), this function
     // will run on EVERY REQUEST, because the database never catches up. Bad?
-    exec_query('INSERT INTO migrations (version) VALUES (?)', [$version])
-      or die("Failed to bump store version to v" . $version . ".");
+    exec_query('INSERT INTO migrations (version) VALUES (?)', [$version]);
   }
 }
 
@@ -2194,11 +2179,11 @@ function slug_taken($table, $slug) {
 // SQL helpers
 
 function one($sql, $params = []) {
-  return exec_query("$sql LIMIT 1", $params)?->fetch();
+  return exec_query("$sql LIMIT 1", $params)->fetch();
 }
 
 function all($sql, $params = []) {
-  return exec_query($sql, $params)?->fetchAll();
+  return exec_query($sql, $params)->fetchAll();
 }
 
 function paginate($sql, $limit, $offset = 0, $params = []) {
@@ -2206,19 +2191,9 @@ function paginate($sql, $limit, $offset = 0, $params = []) {
 }
 
 function exec_query($sql, $params) {
-  try {
-    $query = DBH->prepare($sql);
-    $query->execute($params);
-    return $query;
-  }
-  catch(\PDOException $e) {
-    if(function_exists('logger\\error') && !str_starts_with(ltrim($sql), 'INSERT INTO system_logs')) \logger\error("Database query failed.", [
-      'error' => $e->getMessage(),
-      'query' => $sql,
-    ]);
-    trigger_error($e, E_USER_WARNING);
-    return null;
-  }
+  $query = DBH->prepare($sql);
+  $query->execute($params);
+  return $query;
 }
 
 // Transactions
@@ -2253,7 +2228,7 @@ $latest_store_version = STORE_VERSION;
 $current_store_version = INITIAL_RUN ? -1 : version();
 
 if($current_store_version > $latest_store_version) {
-  die("Mismatched store versions: expected v" . STORE_VERSION . ", 
+  fail("Mismatched store versions: expected v" . STORE_VERSION . ",
   but store is already at v$current_store_version");
 }
 

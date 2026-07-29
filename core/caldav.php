@@ -150,15 +150,13 @@ function reconcile() {
         $href = $row['id'] . "-$type.ics";
 
       if(!$resource) {
-        \store\update_caldav_resource($type, $row['id'], $href, $desired, uid: $uid)
-          or throw new \RuntimeException("Could not register CalDAV resource.");
+        \store\update_caldav_resource($type, $row['id'], $href, $desired, uid: $uid);
         if($desired) $changes[] = ['collection' => $desired, 'href' => $href, 'operation' => 'upsert'];
       }
       elseif($current != $desired) {
         if($current) $changes[] = ['collection' => $current, 'href' => $old_href, 'operation' => 'delete'];
         if($desired) $changes[] = ['collection' => $desired, 'href' => $href, 'operation' => 'upsert'];
-        \store\update_caldav_resource($type, $row['id'], $href, $desired, uid: $uid)
-          or throw new \RuntimeException("Could not move CalDAV resource.");
+        \store\update_caldav_resource($type, $row['id'], $href, $desired, uid: $uid);
       }
     };
 
@@ -197,12 +195,10 @@ function reconcile() {
         'href' => $resource['href'],
         'operation' => 'delete',
       ];
-      \store\delete_caldav_resource($resource['entity_type'], $resource['entity_id'])
-        or throw new \RuntimeException("Could not delete CalDAV resource.");
+      \store\delete_caldav_resource($resource['entity_type'], $resource['entity_id']);
     }
 
-    if($changes) \store\put_caldav_changes($changes)
-      or throw new \RuntimeException("Could not update CalDAV sync state.");
+    if($changes) \store\put_caldav_changes($changes);
   });
 }
 
@@ -210,14 +206,13 @@ function mark_resource_changed($type, $id) {
   $resource = \store\get_caldav_resource($type, $id);
   if(!$resource) return true;
 
-  \store\touch_caldav_resource($type, $id)
-    or throw new \RuntimeException("Could not update CalDAV revision.");
+  \store\touch_caldav_resource($type, $id);
   if($resource['collection'])
     \store\put_caldav_changes([[
       'collection' => $resource['collection'],
       'href' => $resource['href'],
       'operation' => 'upsert',
-    ]]) or throw new \RuntimeException("Could not update CalDAV sync state.");
+    ]]);
   if($type == 'appointment') mark_travel_changed($id);
   return true;
 }
@@ -226,13 +221,12 @@ function mark_travel_changed($id) {
   foreach(['travel_before', 'travel_after'] as $type) {
     $resource = \store\get_caldav_resource($type, $id);
     if(!$resource || !$resource['collection']) continue;
-    \store\touch_caldav_resource($type, $id)
-      or throw new \RuntimeException("Could not update travel revision.");
+    \store\touch_caldav_resource($type, $id);
     \store\put_caldav_changes([[
       'collection' => $resource['collection'],
       'href' => $resource['href'],
       'operation' => 'upsert',
-    ]]) or throw new \RuntimeException("Could not update CalDAV sync state.");
+    ]]);
   }
   return true;
 }
@@ -241,16 +235,14 @@ function hide_resource($type, $id) {
   $resource = \store\get_caldav_resource($type, $id);
   if(!$resource) return true;
 
-  \store\update_caldav_resource($type, $id, $resource['href'], null)
-    or throw new \RuntimeException("Could not hide CalDAV resource.");
-  \store\touch_caldav_resource($type, $id)
-    or throw new \RuntimeException("Could not update CalDAV revision.");
+  \store\update_caldav_resource($type, $id, $resource['href'], null);
+  \store\touch_caldav_resource($type, $id);
   if($resource['collection'])
     \store\put_caldav_changes([[
       'collection' => $resource['collection'],
       'href' => $resource['href'],
       'operation' => 'delete',
-    ]]) or throw new \RuntimeException("Could not update CalDAV sync state.");
+    ]]);
   return true;
 }
 
@@ -263,14 +255,13 @@ function mark_resource_deleted($type, $id) {
   $resource = \store\get_caldav_resource($type, $id);
   if(!$resource) return true;
 
-  \store\delete_caldav_resource($type, $id)
-    or throw new \RuntimeException("Could not delete CalDAV resource.");
+  \store\delete_caldav_resource($type, $id);
   if($resource['collection'])
     \store\put_caldav_changes([[
       'collection' => $resource['collection'],
       'href' => $resource['href'],
       'operation' => 'delete',
-    ]]) or throw new \RuntimeException("Could not update CalDAV sync state.");
+    ]]);
   return true;
 }
 

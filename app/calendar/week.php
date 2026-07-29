@@ -80,8 +80,8 @@ $sidebar_right = UI_SIDEBAR_POSITION == 'right';
   <input type="hidden" name="date" value="<?= $from->format('Y-m-d') ?>" form="calendar-filters">
 
   <div class="calendar-week__nav">
-    <button type="button" title="Sync calendars" data-sync x-get="/calendar/sync"
-      x-target="#calendar-view" x-data="#calendar-filters"><i class="fa-solid fa-rotate"></i></button>
+    <button type="button" title="Sync calendars" data-sync x-post="/calendar/sync"
+      x-refresh="#calendar-view"><i class="fa-solid fa-rotate"></i></button>
     <button type="button" title="Previous week" x-get="/calendar/week?date=<?= (clone $from)->modify('-7 days')->format('Y-m-d') ?>"
       x-target="#calendar-view" x-data="#calendar-filters">&larr;</button>
     <button type="button" data-today x-get="/calendar/week?date=<?= $today->format('Y-m-d') ?>"

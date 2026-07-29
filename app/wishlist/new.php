@@ -1,26 +1,22 @@
 <?php
 
   if(isset($_POST["title"], $_POST["status"], $_POST["urgent"])) {
-    $id = \store\transaction(function() {
-      $id = \store\put_wish(
-        cast_string($_POST['title']),
-        cast_string(@$_POST['content']),
-        cast_string($_POST['status']),
-        cast_boolean($_POST['urgent'])
-      ) or fail("Could not save wish '" . $_POST['title'] . "'.");
+    $id = \store\put_wish(
+      cast_string($_POST['title']),
+      cast_string(@$_POST['content']),
+      cast_string($_POST['status']),
+      cast_boolean($_POST['urgent'])
+    );
 
-      $urls = array_map(fn($row) => [...$row, 'price' => cast_float(@$row['price'])],
-        unfold($_POST, 'url', 'url'));
+    $urls = array_map(fn($row) => [...$row, 'price' => cast_float(@$row['price'])],
+      unfold($_POST, 'url', 'url'));
 
-      \store\set_wish_urls($id, $urls);
-      \store\set_wish_tags($id, $_POST['tags'] ?? []);
+    \store\set_wish_urls($id, $urls);
+    \store\set_wish_tags($id, $_POST['tags'] ?? []);
 
-      \store\put_audit_log('wishes', $id, "Created wishes/$id.", 'user', operation: 'insert')
-        or fail("Could not create audit entry.");
+    \store\put_audit_log('wishes', $id, "Created wishes/$id.", 'user', operation: 'insert');
 
-      \caldav\mark_resource_changed('wish', $id);
-      return $id;
-    });
+    \caldav\mark_resource_changed('wish', $id);
 
     http_response_code(303);
     header("Location: /wishlist"); exit;

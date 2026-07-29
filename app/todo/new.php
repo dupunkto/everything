@@ -13,29 +13,24 @@
       $recurrence_start->setTimezone(new \DateTimeZone(TIMEZONE))))
       fail("Invalid recurrence rule.", status: 400);
 
-    $id = \store\transaction(function() use ($recurrence, $open_at, $due_at, $all_day) {
-      $id = \store\put_task(
-        cast_string($_POST['title']),
-        cast_string(@$_POST['content']),
-        cast_string($_POST['status']),
-        cast_boolean($_POST['urgent']),
-        $recurrence,
-        $open_at,
-        $due_at,
-        $all_day,
-        cast_datetime_utc($_POST['expire_date'], @$_POST['expire_time'] ?: "00:00"),
-        cast_string($_POST['comment'])
-      ) or fail("Could not save task '" . $_POST['title'] . "'.");
+    $id = \store\put_task(
+      cast_string($_POST['title']),
+      cast_string(@$_POST['content']),
+      cast_string($_POST['status']),
+      cast_boolean($_POST['urgent']),
+      $recurrence,
+      $open_at,
+      $due_at,
+      $all_day,
+      cast_datetime_utc($_POST['expire_date'], @$_POST['expire_time'] ?: "00:00"),
+      cast_string($_POST['comment'])
+    );
 
-      \store\set_task_tags($id, $_POST['tags'] ?? []);
-      
-      \store\put_audit_log('tasks', $id, "Created tasks/$id.", 'user', operation: 'insert')
-        or fail("Could not create audit entry.");
-      
-      \caldav\mark_resource_changed('task', $id);
-      
-      return $id;
-    });
+    \store\set_task_tags($id, $_POST['tags'] ?? []);
+
+    \store\put_audit_log('tasks', $id, "Created tasks/$id.", 'user', operation: 'insert');
+
+    \caldav\mark_resource_changed('task', $id);
 
     http_response_code(303);
     header("Location: /todo"); exit;

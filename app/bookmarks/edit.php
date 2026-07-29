@@ -1,7 +1,7 @@
 <?php
 
   if(isset($_POST['id'])) {
-    $bookmark = \store\get_bookmark($_POST['id']);
+    $bookmark = \store\get_bookmark($_POST['id']) or fail("Bookmark not found.", status: 404);
     $fields = \core\diff([...$bookmark, 'tags' => \store\list_bookmark_tag_ids($_POST['id'])],
       label: cast_string(@$_POST['label']),
       url: cast_string($_POST['url']),
@@ -15,12 +15,11 @@
       cast_string($_POST['url']),
       cast_string(@$_POST['note']),
       cast_datetime_utc($_POST['date'], $_POST['time'])
-    ) or fail("Could not update bookmark.");
+    );
 
     \store\set_bookmark_tags($_POST['id'], $_POST['tags'] ?? []);
     \store\put_audit_log('bookmarks', $_POST['id'],
-      "Updated [" . join(", ", $fields) . "] for bookmarks/{$_POST['id']}.", 'user')
-      or fail("Could not create audit entry.");
+      "Updated [" . join(", ", $fields) . "] for bookmarks/{$_POST['id']}.", 'user');
 
     if(isset($_POST['close'])) {
       http_response_code(303);

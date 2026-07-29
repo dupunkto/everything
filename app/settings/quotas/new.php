@@ -10,9 +10,8 @@
       'week',
       60,
       local_date("Y-m-d")
-    ) or fail("Could not create tracker quota.", status: 400);
-    \store\put_audit_log('quotas', $_POST['tag_id'], "Created quotas/{$_POST['tag_id']}.", 'user', operation: 'insert')
-      or fail("Could not create audit entry.");
+    );
+    \store\put_audit_log('quotas', $_POST['tag_id'], "Created quotas/{$_POST['tag_id']}.", 'user', operation: 'insert');
 
     include __DIR__ . "/listing.php"; exit;
   }

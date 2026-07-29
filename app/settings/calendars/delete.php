@@ -1,16 +1,13 @@
 <?php
 
-  \store\delete_calendar($_GET['id']) or fail("Could not delete calendar #" . $id);
+  \store\delete_calendar($_GET['id']);
 
   if(CALENDAR_DEFAULT_CALENDAR == $_GET['id']) {
-    \store\update_config('calendar.default_calendar', null)
-      or fail("Could not unset default calendar.");
+    \store\update_config('calendar.default_calendar', null);
     \store\put_audit_log('config', 'calendar.default_calendar',
-      "Unset calendar.default_calendar.", 'user')
-      or fail("Could not create audit entry.");
+      "Unset calendar.default_calendar.", 'user');
   }
 
-  \store\put_audit_log('calendars', $_GET['id'], "Deleted calendars/{$_GET['id']}.", 'user', operation: 'delete')
-    or fail("Could not create audit entry.");
+  \store\put_audit_log('calendars', $_GET['id'], "Deleted calendars/{$_GET['id']}.", 'user', operation: 'delete');
 
   include __DIR__ . "/listing.php"; exit;

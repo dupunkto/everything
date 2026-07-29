@@ -8,23 +8,18 @@
   $starts_at = cast_datetime_utc($_POST['start_date'], $_POST['start_time']);
   $ends_at = cast_datetime_utc($_POST['end_date'], $_POST['end_time']);
 
-  $id = \store\transaction(function() use ($starts_at, $ends_at) {
-    $id = \store\put_calendar_appointment(
-      CALENDAR_DEFAULT_CALENDAR,
-      "New event",
-      null,
-      $starts_at,
-      $ends_at,
-      all_day: cast_boolean(@$_POST['all_day'])
-    ) or fail("Could not create appointment.");
+  $id = \store\put_calendar_appointment(
+    CALENDAR_DEFAULT_CALENDAR,
+    "New event",
+    null,
+    $starts_at,
+    $ends_at,
+    all_day: cast_boolean(@$_POST['all_day'])
+  );
 
-    \store\put_audit_log('appointments', $id, "Created appointments/$id.", 'user', operation: 'insert')
-      or fail("Could not create audit entry.");
+  \store\put_audit_log('appointments', $id, "Created appointments/$id.", 'user', operation: 'insert');
 
-    \caldav\mark_resource_changed('appointment', $id);
-
-    return $id;
-  });
+  \caldav\mark_resource_changed('appointment', $id);
 
   header("Content-Type: text/plain");
   echo $id; // Return the ID. The frontend will use this to open an edit modal.

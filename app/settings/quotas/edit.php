@@ -18,10 +18,8 @@
   $fields = \core\diff($quota,
     period: $period, minutes: $minutes, start_date: $start_date);
 
-  \store\update_quota(cast_int($_POST['tag_id']), $period, $minutes, $start_date)
-    or fail("Could not save tracker quota.", status: 400);
+  \store\update_quota(cast_int($_POST['tag_id']), $period, $minutes, $start_date);
   \store\put_audit_log('quotas', cast_int($_POST['tag_id']),
-    "Updated [" . join(", ", $fields) . "] for quotas/{$_POST['tag_id']}.", 'user')
-    or fail("Could not create audit entry.");
+    "Updated [" . join(", ", $fields) . "] for quotas/{$_POST['tag_id']}.", 'user');
 
   include __DIR__ . "/listing.php"; exit;

@@ -16,7 +16,7 @@
       // which is the color of the default calendar.
       $ghost_color = @\store\get_calendar(CALENDAR_DEFAULT_CALENDAR)['color'] ?: '#cccccc';
 
-      $sources = \store\list_sources() ?: [];
+      $sources = \store\list_sources();
     ?>
 
     <main class="main main--wide calendar-page <?= UI_SIDEBAR_POSITION == 'right' ? 'calendar-page--sidebar-right' : '' ?>" style="--ghost-color: <?= esc_attr($ghost_color) ?>">

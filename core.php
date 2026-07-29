@@ -4,6 +4,8 @@
 define('EVERYTHING_VERSION', "0.1-preview");
 define('STORE_VERSION', 0);
 
+require __DIR__ . "/core/anyhow.php";
+
 require __DIR__ . "/vendor/sabre.php";
 require __DIR__ . "/vendor/parsedown.php";
 

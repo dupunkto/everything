@@ -21,12 +21,7 @@ function establish_connection() {
 
   $dsn = "mysql:host=$host;port=$port;dbname=$name;charset=utf8mb4";
 
-  try {
-    return new PDO($dsn, $user, $pass, $options);
-  }
-  catch(PDOException $e) {
-    die("Database connection failed: " . $e->getMessage());
-  }
+  return new PDO($dsn, $user, $pass, $options);
 }
 
 function initial_run() {
@@ -39,8 +34,7 @@ function execute($path) {
 
   foreach ($queries as $query) {
     $query = trim($query);
-    if(!empty($query)) DBH->exec($query) !== false 
-      or die("Could not execute query '$query'.");
+    if(!empty($query)) DBH->exec($query);
   }
 }
 

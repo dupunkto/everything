@@ -30,6 +30,7 @@
   if($kind === "org" ? isset($_POST['display_name']) : isset($_POST['first_name'])) {
     $creating = !$id;
     $item = $id ? ($kind == 'org' ? \store\get_organisation($id) : \store\get_contact($id)) : [];
+    if($id) $item or fail(($kind == 'org' ? "Organisation" : "Contact") . " not found.", status: 404);
 
     if($kind === "org") {
       if($id) {
@@ -46,7 +47,7 @@
           cast_string($_POST['registration_number']),
           cast_string($_POST['vat_number']),
           cast_string($_POST['note'])
-        ) or fail("Could not update organisation.");
+        );
       } else {
         $id = \store\put_organisation(
           cast_string($_POST['display_name']),
@@ -54,7 +55,7 @@
           cast_string($_POST['registration_number']),
           cast_string($_POST['vat_number']),
           cast_string($_POST['note'])
-        ) or fail("Could not create organisation.");
+        );
       }
 
       \store\set_organisation_emails($id, unfold($_POST, 'email', 'email'));
@@ -85,7 +86,7 @@
           cast_int($_POST['birth_month']),
           cast_int($_POST['birth_year']),
           cast_string($_POST['note'])
-        ) or fail("Could not update contact.");
+        );
       } else {
         $id = \store\put_contact(
           cast_string($_POST['display_name']),
@@ -97,7 +98,7 @@
           cast_int($_POST['birth_month']),
           cast_int($_POST['birth_year']),
           cast_string($_POST['note'])
-        ) or fail("Could not create contact.");
+        );
       }
 
       \store\set_contact_emails($id, unfold($_POST, 'email', 'email'));
@@ -115,8 +116,7 @@
     $message = $creating
       ? "Created $table/$id."
       : "Updated [" . join(", ", $fields) . "] for $table/$id.";
-    \store\put_audit_log($table, $id, $message, 'user', operation: $creating ? 'insert' : 'update')
-      or fail("Could not create audit entry.");
+    \store\put_audit_log($table, $id, $message, 'user', operation: $creating ? 'insert' : 'update');
 
     $_GET['kind'] = $kind;
     $_GET['id'] = $id;

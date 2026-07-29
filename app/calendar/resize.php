@@ -13,15 +13,11 @@
   $starts_at = cast_datetime_utc($_POST['start_date'], $_POST['start_time']);
   $ends_at = cast_datetime_utc($_POST['end_date'], $_POST['end_time']);
 
-  \store\transaction(function() use ($appointment, $starts_at, $ends_at) {
-    \store\update_appointment_times($appointment['id'], $starts_at, $ends_at)
-      or fail("Could not move or resize appointment.");
+  \store\update_appointment_times($appointment['id'], $starts_at, $ends_at);
 
-    $fields = \core\diff($appointment, starts_at: $starts_at, ends_at: $ends_at);
-    \store\put_audit_log('appointments', $appointment['id'], "Updated [" . join(", ", $fields) . "] for appointments/{$appointment['id']}.", 'user')
-      or fail("Could not create audit entry.");
+  $fields = \core\diff($appointment, starts_at: $starts_at, ends_at: $ends_at);
+  \store\put_audit_log('appointments', $appointment['id'], "Updated [" . join(", ", $fields) . "] for appointments/{$appointment['id']}.", 'user');
 
-    \caldav\mark_resource_changed('appointment', $appointment['id']);
-  });
+  \caldav\mark_resource_changed('appointment', $appointment['id']);
 
   http_response_code(204); exit;

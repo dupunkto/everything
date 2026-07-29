@@ -52,6 +52,31 @@
   max-width: 750px;
 }
 
+.request-error {
+  padding: 1.5em;
+  overflow-wrap: anywhere;
+}
+
+.request-error--page {
+  margin: 10vh auto;
+}
+
+.request-error--fragment {
+  border: 1px solid #e23b3b;
+}
+
+.request-error__status {
+  color: #e23b3b;
+  font-family: monospace;
+  font-weight: bold;
+}
+
+.request-error pre {
+  max-width: 100%;
+  overflow: auto;
+  white-space: pre-wrap;
+}
+
 .main--wide {
   max-width: 100%;
   margin: 1em;

@@ -8,11 +8,10 @@
       $_POST['description'],
       $starts_at,
       $ends_at
-    ) or fail("Could not save timing from $starts_at to $ends_at with description '" . $_POST['description'] . "'.");
+    );
 
     \store\set_timing_tags($id, $_POST['tags'] ?? []);
-    \store\put_audit_log('timings', $id, "Created timings/$id.", 'user', operation: 'insert')
-      or fail("Could not create audit entry.");
+    \store\put_audit_log('timings', $id, "Created timings/$id.", 'user', operation: 'insert');
 
     include __DIR__ . "/listing.php"; exit;
   }

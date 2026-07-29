@@ -13,7 +13,7 @@
     ];
 
     if($_POST['addr_id']) {
-      $address = \store\get_address($_POST['addr_id']);
+      $address = \store\get_address($_POST['addr_id']) or fail("Address not found.", status: 404);
       \store\update_address($_POST['addr_id'], ...$fields);
       $id = $_POST['addr_id'];
       $changed = \core\diff($address, ...$fields);
@@ -26,8 +26,7 @@
       $operation = 'insert';
     }
 
-    \store\put_audit_log('addresses', $id, $message, 'user', operation: $operation)
-      or fail("Could not create audit entry.");
+    \store\put_audit_log('addresses', $id, $message, 'user', operation: $operation);
   }
 
   include __DIR__ . "/listing.php";

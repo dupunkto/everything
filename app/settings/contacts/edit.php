@@ -4,30 +4,24 @@
   define('ENUM_ORDERS', ['first', 'last']);
 
   if(isset($_POST['default-query'])) {
-    \store\update_config('contacts.default-query', $_POST['default-query'])
-      or fail("Could not update default query.");
-    \store\put_audit_log('config', 'contacts', "Set contacts.default-query to '{$_POST['default-query']}'.", 'user')
-      or fail("Could not create audit entry.");
+    \store\update_config('contacts.default-query', $_POST['default-query']);
+    \store\put_audit_log('config', 'contacts', "Set contacts.default-query to '{$_POST['default-query']}'.", 'user');
   }
 
   if(isset($_POST['display-format'])) {
     if(!in_array($_POST['display-format'], ENUM_FORMATS))
       fail("Invalid 'display-format' parameter.", status: 400);
 
-    \store\update_config('contacts.display-format', $_POST['display-format'])
-      or fail("Could not update display format.");
-    \store\put_audit_log('config', 'contacts', "Set contacts.display-format to '{$_POST['display-format']}'.", 'user')
-      or fail("Could not create audit entry.");
+    \store\update_config('contacts.display-format', $_POST['display-format']);
+    \store\put_audit_log('config', 'contacts', "Set contacts.display-format to '{$_POST['display-format']}'.", 'user');
   }
 
   if(isset($_POST['sort-order'])) {
     if(!in_array($_POST['sort-order'], ENUM_ORDERS))
       fail("Invalid 'sort-order' parameter.", status: 400);
 
-    \store\update_config('contacts.sort-order', $_POST['sort-order'])
-      or fail("Could not update sort order.");
-    \store\put_audit_log('config', 'contacts', "Set contacts.sort-order to '{$_POST['sort-order']}'.", 'user')
-      or fail("Could not create audit entry.");
+    \store\update_config('contacts.sort-order', $_POST['sort-order']);
+    \store\put_audit_log('config', 'contacts', "Set contacts.sort-order to '{$_POST['sort-order']}'.", 'user');
   }
 
 
