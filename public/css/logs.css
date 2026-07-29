@@ -34,14 +34,14 @@
 }
 
 .logs-filter {
-  --log-color: #ede8e2;
+  --log-color: light-dark(#ede8e2, #363640);
   display: inline-block;
   width: 120px;
   height: 36px;
   padding: 0;
   line-height: 36px;
   color: inherit;
-  background-color: #ede8e2;
+  background-color: light-dark(#ede8e2, #363640);
   text-align: center;
   cursor: pointer;
   font-size: 1em;
@@ -76,7 +76,7 @@
 
 .logs-header__sources .logs-filter:hover,
 .logs-header__sources .logs-filter--active {
-  background-color: #c6c1bc;
+  background-color: light-dark(#c6c1bc, #555560);
 }
 
 .logs__table {
@@ -94,6 +94,10 @@
 .logs__row--info { color: light-dark(#367c36, #71c271); }
 .logs__row--warn { color: light-dark(#956512, #e0ad4e); }
 .logs__row--error { color: light-dark(#a42d29, #ed716d); }
+
+a.logs__entity {
+  text-decoration-color: currentColor;
+}
 
 .logs__entity {
   display: block;
