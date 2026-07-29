@@ -2110,7 +2110,14 @@ function list_logs_filtered($sources, $levels, $message, $from, $to, $limit) {
 
   if(!$selects) return [];
 
-  return paginate(join(' UNION ALL ', $selects) . ' ORDER BY changed_at DESC, source DESC, source_id DESC',
+  $query = join(' UNION ALL ', $selects);
+
+  return paginate("SELECT logs.*,
+      CASE WHEN source = 'audit' THEN ((SELECT operation FROM audit_log AS latest
+        WHERE latest.table_name = logs.table_name AND latest.record_id = logs.record_id
+        ORDER BY latest.changed_at DESC, latest.id DESC LIMIT 1) = 'delete') END AS deleted
+      FROM ($query) AS logs
+      ORDER BY changed_at DESC, source DESC, source_id DESC",
     $limit, params: $params) ?? [];
 }
 

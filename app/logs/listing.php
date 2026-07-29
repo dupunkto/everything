@@ -68,7 +68,7 @@
 <?php foreach($logs as $log): ?>
   <?php if($log['source'] == 'http') [$log['table_name'], $log['record_id']] = $http_entity($log['message']) ?>
   <?php $entity = $log['table_name'] . ($log['record_id'] ? "/{$log['record_id']}" : '') ?>
-  <?php $url = $edit_url($log) ?>
+  <?php $url = @$log['deleted'] ? null : $edit_url($log) ?>
   <?php $datetime = (new \DateTimeImmutable($log['changed_at'], timezone: new \DateTimeZone("UTC")))->format('c') ?>
   <tr class="logs__row--<?= esc_attr($log['level']) ?>">
     <td><?= esc_inner($log['level']) ?></td>
