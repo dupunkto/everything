@@ -32,16 +32,18 @@ function xml_body() {
 }
 
 function dav_error($status, $message, $condition = null) {
+  $method = @$_SERVER['REQUEST_METHOD'] ?: 'unknown request';
+  $uri = @$_SERVER['REQUEST_URI'] ?: 'unknown URI';
   $context = [
     'status' => $status,
     'message' => $message,
     'condition' => $condition,
-    'method' => @$_SERVER['REQUEST_METHOD'],
-    'uri' => @$_SERVER['REQUEST_URI'],
+    'method' => $method,
+    'uri' => $uri,
   ];
   $status >= 500
-    ? \logger\error("CalDAV request failed.", $context)
-    : \logger\warn("CalDAV request denied.", $context);
+    ? \logger\error("CalDAV $method $uri failed ($status): $message", $context)
+    : \logger\warn("CalDAV $method $uri denied ($status): $message", $context);
   http_response_code($status);
   if($condition) {
     header("Content-Type: application/xml; charset=utf-8");

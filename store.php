@@ -2065,8 +2065,53 @@ function list_logs() {
   return all(logs_query());
 }
 
-function list_logs_paginated($limit, $offset = 0) {
-  return paginate(logs_query(audit_only: true), $limit, offset: $offset);
+function list_logs_filtered($sources, $levels, $message, $from, $to, $limit) {
+  $selects = [];
+  $params = [];
+
+  $where = function($column, $level = null) use ($levels, $message, $from, $to, &$params) {
+    $conditions = [];
+
+    if($level === null) {
+      if(!$levels) return null;
+      $marks = join(', ', array_fill(0, count($levels), '?'));
+      $conditions[] = "level IN ($marks)";
+      array_push($params, ...$levels);
+    }
+    elseif(!in_array($level, $levels)) return null;
+
+    if($message) {
+      $conditions[] = "LOWER($column) LIKE ?";
+      $params[] = '%' . mb_strtolower($message) . '%';
+    }
+    if($from) {
+      $conditions[] = 'changed_at >= ?';
+      $params[] = $from;
+    }
+    if($to) {
+      $conditions[] = 'changed_at <= ?';
+      $params[] = $to;
+    }
+
+    return $conditions ? ' WHERE ' . join(' AND ', $conditions) : '';
+  };
+
+  if(in_array('audit', $sources) && ($filters = $where('message', 'info')) !== null)
+    $selects[] = "SELECT id AS source_id, changed_at, 'info' AS level, message, operation,
+      author, table_name, record_id, 'audit' AS source FROM audit_log$filters";
+
+  if(in_array('system', $sources) && ($filters = $where('message')) !== null)
+    $selects[] = "SELECT id AS source_id, changed_at, level, message, '' AS operation,
+      'system' AS author, '' AS table_name, '' AS record_id, 'system' AS source FROM system_logs$filters";
+
+  if(in_array('http', $sources) && ($filters = $where('uri', 'debug')) !== null)
+    $selects[] = "SELECT id AS source_id, changed_at, 'debug' AS level, uri AS message, method AS operation,
+      'http' AS author, '' AS table_name, '' AS record_id, 'http' AS source FROM http_logs$filters";
+
+  if(!$selects) return [];
+
+  return paginate(join(' UNION ALL ', $selects) . ' ORDER BY changed_at DESC, source DESC, source_id DESC',
+    $limit, params: $params) ?? [];
 }
 
 function list_audit_logs($table_name, $record_id) {

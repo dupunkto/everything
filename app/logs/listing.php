@@ -1,12 +1,54 @@
 <?php
 
-  [$page, $offset] = listing_page();
+  $levels = ['debug', 'info', 'warn', 'error'];
+  $level = in_array(@$_GET['level'], $levels) ? $_GET['level'] : 'info';
+  $levels = array_slice($levels, array_search($level, $levels));
 
-  [$logs, $has_more] = listing_batch(
-    \store\list_logs_paginated(LISTING_PAGE_SIZE + 1, offset: $offset)
+  $sources = isset($_GET['filters'])
+    ? array_values(array_intersect((array)@$_GET['source'], ['audit', 'system', 'http']))
+    : ['audit', 'system'];
+
+  $parse_datetime = function($value) {
+    $value = cast_string($value);
+    if(!$value) return null;
+
+    $utc = cast_datetime_utc(substr($value, 0, 10), substr($value, 11));
+    return $utc ? (new \DateTimeImmutable($utc))->format('Y-m-d H:i:s') : null;
+  };
+
+  $logs = \store\list_logs_filtered(
+    $sources,
+    $levels,
+    cast_string(@$_GET['message']),
+    $parse_datetime(@$_GET['from']),
+    $parse_datetime(@$_GET['to']),
+    max(1, cast_int(@$_GET['limit']) ?: 1000)
   );
 
+  $http_entity = function($uri) {
+    $parts = @parse_url($uri) ?: [];
+    $path = trim(rawurldecode(@$parts['path'] ?: ''), '/');
+    parse_str(@$parts['query'] ?: '', $query);
+
+    $section = explode('/', $path)[0];
+    $table = match($section) {
+      'addresses' => 'addresses',
+      'bookmarks' => 'bookmarks',
+      'calendar' => 'appointments',
+      'contacts' => @$query['kind'] == 'org' ? 'organisations' : 'contacts',
+      'notes' => 'notes',
+      'todo' => 'tasks',
+      'tracker' => 'timings',
+      'wishlist' => 'wishes',
+      default => $path,
+    };
+
+    $id = @$query['id'] ?: @$query['edit'] ?: '';
+    return [$table, is_scalar($id) ? (string)$id : ''];
+  };
+
   $edit_url = function($log) {
+    if(!$log['record_id']) return null;
     $id = rawurlencode($log['record_id']);
 
     return match($log['table_name']) {
@@ -24,10 +66,12 @@
 
 ?>
 <?php foreach($logs as $log): ?>
-  <?php $entity = $log['table_name'] . "/" . $log['record_id'] ?>
+  <?php if($log['source'] == 'http') [$log['table_name'], $log['record_id']] = $http_entity($log['message']) ?>
+  <?php $entity = $log['table_name'] . ($log['record_id'] ? "/{$log['record_id']}" : '') ?>
   <?php $url = $edit_url($log) ?>
   <?php $datetime = (new \DateTimeImmutable($log['changed_at'], timezone: new \DateTimeZone("UTC")))->format('c') ?>
-  <tr>
+  <tr class="logs__row--<?= esc_attr($log['level']) ?>">
+    <td><?= esc_inner($log['level']) ?></td>
     <td><time datetime="<?= esc_attr($datetime) ?>" local><?= esc_inner($log['changed_at']) ?> UTC</time></td>
     <td><?= esc_inner($log['message']) ?></td>
     <td><?= esc_inner($log['operation']) ?></td>
@@ -41,4 +85,3 @@
     </td>
   </tr>
 <?php endforeach ?>
-<?php if($has_more) infinite_scroll("/logs/listing?page=" . ($page + 1), tag: 'tr', colspan: 5) ?>
