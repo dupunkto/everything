@@ -7,6 +7,7 @@
   $backs = [
     "/calendar" => "Calendar",
     "/contacts" => "Contacts",
+    "/notes" => "Notes",
     "/todo" => "ToDo",
     "/tracker" => "Tracker",
   ];

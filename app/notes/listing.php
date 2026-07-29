@@ -1,25 +1,16 @@
 <?php
 
-  $notes = \store\list_notes($_GET['q'] ?? $_POST['q'] ?? "");
+  $query = @$_GET['q'] ?: @$_POST['q'] ?: "";
+  [$page, $offset] = listing_page();
+  [$notes, $has_more] = listing_batch(
+    \store\list_notes_paginated($query, LISTING_PAGE_SIZE + 1, offset: $offset)
+  );
+
+  if($page > 1) {
+    include __DIR__ . "/items.php"; return;
+  }
 
 ?>
-<ul class="notes-grid">
-  <?php foreach($notes as $note): ?>
-    <li class="note-card" tabindex="0">
-      <a class="button note-card__edit" href="/notes/edit?id=<?= esc_attr($note['id']) ?>" title="Edit" z-key="enter e o">
-        <i class="fa-regular fa-pen-to-square"></i>
-      </a>
-
-      <h2 class="note-card__title">
-        <span class="humid"><?= esc_inner($note['id']) ?></span>
-        <?= esc_inner($note['title']) ?>
-      </h2>
-
-      <?php if($note['content']): ?>
-        <div class="note-card__content"><?= markdown($note['content']) ?></div>
-      <?php endif ?>
-
-      <button type="button" x-delete="/notes/delete?id=<?= esc_attr($note['id']) ?>" z-key="d" z-confirm="Delete this note?" hidden></button>
-    </li>
-  <?php endforeach ?>
+<ul class="<?= NOTES_LAYOUT == 'masonry' ? 'notes-grid' : 'listing' ?>">
+  <?php include __DIR__ . "/items.php" ?>
 </ul>

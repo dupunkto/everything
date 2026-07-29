@@ -64,7 +64,7 @@ function set_note_tags($id, $tag_ids) {
   set_tags('notes_tags', 'note_id', $id, $tag_ids);
 }
 
-function list_notes($query = "") {
+function notes_query($query, $stable = false) {
   [$tags, $terms] = \core\parse_query($query);
 
   $where = [];
@@ -86,8 +86,19 @@ function list_notes($query = "") {
   $sql = 'SELECT * FROM notes';
   if($where) $sql .= ' WHERE ' . join(' AND ', $where);
   $sql .= ' ORDER BY CASE WHEN written_at IS NULL THEN 1 ELSE 0 END, written_at DESC';
+  if($stable) $sql .= ', id DESC';
 
+  return [$sql, $params];
+}
+
+function list_notes($query = "") {
+  [$sql, $params] = notes_query($query);
   return all($sql, $params);
+}
+
+function list_notes_paginated($query, $limit, $offset = 0) {
+  [$sql, $params] = notes_query($query, stable: true);
+  return paginate($sql, $limit, offset: $offset, params: $params) ?? [];
 }
 
 function delete_note($id) {

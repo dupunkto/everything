@@ -29,6 +29,8 @@ fallback('ui.border-radius', "subtle");
 
 fallback('calendar.default_calendar', @\store\get_oldest_calendar()['id']);
 
+fallback('notes.layout', "masonry");
+
 fallback('todo.default-query', "is:open not:expired");
 fallback('todo.recurrence-horizon', 3);
 fallback('todo.layout', "masonry");

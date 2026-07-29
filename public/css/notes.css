@@ -13,6 +13,19 @@
   box-sizing: border-box;
 }
 
+.notes--listing .page-header {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.notes--listing .page-header__search {
+  flex: none;
+  max-width: none;
+}
+
 .notes-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));

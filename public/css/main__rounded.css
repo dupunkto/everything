@@ -11,6 +11,8 @@ textarea,
 .tracker-time-popup,
 .tracker-popup-editor,
 .tracker-list__item,
+.settings-back,
+.calendar-week__tools button,
 ul li a {
   border-radius: 0.65em;
 }
