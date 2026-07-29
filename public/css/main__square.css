@@ -1,10 +1,16 @@
 button,
 input,
 select,
+textarea,
 .button,
 .listing__item,
 .contact-item,
 .note-card,
+.tags__suggestions,
+.calendar-editor,
+.tracker-time-popup,
+.tracker-popup-editor,
+.tracker-list__item,
 ul li a {
   border-radius: 0;
 }
