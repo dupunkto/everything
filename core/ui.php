@@ -1,6 +1,29 @@
 <?php
 // Shared UI components.
 
+define('LISTING_PAGE_SIZE', 50);
+
+function listing_page() {
+  $page = max(1, (int)(@$_GET['page'] ?: @$_POST['page'] ?: 1));
+  return [$page, ($page - 1) * LISTING_PAGE_SIZE];
+}
+
+function listing_batch($rows) {
+  return [array_slice($rows, 0, LISTING_PAGE_SIZE), count($rows) > LISTING_PAGE_SIZE];
+}
+
+function infinite_scroll($url, $tag = 'li', $colspan = null) {
+  if($tag == 'tr') {
+    ?>
+    <tr class="infinite-scroll" z-intersect="preload" x-get="<?= esc_attr($url) ?>" x-on="intersect" x-replace="outerHTML"><td colspan="<?= esc_attr($colspan) ?>">Loading…</td></tr>
+    <?php
+    return;
+  }
+  ?>
+  <<?= $tag ?> class="infinite-scroll" z-intersect="preload" x-get="<?= esc_attr($url) ?>" x-on="intersect" x-replace="outerHTML">Loading…</<?= $tag ?>>
+  <?php
+}
+
 // Renders a fragment inline for the initial page load, so sections
 // arrive pre-filled instead of fetching themselves after paint. The
 // fragment sees $params merged over the page's own query string —

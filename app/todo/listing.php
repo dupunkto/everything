@@ -121,11 +121,52 @@
     return join(" ", [...$base_tokens, ...array_intersect($toggle_tokens, $selected)]);
   };
 
+  $tag_tokens = str_explode($query);
+  $tag_default_tokens = str_explode(TODO_DEFAULT_QUERY);
+  $unfinished_tokens = array_values(array_diff($tag_default_tokens, ["is:done"]));
+  $finished_tokens = [...$unfinished_tokens, "is:done"];
+  $is_default = $tag_tokens == $unfinished_tokens || $tag_tokens == $finished_tokens;
+  $is_finished = in_array("is:done", $tag_tokens);
+  $views = ["is:todo" => "ToDo", "is:nvm" => "Shelves", "is:backlog" => "Backlog"];
+  $view_token = "is:todo";
+  $view = "ToDo";
+
+  foreach($tag_tokens as $token) {
+    if(!isset($views[$token])) continue;
+    $view_token = $token;
+    $view = $views[$token]; break;
+  }
+
 ?>
-<h1 class="page-header__title"><strong>ToDo</strong></h1>
+<h1 class="page-header__title"><strong><?= TODO_DISPLAY == 'tag' ? $view : "ToDo" ?></strong></h1>
 
 <nav class="view-nav">
-  <?php if(!$is_supported): ?>
+  <?php if(TODO_DISPLAY == 'tag'): ?>
+    <?php if($view == "ToDo"): ?>
+      <?php if(!$is_default): ?>
+        <button type="button" z-set="#todo-search" value="<?= esc_attr(TODO_DEFAULT_QUERY) ?>">
+          <i class="fa-solid fa-rotate-left"></i> Reset
+        </button>
+      <?php elseif($is_finished): ?>
+        <button type="button" z-set="#todo-search" value="<?= esc_attr(join(" ", array_diff($tag_tokens, ["is:done"]))) ?>">
+          <i class="fa-regular fa-eye"></i> Hide finished
+        </button>
+      <?php else: ?>
+        <button type="button" z-set="#todo-search" value="<?= esc_attr(join(" ", [...$tag_tokens, "is:done"])) ?>">
+          <i class="fa-regular fa-eye-slash"></i> Show finished
+        </button>
+      <?php endif ?>
+      <button type="button" z-set="#todo-search" value="is:nvm"><i class="fa-regular fa-box-archive"></i> Shelves</button>
+      <button type="button" z-set="#todo-search" value="is:backlog"><i class="fa-regular fa-folder-open"></i> Backlog</button>
+    <?php else: ?>
+      <?php if($tag_tokens != [$view_token]): ?>
+        <button type="button" z-set="#todo-search" value="<?= esc_attr($view_token) ?>">
+          <i class="fa-solid fa-rotate-left"></i> Reset
+        </button>
+      <?php endif ?>
+      <button type="button" z-set="#todo-search" value="<?= esc_attr(TODO_DEFAULT_QUERY) ?>">&larr; Back to todo</button>
+    <?php endif ?>
+  <?php elseif(!$is_supported): ?>
     <button type="button" z-set="#todo-search" value="<?= esc_attr(TODO_DEFAULT_QUERY) ?>">
       <i class="fa-solid fa-rotate-left"></i> Reset
     </button>

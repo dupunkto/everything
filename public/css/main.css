@@ -510,3 +510,10 @@ body {
 textarea {
   field-sizing: content
 }
+
+.infinite-scroll {
+  color: light-dark(#777, #aaa);
+  list-style: none;
+  min-height: 1px;
+  text-align: center;
+}

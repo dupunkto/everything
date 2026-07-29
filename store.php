@@ -87,7 +87,7 @@ function list_notes($query = "") {
   if($where) $sql .= ' WHERE ' . join(' AND ', $where);
   $sql .= ' ORDER BY CASE WHEN written_at IS NULL THEN 1 ELSE 0 END, written_at DESC';
 
-  return all($sql, $params) ?? [];
+  return all($sql, $params);
 }
 
 function delete_note($id) {
@@ -356,7 +356,7 @@ function get_task($id) {
 }
 
 function get_task_log($id) {
-  return all('SELECT * FROM task_log WHERE task_id = ? ORDER BY changed_at ASC, id ASC', [$id]) ?? [];
+  return all('SELECT * FROM task_log WHERE task_id = ? ORDER BY changed_at ASC, id ASC', [$id]);
 }
 
 function amend_task_status($id, $comment) {
@@ -470,7 +470,7 @@ function get_wish($id) {
 }
 
 function list_wish_urls($id) {
-  return all('SELECT url, price FROM wish_urls WHERE wish_id = ?', [$id]) ?? [];
+  return all('SELECT url, price FROM wish_urls WHERE wish_id = ?', [$id]);
 }
 
 function set_wish_urls($id, $rows) {
@@ -490,11 +490,26 @@ function set_wish_tags($id, $tag_ids) {
 }
 
 function get_wish_log($id) {
-  return all('SELECT * FROM wish_log WHERE wish_id = ? ORDER BY changed_at ASC', [$id]) ?? [];
+  return all('SELECT * FROM wish_log WHERE wish_id = ? ORDER BY changed_at ASC', [$id]);
 }
 
-function list_wishes($statuses = [], $override = []) {
-  $rows = all("SELECT
+function wishes_query($statuses = [], $override = []) {
+  $params = [];
+  $where = [];
+
+  if($statuses) {
+    $status = 'log.status IN (' . join(', ', array_fill(0, count($statuses), '?')) . ')';
+    $params = [...$params, ...$statuses];
+
+    if($override) {
+      $status = "($status OR wishes.id IN (" . join(', ', array_fill(0, count($override), '?')) . '))';
+      $params = [...$params, ...$override];
+    }
+
+    $where[] = $status;
+  }
+
+  $sql = "SELECT
       wishes.*,
       log.status,
       log.comment,
@@ -508,21 +523,22 @@ function list_wishes($statuses = [], $override = []) {
         WHERE ranked.wish_id = wishes.id
         ORDER BY ranked.changed_at DESC, ranked.id DESC
         LIMIT 1
-      )
-    ORDER BY wishes.added_at DESC, wishes.id DESC");
+      )";
 
-  if(!$rows) return $rows;
+  if($where) $sql .= ' WHERE ' . join(' AND ', $where);
+  $sql .= ' ORDER BY wishes.added_at DESC, wishes.id DESC';
 
-  $result = [];
+  return [$sql, $params];
+}
 
-  foreach($rows as $wish) {
-    if(in_array($wish['id'], $override, true)) { $result[] = $wish; continue; }
-    if($statuses && !in_array($wish['status'], $statuses)) continue;
+function list_wishes($statuses = [], $override = []) {
+  [$sql, $params] = wishes_query($statuses, $override);
+  return all($sql, $params);
+}
 
-    $result[] = $wish;
-  }
-
-  return $result;
+function list_wishes_paginated($statuses, $override, $limit, $offset = 0) {
+  [$sql, $params] = wishes_query($statuses, $override);
+  return paginate($sql, $limit, offset: $offset, params: $params);
 }
 
 function delete_wish($id) {
@@ -580,7 +596,7 @@ function get_bookmark($id) {
   return one('SELECT * FROM bookmarks WHERE id = ?', [$id]);
 }
 
-function list_bookmarks($query = "") {
+function bookmarks_query($query, $stable = false) {
   [$tags, $terms] = \core\parse_query($query);
 
   $where = [];
@@ -603,8 +619,19 @@ function list_bookmarks($query = "") {
   $sql = 'SELECT * FROM bookmarks';
   if($where) $sql .= ' WHERE ' . join(' AND ', $where);
   $sql .= ' ORDER BY CASE WHEN saved_at IS NULL THEN 1 ELSE 0 END, saved_at DESC';
+  if($stable) $sql .= ', id DESC';
 
-  return all($sql, $params) ?? [];
+  return [$sql, $params];
+}
+
+function list_bookmarks($query = "") {
+  [$sql, $params] = bookmarks_query($query);
+  return all($sql, $params);
+}
+
+function list_bookmarks_paginated($query, $limit, $offset = 0) {
+  [$sql, $params] = bookmarks_query($query, stable: true);
+  return paginate($sql, $limit, offset: $offset, params: $params);
 }
 
 function delete_bookmark($id) {
@@ -666,6 +693,10 @@ function list_timings() {
   return all('SELECT * FROM timings ORDER BY starts_at DESC');
 }
 
+function list_timings_paginated($limit, $offset = 0) {
+  return paginate('SELECT * FROM timings ORDER BY starts_at DESC, id DESC', $limit, offset: $offset);
+}
+
 // Timings overlapping [$from, $to), each carrying its first tag (lowest id).
 // The caller resolves that tag to its root to pick a colour; keeping it a bare
 // id keeps this query portable across the SQL engines we target.
@@ -684,7 +715,7 @@ function list_timing_tags_between($from, $to) {
   return all('SELECT t.id, t.starts_at, t.ends_at, tt.tag_id
     FROM timings t
     JOIN timings_tags tt ON tt.timing_id = t.id
-    WHERE t.starts_at < ? AND t.ends_at > ?', [$to, $from]) ?? [];
+    WHERE t.starts_at < ? AND t.ends_at > ?', [$to, $from]);
 }
 
 function get_timing($id) {
@@ -701,7 +732,7 @@ function list_quotas() {
   $quotas = all('SELECT q.*, t.label, t.color
     FROM quotas q
     JOIN tags t ON t.id = q.tag_id
-    ORDER BY t.position ASC, t.id DESC') ?? [];
+    ORDER BY t.position ASC, t.id DESC');
 
   return inherit_tag_colors($quotas, id_key: 'tag_id');
 }
@@ -1190,7 +1221,7 @@ function list_appointments($from, $to) {
 
 function list_calendar_appointments() {
   return all('SELECT * FROM appointments
-    WHERE subscription_id IS NULL ORDER BY id') ?? [];
+    WHERE subscription_id IS NULL ORDER BY id');
 }
 
 function list_subscription_appointments() {
@@ -1200,7 +1231,7 @@ function list_subscription_appointments() {
   FROM appointments
   JOIN subscriptions ON subscriptions.id = appointments.subscription_id
   WHERE appointments.calendar_id IS NULL
-  ORDER BY appointments.id') ?? [];
+  ORDER BY appointments.id');
 }
 
 function list_appointments_by_calendar($calendar_id) {
@@ -1351,7 +1382,7 @@ function list_contacts() {
     (SELECT GROUP_CONCAT(contact_roles.organisation, ' ')
       FROM contact_roles
       WHERE contact_roles.contact_id = contacts.id
-    ) AS org_names FROM contacts") ?? [];
+    ) AS org_names FROM contacts");
 }
 
 function get_contact($id) {
@@ -1538,7 +1569,7 @@ function list_organisations() {
     (SELECT GROUP_CONCAT(org_socials.handle, ' ')
       FROM org_socials
       WHERE org_socials.org_id = organisations.id
-    ) AS handles FROM organisations") ?? [];
+    ) AS handles FROM organisations");
 }
 
 function get_organisation($id) {
@@ -1811,7 +1842,8 @@ function list_alarms($type, $id) {
     'wish' => 'wish_id',
     default => null
   };
-  return $key ? all("SELECT * FROM alarms WHERE $key = ? ORDER BY id", [$id]) ?? [] : [];
+
+  return $key ? all("SELECT * FROM alarms WHERE $key = ? ORDER BY id", [$id]) : [];
 }
 
 function replace_alarms($type, $id, $alarms) {
@@ -1859,7 +1891,8 @@ function list_properties($type, $id) {
     'alarm' => 'alarm_id',
     default => null
   };
-  return $key ? all("SELECT * FROM properties WHERE $key = ? ORDER BY position, id", [$id]) ?? [] : [];
+
+  return $key ? all("SELECT * FROM properties WHERE $key = ? ORDER BY position, id", [$id]) : [];
 }
 
 function replace_properties($type, $id, $properties) {
@@ -1938,7 +1971,7 @@ function list_caldav_changes($collection, $revision) {
           AND newer.href = c.href
           AND newer.revision > c.revision
       )
-    ORDER BY c.revision, c.href', [$collection, $revision]) ?? [];
+    ORDER BY c.revision, c.href', [$collection, $revision]);
 }
 
 // Configuration
@@ -2001,29 +2034,42 @@ function put_http_log($request) {
   ]);
 }
 
-function list_logs() {
-  return all("SELECT changed_at, message, operation, author, table_name, record_id,
+function logs_query($audit_only = false) {
+  if($audit_only) return "SELECT changed_at, message, operation, author, table_name, record_id,
+      'audit_log' AS source
+    FROM audit_log
+    ORDER BY changed_at DESC, id DESC";
+
+  return "SELECT changed_at, message, operation, author, table_name, record_id,
       'audit_log' AS source
     FROM audit_log
     UNION ALL
     SELECT changed_at, 'CalDAV resource changed.', operation, 'caldav', collection, href,
       'caldav_changes'
     FROM caldav_changes
-    ORDER BY changed_at DESC") ?? [];
+    ORDER BY changed_at DESC";
+}
+
+function list_logs() {
+  return all(logs_query());
+}
+
+function list_logs_paginated($limit, $offset = 0) {
+  return paginate(logs_query(audit_only: true), $limit, offset: $offset);
 }
 
 function list_audit_logs($table_name, $record_id) {
   return all('SELECT * FROM audit_log
     WHERE table_name = ? AND record_id = ?
-    ORDER BY changed_at ASC, id ASC', [$table_name, $record_id]) ?? [];
+    ORDER BY changed_at ASC, id ASC', [$table_name, $record_id]);
 }
 
 function list_system_logs() {
-  return all('SELECT * FROM system_logs ORDER BY changed_at DESC, id DESC') ?? [];
+  return all('SELECT * FROM system_logs ORDER BY changed_at DESC, id DESC');
 }
 
 function list_http_logs() {
-  return all('SELECT * FROM http_logs ORDER BY changed_at DESC, id DESC') ?? [];
+  return all('SELECT * FROM http_logs ORDER BY changed_at DESC, id DESC');
 }
 
 function get_log_dates($table, $id) {
@@ -2090,6 +2136,10 @@ function one($sql, $params = []) {
 
 function all($sql, $params = []) {
   return exec_query($sql, $params)?->fetchAll();
+}
+
+function paginate($sql, $limit, $offset = 0, $params = []) {
+  return all("$sql LIMIT ? OFFSET ?", [...$params, (int)$limit, (int)$offset]);
 }
 
 function exec_query($sql, $params) {
