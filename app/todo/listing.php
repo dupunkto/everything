@@ -36,6 +36,13 @@
     if($query_tags && array_diff($query_tags, $ids)) continue;
     if(!str_contains_terms("{$task['title']} {$task['content']}", $query_terms)) continue;
 
+    $task['overdue'] = $is_overdue($task);
+
+    if(TODO_DISPLAY == 'status') {
+      $lists[$task['overdue'] ? 'overdue' : $task['status']][] = $task;
+      continue;
+    }
+
     // A task is placed in the column of the tag closest to root.
     // (and of those, the first in the configured order)
     $best = null;
@@ -45,7 +52,6 @@
       if(!$best || $depth_of($tag) < $depth_of($best)) $best = $tag;
     }
 
-    $task['overdue'] = $is_overdue($task);
     $lists[$best ? tag_slug($best['label']) : 'all'][] = $task;
   }
 
@@ -71,59 +77,73 @@
   }
   unset($tasks);
 
-  // Columns follow the configured order, with ~all always leading.
   $ordered = [];
+  $columns = TODO_DISPLAY == 'status'
+    ? ['overdue', 'todo', 'wip', 'blocked', 'backlog', 'done', 'nvm']
+    : ['all', ...array_map(fn($tag) => tag_slug($tag['label']), $tags)];
 
-  foreach(['all', ...array_map(fn($tag) => tag_slug($tag['label']), $tags)] as $key) {
+  foreach($columns as $key) {
     if(isset($lists[$key])) $ordered[$key] = $lists[$key];
   }
 
   $lists = $ordered;
 
-  $tokens = str_explode($query);
-  $default_tokens = str_explode(TODO_DEFAULT_QUERY);
-  $unfinished_tokens = array_values(array_diff($default_tokens, ["is:done"]));
-  $finished_tokens = [...$unfinished_tokens, "is:done"];
-  $is_default = $tokens == $unfinished_tokens || $tokens == $finished_tokens;
-  $is_finished = in_array("is:done", $tokens);
+  $expand_open = function($tokens) {
+    $expanded = [];
 
-  $views = ["is:todo" => "ToDo", "is:nvm" => "Shelves", "is:backlog" => "Backlog"];
-  $view = "ToDo";
+    foreach($tokens as $token) {
+      $expanded = $token == "is:open"
+        ? [...$expanded, "is:todo", "is:wip", "is:blocked"]
+        : [...$expanded, $token];
+    }
 
-  foreach($tokens as $token) {
-    if(!isset($views[$token])) continue;
-    $view = $views[$token]; break;
-  }
+    return array_values(array_unique($expanded));
+  };
+
+  $toggle_labels = [
+    "is:blocked" => "blocked",
+    "is:backlog" => "backlog",
+    "is:done" => "finished",
+    "is:nvm" => "shelves",
+  ];
+  $toggle_tokens = array_keys($toggle_labels);
+  $tokens = $expand_open(str_explode($query));
+  $default_tokens = $expand_open(str_explode(TODO_DEFAULT_QUERY));
+  $base_tokens = array_values(array_diff($default_tokens, $toggle_tokens));
+  $is_supported = array_values(array_diff($tokens, $toggle_tokens)) == $base_tokens;
+
+  $toggle_query = function($toggle) use ($tokens, $base_tokens, $toggle_tokens) {
+    $selected = array_intersect($toggle_tokens, $tokens);
+    $selected = in_array($toggle, $selected)
+      ? array_diff($selected, [$toggle])
+      : [...$selected, $toggle];
+
+    return join(" ", [...$base_tokens, ...array_intersect($toggle_tokens, $selected)]);
+  };
 
 ?>
-<h1 class="page-header__title"><strong><?= $view ?></strong></h1>
+<h1 class="page-header__title"><strong>ToDo</strong></h1>
 
 <nav class="view-nav">
-  <?php if($view == "ToDo"): ?>
-    <?php if(!$is_default): ?>
-      <button type="button" z-set="#todo-search" value="<?= esc_attr(TODO_DEFAULT_QUERY) ?>">
-        <i class="fa-solid fa-rotate-left"></i> Reset
-      </button>
-    <?php elseif($is_finished): ?>
-      <button type="button" z-set="#todo-search" value="<?= esc_attr(join(" ", array_diff($tokens, ["is:done"]))) ?>">
-        <i class="fa-regular fa-eye"></i> Hide finished
-      </button>
-    <?php else: ?>
-      <button type="button" z-set="#todo-search" value="<?= esc_attr(join(" ", [...$tokens, "is:done"])) ?>">
-        <i class="fa-regular fa-eye-slash"></i> Show finished
-      </button>
-    <?php endif ?>
-    <button type="button" z-set="#todo-search" value="is:nvm"><i class="fa-regular fa-box-archive"></i> Shelves</button>
-    <button type="button" z-set="#todo-search" value="is:backlog"><i class="fa-regular fa-folder-open"></i> Backlog</button>
+  <?php if(!$is_supported): ?>
+    <button type="button" z-set="#todo-search" value="<?= esc_attr(TODO_DEFAULT_QUERY) ?>">
+      <i class="fa-solid fa-rotate-left"></i> Reset
+    </button>
   <?php else: ?>
-    <button type="button" z-set="#todo-search" value="<?= esc_attr(TODO_DEFAULT_QUERY) ?>">&larr; Back to todo</button>
+    <?php foreach($toggle_labels as $token => $label): ?>
+      <?php $shown = in_array($token, $tokens) ?>
+      <button type="button" z-set="#todo-search" value="<?= esc_attr($toggle_query($token)) ?>">
+        <i class="fa-regular fa-eye<?= $shown ? "" : "-slash" ?>"></i>
+        <?= esc_inner($label) ?>
+      </button>
+    <?php endforeach ?>
   <?php endif ?>
 </nav>
 
 <div class="listing listing--<?= TODO_LAYOUT == 'horizontal' ? 'horizontal' : 'masonry' ?>">
   <?php foreach($lists as $list => $tasks): ?>
     <section>
-      <h3 class="listing__heading">~<?= $list ?></h3>
+      <h3 class="listing__heading"><?= TODO_DISPLAY == 'tag' ? "~" : "" ?><?= esc_inner($list) ?></h3>
 
       <ul>
         <?php foreach($tasks as $position => $task): ?>

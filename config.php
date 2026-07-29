@@ -32,6 +32,7 @@ fallback('calendar.default_calendar', @\store\get_oldest_calendar()['id']);
 fallback('todo.default-query', "is:open not:expired");
 fallback('todo.recurrence-horizon', 3);
 fallback('todo.layout', "masonry");
+fallback('todo.display', "tag");
 
 fallback('contacts.default-query', "is:person");
 fallback('contacts.display-format', "first_last");

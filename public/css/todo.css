@@ -33,6 +33,29 @@
   align-self: stretch;
 }
 
+.todo .listing--horizontal {
+  min-height: 0;
+  overflow-y: hidden;
+}
+
+.todo .listing--horizontal > section {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.todo .listing--horizontal > section > ul {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.todo .listing--horizontal .listing__heading {
+  margin: 0;
+  padding: 1em 0 0.3em;
+  background: Canvas;
+}
+
 .todo__item--overdue {
   background: light-dark(#f4b4b4, #681f1f);
   color: light-dark(#7f1d1d, #ffc1c1);
