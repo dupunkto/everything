@@ -553,9 +553,15 @@ function interval_seconds($value) {
 }
 
 function parse_alarm(Component $component) {
-  if(strtoupper(text($component, 'ACTION', '')) != 'DISPLAY')
-    throw new \InvalidArgumentException("Only DISPLAY alarms are supported.");
-  foreach(['REPEAT', 'DURATION', 'ACKNOWLEDGED', 'PROXIMITY', 'ATTACH'] as $unsupported)
+  // Alarm delivery is not modeled, so every action becomes a display reminder.
+  $action = strtoupper(text($component, 'ACTION', ''));
+  if($action == 'NONE') {
+    \logger\warn("Received CalDAV alarm action NONE; ignored.");
+    return null;
+  }
+  if($action != 'DISPLAY')
+    \logger\warn("Received CalDAV alarm action " . ($action ?: "(missing)") . "; cast to DISPLAY.");
+  foreach(['REPEAT', 'DURATION', 'ACKNOWLEDGED', 'PROXIMITY'] as $unsupported)
     if(prop($component, $unsupported))
       throw new \InvalidArgumentException("Alarm $unsupported is unsupported.");
 
@@ -568,7 +574,7 @@ function parse_alarm(Component $component) {
     'trigger_offset' => null,
     'relative_to' => null,
     'description' => text($component, 'DESCRIPTION', "Reminder"),
-    'properties' => properties($component, ['ACTION', 'TRIGGER', 'DESCRIPTION']),
+    'properties' => properties($component, ['ACTION', 'TRIGGER', 'DESCRIPTION', 'ATTACH', 'SUMMARY', 'ATTENDEE']),
   ];
 
   if($absolute) [$alarm['trigger_at']] = datetime($trigger);
@@ -613,7 +619,10 @@ function parse($body, $expected, $type = null) {
     'recurrence' => text($component, 'RRULE'),
     'status' => $expected == 'VTODO'
       ? strtoupper(text($component, 'STATUS', 'NEEDS-ACTION')) : null,
-    'alarms' => array_map(fn($alarm) => parse_alarm($alarm), $component->select('VALARM')),
+    'alarms' => array_values(array_filter(array_map(
+      fn($alarm) => parse_alarm($alarm),
+      $component->select('VALARM')
+    ))),
   ];
 
   if($expected == 'VTODO' && !in_array($data['status'], ['NEEDS-ACTION', 'COMPLETED']))
