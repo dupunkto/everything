@@ -163,7 +163,7 @@
     <?php endif ?>
 
     <?php if($item['socials']): ?>
-      <?php if($kind === "org"): ?><h3>Socials</h3><?php endif ?>
+      <?php if($kind == "org"): ?><h3>Socials</h3><?php endif ?>
       <ul class="detail__socials">
         <?php foreach($item['socials'] as $social): ?>
           <li>
@@ -177,8 +177,10 @@
                 'instagram' => 'fa-brands fa-instagram',
                 'discord' => 'fa-brands fa-discord',
                 'snapchat' => 'fa-brands fa-snapchat',
+                'spacehey' => 'fa-solid fa-user-astronaut',
                 'airbuds' => 'fa-solid fa-album',
                 'tiktok' => 'fa-brands fa-tiktok',
+                'wattpad' => 'fa-brands fa-wattpad',
                 'github' => 'fa-brands fa-github',
                 'codeberg' => 'fa-brands fa-codeberg',
                 'gitlab' => 'fa-brands fa-gitlab',
@@ -197,8 +199,10 @@
                 'instagram' => "https://instagram.com/$enc",
                 'discord' => ctype_digit($h) ? "https://discord.com/users/$enc" : null,
                 'snapchat' => "https://snapchat.com/add/$enc",
+                'spacehey' => ctype_digit($h) ? "https://spacehey.com/profile?id=$enc" : "https://spacehey.com/$enc",
                 'airbuds' => "https://i.airbuds.fm/$enc",
                 'tiktok' => "https://tiktok.com/@$enc",
+                'wattpad' => "https://wattpad.com/user/$enc",
                 'github' => "https://github.com/$enc",
                 'codeberg' => "https://codeberg.org/$enc",
                 'gitlab' => "https://gitlab.com/$enc",
