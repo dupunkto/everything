@@ -19,7 +19,7 @@
   }
 
   if($kind == "person") {
-    $full = str_implode(" ", [$item['first_name'], $item['middle_name'], $item['infix'], $item['last_name']]);
+    $full = str_implode(" ", [$item['first_name'], $item['middle_name'], \contacts\contact_surname($item)]);
     $title = trim($item['display_name'] ?? '') ?: $full;
     $subtitle = (is_nonempty_str($full) && $full !== $title) ? $full : '';
   }

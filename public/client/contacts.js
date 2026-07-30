@@ -96,6 +96,13 @@ document.addEventListener("input", (e) => {
 });
 
 document.addEventListener("click", (e) => {
+  const legal = e.target.closest?.("[data-legal-name-toggle]");
+  if(legal) {
+    const form = legal.closest("form");
+    form.elements.family_infix.placeholder = "Family infix";
+    form.elements.family_name.placeholder = "Family name";
+  }
+
   const toggle = e.target.closest?.("[data-address-search-toggle]");
   if(toggle) {
     const search = toggle.closest("fieldset").querySelector("[data-address-search]");

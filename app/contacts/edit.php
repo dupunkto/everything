@@ -74,18 +74,22 @@
       if($id) {
         $fields = \core\diff($item,
           display_name: cast_string($_POST['display_name']), first_name: cast_string($_POST['first_name']),
-          middle_name: cast_string($_POST['middle_name']), infix: cast_string($_POST['infix']),
-          last_name: cast_string($_POST['last_name']), birth_day: cast_int($_POST['birth_day']),
-          birth_month: cast_int($_POST['birth_month']), birth_year: cast_int($_POST['birth_year']),
-          note: cast_string($_POST['note']));
+          middle_name: cast_string($_POST['middle_name']), legal_infix: cast_string($_POST['legal_infix']),
+          legal_name: cast_string($_POST['legal_name']), family_infix: cast_string($_POST['family_infix']),
+          family_name: cast_string($_POST['family_name']), name_order: cast_string($_POST['name_order']),
+          birth_day: cast_int($_POST['birth_day']), birth_month: cast_int($_POST['birth_month']),
+          birth_year: cast_int($_POST['birth_year']), note: cast_string($_POST['note']));
 
         \store\update_contact(
           $id,
           cast_string($_POST['display_name']),
           cast_string($_POST['first_name']),
           cast_string($_POST['middle_name']),
-          cast_string($_POST['infix']),
-          cast_string($_POST['last_name']),
+          cast_string($_POST['legal_infix']),
+          cast_string($_POST['legal_name']),
+          cast_string($_POST['family_infix']),
+          cast_string($_POST['family_name']),
+          cast_string($_POST['name_order']),
           cast_int($_POST['birth_day']),
           cast_int($_POST['birth_month']),
           cast_int($_POST['birth_year']),
@@ -96,8 +100,11 @@
           cast_string($_POST['display_name']),
           cast_string($_POST['first_name']),
           cast_string($_POST['middle_name']),
-          cast_string($_POST['infix']),
-          cast_string($_POST['last_name']),
+          cast_string($_POST['legal_infix']),
+          cast_string($_POST['legal_name']),
+          cast_string($_POST['family_infix']),
+          cast_string($_POST['family_name']),
+          cast_string($_POST['name_order']),
           cast_int($_POST['birth_day']),
           cast_int($_POST['birth_month']),
           cast_int($_POST['birth_year']),
@@ -207,14 +214,26 @@
     </div>
   <?php else: ?>
     <?php $has_middle = @$item['middle_name'] != '' ?>
-    <?php $has_infix = @$item['infix'] != '' ?>
+    <?php $has_family_infix = @$item['family_infix'] != '' ?>
+    <?php $has_legal = @$item['legal_infix'] != '' || @$item['legal_name'] != '' ?>
+    <?php $family_infix_label = $has_legal ? "Family infix" : "Infix" ?>
+    <?php $family_name_label = $has_legal ? "Family name" : "Last" ?>
     <div class="detail__names">
       <input autofocus name="first_name" placeholder="First" required value="<?= esc_attr(@$item['first_name']) ?>">
       <button type="button" class="js-middle" title="Add middle name" z-toggle=".js-middle" <?= $has_middle ? 'hidden' : '' ?>>+</button>
       <input class="js-middle" name="middle_name" placeholder="Middle" value="<?= esc_attr(@$item['middle_name']) ?>" <?= $has_middle ? '' : 'hidden' ?>>
-      <button type="button" class="js-infix" title="Add infix" z-toggle=".js-infix" <?= $has_infix ? 'hidden' : '' ?>>+</button>
-      <input class="js-infix" name="infix" placeholder="Infix" value="<?= esc_attr(@$item['infix']) ?>" <?= $has_infix ? '' : 'hidden' ?>>
-      <input name="last_name" placeholder="Last" value="<?= esc_attr(@$item['last_name']) ?>">
+      <button type="button" class="js-family-infix" title="Add family infix" z-toggle=".js-family-infix" <?= $has_family_infix ? 'hidden' : '' ?>>+</button>
+      <input class="js-family-infix" name="family_infix" placeholder="<?= $family_infix_label ?>" value="<?= esc_attr(@$item['family_infix']) ?>" <?= $has_family_infix ? '' : 'hidden' ?>>
+      <input name="family_name" placeholder="<?= $family_name_label ?>" value="<?= esc_attr(@$item['family_name']) ?>">
+      <button type="button" class="js-legal-name" title="Add legal name" z-toggle=".js-legal-name" data-legal-name-toggle <?= $has_legal ? 'hidden' : '' ?>>+</button>
+    </div>
+    <div class="detail__names js-legal-name" <?= $has_legal ? '' : 'hidden' ?>>
+      <select name="name_order">
+        <option value="family_legal" <?= @$item['name_order'] != 'legal_family' ? 'selected' : '' ?>>Family name first</option>
+        <option value="legal_family" <?= @$item['name_order'] == 'legal_family' ? 'selected' : '' ?>>Legal name first</option>
+      </select>
+      <input name="legal_infix" placeholder="Legal infix" value="<?= esc_attr(@$item['legal_infix']) ?>">
+      <input name="legal_name" placeholder="Legal name" value="<?= esc_attr(@$item['legal_name']) ?>">
     </div>
     <div class="field">
       <input id="display_name" name="display_name" placeholder="Display name" value="<?= esc_attr(@$item['display_name']) ?>">

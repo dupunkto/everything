@@ -1453,8 +1453,11 @@ function put_contact(
   $display_name,
   $first_name,
   $middle_name,
-  $infix,
-  $last_name,
+  $legal_infix,
+  $legal_name,
+  $family_infix,
+  $family_name,
+  $name_order,
   $birth_day,
   $birth_month,
   $birth_year,
@@ -1463,9 +1466,11 @@ function put_contact(
   [$birth_day, $birth_month, $birth_year] = validate_birthday($birth_day, $birth_month, $birth_year);
 
   exec_query('INSERT INTO contacts
-    (display_name, first_name, middle_name, infix, last_name, birth_day, birth_month, birth_year, note)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    [$display_name, $first_name, $middle_name, $infix, $last_name, $birth_day, $birth_month, $birth_year, $note]);
+    (display_name, first_name, middle_name, legal_infix, legal_name, family_infix, family_name, name_order,
+      birth_day, birth_month, birth_year, note)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [$display_name, $first_name, $middle_name, $legal_infix, $legal_name, $family_infix, $family_name, $name_order,
+      $birth_day, $birth_month, $birth_year, $note]);
 
   return DBH->lastInsertId();
 }
@@ -1475,8 +1480,11 @@ function update_contact(
   $display_name,
   $first_name,
   $middle_name,
-  $infix,
-  $last_name,
+  $legal_infix,
+  $legal_name,
+  $family_infix,
+  $family_name,
+  $name_order,
   $birth_day,
   $birth_month,
   $birth_year,
@@ -1485,9 +1493,11 @@ function update_contact(
   [$birth_day, $birth_month, $birth_year] = validate_birthday($birth_day, $birth_month, $birth_year);
 
   return exec_query('UPDATE contacts SET
-    display_name = ?, first_name = ?, middle_name = ?,
-    infix = ?, last_name = ?, birth_day = ?, birth_month = ?, birth_year = ?, note = ? WHERE id = ?',
-    [$display_name, $first_name, $middle_name, $infix, $last_name, $birth_day, $birth_month, $birth_year, $note, $id]);
+    display_name = ?, first_name = ?, middle_name = ?, legal_infix = ?, legal_name = ?,
+    family_infix = ?, family_name = ?, name_order = ?, birth_day = ?, birth_month = ?, birth_year = ?, note = ?
+    WHERE id = ?',
+    [$display_name, $first_name, $middle_name, $legal_infix, $legal_name, $family_infix, $family_name, $name_order,
+      $birth_day, $birth_month, $birth_year, $note, $id]);
 }
 
 function update_contact_note($id, $note) {

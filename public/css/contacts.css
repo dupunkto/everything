@@ -320,8 +320,13 @@
   font-size: 1.5em;
 }
 
-.detail__names button {
+.detail__names :is(button, select) {
   flex: 0 0 auto;
+}
+
+.detail__names select {
+  width: fit-content;
+  margin-right: 1em;
 }
 
 .detail__title {
@@ -330,6 +335,11 @@
 
 .detail__title, .detail__names {
   margin-top: 0.5em;
+}
+
+.detail__names.js-legal-name {
+  margin-top: 0;
+  margin-bottom: 0.5em;
 }
 
 .field {
