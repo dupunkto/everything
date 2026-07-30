@@ -68,6 +68,9 @@
 
   requestAnimationFrame(fit_circles);
 
+  const circle_observer = new ResizeObserver(fit_circles);
+  circle_observer.observe(view);
+
   const minute_at = (day, y) => {
     const rect = day.getBoundingClientRect();
     const min = (y - rect.top) / rect.height * DAY;
@@ -234,6 +237,7 @@
   window.calendar_teardown = () => {
     document.removeEventListener("click", close_on_click);
     document.removeEventListener("keydown", close_on_escape);
+    circle_observer.disconnect();
   };
 
   // Drag to create, move or resize
