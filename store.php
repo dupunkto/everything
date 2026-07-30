@@ -690,6 +690,17 @@ function list_timing_tags($id) {
   return tags_of('timings_tags', 'timing_id', $id);
 }
 
+function list_timings_tags($ids) {
+  if(!$ids) return [];
+
+  $placeholders = join(', ', array_fill(0, count($ids), '?'));
+
+  return inherit_tag_colors(all("SELECT link.timing_id, tags.* FROM tags
+    JOIN timings_tags link ON link.tag_id = tags.id
+    WHERE link.timing_id IN ($placeholders)
+    ORDER BY tags.position ASC, tags.id DESC", $ids));
+}
+
 function list_timing_tag_ids($id) {
   return array_column(list_timing_tags($id), 'id');
 }

@@ -88,29 +88,40 @@
   margin-bottom: 0.25em;
   background: light-dark(#f1f1f1, #2b2b33);
   display: grid;
-  grid-template-columns: 1fr 300px;
-  grid-template-areas: "meta duration" "meta duration";
+  grid-template-columns: 1fr auto;
+  grid-template-areas: "meta duration";
   align-items: center;
+  gap: 1em;
+}
+
+.tracker-list__meta {
+  grid-area: meta;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25em;
 }
 
 .tracker-list__description {
-  margin: 0;
-}
-
-.tracker-list__times {
-  opacity: 0.8;
-  font-size: 0.7em;
-  margin: 0;
+  margin: 0 0.25em 0;
 }
 
 .tracker-list__duration {
+  grid-area: duration;
+  display: flex;
+  align-items: center;
+  gap: 1em;
+  white-space: nowrap;
+  margin: 0.25em;
+}
+
+.tracker-list__range {
+  opacity: 0.8;
+}
+
+.tracker-list__total {
   font-size: 1.5em;
   font-weight: bold;
-  grid-area: duration;
-  grid-row-start: 1;
-  grid-row-end: 3;
-  text-align: right;
-  margin: 0.25em;
 }
 
 .tracker-popup-editor {
