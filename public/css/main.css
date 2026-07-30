@@ -376,28 +376,32 @@ button,
   margin-bottom: 0.25em;
 }
 
-.tags__tag {
-  display: flex;
+.tag {
+  display: inline-flex;
   align-items: center;
   gap: 0.4em;
   white-space: nowrap;
+  padding: 0 10px 0 6px;
   color: inherit;
   text-transform: none;
-  background: transparent;
-  border: none;
-  /* No vertical padding: the badge must stay shorter than the input,
-     or the row grows when the first tag is added. */
-  padding: 0 10px 0 6px;
-  font-size: inherit;
-  cursor: pointer;
 }
 
-.tags__tag::before {
+.tag::before {
   content: "";
+  flex: 0 0 auto;
   width: 1em;
   height: 1em;
   border-radius: 4px;
   background: var(--tag-color);
+}
+
+.tags__tag {
+  background: transparent;
+  border: none;
+  /* The shared tag has no vertical padding, so the badge stays shorter
+     than the input instead of growing the row when the first tag is added. */
+  font-size: inherit;
+  cursor: pointer;
 }
 
 .tags__tag:hover {

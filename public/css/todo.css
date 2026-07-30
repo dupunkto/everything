@@ -66,6 +66,41 @@
   background: transparent;
 }
 
+.todo__status {
+  display: inline-block;
+  padding: 2px 6px;
+  font-family: monospace;
+  font-size: 0.8em;
+  background: light-dark(#e5e5e5, #3a3a3a);
+  color: light-dark(#666, #ccc);
+}
+
+.todo__status--todo {
+  background: light-dark(#b9dcff, #164c7e);
+  color: light-dark(#164c7e, #b9dcff);
+}
+
+.todo__status--wip {
+  background: light-dark(#ffe58a, #665200);
+  color: light-dark(#664d00, #ffe58a);
+}
+
+.todo__status--blocked,
+.todo__status--overdue {
+  background: light-dark(#f4b4b4, #681f1f);
+  color: light-dark(#7f1d1d, #ffc1c1);
+}
+
+.todo__status--backlog {
+  background: light-dark(#ddc5f7, #4d2875);
+  color: light-dark(#4d2875, #e4cffb);
+}
+
+.todo__status--done {
+  background: light-dark(#bde8c6, #245c31);
+  color: light-dark(#245c31, #c5edcd);
+}
+
 .todo__badges {
   display: flex;
   gap: 0.25em;

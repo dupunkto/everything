@@ -152,7 +152,11 @@
 }
 
 .detail__meta-tag {
-  opacity: 1;
+  padding-block: 2px;
+}
+
+.detail__meta-tag:first-child {
+  padding-left: 0;
 }
 
 .detail__cols {

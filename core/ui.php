@@ -43,7 +43,7 @@ function tags_field($selected = []) {
   ?>
   <div class="tags" z-tags>
     <?php foreach($selected as $tag): ?>
-      <button type="button" class="tags__tag" title="Remove tag" style="--tag-color: <?= esc_attr($tag['color']) ?>"><input
+      <button type="button" class="tag tags__tag" title="Remove tag" style="--tag-color: <?= esc_attr($tag['color']) ?>"><input
         type="hidden" name="tags[]" value="<?= esc_attr($tag['id']) ?>"><?= esc_inner($tag['label']) ?></button>
     <?php endforeach ?>
     <!-- The wrapper anchors the suggestion list to the input, so it opens
@@ -59,7 +59,7 @@ function tags_field($selected = []) {
         <?php endforeach ?>
       </ul>
     </span>
-    <template><button type="button" class="tags__tag" title="Remove tag"><input type="hidden" name="tags[]"></button></template>
+    <template><button type="button" class="tag tags__tag" title="Remove tag"><input type="hidden" name="tags[]"></button></template>
   </div>
   <?php
 }

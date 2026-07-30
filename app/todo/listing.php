@@ -1,11 +1,20 @@
 <?php
 
-  $lists = [];
-
   $query = $_GET['q'] ?? $_POST['q'] ?? "";
   $pinned = json_decode(@$_GET['i'] ?: @$_POST['i'] ?: "[]", true);
 
   $tags = \store\list_tags();
+  $lists = [];
+
+  if(TODO_DISPLAY == 'status') {
+    foreach(['overdue', 'todo', 'wip', 'blocked', 'backlog', 'done', 'nvm'] as $status)
+      $lists[$status] = ['label' => $status, 'color' => null, 'tasks' => []];
+  } else {
+    $lists['all'] = ['label' => "all", 'color' => null, 'tasks' => []];
+    foreach($tags as $tag)
+      $lists[$tag['id']] = ['label' => $tag['label'], 'color' => $tag['color'], 'tasks' => []];
+  }
+
   $tasks = \store\list_tasks($query, array_keys($pinned));
   $today = local_date("Y-m-d");
   $now = time();
@@ -39,7 +48,7 @@
     $task['overdue'] = $is_overdue($task);
 
     if(TODO_DISPLAY == 'status') {
-      $lists[$task['overdue'] ? 'overdue' : $task['status']][] = $task;
+      $lists[$task['overdue'] ? 'overdue' : $task['status']]['tasks'][] = $task;
       continue;
     }
 
@@ -52,41 +61,32 @@
       if(!$best || $depth_of($tag) < $depth_of($best)) $best = $tag;
     }
 
-    $lists[$best ? tag_slug($best['label']) : 'all'][] = $task;
+    $lists[$best ? $best['id'] : 'all']['tasks'][] = $task;
   }
 
   $status_rank = array_flip(['wip', 'todo', 'blocked', 'backlog', 'done', 'nvm']);
   $sort_rank = fn($task) => $task['overdue'] ? 0 : $status_rank[$task['status']] + 1;
 
-  foreach($lists as &$tasks) {
+  foreach($lists as &$list) {
     $fixed = sorted(
-      array_filter($tasks, fn($task) => isset($pinned[$task['id']])),
+      array_filter($list['tasks'], fn($task) => isset($pinned[$task['id']])),
       fn($a, $b) => $pinned[$a['id']] <=> $pinned[$b['id']]
     );
 
     $tasks = sorted(
-      array_filter($tasks, fn($task) => !isset($pinned[$task['id']])),
+      array_filter($list['tasks'], fn($task) => !isset($pinned[$task['id']])),
       fn($a, $b) => $sort_rank($a) <=> $sort_rank($b)
     );
 
-    $tasks = array_reduce($fixed, fn($tasks, $task) => insert(
+    $list['tasks'] = array_reduce($fixed, fn($tasks, $task) => insert(
       $tasks,
       max(0, min($pinned[$task['id']], count($tasks))),
       $task
     ), $tasks);
   }
-  unset($tasks);
+  unset($list);
 
-  $ordered = [];
-  $columns = TODO_DISPLAY == 'status'
-    ? ['overdue', 'todo', 'wip', 'blocked', 'backlog', 'done', 'nvm']
-    : ['all', ...array_map(fn($tag) => tag_slug($tag['label']), $tags)];
-
-  foreach($columns as $key) {
-    if(isset($lists[$key])) $ordered[$key] = $lists[$key];
-  }
-
-  $lists = $ordered;
+  $lists = array_filter($lists, fn($list) => $list['tasks']);
 
   $expand_open = function($tokens) {
     $expanded = [];
@@ -182,12 +182,20 @@
 </nav>
 
 <div class="listing listing--<?= TODO_LAYOUT == 'horizontal' ? 'horizontal' : 'masonry' ?>">
-  <?php foreach($lists as $list => $tasks): ?>
+  <?php foreach($lists as $key => $list): ?>
     <section>
-      <h3 class="listing__heading"><?= TODO_DISPLAY == 'tag' ? "~" : "" ?><?= esc_inner($list) ?></h3>
+      <h3 class="listing__heading">
+        <?php if(isset($list['color'])): ?>
+          <span class="tag" style="--tag-color: <?= esc_attr($list['color']) ?>"><?= esc_inner($list['label']) ?></span>
+        <?php elseif(TODO_DISPLAY == 'status'): ?>
+          <span class="todo__status todo__status--<?= esc_attr($key) ?>"><?= esc_inner($list['label']) ?></span>
+        <?php else: ?>
+          <?= esc_inner($list['label']) ?>
+        <?php endif ?>
+      </h3>
 
       <ul>
-        <?php foreach($tasks as $position => $task): ?>
+        <?php foreach($list['tasks'] as $position => $task): ?>
           <?php $state = json_encode(array_replace($pinned, [$task['id'] => $position])) ?>
           <li class="listing__item<?= $task['overdue'] ? " todo__item--overdue" : "" ?>" tabindex="0">
             <?php if(cast_boolean($task['urgent'])) circle() ?>
@@ -229,7 +237,7 @@
                 <?= esc_inner($task['title']) ?>
               </a>
             </h4>
-            <?php if(in_array($task['status'], ['wip', 'blocked']) || $task['recurrence']): ?>
+            <?php if(TODO_DISPLAY != 'status' && (in_array($task['status'], ['wip', 'blocked']) || $task['recurrence'])): ?>
               <span class="todo__badges">
                 <?php if(in_array($task['status'], ['wip', 'blocked'])): ?>
                   <span class="todo__badge todo__badge--<?= esc_attr($task['status']) ?>"><?= esc_inner($task['status']) ?></span>
