@@ -20,8 +20,31 @@ function establish_connection() {
   ];
 
   $dsn = "pgsql:host=$host;port=$port;dbname=$name";
+  $dbh = new PDO($dsn, $user, $pass, $options);
 
-  return new PDO($dsn, $user, $pass, $options);
+  register_functions($dbh);
+
+  return $dbh;
+}
+
+function register_functions($dbh) {
+  $dbh->exec("CREATE EXTENSION IF NOT EXISTS unaccent");
+
+  if(!function_defined($dbh, 'EXO_NORMALIZE')) $dbh->exec('CREATE FUNCTION EXO_NORMALIZE(input text)
+    RETURNS text
+    LANGUAGE SQL
+    STABLE STRICT PARALLEL SAFE
+    AS $$ SELECT unaccent(lower(input)) $$');
+}
+
+function function_defined($dbh, $name) {
+  $query = $dbh->prepare('SELECT 1
+    FROM pg_proc
+    JOIN pg_namespace ON pg_namespace.oid = pg_proc.pronamespace
+    WHERE pg_namespace.nspname = current_schema()
+      AND pg_proc.proname = LOWER(?)');
+  $query->execute([$name]);
+  return !!$query->fetch();
 }
 
 function initial_run() {

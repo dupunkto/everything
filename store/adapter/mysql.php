@@ -20,8 +20,27 @@ function establish_connection() {
   ];
 
   $dsn = "mysql:host=$host;port=$port;dbname=$name;charset=utf8mb4";
+  $dbh = new PDO($dsn, $user, $pass, $options);
 
-  return new PDO($dsn, $user, $pass, $options);
+  register_functions($dbh);
+
+  return $dbh;
+}
+
+function register_functions($dbh) {
+  if(!function_defined($dbh, 'EXO_NORMALIZE')) $dbh->exec("CREATE FUNCTION EXO_NORMALIZE(input TEXT)
+    RETURNS TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+    DETERMINISTIC NO SQL
+    RETURN LOWER(input)");
+}
+
+function function_defined($dbh, $name) {
+  $query = $dbh->prepare("SELECT 1 FROM information_schema.routines
+    WHERE routine_schema = DATABASE()
+      AND routine_type = 'FUNCTION'
+      AND routine_name = ?");
+  $query->execute([$name]);
+  return !!$query->fetch();
 }
 
 function initial_run() {

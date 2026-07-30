@@ -39,12 +39,12 @@ zhtml.directive("z-tags", (root) => {
   };
 
   const filter = () => {
-    const query = input.value.trim().toLowerCase();
+    const query = str_normalize(input.value.trim());
     if(query != "") browse = false;
 
     for(const item of list.querySelectorAll("li")) {
       item.hidden = !((browse || query != "")
-        && (item.dataset.label.toLowerCase().includes(query) || item.dataset.slug.includes(query))
+        && (str_normalize(item.dataset.label).includes(query) || item.dataset.slug.includes(query))
         && !selected().includes(item.dataset.id));
     }
 

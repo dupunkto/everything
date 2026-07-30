@@ -61,7 +61,7 @@
     if(!str_contains_terms($row['search']['fuzzy'], $terms)) return false;
 
     foreach($fields as [$field, $needle]) {
-      if($needle !== "" && mb_stripos($row['search'][$field] ?? "", $needle) === false)
+      if($needle !== "" && !str_contains_term($row['search'][$field] ?? "", $needle))
         return false;
     }
 
@@ -74,11 +74,11 @@
   // matches in notes or description later.
   if($searching) {
     $score = function($row) use ($terms) {
-      $name = mb_strtolower($row['display']);
+      $name = str_normalize($row['display']);
       $total = 0;
 
       foreach($terms as $term) {
-        $pos = mb_stripos($name, $term);
+        $pos = mb_strpos($name, str_normalize($term));
         $total += $pos === false ? 1000 : $pos;
       }
 

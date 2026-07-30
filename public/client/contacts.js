@@ -88,10 +88,10 @@ document.addEventListener("input", (e) => {
   const search = e.target.closest?.("[data-address-search]");
   if(!search || e.target != search.querySelector("input")) return;
 
-  const query = e.target.value.trim().toLowerCase();
+  const query = str_normalize(e.target.value.trim());
 
   search.querySelector("ul").replaceChildren(...Object.entries(addresses())
-    .filter(([line, a]) => query && `${line} ${a.label ?? ""}`.toLowerCase().includes(query))
+    .filter(([line, a]) => query && str_normalize(`${line} ${a.label ?? ""}`).includes(query))
     .map(([line, a]) => item_for(line, a)));
 });
 

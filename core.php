@@ -5,6 +5,7 @@ define('EVERYTHING_VERSION', "0.1-preview");
 define('STORE_VERSION', 0);
 
 require __DIR__ . "/core/anyhow.php";
+require __DIR__ . "/core/neuro.php";
 
 require __DIR__ . "/vendor/sabre.php";
 require __DIR__ . "/vendor/parsedown.php";
@@ -16,7 +17,6 @@ require __DIR__ . "/init.php";
 require __DIR__ . "/git.php";
 
 require __DIR__ . "/core/core.php";
-require __DIR__ . "/core/neuro.php";
 require __DIR__ . "/core/logger.php";
 require __DIR__ . "/core/cast.php";
 require __DIR__ . "/core/ui.php";

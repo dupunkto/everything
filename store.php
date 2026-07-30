@@ -72,8 +72,9 @@ function notes_query($query, $stable = false) {
   $params = [];
 
   foreach($terms as $term) {
-    $where[] = '(LOWER(title) LIKE ? OR LOWER(content) LIKE ?)';
-    $like = "%" . mb_strtolower($term) . "%";
+    $where[] = '(EXO_NORMALIZE(title) LIKE EXO_NORMALIZE(?)
+      OR EXO_NORMALIZE(content) LIKE EXO_NORMALIZE(?))';
+    $like = "%$term%";
     $params[] = $like;
     $params[] = $like;
   }
@@ -609,8 +610,10 @@ function bookmarks_query($query, $stable = false) {
   $params = [];
 
   foreach($terms as $term) {
-    $where[] = '(LOWER(label) LIKE ? OR LOWER(url) LIKE ? OR LOWER(note) LIKE ?)';
-    $like = "%" . mb_strtolower($term) . "%";
+    $where[] = '(EXO_NORMALIZE(label) LIKE EXO_NORMALIZE(?)
+      OR EXO_NORMALIZE(url) LIKE EXO_NORMALIZE(?)
+      OR EXO_NORMALIZE(note) LIKE EXO_NORMALIZE(?))';
+    $like = "%$term%";
     $params[] = $like;
     $params[] = $like;
     $params[] = $like;
@@ -2064,8 +2067,8 @@ function list_logs_filtered($sources, $levels, $message, $from, $to, $limit) {
     elseif(!in_array($level, $levels)) return null;
 
     if($message) {
-      $conditions[] = "LOWER($column) LIKE ?";
-      $params[] = '%' . mb_strtolower($message) . '%';
+      $conditions[] = "EXO_NORMALIZE($column) LIKE EXO_NORMALIZE(?)";
+      $params[] = "%$message%";
     }
     if($from) {
       $conditions[] = 'changed_at >= ?';

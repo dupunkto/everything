@@ -19,11 +19,24 @@ function establish_connection() {
   define('INITIAL_RUN', !file_exists($database));
   $dbh = new PDO($dsn, options: $options);
 
+  register_functions($dbh);
+
   // SQLite ignores foreign keys (and their ON DELETE actions) unless
   // enforcement is switched on per connection.
   $dbh->exec("PRAGMA foreign_keys = ON");
 
   return $dbh;
+}
+
+function register_functions($dbh) {
+  if(!function_defined($dbh, 'EXO_NORMALIZE')) $dbh->sqliteCreateFunction('EXO_NORMALIZE',
+    fn($value) => is_null($value) ? null : str_normalize($value), 1);
+}
+
+function function_defined($dbh, $name) {
+  $query = $dbh->prepare('SELECT 1 FROM pragma_function_list WHERE name = LOWER(?)');
+  $query->execute([$name]);
+  return !!$query->fetch();
 }
 
 // Other adapters use a runtime check on the database schema to

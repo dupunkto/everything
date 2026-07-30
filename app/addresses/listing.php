@@ -3,7 +3,7 @@
   $query = cast_string($_GET['q'] ?? $_POST['q'] ?? "");
 
   $addresses = array_filter(\store\list_addresses(), fn($a) =>
-    $query == "" || mb_stripos(address_line($a) . " " . $a['label'], $query) !== false);
+    $query == "" || str_contains_term(address_line($a) . " " . $a['label'], $query));
 
 ?>
 <?php foreach($addresses as $a): ?>
