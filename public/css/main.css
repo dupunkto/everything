@@ -53,12 +53,17 @@
 }
 
 .request-error {
-  padding: 1.5em;
+  padding: 1em;
   overflow-wrap: anywhere;
 }
 
+.request-error__title {
+  margin: 0;
+}
+
 .request-error--page {
-  margin: 10vh auto;
+  margin: 0;
+  max-width: 100%;
 }
 
 .request-error--fragment {
@@ -67,8 +72,19 @@
 
 .request-error__status {
   color: #e23b3b;
+  font-size: 3em;
+  line-height: 1;
   font-family: monospace;
   font-weight: bold;
+  float: right;
+}
+
+.request-error__trace {
+  font-size: 0.8em;
+}
+
+.request-error__trace summary {
+  cursor: pointer;
 }
 
 .request-error pre {

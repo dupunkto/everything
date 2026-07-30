@@ -30,6 +30,15 @@ function error_status($error) {
   return $error instanceof HTTPError ? $error->status : 500;
 }
 
+function error_title($error) {
+  return match(error_status($error)) {
+    401 => "please dont :|",
+    403 => "bad boy >:(",
+    404 => "not found :(",
+    default => "everything crashed :[",
+  };
+}
+
 function error_message($error) {
   $developer = defined('DEVELOPER_MODE') && DEVELOPER_MODE;
   $safe = $error instanceof HTTPError && $error->status < 500;
@@ -56,7 +65,11 @@ function report_error($error) {
   $reporting = true;
 
   $status = error_status($error);
-  $level = $status >= 400 && $status < 500 ? 'warn' : 'error';
+  $level = match(true) {
+    in_array($status, [401, 404]) => 'debug',
+    $status >= 400 && $status < 500 => 'warn',
+    default => 'error',
+  };
 
   try {
     if(function_exists('logger\\write')) {
@@ -106,7 +119,7 @@ function finish_request($commit) {
 
 function rollback_request() {
   try { finish_request(false); }
-  catch(Throwable $error) { error_log("Everything could not roll back its request transaction: " . $error->getMessage()); }
+  catch(Throwable $error) { error_log("Could not roll back request transaction: " . $error->getMessage()); }
 }
 
 function clear_response() {
@@ -114,8 +127,32 @@ function clear_response() {
   ob_start();
 }
 
+// Error rendering
+
+function render_error($error) {
+  http_response_code(error_status($error));
+
+  if($error instanceof DAVError || str_starts_with(@$_SERVER['REQUEST_URI'] ?: '', '/caldav')) {
+    render_dav_error($error);
+    return;
+  }
+
+  header("Content-Type: text/html; charset=utf-8");
+
+  $status = error_status($error);
+  $title = error_title($error);
+  $message = error_message($error);
+  $developer = defined('DEVELOPER_MODE') && DEVELOPER_MODE;
+  $fragment = @$_SERVER['HTTP_X_XHTML'] == 'true';
+
+  include $fragment ? 
+    __DIR__ . "/../app/error/fragment.php" :
+    __DIR__ . "/../app/error.php";
+}
+
 function render_dav_error($error) {
   $condition = $error instanceof DAVError ? $error->condition : null;
+
   if($condition) {
     header("Content-Type: application/xml; charset=utf-8");
     $name = str_replace('D:', '', $condition);
@@ -130,23 +167,6 @@ function render_dav_error($error) {
 
   header("Content-Type: text/plain; charset=utf-8");
   echo error_message($error);
-}
-
-// Error rendering
-
-function render_error($error) {
-  http_response_code(error_status($error));
-
-  if($error instanceof DAVError || str_starts_with(@$_SERVER['REQUEST_URI'] ?: '', '/caldav')) {
-    render_dav_error($error);
-    return;
-  }
-
-  header("Content-Type: text/html; charset=utf-8");
-  $message = error_message($error);
-  $developer = defined('DEVELOPER_MODE') && DEVELOPER_MODE;
-  $fragment = @$_SERVER['HTTP_X_XHTML'] == 'true';
-  include __DIR__ . ($fragment ? "/../app/error/fragment.php" : "/../app/error.php");
 }
 
 function handle_exception($error) {
