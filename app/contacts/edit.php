@@ -32,6 +32,10 @@
     $item = $id ? ($kind == 'org' ? \store\get_organisation($id) : \store\get_contact($id)) : [];
     if($id) $item or fail(($kind == 'org' ? "Organisation" : "Contact") . " not found.", status: 404);
 
+    $phones = array_map(fn($row) => [...$row,
+      'phone_number' => normalize_phone_number($row['phone_number'])
+    ], unfold($_POST, 'phone', 'phone_number'));
+
     if($kind === "org") {
       if($id) {
         $fields = \core\diff($item,
@@ -59,7 +63,7 @@
       }
 
       \store\set_organisation_emails($id, unfold($_POST, 'email', 'email'));
-      \store\set_organisation_phone_numbers($id, unfold($_POST, 'phone', 'phone_number'));
+      \store\set_organisation_phone_numbers($id, $phones);
       \store\set_organisation_urls($id, unfold($_POST, 'url', 'url'));
       \store\set_organisation_socials($id, unfold($_POST, 'social', 'handle'));
       \store\set_organisation_addresses($id, unfold($_POST, 'address', 'street_name'));
@@ -102,7 +106,7 @@
       }
 
       \store\set_contact_emails($id, unfold($_POST, 'email', 'email'));
-      \store\set_contact_phone_numbers($id, unfold($_POST, 'phone', 'phone_number'));
+      \store\set_contact_phone_numbers($id, $phones);
       \store\set_contact_urls($id, unfold($_POST, 'url', 'url'));
       \store\set_contact_socials($id, unfold($_POST, 'social', 'handle'));
       \store\set_contact_roles($id, unfold($_POST, 'role', 'organisation'));

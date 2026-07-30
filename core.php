@@ -8,6 +8,7 @@ require __DIR__ . "/core/anyhow.php";
 
 require __DIR__ . "/vendor/sabre.php";
 require __DIR__ . "/vendor/parsedown.php";
+require __DIR__ . "/vendor/libphonenumber.php";
 
 require __DIR__ . "/store.php";
 require __DIR__ . "/config.php";
@@ -22,6 +23,7 @@ require __DIR__ . "/core/ui.php";
 require __DIR__ . "/core/forms.php";
 require __DIR__ . "/core/dates.php";
 require __DIR__ . "/core/geo.php";
+require __DIR__ . "/core/phone.php";
 require __DIR__ . "/core/astro.php";
 require __DIR__ . "/core/icalendar.php";
 require __DIR__ . "/core/caldav.php";

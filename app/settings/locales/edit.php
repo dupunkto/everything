@@ -4,7 +4,16 @@
   // the store loads, we define them here instead, since this is the only callsite at this point.
   define('ENUM_CURRENCY', array_keys(CURRENCY_SYMBOLS));
   define('ENUM_MAP_PROVIDER', array_keys(map_provider_options()));
+  define('ENUM_PHONE_REGION', array_keys(phone_region_options()));
   define('ENUM_TIME_FORMAT', ['12-hour', '24-hour']);
+
+  if(isset($_POST['phone-region'])) {
+    if(!in_array($_POST['phone-region'], ENUM_PHONE_REGION))
+      fail("Invalid 'phone-region' parameter.", status: 400);
+
+    \store\update_config('phone-region', $_POST['phone-region']);
+    \store\put_audit_log('config', 'general', "Set phone-region to '{$_POST['phone-region']}'.", 'user');
+  }
 
   if(isset($_POST['timezone'])) {
     if(!in_array($_POST['timezone'], \DateTimeZone::listIdentifiers()))
@@ -38,25 +47,30 @@
     \store\put_audit_log('config', 'general', "Set currency to '{$_POST['currency']}'.", 'user');
   }
 
-
-  $timezones = [];
-
-  foreach(\DateTimeZone::listIdentifiers() as $timezone) {
-    $timezones[$timezone] = str_replace("_", " ", $timezone);
+  function timezone_options() {
+    $timezones = \DateTimeZone::listIdentifiers();
+    return array_combine($timezones, array_map(fn($tz) =>
+      str_replace("_", " ", $tz), $timezones));
   }
 
-  $currency_options = array_combine(ENUM_CURRENCY, array_map(fn($c) =>
-    strtoupper($c) . " (" . CURRENCY_SYMBOLS[$c] . ")", ENUM_CURRENCY));
+  function currency_options() {
+    return array_combine(ENUM_CURRENCY, array_map(fn($c) =>
+      strtoupper($c) . " (" . CURRENCY_SYMBOLS[$c] . ")", ENUM_CURRENCY));
+  }
 
 ?>
 <form class="settings-form" x-post="/settings/locales/edit" x-on="change" x-target="#locale-settings">
   <label>
     Timezone
-    <?php \forms\options('timezone', $timezones, \config\fresh_value('timezone'), flat: true) ?>
+    <?php \forms\options('timezone', timezone_options(), \config\fresh_value('timezone'), flat: true) ?>
   </label>
   <label>
     Time format
     <?php \forms\options('time-format', ENUM_TIME_FORMAT, \config\fresh_value('time-format')) ?>
+  </label>
+  <label>
+    Phone region
+    <?php \forms\options('phone-region', phone_region_options(), \config\fresh_value('phone-region'), flat: true) ?>
   </label>
   <label>
     Map provider
@@ -64,6 +78,6 @@
   </label>
   <label>
     Currency
-    <?php \forms\options('currency', $currency_options, \config\fresh_value('currency'), flat: true) ?>
+    <?php \forms\options('currency', currency_options(), \config\fresh_value('currency'), flat: true) ?>
   </label>
 </form>

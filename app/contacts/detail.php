@@ -94,8 +94,12 @@
   <div class="detail__main">
     <?php
       $comms = [
-        ['fa-solid fa-phone', 'tel:', array_map(fn($r) => [$r['label'], $r['phone_number']], $item['phone_numbers'])],
-        ['fa-solid fa-envelope', 'mailto:', array_map(fn($r) => [$r['label'], $r['email']], $item['emails'])],
+        ['fa-solid fa-phone', 'tel:', array_map(fn($r) => [
+          $r['label'],
+          format_phone_number($r['phone_number']),
+          $r['phone_number']
+        ], $item['phone_numbers'])],
+        ['fa-solid fa-envelope', 'mailto:', array_map(fn($r) => [$r['label'], $r['email'], $r['email']], $item['emails'])],
       ];
     ?>
     <div class="detail__comms">
@@ -104,8 +108,8 @@
         if(!$rows) continue;
         // Only surface the label column when the rows carry more than one.
         $show_label = count(array_unique(array_filter(array_map(fn($r) => trim($r[0]), $rows)))) > 1;
-        foreach($rows as $i => [$label, $value]):
-          $href = $scheme . ($scheme === 'tel:' ? preg_replace('/\s+/', "", $value) : $value); ?>
+        foreach($rows as $i => [$label, $value, $target]):
+          $href = $scheme . $target; ?>
         <div class="detail__comm">
           <span class="detail__comm-icon"><?php if($i === 0): ?><i class="<?= $icon ?>"></i><?php endif ?></span>
           <span class="detail__comm-label"><?= $show_label ? esc_inner($label) : '' ?></span>

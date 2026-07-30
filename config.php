@@ -20,6 +20,7 @@ fallback('timezone', getenv("TIMEZONE") ?: "Europe/Amsterdam");
 fallback('time-format', "24-hour");
 resolute('time-lang', TIME_FORMAT == '24-hour' ? 'nl' : 'en');
 fallback('currency', "eur");
+fallback('phone-region', "NL");
 fallback('map-provider', "google_maps");
 fallback('developer-mode', $_ENV == "dev");
 
