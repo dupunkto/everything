@@ -118,7 +118,7 @@
       \store\set_contact_phone_numbers($id, $phones);
       \store\set_contact_urls($id, unfold($_POST, 'url', 'url'));
       \store\set_contact_socials($id, unfold($_POST, 'social', 'handle'));
-      \store\set_contact_roles($id, unfold($_POST, 'role', 'organisation'));
+      \store\set_contact_roles($id, unfold($_POST, 'role', 'org_id'));
       \store\set_contact_addresses($id, unfold($_POST, 'address', 'street_name'));
       \store\set_contact_tags($id, $_POST['tags'] ?? []);
 
@@ -149,8 +149,17 @@
     <input name="<?= $scope ?>_<?= $column ?>[]" placeholder="<?= $placeholder ?>" required value="<?= esc_attr(@$row[$column]) ?>" data-value>
   <?php };
 
-  $roles_field = function($row) { ?>
-    <input name="role_organisation[]" placeholder="organisation" required value="<?= esc_attr(@$row['organisation']) ?>" data-value>
+  $organisations = $kind == 'person' ? \store\list_organisations() : [];
+
+  $roles_field = function($row) use ($organisations) { ?>
+    <select name="role_org_id[]" required data-value>
+      <option value="">Organisation</option>
+      <?php foreach($organisations as $organisation): ?>
+        <option value="<?= esc_attr($organisation['id']) ?>" <?= @$row['org_id'] == $organisation['id'] ? 'selected' : '' ?>>
+          <?= esc_inner($organisation['display_name']) ?>
+        </option>
+      <?php endforeach ?>
+    </select>
     <input name="role_role[]" placeholder="role" value="<?= esc_attr(@$row['role']) ?>">
   <?php };
 

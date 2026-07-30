@@ -255,10 +255,34 @@
       <ul class="detail__roles">
         <?php foreach($item['roles'] as $r): ?>
           <li>
-            <strong><?= esc_inner($r['organisation']) ?></strong>
-            <?php if(trim($r['role'] ?? '')): ?>
-              <br><?= esc_inner($r['role']) ?>
-            <?php endif ?>
+            <a class="detail__role"
+              href="/contacts?kind=org&view=<?= esc_attr($r['org_id']) ?>"
+              x-get="/contacts/detail?kind=org&id=<?= esc_attr($r['org_id']) ?>"
+              x-target="#contacts-panel">
+              <strong><?= esc_inner($r['organisation_name']) ?></strong>
+              <?php if(trim($r['role'] ?? '')): ?>
+                <br><?= esc_inner($r['role']) ?>
+              <?php endif ?>
+            </a>
+          </li>
+        <?php endforeach ?>
+      </ul>
+    <?php endif ?>
+
+    <?php if($kind == "org" && $item['employees']): ?>
+      <h3>Employees</h3>
+      <ul class="detail__roles">
+        <?php foreach($item['employees'] as $employee): ?>
+          <li>
+            <a class="detail__role"
+              href="/contacts?kind=person&view=<?= esc_attr($employee['id']) ?>"
+              x-get="/contacts/detail?kind=person&id=<?= esc_attr($employee['id']) ?>"
+              x-target="#contacts-panel">
+              <strong><?= esc_inner(\contacts\contact_display_name($employee)) ?></strong>
+              <?php if(trim($employee['role'] ?? '')): ?>
+                <br><?= esc_inner($employee['role']) ?>
+              <?php endif ?>
+            </a>
           </li>
         <?php endforeach ?>
       </ul>

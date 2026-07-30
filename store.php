@@ -1394,8 +1394,9 @@ function list_contacts() {
       FROM contact_socials
       WHERE contact_socials.contact_id = contacts.id
     ) AS handles,
-    (SELECT EXO_CONCAT(contact_roles.organisation, ' ')
+    (SELECT EXO_CONCAT(organisations.display_name, ' ')
       FROM contact_roles
+      JOIN organisations ON organisations.id = contact_roles.org_id
       WHERE contact_roles.contact_id = contacts.id
     ) AS org_names FROM contacts");
 }
@@ -1433,7 +1434,10 @@ function list_contact_socials($id) {
 }
 
 function list_contact_roles($id) {
-  return all('SELECT * FROM contact_roles WHERE contact_id = ?', [$id]);
+  return all('SELECT contact_roles.*, organisations.display_name AS organisation_name
+    FROM contact_roles
+    JOIN organisations ON organisations.id = contact_roles.org_id
+    WHERE contact_roles.contact_id = ?', [$id]);
 }
 
 function list_contact_addresses($id) {
@@ -1584,8 +1588,23 @@ function get_organisation($id) {
   $organisation['socials'] = list_organisation_socials($id);
   $organisation['addresses'] = list_organisation_addresses($id);
   $organisation['tags'] = list_organisation_tags($id);
+  $organisation['employees'] = list_organisation_employees($id);
 
   return $organisation;
+}
+
+function list_organisation_employees($id) {
+  return all('SELECT contacts.*, contact_roles.role
+    FROM contact_roles
+    JOIN contacts ON contacts.id = contact_roles.contact_id
+    WHERE contact_roles.org_id = ?
+      AND NOT EXISTS (
+        SELECT 1 FROM contact_roles earlier
+        WHERE earlier.org_id = contact_roles.org_id
+          AND earlier.contact_id = contact_roles.contact_id
+          AND earlier.id < contact_roles.id
+      )
+    ORDER BY contact_roles.id', [$id]);
 }
 
 function list_organisation_emails($id) {

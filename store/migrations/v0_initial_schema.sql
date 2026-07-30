@@ -111,9 +111,10 @@ CREATE TABLE IF NOT EXISTS orgs_tags (
 CREATE TABLE IF NOT EXISTS contact_roles (
   id int(11) NOT NULL AUTO_INCREMENT,
   contact_id int(11) NOT NULL,
-  organisation text NOT NULL,
+  org_id int(11) NOT NULL,
   role text,
   FOREIGN KEY (contact_id) REFERENCES contacts (id) ON DELETE CASCADE,
+  FOREIGN KEY (org_id) REFERENCES organisations (id) ON DELETE CASCADE,
   PRIMARY KEY (id)
 );
 
