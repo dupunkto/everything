@@ -22,8 +22,7 @@ CREATE TABLE IF NOT EXISTS system_logs (
   level text NOT NULL,
   message text NOT NULL,
   context text,
-  PRIMARY KEY (id),
-  CHECK (level IN ('info', 'warn', 'error'))
+  PRIMARY KEY (id)
 );
 
 CREATE TABLE IF NOT EXISTS http_logs (
