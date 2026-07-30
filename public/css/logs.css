@@ -66,7 +66,8 @@
 }
 
 .logs-header__levels .logs-filter:hover,
-.logs-header__levels .logs-filter--active {
+.logs-header__levels .logs-filter:has(input:checked),
+.logs-header__levels .logs-filter:has(~ .logs-filter input:checked) {
   background-color: var(--log-color);
 }
 
@@ -75,7 +76,7 @@
 }
 
 .logs-header__sources .logs-filter:hover,
-.logs-header__sources .logs-filter--active {
+.logs-header__sources .logs-filter:has(input:checked) {
   background-color: light-dark(#c6c1bc, #555560);
 }
 

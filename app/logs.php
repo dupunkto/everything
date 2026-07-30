@@ -13,25 +13,26 @@
     <?php include __DIR__ . "/shell/menu.php" ?>
     <main class="main main--wide main--scrollable logs">
       <header>
-        <form id="logs-filters" class="logs-header" method="get" action="/logs"
-          x-get="/logs" x-on="input" x-target="@document">
+        <form id="logs-filters" class="logs-header" method="get" action="/logs" z-persist
+          x-get="/logs/listing" x-on="input" x-target="#logs-listing">
           <input type="hidden" name="filters" value="1">
           <h1 class="logs-header__title"><strong>Logs</strong></h1>
           <input class="logs-header__message" type="search" name="message" placeholder="Message" aria-label="Message" value="<?= esc_attr(@$_GET['message']) ?>">
           <input type="datetime-local" name="from" step="1" aria-label="From" title="From" value="<?= esc_attr(@$_GET['from']) ?>" hidden>
           <input type="datetime-local" name="to" step="1" aria-label="To" title="To" value="<?= esc_attr(@$_GET['to']) ?>" hidden>
 
-          <input type="hidden" name="level" value="<?= esc_attr($level) ?>">
           <div class="logs-header__buttons logs-header__levels">
             <?php foreach(['error', 'warn', 'info', 'debug'] as $candidate): ?>
-              <?php $active = array_search($candidate, ['debug', 'info', 'warn', 'error']) >= array_search($level, ['debug', 'info', 'warn', 'error']) ?>
-              <button class="logs-filter logs-filter--<?= esc_attr($candidate) ?><?php if($active) echo ' logs-filter--active' ?>" type="submit" name="level" value="<?= esc_attr($candidate) ?>"><?= esc_inner($candidate) ?></button>
+              <label class="logs-filter logs-filter--<?= esc_attr($candidate) ?>">
+                <input type="radio" name="level" value="<?= esc_attr($candidate) ?>" <?php if($candidate == $level) echo "checked" ?>>
+                <?= esc_inner($candidate) ?>
+              </label>
             <?php endforeach ?>
           </div>
 
           <div class="logs-header__buttons logs-header__sources">
             <?php foreach(['audit', 'system', 'http'] as $source): ?>
-              <label class="logs-filter<?php if(in_array($source, $sources)) echo ' logs-filter--active' ?>">
+              <label class="logs-filter">
                 <input type="checkbox" name="source[]" value="<?= esc_attr($source) ?>" <?php if(in_array($source, $sources)) echo "checked" ?>>
                 <?= esc_inner($source) ?>
               </label>
@@ -54,7 +55,7 @@
               <th>entity</th>
             </tr>
           </thead>
-          <tbody id="logs-listing"><?php fragment("logs/listing") ?></tbody>
+          <tbody id="logs-listing" x-get="/logs/listing" x-data="#logs-filters" x-on="load"><?php fragment("logs/listing") ?></tbody>
         </table>
       </div>
     </main>
