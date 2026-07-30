@@ -151,7 +151,7 @@ $sidebar_right = UI_SIDEBAR_POSITION == 'right';
         <?php foreach($timings[$date] ?? [] as $timing): ?>
           <div class="day__timing" data-id="<?= esc_attr($timing['id']) ?>" title="<?= esc_attr($timing['title']) ?>"
                style="--timing-top: <?= $timing['top'] ?>; --timing-height: <?= $timing['height'] ?>; --timing-color: <?= esc_attr($timing['color']) ?>">
-            <span class="day__timing-dot day__timing-dot--start"><i class="fa-solid fa-clock"></i></span>
+            <span class="day__timing-dot day__timing-dot--start"></span>
             <span class="day__timing-dot day__timing-dot--end"></span>
           </div>
         <?php endforeach ?>

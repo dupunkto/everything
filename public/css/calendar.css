@@ -401,19 +401,12 @@ body:has(.calendar-page) {
 
 .calendar-week .day__timing-dot--start {
   top: 0;
-  width: 14px;
-  height: 14px;
   transform: translate(-50%, -50%);
 }
 
 .calendar-week .day__timing-dot--end {
   bottom: 0;
   transform: translate(-50%, 50%);
-}
-
-.calendar-week .day__timing-dot i {
-  font-size: 9px;
-  color: black;
 }
 
 .calendar-week .day .appointment:has(.appointment__handle) {
