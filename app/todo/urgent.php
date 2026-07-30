@@ -9,4 +9,4 @@
 
   \caldav\mark_resource_changed('task', $_POST['id']);
 
-  include "listing.php"; exit;
+  include __DIR__ . "/listing.php"; exit;

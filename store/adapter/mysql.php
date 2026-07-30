@@ -34,6 +34,14 @@ function register_functions($dbh) {
     RETURN LOWER(input)");
 }
 
+function expand_macros($sql) {
+  return preg_replace(
+    "/EXO_CONCAT\(\s*([^,]+?)\s*,\s*('(?:[^']|'')*')\s*\)/i",
+    'GROUP_CONCAT($1 SEPARATOR $2)',
+    $sql
+  );
+}
+
 function function_defined($dbh, $name) {
   $query = $dbh->prepare("SELECT 1 FROM information_schema.routines
     WHERE routine_schema = DATABASE()

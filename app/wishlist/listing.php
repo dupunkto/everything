@@ -1,13 +1,9 @@
 <?php
 
   $show = @$_GET['show'] ?: @$_POST['show'] ?: 'dream';
-  $include = @$_GET['i'] ?: @$_POST['i'];
+  $pinned = json_decode(@$_GET['i'] ?: @$_POST['i'] ?: "[]", true);
 
-  // This array includes IDs of items that have just been clicked.
-  // We do not want to have them disappear from under the users cursor,
-  // that is a very bad UX. So this 'skips' them from the query that
-  // is currently active.
-  $include = $include ? explode(",", $include) : [];
+  if(!is_array($pinned)) $pinned = [];
 
   $statuses = match($show) {
     'shelves' => ['nvm'],
@@ -19,7 +15,7 @@
 
   [$wishes, $has_more] = listing_batch(\store\list_wishes_paginated(
     $statuses,
-    $include,
+    $pinned,
     LISTING_PAGE_SIZE + 1,
     offset: $offset
   ));

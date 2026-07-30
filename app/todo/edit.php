@@ -49,8 +49,7 @@
     \caldav\mark_resource_changed('task', $_POST['id']);
 
     if(isset($_POST['close'])) {
-      http_response_code(303);
-      header("Location: /todo"); exit;
+      see_other("/todo");
     }
   }
 
@@ -85,16 +84,7 @@
         <button type="submit" name="close" value="1" z-key="escape mod+enter" hidden></button>
 
         <section>
-          <div class="title-check" z-circle>
-            <input name="title" type="text" placeholder="Title" required value="<?= esc_attr($task['title']) ?>">
-            <?php circle() ?>
-            <label class="title-check__urgent" title="Circle" z-key="m">
-              <input type="hidden" name="urgent" value="false">
-              <input type="checkbox" name="urgent" value="true" aria-label="Circle" <?php if(filter_var($task['urgent'], FILTER_VALIDATE_BOOLEAN)) echo "checked" ?>>
-              <i class="fa-regular fa-flag"></i>
-              <i class="fa-solid fa-flag"></i>
-            </label>
-          </div>
+          <?php title_field($task['title'], filter_var($task['urgent'], FILTER_VALIDATE_BOOLEAN), autofocus: false, key: "m") ?>
           <textarea name="content" placeholder="What to do...?"><?= esc_inner($task['content']) ?></textarea>
 
           <?php tags_field(\store\list_task_tags($task['id'])) ?>

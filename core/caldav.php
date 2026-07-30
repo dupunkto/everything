@@ -324,7 +324,8 @@ function duration($seconds) {
   $seconds %= 60;
   $value = "P" . ($days ? $days . "D" : "");
   if($hours || $minutes || $seconds || !$days)
-    $value .= "T" . ($hours ? $hours . "H" : "") . ($minutes ? $minutes . "M" : "") . ($seconds ? $seconds . "S" : "");
+    $value .= "T" . ($hours ? $hours . "H" : "") . ($minutes ? $minutes . "M" : "")
+      . ($seconds || (!$days && !$hours && !$minutes) ? $seconds . "S" : "");
   return $sign . $value;
 }
 

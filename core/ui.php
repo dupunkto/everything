@@ -72,3 +72,34 @@ function circle($class = "") {
   </svg>
   <?php
 }
+
+function title_field($title = "", $urgent = false, $autofocus = true, $key = null) {
+  ?>
+  <div class="title-check" z-circle>
+    <input name="title" type="text" placeholder="Title" required value="<?= esc_attr($title) ?>"<?= $autofocus ? ' autofocus' : '' ?>>
+    <?php circle() ?>
+    <label class="title-check__urgent" title="Circle"<?= $key ? ' z-key="' . esc_attr($key) . '"' : '' ?>>
+      <input type="hidden" name="urgent" value="false">
+      <input type="checkbox" name="urgent" value="true" aria-label="Circle"<?= $urgent ? ' checked' : '' ?>>
+      <i class="fa-regular fa-flag"></i>
+      <i class="fa-solid fa-flag"></i>
+    </label>
+  </div>
+  <?php
+}
+
+function repeat_field($legend, $button, $rows, $render, $extra = null, $confirm = "Are you sure?") {
+  ?>
+  <fieldset class="repeat" z-repeat="<?= esc_attr($confirm) ?>">
+    <legend><?= esc_inner($legend) ?></legend>
+    <div class="repeat__rows">
+      <?php foreach($rows as $row): ?>
+        <div class="repeat__row"><?php $render($row) ?><button type="button" data-remove>&times;</button></div>
+      <?php endforeach ?>
+    </div>
+    <template><div class="repeat__row"><?php $render([]) ?><button type="button" data-remove>&times;</button></div></template>
+    <button type="button" data-add>+ <?= esc_inner($button) ?></button>
+    <?php if($extra) $extra() ?>
+  </fieldset>
+  <?php
+}

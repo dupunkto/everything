@@ -54,5 +54,5 @@
     </label>
   </div>
 
-  <button type="button" class="tracker-editor__delete" data-delete="<?= esc_attr($_GET['id']) ?>">Delete</button>
+  <button type="button" class="tracker-editor__delete" x-delete="/tracker/delete?id=<?= esc_attr($_GET['id']) ?>" z-confirm="Delete this timing?" x-refresh="#tracker-listing">Delete</button>
 </form>

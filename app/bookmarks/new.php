@@ -15,8 +15,7 @@
     \store\set_bookmark_tags($id, $_POST['tags'] ?? []);
     \store\put_audit_log('bookmarks', $id, "Created bookmarks/$id.", 'user', operation: 'insert');
 
-    http_response_code(303);
-    header("Location: /bookmarks"); exit;
+    see_other("/bookmarks");
   }
 
 ?>

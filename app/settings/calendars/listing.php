@@ -15,7 +15,7 @@
         <input name="title" type="text" required value="<?= esc_attr($calendar['title']) ?>" placeholder="Title">
         <input name="subtitle" type="text" value="<?= esc_attr($calendar['subtitle'] ?? '') ?>" placeholder="Subtitle">
         <button class="settings-editor__icon-button settings-editor__icon-button--square" type="button" title="Make default calendar" x-post="/settings/calendars/default?id=<?= esc_attr($calendar['id']) ?>" x-target="#calendars-listing"><i class="fa-<?= $is_default ? 'solid' : 'regular' ?> fa-star"></i></button>
-        <button type="button" x-delete="/settings/calendars/delete?id=<?= esc_attr($calendar['id']) ?>" x-target="#calendars-listing" x-confirm="Delete this calendar and all its appointments?">&times;</button>
+        <button type="button" x-delete="/settings/calendars/delete?id=<?= esc_attr($calendar['id']) ?>" x-target="#calendars-listing" z-confirm="Delete this calendar and all its appointments?">&times;</button>
       </form>
     </li>
   <?php endforeach ?>

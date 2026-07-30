@@ -1,6 +1,8 @@
 <?php
   // Edit target for note textarea.
 
+  if($method != 'POST') fail("Method not allowed.", status: 405);
+
   $kind = @$_GET['kind'] ?? "person";
   $id = @$_GET['id'] ?: @$_POST['id'];
 
@@ -16,4 +18,4 @@
     \store\put_audit_log($table, $id, "Updated [note] for $table/$id.", 'user');
   }
 
-  http_response_code(204); exit;
+  stay_on_page();

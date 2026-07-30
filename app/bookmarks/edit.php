@@ -22,8 +22,7 @@
       "Updated [" . join(", ", $fields) . "] for bookmarks/{$_POST['id']}.", 'user');
 
     if(isset($_POST['close'])) {
-      http_response_code(303);
-      header("Location: /bookmarks"); exit;
+      see_other("/bookmarks");
     }
   }
 

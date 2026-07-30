@@ -45,7 +45,7 @@
           <?php endforeach; ?>
         </select>
 
-        <button type="button" x-delete="/settings/tags/delete?id=<?= $tag['id'] ?>" x-target="#tags-listing" <?php if($tag['label'] != "Untitled tag") echo 'x-confirm="Are you sure?"' ?>>&times;</button>
+        <button type="button" x-delete="/settings/tags/delete?id=<?= $tag['id'] ?>" x-target="#tags-listing" <?php if($tag['label'] != "Untitled tag") echo 'z-confirm="Are you sure?"' ?>>&times;</button>
       </form>
     </li>
   <?php endforeach ?>

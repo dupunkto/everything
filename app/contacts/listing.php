@@ -102,11 +102,11 @@
 
 ?>
 <nav class="contacts__tabs">
-  <button type="button" <?php if(isset($kinds['person'])) echo 'class="is-active"' ?>
+  <button type="button" class="contacts__tab<?= isset($kinds['person']) ? ' contacts__tab--active' : '' ?>"
     z-set=".contacts__search" value="<?= esc_attr($tab_query('person')) ?>">
     <i class="fa-solid fa-people-group"></i> People
   </button>
-  <button type="button" <?php if(isset($kinds['org'])) echo 'class="is-active"' ?>
+  <button type="button" class="contacts__tab<?= isset($kinds['org']) ? ' contacts__tab--active' : '' ?>"
     z-set=".contacts__search" value="<?= esc_attr($tab_query('org')) ?>">
     <i class="fa-solid fa-building-columns"></i> Organisations
   </button>
@@ -140,13 +140,14 @@
       z-stop
       hidden
     ></button>
-    <a
-      href="/contacts/delete?kind=<?= esc_attr($row['kind']) ?>&id=<?= esc_attr($row['id']) ?>"
+    <button
+      type="button"
       z-key="d"
+      x-delete="/contacts/delete?kind=<?= esc_attr($row['kind']) ?>&id=<?= esc_attr($row['id']) ?>"
       z-confirm="Delete this <?= $row['kind'] == 'org' ? 'organisation' : 'contact' ?>?"
       z-stop
       hidden
-    ></a>
+    ></button>
   </div>
 <?php endforeach ?>
 <?php if(!$rows): ?>

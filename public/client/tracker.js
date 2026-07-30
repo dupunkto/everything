@@ -189,15 +189,7 @@ zhtml.directive("z-timer", (form) => {
     if(dates) {
       for(const field of popup.querySelectorAll(".tracker-editor__date")) field.hidden = false;
       dates.hidden = true;
-      return;
     }
-
-    const button = event.target.closest("[data-delete]");
-    if(!button || !confirm("Are you sure?")) return;
-
-    await fetch("/tracker/delete?id=" + encodeURIComponent(button.dataset.delete), { method: "DELETE" });
-    close_editor();
-    xhtml.refresh("#tracker-listing");
   });
 
   document.addEventListener("x-swap", (event) => {

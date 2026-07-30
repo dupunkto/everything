@@ -101,5 +101,5 @@ function restart($id) {
 }
 
 function reload($id) {
-  return docker("exec", "caddy", "reload", "-c", APP['caddy']['config']);
+  return docker("exec", $id, "caddy", "reload", "-c", APP['caddy']['config']);
 }

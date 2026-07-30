@@ -3,6 +3,8 @@
   $query = $_GET['q'] ?? $_POST['q'] ?? "";
   $pinned = json_decode(@$_GET['i'] ?: @$_POST['i'] ?: "[]", true);
 
+  if(!is_array($pinned)) $pinned = [];
+
   $tags = \store\list_tags();
   $lists = [];
 
@@ -200,14 +202,14 @@
           <li class="listing__item<?= $task['overdue'] ? " todo__item--overdue" : "" ?>" tabindex="0">
             <?php if(cast_boolean($task['urgent'])) circle() ?>
             <form x-post="/todo/urgent" x-target="#todo-listing" x-on="change" hidden>
-              <input type="hidden" name="id" value="<?= $task['id'] ?>">
+              <input type="hidden" name="id" value="<?= esc_attr($task['id']) ?>">
               <input type="hidden" name="urgent" value="false">
               <input type="hidden" name="q" value="<?= esc_attr($query) ?>">
               <input type="hidden" name="i" value="<?= esc_attr($state) ?>">
               <input type="checkbox" name="urgent" value="true" z-key="m" <?php if(cast_boolean($task['urgent'])) echo "checked" ?> hidden>
             </form>
             <form x-post="/todo/status" x-target="#todo-listing" x-on="change">
-              <input type="hidden" name="id" value="<?= $task['id'] ?>">
+              <input type="hidden" name="id" value="<?= esc_attr($task['id']) ?>">
               <input type="hidden" name="status" value="todo" />
               <input type="hidden" name="comment" value="" />
               <input type="hidden" name="q" value="<?= esc_attr($query) ?>" />
@@ -232,8 +234,8 @@
               <button name="status" value="<?= $status_for($task, 'nvm') ?>" z-key="s" hidden></button>
             </form>
             <h4 class="listing__title">
-              <span class="humid"><?= $task['id'] ?></span>
-              <a class="listing__link" href="/todo/edit?id=<?= $task['id'] ?>" tabindex="-1" z-key="enter e o">
+              <span class="humid"><?= esc_inner($task['id']) ?></span>
+              <a class="listing__link" href="/todo/edit?id=<?= esc_attr($task['id']) ?>" tabindex="-1" z-key="enter e o">
                 <?= esc_inner($task['title']) ?>
               </a>
             </h4>
@@ -245,7 +247,7 @@
                 <?php if($task['recurrence']): ?><span class="todo__badge">recurring</span><?php endif ?>
               </span>
             <?php endif ?>
-            <button type="button" x-delete="/todo/delete?id=<?= $task['id'] ?>" z-key="d" z-confirm="Delete this task?" hidden></button>
+            <button type="button" x-delete="/todo/delete?id=<?= esc_attr($task['id']) ?>" z-key="d" z-confirm="Delete this task?" hidden></button>
           </li>
         <?php endforeach; ?>
       </ul>

@@ -33,6 +33,10 @@ function register_functions($dbh) {
     fn($value) => is_null($value) ? null : str_normalize($value), 1);
 }
 
+function expand_macros($sql) {
+  return str_ireplace('EXO_CONCAT(', 'GROUP_CONCAT(', $sql);
+}
+
 function function_defined($dbh, $name) {
   $query = $dbh->prepare('SELECT 1 FROM pragma_function_list WHERE name = LOWER(?)');
   $query->execute([$name]);

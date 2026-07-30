@@ -32,8 +32,7 @@
 
     \caldav\mark_resource_changed('task', $id);
 
-    http_response_code(303);
-    header("Location: /todo"); exit;
+    see_other("/todo");
   }
 
 ?>
@@ -54,16 +53,7 @@
           <button>Save</button>
         </div>
 
-        <div class="title-check" z-circle>
-          <input name="title" type="text" placeholder="Title" required autofocus>
-          <?php circle() ?>
-          <label class="title-check__urgent" title="Circle">
-            <input type="hidden" name="urgent" value="false">
-            <input type="checkbox" name="urgent" value="true" aria-label="Circle">
-            <i class="fa-regular fa-flag"></i>
-            <i class="fa-solid fa-flag"></i>
-          </label>
-        </div>
+        <?php title_field() ?>
 
         <?php tags_field() ?>
 

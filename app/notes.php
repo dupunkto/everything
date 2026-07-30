@@ -7,22 +7,25 @@
   </head>
   <body>
     <?php include __DIR__ . "/shell/menu.php" ?>
-    <main class="main<?= NOTES_LAYOUT == 'masonry' ? ' main--wide' : '' ?> main--scrollable notes notes--<?= esc_attr(NOTES_LAYOUT) ?>" z-nav=".page-header__search, .note-card, .listing__item">
+    <?php $query = cast_string(@$_GET['q']) ?? "" ?>
+    <main class="main<?= NOTES_LAYOUT == 'masonry' ? ' main--wide' : '' ?> main--scrollable notes notes--<?= esc_attr(NOTES_LAYOUT) ?>" z-nav="#notes-search, .note-card, .listing__item">
       <div class="page-header">
         <h1 class="page-header__title"><strong>Notes</strong></h1>
         <input
+          id="notes-search"
           class="page-header__search"
           type="search"
           name="q"
           z-key="/"
           placeholder="keywords +acme"
+          value="<?= esc_attr($query) ?>"
           x-get="/notes/listing"
           x-on="input"
           x-target="#notes-listing"
         >
       </div>
 
-      <section id="notes-listing" class="main__scroll" x-get="/notes/listing"><?php fragment("notes/listing") ?></section>
+      <section id="notes-listing" class="main__scroll" x-get="/notes/listing" x-data="#notes-search"><?php fragment("notes/listing", ["q" => $query]) ?></section>
     </main>
   </body>
 </html>

@@ -20,7 +20,7 @@
         x-target="#addresses-list"
         x-refresh="#address-editor"
         x-data="#address-search"
-        x-confirm="Delete this address and remove it from all contacts and organisations?"
+        z-confirm="Delete this address and remove it from all contacts and organisations?"
         hidden
       ></button>
       <?php if($map_url): ?>

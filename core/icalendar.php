@@ -153,7 +153,7 @@ function resolve_datetime($prop) {
 }
 
 function escape_text($value) {
-  return strtr($value, ["\\" => "\\\\", "\n" => "\\n", "," => "\\,", ";" => "\\;"]);
+  return strtr($value, ["\\" => "\\\\", "\r\n" => "\\n", "\r" => "\\n", "\n" => "\\n", "," => "\\,", ";" => "\\;"]);
 }
 
 function unescape_text($value) {

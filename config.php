@@ -29,7 +29,7 @@ fallback('ui.sidebar-position', "left");
 fallback('ui.habits-position', "bottom");
 fallback('ui.border-radius', "subtle");
 
-fallback('calendar.default_calendar', @\store\get_oldest_calendar()['id']);
+fallback('calendar.default_calendar', @\store\get_first_calendar()['id']);
 
 fallback('notes.layout', "masonry");
 

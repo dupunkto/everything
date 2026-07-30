@@ -7,5 +7,4 @@
   \store\update_bookmark_favicon($bookmark['id'], $favicon);
   \store\put_audit_log('bookmarks', $bookmark['id'], "Refreshed favicon for bookmarks/{$bookmark['id']}.", 'system');
 
-  http_response_code(303);
-  header("Location: /bookmarks/edit?id=" . urlencode($bookmark['id'])); exit;
+  see_other("/bookmarks/edit?id=" . urlencode($bookmark['id']));

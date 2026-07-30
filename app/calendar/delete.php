@@ -1,5 +1,7 @@
 <?php
 
+  if($method != 'POST') fail("Method not allowed.", status: 405);
+
   $appointment = \store\get_appointment($_POST['id'])
     or fail("Appointment not found.", status: 404);
 
@@ -12,4 +14,4 @@
   \caldav\mark_resource_deleted('appointment', $appointment['id']);
 
   // The caller re-fetches the week itself, nothing to render here.
-  http_response_code(204); exit;
+  stay_on_page();

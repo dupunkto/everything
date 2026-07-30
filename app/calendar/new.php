@@ -1,8 +1,14 @@
 <?php
   // Drag-to-create target for the week view.
 
+  if($method != 'POST') fail("Method not allowed.", status: 405);
+
   if(!CALENDAR_DEFAULT_CALENDAR) {
     fail("No default calendar available.", status: 409);
+  }
+
+  if(!isset($_POST['start_date'], $_POST['start_time'], $_POST['end_date'], $_POST['end_time'])) {
+    fail("Missing event times.", status: 400);
   }
 
   $starts_at = cast_datetime_utc($_POST['start_date'], $_POST['start_time']);

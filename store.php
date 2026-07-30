@@ -935,8 +935,8 @@ function get_calendar($id) {
   return one('SELECT * FROM calendars WHERE id = ?', [$id]);
 }
 
-function get_oldest_calendar() {
-  return one('SELECT id FROM calendars ORDER BY rowid');
+function get_first_calendar() {
+  return one('SELECT id FROM calendars ORDER BY position ASC, title ASC');
 }
 
 function delete_calendar($id) {
@@ -1373,28 +1373,28 @@ define('ENUM_SOCIAL_TYPE', ['instagram', 'discord', 'snapchat', 'spacehey', 'air
 
 function list_contacts() {
   return all("SELECT contacts.*,
-    (SELECT GROUP_CONCAT(tags.label, ' ')
+    (SELECT EXO_CONCAT(tags.label, ' ')
       FROM tags
       JOIN contacts_tags ON contacts_tags.tag_id = tags.id
       WHERE contacts_tags.contact_id = contacts.id
     ) AS tag_labels,
-    (SELECT GROUP_CONCAT(contacts_tags.tag_id, ' ')
+    (SELECT EXO_CONCAT(contacts_tags.tag_id, ' ')
       FROM contacts_tags
       WHERE contacts_tags.contact_id = contacts.id
     ) AS tag_ids,
-    (SELECT GROUP_CONCAT(contact_emails.email, ' ')
+    (SELECT EXO_CONCAT(contact_emails.email, ' ')
       FROM contact_emails
       WHERE contact_emails.contact_id = contacts.id
     ) AS emails,
-    (SELECT GROUP_CONCAT(contact_phone_numbers.phone_number, ' ')
+    (SELECT EXO_CONCAT(contact_phone_numbers.phone_number, ' ')
       FROM contact_phone_numbers
       WHERE contact_phone_numbers.contact_id = contacts.id
     ) AS phone_numbers,
-    (SELECT GROUP_CONCAT(contact_socials.handle, ' ')
+    (SELECT EXO_CONCAT(contact_socials.handle, ' ')
       FROM contact_socials
       WHERE contact_socials.contact_id = contacts.id
     ) AS handles,
-    (SELECT GROUP_CONCAT(contact_roles.organisation, ' ')
+    (SELECT EXO_CONCAT(contact_roles.organisation, ' ')
       FROM contact_roles
       WHERE contact_roles.contact_id = contacts.id
     ) AS org_names FROM contacts");
@@ -1550,24 +1550,24 @@ function validate_birthday($day, $month, $year) {
 
 function list_organisations() {
   return all("SELECT organisations.*,
-    (SELECT GROUP_CONCAT(tags.label, ' ')
+    (SELECT EXO_CONCAT(tags.label, ' ')
       FROM tags
       JOIN orgs_tags ON orgs_tags.tag_id = tags.id
       WHERE orgs_tags.org_id = organisations.id
     ) AS tag_labels,
-    (SELECT GROUP_CONCAT(orgs_tags.tag_id, ' ')
+    (SELECT EXO_CONCAT(orgs_tags.tag_id, ' ')
       FROM orgs_tags
       WHERE orgs_tags.org_id = organisations.id
     ) AS tag_ids,
-    (SELECT GROUP_CONCAT(org_emails.email, ' ')
+    (SELECT EXO_CONCAT(org_emails.email, ' ')
       FROM org_emails
       WHERE org_emails.org_id = organisations.id
     ) AS emails,
-    (SELECT GROUP_CONCAT(org_phone_numbers.phone_number, ' ')
+    (SELECT EXO_CONCAT(org_phone_numbers.phone_number, ' ')
       FROM org_phone_numbers
       WHERE org_phone_numbers.org_id = organisations.id
     ) AS phone_numbers,
-    (SELECT GROUP_CONCAT(org_socials.handle, ' ')
+    (SELECT EXO_CONCAT(org_socials.handle, ' ')
       FROM org_socials
       WHERE org_socials.org_id = organisations.id
     ) AS handles FROM organisations");
@@ -2204,20 +2204,6 @@ function migrate($from, $to) {
   }
 }
 
-// Uniqueness
-
-function unique_slug($table, $seed) {
-  $slug = slugify($seed);
-  $num = 1;
-  $try = $slug;
-  while(slug_taken($table, $try)) $try = $slug . "-" . $num++;
-  return $try;
-}
-
-function slug_taken($table, $slug) {
-  return !!one("SELECT slug FROM $table WHERE slug = ?", [$slug]);
-}
-
 // SQL helpers
 
 function one($sql, $params = []) {
@@ -2233,6 +2219,8 @@ function paginate($sql, $limit, $offset = 0, $params = []) {
 }
 
 function exec_query($sql, $params) {
+  $sql = \adapter\expand_macros($sql);
+
   $query = DBH->prepare($sql);
   $query->execute($params);
   return $query;

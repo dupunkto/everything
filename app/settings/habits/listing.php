@@ -42,7 +42,7 @@
             <input name="every" type="number" min="1" required value="<?= esc_attr($habit['every']) ?>">
             days
           </p>
-          <button type="button" x-delete="/settings/habits/delete?id=<?= esc_attr($habit['id']) ?>" x-target="#habits-listing" x-confirm="Delete this habit and its log?">&times;</button>
+          <button type="button" x-delete="/settings/habits/delete?id=<?= esc_attr($habit['id']) ?>" x-target="#habits-listing" z-confirm="Delete this habit and its log?">&times;</button>
         </div>
 
         <div id="<?= esc_attr($icon_id) ?>-picker" class="settings-editor__icon-picker" hidden>

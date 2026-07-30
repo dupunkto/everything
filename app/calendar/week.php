@@ -18,7 +18,12 @@ $today = new DateTime('today', $tz);
 $now = new DateTime('now', $tz);
 
 // The window as timezone-naive wall time; all layout math lives there.
-$from = new DateTime((new DateTime(@$_GET['date'] ?: 'today', $tz))->modify('monday this week')->format('Y-m-d'));
+try {
+  $anchor = new DateTime(@$_GET['date'] ?: 'today', $tz);
+} catch(\Exception) {
+  fail("Invalid date.", status: 400);
+}
+$from = new DateTime($anchor->modify('monday this week')->format('Y-m-d'));
 $to = (clone $from)->modify('+7 days');
 
 $skeleton = isset($_GET['skeleton']);
@@ -168,7 +173,7 @@ $sidebar_right = UI_SIDEBAR_POSITION == 'right';
             <h3 class="appointment__title"><span class="appointment__title-text"><?php if($is_task): ?><i class="fa-solid <?= $task_icon($appointment) ?>"></i> <?php endif ?><?= esc_inner($appointment['title']) ?></span></h3>
 
             <?php if($appointment['location']): ?>
-              <span class="appointment__location"><?= $appointment['location'] ?></span>
+              <span class="appointment__location"><?= esc_inner($appointment['location']) ?></span>
             <?php endif ?>
 
             <span class="appointment__duration">

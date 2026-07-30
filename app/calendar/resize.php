@@ -1,6 +1,8 @@
 <?php
   // Drag-to-resize/move target for the week view.
 
+  if($method != 'POST') fail("Method not allowed.", status: 405);
+
   $appointment = \store\get_appointment($_POST['id'])
     or fail("Appointment not found.", status: 404);
 
@@ -20,4 +22,4 @@
 
   \caldav\mark_resource_changed('appointment', $appointment['id']);
 
-  http_response_code(204); exit;
+  stay_on_page();

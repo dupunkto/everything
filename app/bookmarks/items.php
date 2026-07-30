@@ -3,7 +3,7 @@
   <li class="listing__item bookmark" tabindex="0">
     <a class="bookmark__edit" href="/bookmarks/edit?id=<?= esc_attr($bookmark['id']) ?>" tabindex="-1" aria-label="Edit bookmark"></a>
     <?php if($favicon): ?>
-      <img class="bookmark__favicon" src="<?= esc_attr($favicon) ?>" alt="" onerror="this.replaceWith(Object.assign(document.createElement('i'), {className: 'bookmark__favicon fa-regular fa-globe'}))">
+      <img class="bookmark__favicon" src="<?= esc_attr($favicon) ?>" alt="">
     <?php else: ?>
       <i class="bookmark__favicon fa-regular fa-globe"></i>
     <?php endif ?>

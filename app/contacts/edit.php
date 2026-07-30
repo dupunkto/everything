@@ -131,10 +131,7 @@
       : "Updated [" . join(", ", $fields) . "] for $table/$id.";
     \store\put_audit_log($table, $id, $message, 'user', operation: $creating ? 'insert' : 'update');
 
-    $_GET['kind'] = $kind;
-    $_GET['id'] = $id;
-
-    include __DIR__ . "/detail.php"; exit;
+    fragment("contacts/detail", ["kind" => $kind, "id" => $id]); exit;
   }
 
   if($id) {
@@ -145,20 +142,6 @@
   $addresses = \store\list_addresses();
   $address_map = [];
   foreach($addresses as $a) $address_map[address_line($a)] = $a;
-
-  $repeat = function($legend, $button, $rows, $render, $extra = null, $confirm = "Are you sure?") { ?>
-    <fieldset class="repeat" z-repeat="<?= esc_attr($confirm) ?>">
-      <legend><?= esc_inner($legend) ?></legend>
-      <div class="repeat__rows">
-        <?php foreach($rows as $row): ?>
-          <div class="repeat__row"><?php $render($row) ?><button type="button" data-remove>&times;</button></div>
-        <?php endforeach ?>
-      </div>
-      <template><div class="repeat__row"><?php $render([]) ?><button type="button" data-remove>&times;</button></div></template>
-      <button type="button" data-add>+ <?= esc_inner($button) ?></button>
-      <?php if($extra) $extra() ?>
-    </fieldset>
-  <?php };
 
   $generic_field = fn($scope, $column, $placeholder) =>
     function($row) use ($scope, $column, $placeholder) { ?>
@@ -256,19 +239,19 @@
 
   <hr>
 
-  <?php $repeat("Emails", "Email", @$item['emails'] ?: [], $generic_field('email', 'email', 'email')) ?>
-  <?php $repeat("Phones", "Phone", @$item['phone_numbers'] ?: [], $generic_field('phone', 'phone_number', 'phone')) ?>
-  <?php $repeat("Addresses", "Address", @$item['addresses'] ?: [], $address_field, confirm: "", extra: function() { ?>
+  <?php repeat_field("Emails", "Email", @$item['emails'] ?: [], $generic_field('email', 'email', 'email')) ?>
+  <?php repeat_field("Phones", "Phone", @$item['phone_numbers'] ?: [], $generic_field('phone', 'phone_number', 'phone')) ?>
+  <?php repeat_field("Addresses", "Address", @$item['addresses'] ?: [], $address_field, confirm: "", extra: function() { ?>
     <button type="button" data-address-search-toggle>+ Existing address</button>
     <div class="address-search" data-address-search hidden>
       <input class="repeat__wide" type="search" placeholder="find existing address…">
       <ul class="listing address-search__results"></ul>
     </div>
   <?php }) ?>
-  <?php $repeat("Socials", "Social", @$item['socials'] ?: [], $social_field) ?>
-  <?php $repeat("Websites", "Website", @$item['urls'] ?: [], $generic_field('url', 'url', 'url')) ?>
+  <?php repeat_field("Socials", "Social", @$item['socials'] ?: [], $social_field) ?>
+  <?php repeat_field("Websites", "Website", @$item['urls'] ?: [], $generic_field('url', 'url', 'url')) ?>
   <?php if($kind === "person"): ?>
-    <?php $repeat("Roles", "Role", @$item['roles'] ?: [], $roles_field) ?>
+    <?php repeat_field("Roles", "Role", @$item['roles'] ?: [], $roles_field) ?>
   <?php endif ?>
 
   <?php if($kind == 'org'): ?>

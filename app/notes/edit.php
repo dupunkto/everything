@@ -18,8 +18,7 @@
       "Updated [" . join(", ", $fields) . "] for notes/{$_POST['id']}.", 'user');
 
     if(isset($_POST['close'])) {
-      http_response_code(303);
-      header("Location: /notes"); exit;
+      see_other("/notes");
     }
   }
 

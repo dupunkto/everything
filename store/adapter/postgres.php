@@ -37,6 +37,14 @@ function register_functions($dbh) {
     AS $$ SELECT unaccent(lower(input)) $$');
 }
 
+function expand_macros($sql) {
+  return preg_replace(
+    "/EXO_CONCAT\(\s*([^,]+?)\s*,\s*('(?:[^']|'')*')\s*\)/i",
+    'STRING_AGG(($1)::text, $2)',
+    $sql
+  );
+}
+
 function function_defined($dbh, $name) {
   $query = $dbh->prepare('SELECT 1
     FROM pg_proc

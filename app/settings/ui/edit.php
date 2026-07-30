@@ -12,9 +12,7 @@
     \store\put_audit_log('config', 'ui', "Set ui.panel-position to '{$_POST['panel-position']}'.", 'user');
 
     // We need to do a full reload for the panel to change place.
-    http_response_code(303);
-    header("Location: /settings/ui");
-    exit;
+    see_other("/settings/ui");
   }
 
   if(isset($_POST['border-radius'])) {
@@ -24,9 +22,7 @@
     \store\update_config('ui.border-radius', $_POST['border-radius']);
     \store\put_audit_log('config', 'ui', "Set ui.border-radius to '{$_POST['border-radius']}'.", 'user');
 
-    http_response_code(303);
-    header("Location: /settings/ui");
-    exit;
+    see_other("/settings/ui");
   }
 
   if(isset($_POST['sidebar-position'])) {

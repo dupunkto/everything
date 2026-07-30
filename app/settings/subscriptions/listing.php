@@ -17,7 +17,7 @@
           <input name="subtitle" type="text" value="<?= esc_attr($subscription['subtitle'] ?? '') ?>" placeholder="Subtitle">
           <input name="url" type="url" required value="<?= esc_attr($subscription['url']) ?>" placeholder="iCal URL">
           <button class="settings-editor__icon-button settings-editor__icon-button--square <?php if($has_filter) echo 'settings-editor__filter-button--active' ?>" type="button" title="Show filter" x-get="/settings/subscriptions/listing<?php if(!$is_open) echo "?filter=" . urlencode($subscription['id']) ?>" x-target="#subscriptions-listing"><i class="fa-<?= $is_open ? 'solid' : 'regular' ?> fa-filter"></i></button>
-          <button type="button" x-delete="/settings/subscriptions/delete?id=<?= esc_attr($subscription['id']) ?>" x-target="#subscriptions-listing" x-confirm="Delete this subscription and all synced appointments?">&times;</button>
+          <button type="button" x-delete="/settings/subscriptions/delete?id=<?= esc_attr($subscription['id']) ?>" x-target="#subscriptions-listing" z-confirm="Delete this subscription and all synced appointments?">&times;</button>
         </div>
         <label id="subscription-<?= $subscription['id'] ?>-filter" class="settings-editor__filter" <?php if(!$is_open) echo "hidden" ?>>
           Filter:

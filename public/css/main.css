@@ -38,16 +38,6 @@
   height: calc(100% + 0.4em);
 }
 
-.circled-field {
-  position: relative;
-  display: flex;
-}
-
-.circled-field > input {
-  flex: 1;
-  width: 100%;
-}
-
 .main {
   max-width: 750px;
 }

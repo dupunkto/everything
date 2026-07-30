@@ -31,8 +31,7 @@
     \caldav\mark_resource_changed('wish', $_POST['id']);
 
     if(isset($_POST['close'])) {
-      http_response_code(303);
-      header("Location: /wishlist"); exit;
+      see_other("/wishlist");
     }
   }
 
@@ -40,19 +39,6 @@
     or fail("Wish not found.", status: 404);
 
   $status_for = fn($target) => $wish['status'] == $target ? "dream" : $target;
-
-  $repeat = function($legend, $button, $rows, $render, $confirm = "Are you sure?") { ?>
-    <fieldset class="repeat" z-repeat="<?= esc_attr($confirm) ?>">
-      <legend><?= esc_inner($legend) ?></legend>
-      <div class="repeat__rows">
-        <?php foreach($rows as $row): ?>
-          <div class="repeat__row"><?php $render($row) ?><button type="button" data-remove>&times;</button></div>
-        <?php endforeach ?>
-      </div>
-      <template><div class="repeat__row"><?php $render([]) ?><button type="button" data-remove>&times;</button></div></template>
-      <button type="button" data-add>+ <?= esc_inner($button) ?></button>
-    </fieldset>
-  <?php };
 
   $url_field = function($row) { ?>
     <input name="url_url[]" type="url" placeholder="url" required value="<?= esc_attr(@$row['url']) ?>" data-value>
@@ -79,16 +65,7 @@
         <button type="submit" name="close" value="1" z-key="escape mod+enter" hidden></button>
 
         <div class="title-row">
-          <div class="title-check" z-circle>
-            <input name="title" type="text" placeholder="Title" required value="<?= esc_attr($wish['title']) ?>">
-            <?php circle() ?>
-            <label class="title-check__urgent" title="Circle">
-              <input type="hidden" name="urgent" value="false">
-              <input type="checkbox" name="urgent" value="true" aria-label="Circle" <?php if(filter_var($wish['urgent'], FILTER_VALIDATE_BOOLEAN)) echo "checked" ?>>
-              <i class="fa-regular fa-flag"></i>
-              <i class="fa-solid fa-flag"></i>
-            </label>
-          </div>
+          <?php title_field($wish['title'], filter_var($wish['urgent'], FILTER_VALIDATE_BOOLEAN), autofocus: false) ?>
           <?php \forms\options("status",
             ["dream", "bought", "nvm"], selected: $wish['status'], capitalize: false) ?>
         </div>
@@ -99,7 +76,7 @@
           <p class="status-comment"><?= esc_inner($wish['comment']) ?></p>
         <?php endif ?>
 
-        <?php $repeat("URLs", "URL", $wish['urls'], $url_field) ?>
+        <?php repeat_field("URLs", "URL", $wish['urls'], $url_field) ?>
 
         <label class="wishlist-editor-textarea">
           Description

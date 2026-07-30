@@ -560,7 +560,14 @@ CREATE TABLE IF NOT EXISTS bookmarks_tags (
   PRIMARY KEY (id)
 );
 
+CREATE INDEX appointments_window ON appointments (starts_at, ends_at);
+CREATE INDEX timings_window ON timings (starts_at, ends_at);
+
+CREATE INDEX appointments_lookup ON appointments (subscription_id);
+CREATE INDEX task_log_lookup ON task_log (task_id, changed_at);
+
 CREATE INDEX audit_log_lookup ON audit_log (table_name, record_id, changed_at);
 CREATE INDEX caldav_changes_lookup ON caldav_changes (collection, revision);
+CREATE INDEX caldav_changes_href_lookup ON caldav_changes (collection, href, revision);
 CREATE INDEX http_logs_lookup ON http_logs (authenticated, changed_at);
 CREATE INDEX system_logs_lookup ON system_logs (changed_at);

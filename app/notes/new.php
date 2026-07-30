@@ -6,8 +6,7 @@
     \store\set_note_tags($id, $_POST['tags'] ?? []);
     \store\put_audit_log('notes', $id, "Created notes/$id.", 'user', operation: 'insert');
 
-    http_response_code(303);
-    header("Location: /notes"); exit;
+    see_other("/notes");
   }
 
 ?>

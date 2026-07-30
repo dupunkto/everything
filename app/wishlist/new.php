@@ -18,22 +18,8 @@
 
     \caldav\mark_resource_changed('wish', $id);
 
-    http_response_code(303);
-    header("Location: /wishlist"); exit;
+    see_other("/wishlist");
   }
-
-  $repeat = function($legend, $button, $rows, $render, $confirm = "Are you sure?") { ?>
-    <fieldset class="repeat" z-repeat="<?= esc_attr($confirm) ?>">
-      <legend><?= esc_inner($legend) ?></legend>
-      <div class="repeat__rows">
-        <?php foreach($rows as $row): ?>
-          <div class="repeat__row"><?php $render($row) ?><button type="button" data-remove>&times;</button></div>
-        <?php endforeach ?>
-      </div>
-      <template><div class="repeat__row"><?php $render([]) ?><button type="button" data-remove>&times;</button></div></template>
-      <button type="button" data-add>+ <?= esc_inner($button) ?></button>
-    </fieldset>
-  <?php };
 
   $url_field = function($row) { ?>
     <input name="url_url[]" type="url" placeholder="url" required value="<?= esc_attr(@$row['url']) ?>" data-value>
@@ -60,20 +46,11 @@
 
         <input type="hidden" name="status" value="dream">
 
-        <div class="title-check" z-circle>
-          <input name="title" type="text" placeholder="Title" required autofocus>
-          <?php circle() ?>
-          <label class="title-check__urgent" title="Circle">
-            <input type="hidden" name="urgent" value="false">
-            <input type="checkbox" name="urgent" value="true" aria-label="Circle">
-            <i class="fa-regular fa-flag"></i>
-            <i class="fa-solid fa-flag"></i>
-          </label>
-        </div>
+        <?php title_field() ?>
 
         <?php tags_field() ?>
 
-        <?php $repeat("URLs", "URL", [], $url_field) ?>
+        <?php repeat_field("URLs", "URL", [], $url_field) ?>
       </form>
     </main>
   </body>
