@@ -264,18 +264,20 @@ body:has(.calendar-page) {
 
 .calendar-week .appointment__title-text {
   display: inline-block;
+  width: fit-content;
   max-width: 100%;
   overflow: hidden;
   line-height: 1.2;
   vertical-align: bottom;
 }
 
-.calendar-week .day .appointment:not(.appointment--task) {
-  container-type: size;
-}
-
-.calendar-week .day .appointment:not(.appointment--task) .appointment__title-text {
-  max-height: calc(round(down, 100cqh, 1.2em));
+.calendar-week .day .appointment:not(.appointment--task) .appointment__title-text,
+.calendar-week .day .appointment:not(.appointment--task) .appointment__location {
+  display: -webkit-box;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  line-height: 1.2;
+  -webkit-box-orient: vertical;
 }
 
 .calendar-week .appointment__circle {
@@ -311,6 +313,8 @@ body:has(.calendar-page) {
 }
 
 .calendar-week .appointment__location {
+  min-width: 0;
+  max-width: 100%;
   flex: 1 0 100%;
   order: 2;
   font-size: 0.9rem;

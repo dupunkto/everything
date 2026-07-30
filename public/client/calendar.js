@@ -28,11 +28,34 @@
   };
 
   const fit_circles = () => {
+    for(const appointment of view.querySelectorAll(".day .appointment:not(.appointment--task)")) {
+      const texts = appointment.querySelectorAll(".appointment__title-text, .appointment__location");
+      for(const text of texts) {
+        text.style.display = "";
+        text.style.webkitLineClamp = "";
+      }
+
+      const box = appointment.getBoundingClientRect();
+      const bottom = box.bottom - parseFloat(getComputedStyle(appointment).paddingBottom);
+      for(const text of texts) {
+        const line_height = parseFloat(getComputedStyle(text).lineHeight);
+        const lines = Math.floor((bottom - text.getBoundingClientRect().top + 0.5) / line_height);
+        if(lines > 0) text.style.webkitLineClamp = lines;
+        else text.style.display = "none";
+      }
+    }
+
     for(const ring of view.querySelectorAll(".appointment__circle")) {
       const appointment = ring.previousElementSibling;
       const text = appointment.querySelector(".appointment__title-text").getBoundingClientRect();
       const base = ring.closest(".day, .calendar-week").getBoundingClientRect();
 
+      if(!text.width || !text.height) {
+        ring.style.display = "none";
+        continue;
+      }
+
+      ring.style.display = "";
       const pad_x = Math.max(12, text.width * 0.14);
       const pad_y = Math.max(8, text.height * 0.22);
 
