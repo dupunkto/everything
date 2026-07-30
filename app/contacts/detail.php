@@ -163,6 +163,7 @@
     <?php endif ?>
 
     <?php if($item['socials']): ?>
+      <?php if($kind === "org"): ?><h3>Socials</h3><?php endif ?>
       <ul class="detail__socials">
         <?php foreach($item['socials'] as $social): ?>
           <li>
