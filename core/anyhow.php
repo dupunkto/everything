@@ -77,7 +77,7 @@ function report_error($error) {
       $reporting = false;
       return;
     }
-    if(function_exists('store\\put_system_log') && defined('store\\DBH')) {
+    if(function_exists('store\\put_system_log') && defined('DBH')) {
       \store\put_system_log($level, $error->getMessage(), error_context($error));
       $reporting = false;
       return;
@@ -98,21 +98,21 @@ $_TRANSACTION = false;
 function begin_request() {
   global $_TRANSACTION;
   if($_TRANSACTION) return;
-  \store\DBH->beginTransaction();
+  \DBH->beginTransaction();
   $_TRANSACTION = true;
 }
 
 function finish_request($commit) {
   global $_TRANSACTION;
-  if(!$_TRANSACTION || !defined('store\\DBH')) return;
+  if(!$_TRANSACTION || !defined('DBH')) return;
   $_TRANSACTION = false;
 
-  if(!\store\DBH->inTransaction()) return;
-  if(!$commit) { \store\DBH->rollBack(); return; }
+  if(!\DBH->inTransaction()) return;
+  if(!$commit) { \DBH->rollBack(); return; }
 
-  try { \store\DBH->commit(); }
+  try { \DBH->commit(); }
   catch(Throwable $error) {
-    if(\store\DBH->inTransaction()) \store\DBH->rollBack();
+    if(\DBH->inTransaction()) \DBH->rollBack();
     throw $error;
   }
 }
