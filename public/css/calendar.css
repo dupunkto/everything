@@ -254,11 +254,34 @@ body:has(.calendar-page) {
 
 .calendar-week .appointment__title {
   position: relative;
+  min-width: 0;
   margin: 0;
   padding: 0;
   font-size: 0.9rem;
   flex: 1 1 auto;
   order: 0;
+}
+
+.calendar-week .appointment__title-text {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  line-height: 1.2;
+  vertical-align: bottom;
+}
+
+.calendar-week .day .appointment:not(.appointment--task) {
+  container-type: size;
+}
+
+.calendar-week .day .appointment:not(.appointment--task) .appointment__title-text {
+  max-height: calc(round(down, 100cqh, 1.2em));
+}
+
+.calendar-week .appointment__circle {
+  width: 0;
+  height: 0;
+  z-index: 3;
 }
 
 .calendar-week .appointment__duration {
@@ -310,9 +333,7 @@ body:has(.calendar-page) {
   margin-left: auto;
 }
 
-.calendar-week__all-day .appointment__title {
-  min-width: 0;
-  overflow: hidden;
+.calendar-week__all-day .appointment__title-text {
   white-space: nowrap;
   text-overflow: ellipsis;
 }

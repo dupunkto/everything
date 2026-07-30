@@ -28,14 +28,10 @@
   };
 
   const fit_circles = () => {
-    for(const ring of view.querySelectorAll(".appointment__title .circle")) {
-      const title = ring.parentElement;
-
-      const range = document.createRange();
-      range.setStart(title, 0);
-      range.setEndBefore(ring);
-      const text = range.getBoundingClientRect();
-      const base = title.getBoundingClientRect();
+    for(const ring of view.querySelectorAll(".appointment__circle")) {
+      const appointment = ring.previousElementSibling;
+      const text = appointment.querySelector(".appointment__title-text").getBoundingClientRect();
+      const base = ring.closest(".day, .calendar-week").getBoundingClientRect();
 
       const pad_x = Math.max(12, text.width * 0.14);
       const pad_y = Math.max(8, text.height * 0.22);
@@ -46,6 +42,8 @@
       ring.style.height = `${text.height + pad_y * 2}px`;
     }
   };
+
+  requestAnimationFrame(fit_circles);
 
   const minute_at = (day, y) => {
     const rect = day.getBoundingClientRect();
