@@ -517,32 +517,40 @@ function datetime(Property $property, $allow_date = false) {
   $raw = $property->getRawMimeDirValue();
   $date = $property->getValueType() == 'DATE' || preg_match('/^\d{8}$/', $raw);
   if($date) {
-    if(!$allow_date) throw new \InvalidArgumentException("DATE value is not supported here.");
+    if(!$allow_date)
+      throw new \InvalidArgumentException("{$property->name} cannot use DATE value '$raw'.");
     $value = \DateTimeImmutable::createFromFormat('!Ymd', $raw, new \DateTimeZone(TIMEZONE));
-    if(!$value) throw new \InvalidArgumentException("Invalid DATE value.");
+    if(!$value) throw new \InvalidArgumentException("Invalid {$property->name} DATE value '$raw'.");
     return [$value->setTimezone(new \DateTimeZone("UTC"))->format('c'), true];
   }
 
-  if(isset($property['TZID'])) {
-    $tzid = (string)$property['TZID'];
-    if($tzid != TIMEZONE)
-      throw new \InvalidArgumentException("Only the configured application timezone is supported.");
-    $value = \DateTimeImmutable::createFromFormat('!Ymd\THis', $raw, new \DateTimeZone(TIMEZONE));
-    if(!$value) throw new \InvalidArgumentException("Invalid DATE-TIME value.");
-    return [$value->setTimezone(new \DateTimeZone("UTC"))->format('c'), false];
+  $tzid = isset($property['TZID']) ? (string)$property['TZID'] : null;
+  $timezone = new \DateTimeZone("UTC");
+  $format = '!Ymd\THis\Z';
+  if(!str_ends_with($raw, 'Z')) {
+    $format = '!Ymd\THis';
+    $timezone = new \DateTimeZone(TIMEZONE);
+    if($tzid) {
+      try { $timezone = new \DateTimeZone($tzid); }
+      catch(\Throwable $e) {
+        \logger\warn("Unknown CalDAV timezone $tzid; interpreted as " . TIMEZONE . ".");
+      }
+    }
   }
-
-  if(!str_ends_with($raw, 'Z'))
-    throw new \InvalidArgumentException("Floating time values are unsupported.");
-  $value = \DateTimeImmutable::createFromFormat('!Ymd\THis\Z', $raw, new \DateTimeZone("UTC"));
-  if(!$value) throw new \InvalidArgumentException("Invalid DATE-TIME value.");
-  return [$value->format('c'), false];
+  $value = \DateTimeImmutable::createFromFormat($format, $raw, $timezone);
+  if(!$value) {
+    $zone = $tzid ? " in timezone '$tzid'" : "";
+    throw new \InvalidArgumentException("Invalid {$property->name} DATE-TIME value '$raw'$zone.");
+  }
+  if($tzid && $tzid != TIMEZONE)
+    \logger\warn("Received CalDAV timezone $tzid; converted to " . TIMEZONE . ".");
+  return [$value->setTimezone(new \DateTimeZone("UTC"))->format('c'), false];
 }
 
 function parse_interval($value) {
   $negative = str_starts_with($value, '-');
   try { $interval = new \DateInterval(ltrim($value, '+-')); }
-  catch(\Throwable $e) { throw new \InvalidArgumentException("Invalid duration."); }
+  catch(\Throwable $e) { throw new \InvalidArgumentException("Invalid duration '$value': {$e->getMessage()}"); }
   $interval->invert = $negative ? 1 : 0;
   return $interval;
 }
@@ -556,17 +564,14 @@ function parse_alarm(Component $component) {
   // Alarm delivery is not modeled, so every action becomes a display reminder.
   $action = strtoupper(text($component, 'ACTION', ''));
   if($action == 'NONE') {
-    \logger\warn("Received CalDAV alarm action NONE; ignored.");
     return null;
   }
   if($action != 'DISPLAY')
     \logger\warn("Received CalDAV alarm action " . ($action ?: "(missing)") . "; cast to DISPLAY.");
-  foreach(['REPEAT', 'DURATION', 'ACKNOWLEDGED', 'PROXIMITY'] as $unsupported)
-    if(prop($component, $unsupported))
-      throw new \InvalidArgumentException("Alarm $unsupported is unsupported.");
 
   $trigger = prop($component, 'TRIGGER');
-  if(!$trigger) throw new \InvalidArgumentException("Alarm TRIGGER is required.");
+  if(!$trigger)
+    throw new \InvalidArgumentException("CalDAV alarm action " . ($action ?: "(missing)") . " has no TRIGGER.");
 
   $absolute = $trigger->getValueType() == 'DATE-TIME';
   $alarm = [
@@ -585,30 +590,49 @@ function parse_alarm(Component $component) {
   return $alarm;
 }
 
+function parse_alarms(Component $component) {
+  $alarms = [];
+  foreach($component->select('VALARM') as $alarm_component) {
+    try { $alarm = parse_alarm($alarm_component); }
+    catch(\InvalidArgumentException $e) {
+      \logger\warn("Ignored invalid CalDAV alarm: {$e->getMessage()}");
+      continue;
+    }
+    if($alarm) $alarms[] = $alarm;
+  }
+  return $alarms;
+}
+
 function parse($body, $expected, $type = null) {
   try { $calendar = Reader::read($body); }
-  catch(\Throwable $e) { throw new \InvalidArgumentException("Invalid iCalendar object."); }
+  catch(\Throwable $e) { throw new \InvalidArgumentException("Invalid iCalendar object: {$e->getMessage()}"); }
 
-  if($calendar->name != 'VCALENDAR') throw new \InvalidArgumentException("VCALENDAR is required.");
-  if(prop($calendar, 'METHOD')) throw new \InvalidArgumentException("Scheduling objects are unsupported.");
+  if($calendar->name != 'VCALENDAR')
+    throw new \InvalidArgumentException("Expected VCALENDAR, received {$calendar->name}.");
+  if(prop($calendar, 'METHOD'))
+    \logger\warn("Ignored CalDAV scheduling METHOD " . text($calendar, 'METHOD') . ".");
   $components = [];
   foreach($calendar->getComponents() as $component) {
     if(in_array($component->name, ['VEVENT', 'VTODO'])) $components[] = $component;
-    elseif($component->name != 'VTIMEZONE' || text($component, 'TZID') != TIMEZONE)
-      throw new \InvalidArgumentException("Unsupported component {$component->name}.");
+    elseif($component->name != 'VTIMEZONE')
+      \logger\warn("Ignored unsupported CalDAV component {$component->name}.");
   }
-  if(count($components) != 1 || $components[0]->name != $expected)
-    throw new \InvalidArgumentException("Exactly one $expected component is required.");
+  if(count($components) != 1 || $components[0]->name != $expected) {
+    $received = $components ? implode(", ", array_map(fn($component) => $component->name, $components)) : "none";
+    throw new \InvalidArgumentException("Expected exactly one $expected component; received $received.");
+  }
 
   $component = $components[0];
   foreach($component->getComponents() as $nested)
-    if($nested->name != 'VALARM') throw new \InvalidArgumentException("Unsupported nested component {$nested->name}.");
+    if($nested->name != 'VALARM')
+      \logger\warn("Ignored unsupported nested CalDAV component {$nested->name}.");
 
-  foreach(['RECURRENCE-ID', 'RDATE', 'EXDATE', 'ORGANIZER', 'ATTENDEE'] as $unsupported)
-    if(prop($component, $unsupported)) throw new \InvalidArgumentException("$unsupported is unsupported.");
+  foreach(['RECURRENCE-ID', 'RDATE', 'EXDATE'] as $unsupported)
+    if(prop($component, $unsupported))
+      throw new \InvalidArgumentException("$unsupported value '" . text($component, $unsupported) . "' cannot be represented.");
 
   $uid = text($component, 'UID');
-  if(!$uid) throw new \InvalidArgumentException("UID is required.");
+  if(!$uid) throw new \InvalidArgumentException("{$component->name} component has no UID.");
 
   $data = [
     'uid' => $uid,
@@ -619,23 +643,23 @@ function parse($body, $expected, $type = null) {
     'recurrence' => text($component, 'RRULE'),
     'status' => $expected == 'VTODO'
       ? strtoupper(text($component, 'STATUS', 'NEEDS-ACTION')) : null,
-    'alarms' => array_values(array_filter(array_map(
-      fn($alarm) => parse_alarm($alarm),
-      $component->select('VALARM')
-    ))),
+    'alarms' => parse_alarms($component),
   ];
 
-  if($expected == 'VTODO' && !in_array($data['status'], ['NEEDS-ACTION', 'COMPLETED']))
-    throw new \InvalidArgumentException("Unsupported STATUS value.");
+  if($expected == 'VTODO' && !in_array($data['status'], ['NEEDS-ACTION', 'COMPLETED'])) {
+    \logger\warn("Received CalDAV task status {$data['status']}; cast to NEEDS-ACTION.");
+    $data['status'] = 'NEEDS-ACTION';
+  }
 
   if($expected == 'VEVENT') {
     $start = prop($component, 'DTSTART');
-    if(!$start) throw new \InvalidArgumentException("DTSTART is required.");
+    if(!$start) throw new \InvalidArgumentException("VEVENT {$data['uid']} has no DTSTART.");
     [$data['starts_at'], $data['all_day']] = datetime($start, allow_date: true);
 
     $end = prop($component, 'DTEND');
     $duration = prop($component, 'DURATION');
-    if($end && $duration) throw new \InvalidArgumentException("DTEND and DURATION are mutually exclusive.");
+    if($end && $duration)
+      throw new \InvalidArgumentException("VEVENT {$data['uid']} contains both DTEND and DURATION.");
     if($end) [$data['ends_at'], $end_date] = datetime($end, allow_date: true);
     elseif($duration) {
       $zone = $data['all_day'] ? new \DateTimeZone(TIMEZONE) : new \DateTimeZone("UTC");
@@ -651,8 +675,10 @@ function parse($body, $expected, $type = null) {
         : $data['starts_at'];
       $end_date = $data['all_day'];
     }
-    if($data['all_day'] != $end_date) throw new \InvalidArgumentException("DTSTART and DTEND value types differ.");
-    if(strtotime($data['ends_at']) < strtotime($data['starts_at'])) throw new \InvalidArgumentException("DTEND precedes DTSTART.");
+    if($data['all_day'] != $end_date)
+      throw new \InvalidArgumentException("VEVENT {$data['uid']} mixes DATE and DATE-TIME values in DTSTART and DTEND.");
+    if(strtotime($data['ends_at']) < strtotime($data['starts_at']))
+      throw new \InvalidArgumentException("VEVENT {$data['uid']} ends at {$data['ends_at']}, before it starts at {$data['starts_at']}.");
 
     $data['location'] = text($component, 'LOCATION');
     $conference = text($component, 'CONFERENCE');
@@ -670,16 +696,17 @@ function parse($body, $expected, $type = null) {
     else [$data['due_at'], $data['due_all_day']] = [null, false];
     $native = ['UID', 'DTSTAMP', 'SEQUENCE', 'CREATED', 'LAST-MODIFIED', 'SUMMARY', 'DESCRIPTION', 'DTSTART', 'STATUS', 'COMPLETED'];
     if($type == 'task') $native = [...$native, 'DUE', 'RRULE'];
-    elseif($data['recurrence']) throw new \InvalidArgumentException("Wishlist recurrence is unsupported.");
+    elseif($data['recurrence'])
+      throw new \InvalidArgumentException("Wishlist {$data['uid']} cannot represent RRULE '{$data['recurrence']}'.");
   }
 
   foreach($data['alarms'] as $alarm)
     if($alarm['relative_to'] == 'end' && $expected == 'VTODO' && (!$data['due_at'] || $type == 'wish'))
-      throw new \InvalidArgumentException("End-relative alarm requires a task due date.");
+      throw new \InvalidArgumentException("End-relative alarm on {$data['uid']} requires a task DUE value.");
 
   $base = new \DateTimeImmutable(@$data['starts_at'] ?: @$data['due_at'] ?: $data['open_at']);
   if($data['recurrence'] && !\recurrence\valid($data['recurrence'], $base->setTimezone(new \DateTimeZone(TIMEZONE))))
-    throw new \InvalidArgumentException("Invalid RRULE.");
+    throw new \InvalidArgumentException("Invalid RRULE '{$data['recurrence']}' on {$data['uid']}.");
 
   $data['properties'] = properties($component, $native);
   return $data;

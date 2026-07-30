@@ -25,9 +25,13 @@ function xml_body() {
   $document = new DOMDocument();
   $previous = libxml_use_internal_errors(true);
   $ok = $document->loadXML($body, LIBXML_NONET | LIBXML_NOBLANKS);
+  $error = libxml_get_last_error();
   libxml_clear_errors();
   libxml_use_internal_errors($previous);
-  if(!$ok) dav_error(400, "Invalid XML request.");
+  if(!$ok) {
+    $detail = $error ? trim($error->message) . " at line {$error->line}, column {$error->column}" : "unknown parser error";
+    dav_error(400, "Invalid XML request: $detail.");
+  }
   return $document;
 }
 
@@ -182,18 +186,18 @@ function locate() {
   if($path == '/caldav/calendars/' . CALDAV_PRINCIPAL) return ['home'];
   if(preg_match("@^/caldav/calendars/$principal/([^/]+)(?:/(.+))?$@", $path, $match)) {
     $id = rawurldecode($match[1]);
-    $collection = \caldav\collection($id) or dav_error(404, "Collection not found.");
+    $collection = \caldav\collection($id) or dav_error(404, "CalDAV collection '$id' was not found.");
     if(!isset($match[2])) return ['collection', $collection];
     $href = rawurldecode($match[2]);
-    if(str_contains($href, '/')) dav_error(404, "Resource not found.");
+    if(str_contains($href, '/')) dav_error(404, "Invalid CalDAV resource path '$href'.");
     return ['resource', $collection, $href, \store\get_caldav_resource_by_href($id, $href)];
   }
-  dav_error(404, "Not found.");
+  dav_error(404, "CalDAV path '$path' was not found.");
 }
 
 function propfind() {
   $depth = @$_SERVER['HTTP_DEPTH'] ?: '0';
-  if(!in_array($depth, ['0', '1'])) dav_error(403, "Only Depth 0 and 1 are supported.");
+  if(!in_array($depth, ['0', '1'])) dav_error(403, "PROPFIND Depth '$depth' is unsupported; use 0 or 1.");
   $requested = request_properties(xml_body());
   $location = locate();
   $responses = [];
@@ -218,7 +222,7 @@ function propfind() {
   }
   else {
     [$kind, $collection, $name, $resource] = $location;
-    if(!$resource) dav_error(404, "Resource not found.");
+    if(!$resource) dav_error(404, "CalDAV resource '$name' was not found in collection '{$collection['id']}'.");
     $responses[] = response(collection_href($collection['id']) . rawurlencode($name), resource_properties($collection, $resource), $requested);
   }
 
@@ -259,7 +263,8 @@ function in_time_range($resource, $start, $end) {
 
 function report() {
   $location = locate();
-  if($location[0] != 'collection') dav_error(403, "REPORT requires a calendar collection.");
+  if($location[0] != 'collection')
+    dav_error(403, "REPORT path must name a calendar collection; received {$location[0]}.");
   $collection = $location[1];
   $document = xml_body() or dav_error(400, "REPORT body is required.");
   $report = $document->documentElement->localName;
@@ -267,7 +272,7 @@ function report() {
   $responses = [];
   foreach(['expand', 'limit-recurrence-set', 'limit-freebusy-set'] as $modifier)
     if($document->getElementsByTagNameNS(CALDAV_XML_CALDAV, $modifier)->length)
-      dav_error(403, "Calendar data expansion is unsupported.", 'supported-calendar-data');
+      \logger\warn("Ignored unsupported CalDAV calendar data modifier $modifier.");
 
   if($report == 'calendar-multiget') {
     foreach($document->getElementsByTagNameNS(CALDAV_XML_DAV, 'href') as $node) {
@@ -282,7 +287,7 @@ function report() {
   elseif($report == 'calendar-query') {
     foreach(['prop-filter', 'param-filter', 'text-match', 'is-not-defined'] as $filter)
       if($document->getElementsByTagNameNS(CALDAV_XML_CALDAV, $filter)->length)
-        dav_error(403, "Unsupported calendar filter.", 'valid-filter');
+        \logger\warn("Ignored unsupported CalDAV calendar filter $filter.");
 
     $component_match = true;
     foreach($document->getElementsByTagNameNS(CALDAV_XML_CALDAV, 'comp-filter') as $filter) {
@@ -303,7 +308,7 @@ function report() {
     $token = $tokens->length ? trim($tokens->item(0)->textContent) : '';
     $pattern = '@/sync/' . preg_quote(rawurlencode($collection['id']), '@') . '/(\d+)$@';
     if($token && !preg_match($pattern, $token, $match))
-      dav_error(403, "Invalid sync token.", 'D:valid-sync-token');
+      dav_error(403, "Sync token '$token' is invalid for collection '{$collection['id']}'.", 'D:valid-sync-token');
     $revision = $token ? (int)$match[1] : null;
 
     if($revision === null) {
@@ -312,7 +317,8 @@ function report() {
           resource_properties($collection, $resource, calendar_data: true), $requested);
     }
     else {
-      if($revision > \store\caldav_global_revision()) dav_error(403, "Invalid sync token.", 'D:valid-sync-token');
+      if($revision > \store\caldav_global_revision())
+        dav_error(403, "Sync revision $revision is newer than the server revision " . \store\caldav_global_revision() . ".", 'D:valid-sync-token');
       foreach(\store\list_caldav_changes($collection['id'], $revision) as $change) {
         $url = collection_href($collection['id']) . rawurlencode($change['href']);
         $resource = $change['operation'] == 'upsert'
@@ -333,7 +339,7 @@ function report() {
     exit;
   }
   else {
-    dav_error(403, "Unsupported REPORT.", 'D:supported-report');
+    dav_error(403, "CalDAV REPORT '$report' is unsupported.", 'D:supported-report');
   }
 
   multistatus($responses);
@@ -342,12 +348,14 @@ function report() {
 function precondition($resource) {
   $match = @$_SERVER['HTTP_IF_MATCH'];
   $none = @$_SERVER['HTTP_IF_NONE_MATCH'];
-  if($none == '*' && $resource) dav_error(412, "Resource already exists.");
+  if($none == '*' && $resource)
+    dav_error(412, "Resource already exists with ETag " . \caldav\etag(\caldav\serialize($resource)) . ".");
   if($match) {
-    if(!$resource) dav_error(412, "Resource does not exist.");
+    if(!$resource) dav_error(412, "If-Match '$match' was supplied, but the resource does not exist.");
     $body = \caldav\serialize($resource);
-    if($match != '*' && !in_array(\caldav\etag($body), array_map('trim', explode(',', $match))))
-      dav_error(412, "ETag does not match.");
+    $etag = \caldav\etag($body);
+    if($match != '*' && !in_array($etag, array_map('trim', explode(',', $match))))
+      dav_error(412, "If-Match '$match' does not match current ETag $etag.");
   }
 }
 
@@ -363,9 +371,10 @@ function save_properties($type, $id, $data) {
 
 function put() {
   $location = locate();
-  if($location[0] != 'resource') dav_error(405, "PUT requires a resource URL.");
+  if($location[0] != 'resource') dav_error(405, "PUT path must name a resource inside a calendar collection.");
   [$kind, $collection, $name, $resource] = $location;
-  if($collection['readonly']) dav_error(403, "Collection is read-only.");
+  if($collection['readonly'])
+    dav_error(403, "CalDAV collection '{$collection['id']}' is read-only.");
   precondition($resource);
 
   try { $data = \caldav\parse(file_get_contents('php://input'), $collection['component'], $collection['type']); }
@@ -374,16 +383,16 @@ function put() {
   $type = $collection['type'];
   $by_uid = \store\get_caldav_resource_by_uid($data['uid']);
   if($by_uid && $by_uid['entity_type'] != $type)
-    dav_error(409, "UID conflicts with another component type.");
+    dav_error(409, "UID '{$data['uid']}' belongs to {$by_uid['entity_type']} {$by_uid['entity_id']}, not $type.");
   if($resource && $resource['uid'] != $data['uid'])
-    dav_error(409, "UID cannot be changed.");
+    dav_error(409, "Resource '$name' has UID '{$resource['uid']}'; it cannot be changed to '{$data['uid']}'.");
   if($resource && $by_uid && $resource['entity_id'] != $by_uid['entity_id'])
-    dav_error(409, "UID conflicts with another resource.");
+    dav_error(409, "UID '{$data['uid']}' already belongs to resource '{$by_uid['href']}'.");
   if($resource && $resource['entity_type'] != $type)
-    dav_error(403, "Component type cannot move between collection types.");
+    dav_error(403, "Resource type {$resource['entity_type']} cannot be stored in a $type collection.");
   if(!$resource && $by_uid) $resource = $by_uid;
   if($resource && $resource['entity_type'] != $type)
-    dav_error(403, "Wishlist and task resources cannot be moved.");
+    dav_error(403, "Existing {$resource['entity_type']} resource {$resource['entity_id']} cannot be stored as $type.");
 
   $created = !$resource;
   $saved_collection = $collection['id'];
@@ -482,14 +491,16 @@ function put() {
 
 function delete_resource() {
   $location = locate();
-  if($location[0] != 'resource' || !$location[3]) dav_error(404, "Resource not found.");
+  if($location[0] != 'resource' || !$location[3])
+    dav_error(404, "CalDAV resource to delete was not found.");
   [$kind, $collection, $name, $resource] = $location;
-  if($collection['readonly']) dav_error(403, "Collection is read-only.");
+  if($collection['readonly'])
+    dav_error(403, "CalDAV collection '{$collection['id']}' is read-only.");
   precondition($resource);
 
   $row = \caldav\entity($resource);
   if($resource['entity_type'] == 'task' && @$row['status'] == 'done')
-    dav_error(403, "Completed tasks cannot be deleted through CalDAV.");
+    dav_error(403, "Completed task {$resource['entity_id']} cannot be deleted through CalDAV.");
 
   $type = $resource['entity_type'];
   $id = $resource['entity_id'];
@@ -517,21 +528,25 @@ function delete_resource() {
 
 function move() {
   $location = locate();
-  if($location[0] != 'resource' || !$location[3]) dav_error(404, "Resource not found.");
+  if($location[0] != 'resource' || !$location[3])
+    dav_error(404, "CalDAV resource to move was not found.");
   [$kind, $source, $name, $resource] = $location;
   precondition($resource);
-  $destination = @$_SERVER['HTTP_DESTINATION'] or dav_error(400, "Destination is required.");
+  $destination = @$_SERVER['HTTP_DESTINATION'] or dav_error(400, "MOVE requires a Destination header.");
   $destination_path = '/' . trim(parse_url($destination, PHP_URL_PATH), '/');
   $principal = preg_quote(CALDAV_PRINCIPAL, '@');
   if(!preg_match("@^/caldav/calendars/$principal/([^/]+)/([^/]+)$@", $destination_path, $match))
-    dav_error(403, "Invalid destination.");
-  $target = \caldav\collection(rawurldecode($match[1])) or dav_error(404, "Destination collection not found.");
+    dav_error(403, "MOVE destination '$destination_path' is not a CalDAV resource path.");
+  $target_id = rawurldecode($match[1]);
+  $target = \caldav\collection($target_id) or dav_error(404, "Destination collection '$target_id' was not found.");
   $target_name = rawurldecode($match[2]);
   if($source['readonly'] || $target['readonly'])
-    dav_error(403, "Collection is read-only.");
-  if($target['type'] != $source['type']) dav_error(403, "Wishlist and task resources cannot be moved.");
-  if($target['type'] == 'wish') dav_error(403, "Wishlist cannot be moved.");
-  if(\store\get_caldav_resource_by_href($target['id'], $target_name)) dav_error(412, "Destination exists.");
+    dav_error(403, "Cannot move between '{$source['id']}' and '{$target['id']}': one is read-only.");
+  if($target['type'] != $source['type'])
+    dav_error(403, "Cannot move {$source['type']} resource '$name' into {$target['type']} collection '{$target['id']}'.");
+  if($target['type'] == 'wish') dav_error(403, "Wishlist resources cannot move between collections.");
+  if(\store\get_caldav_resource_by_href($target['id'], $target_name))
+    dav_error(412, "Destination resource '{$target['id']}/$target_name' already exists.");
 
   $id = $resource['entity_id'];
   if($resource['entity_type'] == 'appointment') {
@@ -579,7 +594,9 @@ function proppatch() {
     elseif($element->namespaceURI == CALDAV_XML_APPLE && $element->localName == 'calendar-color') $color = substr(trim($element->textContent), 0, 7);
     elseif($element->namespaceURI == CALDAV_XML_APPLE && $element->localName == 'calendar-order') $position = (int)$element->textContent;
   }
-  if(!$title || !preg_match('/^#[0-9a-fA-F]{6}$/', $color)) dav_error(409, "Invalid calendar properties.");
+  if(!$title) dav_error(409, "Calendar display name cannot be empty.");
+  if(!preg_match('/^#[0-9a-fA-F]{6}$/', $color))
+    dav_error(409, "Calendar color '$color' must use #RRGGBB format.");
   $fields = \core\diff($collection,
     title: $title, subtitle: $subtitle, color: strtolower($color), position: $position);
   \store\update_calendar(
@@ -592,7 +609,8 @@ function proppatch() {
 
 function get_resource($head = false) {
   $location = locate();
-  if($location[0] != 'resource' || !$location[3]) dav_error(404, "Resource not found.");
+  if($location[0] != 'resource' || !$location[3])
+    dav_error(404, "Requested CalDAV resource was not found.");
   [$kind, $collection, $name, $resource] = $location;
   $body = \caldav\serialize($resource);
   $etag = \caldav\etag($body);
@@ -620,5 +638,5 @@ match($_SERVER['REQUEST_METHOD']) {
   'MOVE' => move(),
   'PROPPATCH' => proppatch(),
   'OPTIONS' => options(),
-  default => dav_error(405, "Method not allowed."),
+  default => dav_error(405, "HTTP method {$_SERVER['REQUEST_METHOD']} is not supported by CalDAV."),
 };
