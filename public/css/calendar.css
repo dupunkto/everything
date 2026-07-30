@@ -619,8 +619,15 @@ body:has(.calendar-page) {
   position: relative;
 }
 
-.calendar-editor__head input[name=title] {
+.calendar-editor__head textarea[name=title] {
+  field-sizing: content;
   font-size: 1.3em;
+  resize: none;
+}
+
+.calendar-editor textarea[name=location] {
+  padding: 0.2em 0.4em;
+  resize: none;
 }
 
 .calendar-editor__source {
@@ -655,6 +662,7 @@ body:has(.calendar-page) {
   gap: 0.4rem;
 }
 
-.title-check__urgent {
+.calendar-editor .title-check__urgent {
+  top: 1em;
   right: 7px;
 }

@@ -90,8 +90,8 @@
   <input type="hidden" name="id" value="<?= esc_attr($appointment['id']) ?>">
 
   <div class="calendar-editor__head title-check" z-circle>
-    <input type="text" name="title" placeholder="Title" value="<?= esc_attr($appointment['title']) ?>"
-      <?= $is_subscription ? 'readonly' : 'required autofocus' ?>>
+    <textarea name="title" placeholder="Title" rows="1"
+      <?= $is_subscription ? 'readonly' : 'required autofocus' ?>><?= esc_inner($appointment['title']) ?></textarea>
     <?php circle() ?>
     <label class="title-check__urgent" title="Circle">
       <input type="checkbox" name="urgent" aria-label="Circle" <?= cast_boolean($appointment['urgent']) ? 'checked' : '' ?>>
@@ -115,9 +115,17 @@
     <?php endif ?>
 
     <textarea name="content" placeholder="Description"><?= esc_inner($appointment['content'] ?? '') ?></textarea>
-    <input name="location" type="text" placeholder="Location" value="<?= esc_attr($appointment['location'] ?? '') ?>">
-    <input name="meeting" type="text" placeholder="Meeting URL" value="<?= esc_attr($appointment['meeting'] ?? '') ?>">
+  <?php endif ?>
 
+  <?php if(!$is_subscription || !empty($appointment['location'])): ?>
+    <textarea name="location" placeholder="Location" rows="1" <?= $is_subscription ? 'readonly' : '' ?>><?= esc_inner($appointment['location'] ?? '') ?></textarea>
+  <?php endif ?>
+
+  <?php if(!$is_subscription || !empty($appointment['meeting'])): ?>
+    <input name="meeting" type="text" placeholder="Meeting URL" value="<?= esc_attr($appointment['meeting'] ?? '') ?>" <?= $is_subscription ? 'readonly' : '' ?>>
+  <?php endif ?>
+
+  <?php if(!$is_subscription): ?>
     <label class="field">
       Starts
       <span class="datetime-pair">
