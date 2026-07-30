@@ -180,7 +180,7 @@
                 'spacehey' => 'fa-solid fa-user-astronaut',
                 'airbuds' => 'fa-solid fa-album',
                 'tiktok' => 'fa-brands fa-tiktok',
-                'wattpad' => 'fa-brands fa-wattpad',
+                'wattpad' => 'fa-solid fa-feather',
                 'github' => 'fa-brands fa-github',
                 'codeberg' => 'fa-brands fa-codeberg',
                 'gitlab' => 'fa-brands fa-gitlab',
