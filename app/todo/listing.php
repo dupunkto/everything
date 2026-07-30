@@ -10,7 +10,7 @@
     foreach(['overdue', 'todo', 'wip', 'blocked', 'backlog', 'done', 'nvm'] as $status)
       $lists[$status] = ['label' => $status, 'color' => null, 'tasks' => []];
   } else {
-    $lists['all'] = ['label' => "all", 'color' => null, 'tasks' => []];
+    $lists['all'] = ['label' => "All", 'color' => "#cccccc", 'tasks' => []];
     foreach($tags as $tag)
       $lists[$tag['id']] = ['label' => $tag['label'], 'color' => $tag['color'], 'tasks' => []];
   }
