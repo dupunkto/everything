@@ -13,7 +13,7 @@ export AUTH_PASSWORD=pannekoek
 export PHP_CLI_SERVER_WORKERS=2
 
 serve() {
-  case ${SECURE:-} in
+  case ${SECURE:-true} in
     1|true|on|yes)
       spawn \
         "env ENV=dev php -S 0.0.0.0:$PORT $ENTRYPOINT" \
