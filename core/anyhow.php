@@ -147,7 +147,7 @@ function render_error($error) {
 
   include $fragment ? 
     __DIR__ . "/../app/error/fragment.php" :
-    __DIR__ . "/../app/error.php";
+    __DIR__ . "/../app/error/page.php";
 }
 
 function render_dav_error($error) {
