@@ -173,6 +173,7 @@
 
   $address_field = function($row) { ?>
     <div class="address-row__fields">
+      <input type="hidden" name="address_id[]" value="<?= esc_attr(@$row['id']) ?>">
       <input name="address_label[]" placeholder="label" value="<?= esc_attr(@$row['link_label']) ?>">
       <input name="address_street_name[]" placeholder="street" value="<?= esc_attr(@$row['street_name']) ?>" required data-value>
       <input name="address_street_number[]" placeholder="number" value="<?= esc_attr(@$row['street_number']) ?>" required>

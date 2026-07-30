@@ -1533,23 +1533,7 @@ function set_contact_tags($id, $tag_ids) {
 }
 
 function set_contact_addresses($id, $rows) {
-  exec_query('DELETE FROM contact_addresses WHERE contact_id = ?', [$id]);
-
-  foreach($rows as $row) {
-    $address_id = put_address(
-      label: null,
-      street_name: $row['street_name'],
-      street_number: $row['street_number'],
-      postal_code: $row['postal_code'],
-      city: $row['city'],
-      province: $row['province'],
-      country: $row['country'],
-      timezone: $row['timezone']
-    );
-
-    exec_query('INSERT INTO contact_addresses (contact_id, label, address_id) VALUES (?, ?, ?)',
-      [$id, $row['label'], $address_id]);
-  }
+  set_address_links('contact_addresses', 'contact_id', $id, $rows);
 }
 
 function delete_contact($id) {
@@ -1673,23 +1657,7 @@ function set_organisation_socials($id, $rows) {
 }
 
 function set_organisation_addresses($id, $rows) {
-  exec_query('DELETE FROM org_addresses WHERE org_id = ?', [$id]);
-
-  foreach($rows as $row) {
-    $address_id = put_address(
-      label: null,
-      street_name: $row['street_name'],
-      street_number: $row['street_number'],
-      postal_code: $row['postal_code'],
-      city: $row['city'],
-      province: $row['province'],
-      country: $row['country'],
-      timezone: $row['timezone']
-    );
-
-    exec_query('INSERT INTO org_addresses (org_id, label, address_id) VALUES (?, ?, ?)',
-      [$id, $row['label'], $address_id]);
-  }
+  set_address_links('org_addresses', 'org_id', $id, $rows);
 }
 
 function delete_organisation($id) {
@@ -1718,6 +1686,12 @@ function get_address($id) {
   return one("SELECT * FROM addresses WHERE id = ?", [$id]);
 }
 
+function find_address($street_name, $street_number, $postal_code, $city, $country) {
+  return one('SELECT id FROM addresses
+    WHERE street_name = ? AND street_number = ? AND postal_code = ? AND city = ? AND country = ?',
+    [$street_name, $street_number, $postal_code, $city, $country]);
+}
+
 function put_address(
   $label,
   $street_name,
@@ -1731,10 +1705,7 @@ function put_address(
   // If an address already exists verbatim, we reuse the existing address row.
   // This keeps the database free of duplicates.
 
-  $existing = one('SELECT id FROM addresses
-    WHERE street_name = ? AND street_number = ? AND postal_code = ? AND city = ? AND country = ?',
-    [$street_name, $street_number, $postal_code, $city, $country]);
-
+  $existing = find_address($street_name, $street_number, $postal_code, $city, $country);
   if($existing) return $existing['id'];
 
   exec_query('INSERT INTO addresses (
@@ -1791,6 +1762,53 @@ function update_address(
     $timezone,
     $id
   ]);
+}
+
+function set_address_links($table, $fk, $id, $rows) {
+  exec_query("DELETE FROM $table WHERE $fk = ?", [$id]);
+
+  foreach($rows as $row) {
+    $current = @$row['id'] ? get_address($row['id']) : null;
+    if(@$row['id'] && !$current) fail("Address not found.", status: 400);
+
+    $existing = find_address(
+      $row['street_name'],
+      $row['street_number'],
+      $row['postal_code'],
+      $row['city'],
+      $row['country']
+    );
+
+    if($current && (!$existing || $existing['id'] == $current['id'])) {
+      update_address(
+        $current['id'],
+        $current['label'],
+        $row['street_name'],
+        $row['street_number'],
+        $row['postal_code'],
+        $row['city'],
+        $row['province'],
+        $row['country'],
+        $row['timezone']
+      );
+      $address_id = $current['id'];
+    }
+    else {
+      $address_id = put_address(
+        label: null,
+        street_name: $row['street_name'],
+        street_number: $row['street_number'],
+        postal_code: $row['postal_code'],
+        city: $row['city'],
+        province: $row['province'],
+        country: $row['country'],
+        timezone: $row['timezone']
+      );
+    }
+
+    exec_query("INSERT INTO $table ($fk, label, address_id) VALUES (?, ?, ?)",
+      [$id, $row['label'], $address_id]);
+  }
 }
 
 function delete_address($id) {
