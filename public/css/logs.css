@@ -84,6 +84,13 @@
   table-layout: fixed;
 }
 
+.logs__table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: Canvas;
+}
+
 .logs__table th:nth-child(1) { width: 5%; }
 .logs__table th:nth-child(2) { width: 13%; }
 .logs__table th:nth-child(3) { width: 52%; }
