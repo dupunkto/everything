@@ -78,6 +78,10 @@
 
   requestAnimationFrame(fit_circles);
 
+  const zoom = page.querySelector(".calendar-sidebar__zoom");
+  const fit_after_zoom = () => requestAnimationFrame(fit_circles);
+  zoom?.addEventListener("input", fit_after_zoom);
+
   const circle_observer = new ResizeObserver(fit_circles);
   circle_observer.observe(view);
 
@@ -247,6 +251,7 @@
   window.calendar_teardown = () => {
     document.removeEventListener("click", close_on_click);
     document.removeEventListener("keydown", close_on_escape);
+    zoom?.removeEventListener("input", fit_after_zoom);
     circle_observer.disconnect();
   };
 

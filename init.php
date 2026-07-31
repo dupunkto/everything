@@ -2,8 +2,8 @@
 // The contents of this file will be evaluated just
 // before the Core API loads, on every request.
 
-if(!defined('PHP_VERSION_ID') or PHP_VERSION_ID < 80000) {
-  fail("The minimum required PHP version is 8.0. Please upgrade your PHP installation to continue.");
+if(!defined('PHP_VERSION_ID') or PHP_VERSION_ID < 80400) {
+  fail("The minimum required PHP version is 8.4. Please upgrade your PHP installation to continue.");
 }
 
 // Error for mismatches between CANONICAL and FORCE_HTTPS.
