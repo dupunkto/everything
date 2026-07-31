@@ -573,6 +573,7 @@ body:has(.calendar-page) {
   align-content: start;
   gap: 1px;
   padding-top: 10px;
+  overflow-x: hidden;
   overflow-y: auto;
 }
 
