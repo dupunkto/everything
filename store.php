@@ -977,6 +977,10 @@ function update_subscription($id, $title, $subtitle, $url, $color, $filter = nul
   WHERE id = ?', [$title, $subtitle, $url, $color, $filter, $id]);
 }
 
+function update_subscription_history($id, $history) {
+  return exec_query('UPDATE subscriptions SET history = ? WHERE id = ?', [$history, $id]);
+}
+
 function list_subscriptions() {
   return all('SELECT * FROM subscriptions ORDER BY position ASC, title ASC');
 }

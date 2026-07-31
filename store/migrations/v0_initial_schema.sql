@@ -359,6 +359,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   url text NOT NULL,
   color text NOT NULL,
   filter text,
+  history boolean NOT NULL DEFAULT true,
   position int(11) NOT NULL DEFAULT 0,
   PRIMARY KEY (id)
 );

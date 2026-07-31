@@ -21,9 +21,8 @@ if($subscriptions == []) {
 // 'appointments' table in the store. It mirros the title, content, location,
 // meeting, starts_at, ends_at, all_day and recurrence columns. The going,
 // urgent, and color columns are user annotations that are never overwritten.
-// If a future appointment is in the store but no longer in the feed, it will
-// get deleted from the store too. Past appointments (ends_at < now) are left
-// alone, for historical record keeping.
+// Appointments no longer in the feed are deleted unless the subscription is
+// configured to retain history and the appointment is past or recurring.
 
 foreach($subscriptions as $subscription) {
   $response = \http\get($subscription['url']);
@@ -85,7 +84,8 @@ foreach($subscriptions as $subscription) {
       \store\put_audit_log('appointments', $row['id'], "Updated [" . join(", ", $fields) . "] for appointments/{$row['id']}.", 'syncer');
       $stats['updated']++;
     }
-    elseif($row['ends_at'] < $now || $row['recurrence']) {
+    elseif(cast_boolean($subscription['history'])
+      && ($row['ends_at'] < $now || $row['recurrence'])) {
       $stats['kept']++;
     }
     else {
