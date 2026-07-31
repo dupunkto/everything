@@ -1,5 +1,7 @@
 <?php
 
+  define('ENUM_VIRTUAL_STATUS', ['overdue', 'todo', 'wip', 'blocked', 'backlog', 'done', 'nvm']);
+
   $query = $_GET['q'] ?? $_POST['q'] ?? "";
   $pinned = json_decode(@$_GET['i'] ?: @$_POST['i'] ?: "[]", true);
 
@@ -9,7 +11,7 @@
   $lists = [];
 
   if(TODO_DISPLAY == 'status') {
-    foreach(['overdue', 'todo', 'wip', 'blocked', 'backlog', 'done', 'nvm'] as $status)
+    foreach(ENUM_VIRTUAL_STATUS as $status)
       $lists[$status] = ['label' => $status, 'color' => null, 'tasks' => []];
   } else {
     $lists['all'] = ['label' => "All", 'color' => "#cccccc", 'tasks' => []];
@@ -48,9 +50,12 @@
     if(!str_contains_terms("{$task['title']} {$task['content']}", $query_terms)) continue;
 
     $task['overdue'] = $is_overdue($task);
+    $task['virtual_status'] = in_array(@$pinned[$task['id']], ENUM_VIRTUAL_STATUS)
+      ? $pinned[$task['id']]
+      : ($task['overdue'] ? 'overdue' : $task['status']);
 
     if(TODO_DISPLAY == 'status') {
-      $lists[$task['overdue'] ? 'overdue' : $task['status']]['tasks'][] = $task;
+      $lists[$task['virtual_status']]['tasks'][] = $task;
       continue;
     }
 
@@ -66,25 +71,13 @@
     $lists[$best ? $best['id'] : 'all']['tasks'][] = $task;
   }
 
-  $status_rank = array_flip(['wip', 'todo', 'blocked', 'backlog', 'done', 'nvm']);
-  $sort_rank = fn($task) => $task['overdue'] ? 0 : $status_rank[$task['status']] + 1;
+  $status_rank = array_flip(['overdue', 'wip', 'todo', 'blocked', 'backlog', 'done', 'nvm']);
 
   foreach($lists as &$list) {
-    $fixed = sorted(
-      array_filter($list['tasks'], fn($task) => isset($pinned[$task['id']])),
-      fn($a, $b) => $pinned[$a['id']] <=> $pinned[$b['id']]
+    $list['tasks'] = sorted(
+      $list['tasks'],
+      fn($a, $b) => $status_rank[$a['virtual_status']] <=> $status_rank[$b['virtual_status']]
     );
-
-    $tasks = sorted(
-      array_filter($list['tasks'], fn($task) => !isset($pinned[$task['id']])),
-      fn($a, $b) => $sort_rank($a) <=> $sort_rank($b)
-    );
-
-    $list['tasks'] = array_reduce($fixed, fn($tasks, $task) => insert(
-      $tasks,
-      max(0, min($pinned[$task['id']], count($tasks))),
-      $task
-    ), $tasks);
   }
   unset($list);
 
@@ -197,8 +190,8 @@
       </h3>
 
       <ul>
-        <?php foreach($list['tasks'] as $position => $task): ?>
-          <?php $state = json_encode(array_replace($pinned, [$task['id'] => $position])) ?>
+        <?php foreach($list['tasks'] as $task): ?>
+          <?php $state = json_encode(array_replace($pinned, [$task['id'] => $task['virtual_status']])) ?>
           <li class="listing__item<?= $task['overdue'] ? " todo__item--overdue" : "" ?>" tabindex="0">
             <?php if(cast_boolean($task['urgent'])) circle() ?>
             <form x-post="/todo/urgent" x-target="#todo-listing" x-on="change" hidden>
