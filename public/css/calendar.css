@@ -309,6 +309,7 @@ body:has(.calendar-page) {
 }
 
 .calendar-week .day .appointment__title {
+  padding-top: 2px;
   padding-right: 3.25em;
 }
 
@@ -335,6 +336,10 @@ body:has(.calendar-page) {
 .calendar-week__all-day .appointment__icons {
   order: 1;
   margin-left: auto;
+}
+
+.calendar-week__all-day .appointment__title {
+  transform: translateY(-2px);
 }
 
 .calendar-week__all-day .appointment__title-text {
@@ -586,6 +591,7 @@ body:has(.calendar-page) {
   grid-column: var(--appointment-column) / span var(--appointment-span);
   grid-row: var(--appointment-row);
   flex-wrap: nowrap;
+  align-items: center;
 }
 
 .calendar-editor {
