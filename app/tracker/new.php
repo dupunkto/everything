@@ -24,15 +24,15 @@
 
   <div class="tracker-form__timer">
     <button type="button" class="tracker-form__duration" data-duration>0:00:00</button>
-    <div class="tracker-time-popup" data-time-popup hidden>
-      <label>
+    <div class="popover tracker-time-popup" data-time-popup hidden>
+      <label class="field">
         Start
         <span class="tracker-time-popup__inputs">
           <input name="start_date" type="date" value="<?= local_date("Y-m-d") ?>">
           <input name="start_time" type="time" lang="<?= TIME_LANG ?>" step="1">
         </span>
       </label>
-      <label>
+      <label class="field">
         End
         <span class="tracker-time-popup__inputs">
           <input name="end_date" type="date" value="<?= local_date("Y-m-d") ?>">

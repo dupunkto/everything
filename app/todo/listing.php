@@ -1,6 +1,7 @@
 <?php
 
   define('ENUM_VIRTUAL_STATUS', ['overdue', 'todo', 'wip', 'blocked', 'backlog', 'done', 'nvm']);
+  define('STATUS_COLORS', ['overdue' => 'red', 'todo' => 'blue', 'wip' => 'yellow', 'blocked' => 'red', 'backlog' => 'purple', 'done' => 'green']);
 
   $query = $_GET['q'] ?? $_POST['q'] ?? "";
   $pinned = json_decode(@$_GET['i'] ?: @$_POST['i'] ?: "[]", true);
@@ -183,7 +184,7 @@
         <?php if(isset($list['color'])): ?>
           <span class="tag" style="--tag-color: <?= esc_attr($list['color']) ?>"><?= esc_inner($list['label']) ?></span>
         <?php elseif(TODO_DISPLAY == 'status'): ?>
-          <span class="todo__status todo__status--<?= esc_attr($key) ?>"><?= esc_inner($list['label']) ?></span>
+          <span class="badge<?= ($color = STATUS_COLORS[$key] ?? null) ? " badge--$color" : "" ?>"><?= esc_inner($list['label']) ?></span>
         <?php else: ?>
           <?= esc_inner($list['label']) ?>
         <?php endif ?>
@@ -235,9 +236,9 @@
             <?php if(TODO_DISPLAY != 'status' && (in_array($task['status'], ['wip', 'blocked']) || $task['recurrence'])): ?>
               <span class="todo__badges">
                 <?php if(in_array($task['status'], ['wip', 'blocked'])): ?>
-                  <span class="todo__badge todo__badge--<?= esc_attr($task['status']) ?>"><?= esc_inner($task['status']) ?></span>
+                  <span class="badge badge--<?= STATUS_COLORS[$task['status']] ?> todo__badge"><?= esc_inner($task['status']) ?></span>
                 <?php endif ?>
-                <?php if($task['recurrence']): ?><span class="todo__badge">recurring</span><?php endif ?>
+                <?php if($task['recurrence']): ?><span class="badge todo__badge">recurring</span><?php endif ?>
               </span>
             <?php endif ?>
             <button type="button" x-delete="/todo/delete?id=<?= esc_attr($task['id']) ?>" z-key="d" z-confirm="Delete this task?" hidden></button>

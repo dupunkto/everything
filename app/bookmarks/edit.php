@@ -59,7 +59,7 @@
 
         <div class="actions">
           <button class="button" type="button" formnovalidate z-key="d" x-delete="/bookmarks/delete?id=<?= esc_attr($bookmark['id']) ?>" z-confirm="Delete this bookmark?">Delete</button>
-          <div class="field bookmark-editor__saved">
+          <div class="field field--row">
             <label for="date">Saved on</label>
             <span class="datetime-pair">
               <input type="date" id="date" name="date" value="<?= esc_attr(local_date("Y-m-d", $bookmark['saved_at'])) ?>" required>

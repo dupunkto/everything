@@ -122,7 +122,7 @@
     <?php endif ?>
   <?php endif ?>
   <div
-    class="contact-item"
+    class="listing__item contact-item"
     tabindex="0"
     data-id="<?= esc_attr($row['id']) ?>"
     data-kind="<?= esc_attr($row['kind']) ?>"

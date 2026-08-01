@@ -63,17 +63,6 @@
 .contact-item {
   padding: 0.4em 0.6em;
   cursor: pointer;
-  background: light-dark(#f1f1f1, #2b2b33);
-  margin-bottom: 0.25em;
-}
-
-.contact-item:hover {
-  opacity: .8;
-}
-
-.contact-item:focus-visible {
-  outline: none;
-  box-shadow: inset 0 0 0 2px light-dark(#0066cc, #4da6ff);
 }
 
 .address-search {
@@ -128,7 +117,7 @@
   width: 3.85em;
   height: 3.85em;
   border-radius: 50%;
-  background: light-dark(#e2e2e2, #3a3a42);
+  background: var(--gray-bg);
 }
 
 .detail__subtitle {
@@ -145,7 +134,7 @@
 
 .detail__meta-badge {
   white-space: nowrap;
-  background: light-dark(#f6f6f6, #27272e);
+  background: var(--surface-hover);
   padding: 2px 10px;
   border-radius: 10px;
   opacity: 0.75;
@@ -304,14 +293,6 @@
   font-size: 1.3em;
 }
 
-.detail__edit fieldset button {
-  padding: 0.5em 0.75em;
-}
-
-.detail__edit [data-remove] {
-  padding: 2px 8px;
-}
-
 .detail__names {
   display: flex;
   gap: 0.25em;
@@ -341,15 +322,9 @@
   margin-top: 0.5em;
 }
 
-.detail__names.js-legal-name {
+.detail__names--legal {
   margin-top: 0;
   margin-bottom: 0.5em;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15em;
 }
 
 .birthday-fields {
@@ -361,33 +336,6 @@
   margin-top: 2em;
   align-self: flex-start;
 }
-
-.repeat__rows {
-  display: flex;
-  flex-direction: column;
-}
-
-.repeat__row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25em;
-  align-items: center;
-  margin-bottom: 0.3em;
-}
-
-.repeat__row select {
-  padding: 2px 6px;
-}
-
-.repeat__row :is(input, select):not(.repeat__wide) {
-  flex: 1;
-  min-width: 6em;
-}
-
-.repeat__row input {
-  padding: 0;
-}
-
 
 .repeat__row input[data-value] {
   flex: 2;
@@ -402,12 +350,7 @@
   flex: 2;
 }
 
-.repeat__wide {
-  flex-basis: 100%;
-}
-
 .repeat__row:has([name="address_street_name[]"]) {
-  display: flex;
   align-items: flex-start;
 }
 

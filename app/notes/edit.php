@@ -46,7 +46,7 @@
 
         <div class="actions">
           <button class="button" type="button" formnovalidate z-key="d" x-delete="/notes/delete?id=<?= esc_attr($note['id']) ?>" z-confirm="Delete this note?">Delete</button>
-          <div class="field note-editor__saved">
+          <div class="field field--row">
             <label for="date">Written at</label>
             <span class="datetime-pair">
               <input type="date" id="date" name="date" value="<?= esc_attr(local_date("Y-m-d", $note['written_at'])) ?>" required>

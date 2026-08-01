@@ -11,6 +11,6 @@
   }
 
 ?>
-<ul class="<?= NOTES_LAYOUT == 'masonry' ? 'notes-grid' : 'listing' ?>">
+<ul class="<?= NOTES_LAYOUT == 'masonry' ? 'notes__grid' : 'listing' ?>">
   <?php include __DIR__ . "/items.php" ?>
 </ul>

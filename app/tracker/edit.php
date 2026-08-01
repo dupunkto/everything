@@ -33,14 +33,14 @@
   <?php tags_field(\store\list_timing_tags($_GET['id'])) ?>
 
   <div class="tracker-editor__times">
-    <label>
+    <label class="field">
       Start
       <span class="tracker-editor__datetime">
         <input name="start_time" type="time" lang="<?= TIME_LANG ?>" step="1" value="<?= $starts->format('H:i:s') ?>">
         <input class="tracker-editor__date" name="start_date" type="date" value="<?= $starts->format('Y-m-d') ?>" <?= $show_dates ? '' : 'hidden' ?>>
       </span>
     </label>
-    <label>
+    <label class="field">
       End
       <span class="tracker-editor__datetime">
         <span class="tracker-editor__time">

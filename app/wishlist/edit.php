@@ -78,14 +78,14 @@
 
         <?php repeat_field("URLs", "URL", $wish['urls'], $url_field) ?>
 
-        <label class="wishlist-editor-textarea">
+        <label class="wishlist-editor__textarea">
           Description
           <textarea name="content" placeholder="What are you wishing for...?" rows="3"><?= esc_inner($wish['content']) ?></textarea>
         </label>
 
         <div class="actions">
           <button class="button" type="button" formnovalidate z-key="d" x-delete="/wishlist/delete?id=<?= esc_attr($wish['id']) ?>" z-confirm="Delete this wish?">Delete</button>
-          <div class="field wishlist-editor__added">
+          <div class="field field--row">
             <label for="date">added on</label>
             <span class="datetime-pair">
               <input type="date" id="date" name="date" value="<?= esc_attr(local_date("Y-m-d", $wish['added_at'])) ?>" required>

@@ -11,7 +11,7 @@
     <main class="main main--wide main--scrollable">
       <section id="tracker-new" x-get="/tracker/new"><?php fragment("tracker/new") ?></section>
       <section id="tracker-listing" class="main__scroll" x-get="/tracker/listing"><?php fragment("tracker/listing") ?></section>
-      <aside class="tracker-popup-editor" hidden></aside>
+      <aside class="popover tracker-popup-editor" hidden></aside>
     </main>
   </body>
 </html>

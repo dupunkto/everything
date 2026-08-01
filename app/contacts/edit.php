@@ -222,7 +222,7 @@
       <input name="family_name" placeholder="<?= $family_name_label ?>" value="<?= esc_attr(@$item['family_name']) ?>">
       <button type="button" class="js-legal-name" title="Add legal name" z-toggle=".js-legal-name" data-legal-name-toggle <?= $has_legal ? 'hidden' : '' ?>>+</button>
     </div>
-    <div class="detail__names js-legal-name" <?= $has_legal ? '' : 'hidden' ?>>
+    <div class="detail__names detail__names--legal js-legal-name" <?= $has_legal ? '' : 'hidden' ?>>
       <select name="name_order">
         <option value="family_legal" <?= @$item['name_order'] != 'legal_family' ? 'selected' : '' ?>>Family name first</option>
         <option value="legal_family" <?= @$item['name_order'] == 'legal_family' ? 'selected' : '' ?>>Legal name first</option>

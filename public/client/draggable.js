@@ -34,7 +34,7 @@ document.addEventListener("dragstart", (e) => {
   if(!item || !item.draggable) return;
 
   dragged_item = item;
-  item.classList.add("order-item--dragging");
+  item.dataset.dragging = "";
   e.dataTransfer.effectAllowed = "move";
   e.dataTransfer.setData("text/plain", item.dataset.orderId);
 });
@@ -84,8 +84,8 @@ document.addEventListener("drop", async (e) => {
 });
 
 document.addEventListener("dragend", () => {
-  document.querySelectorAll(".order-item--dragging").forEach((item) => {
-    item.classList.remove("order-item--dragging");
+  document.querySelectorAll("[data-dragging]").forEach((item) => {
+    delete item.dataset.dragging;
     item.draggable = false;
   });
 

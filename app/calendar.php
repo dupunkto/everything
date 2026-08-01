@@ -85,7 +85,7 @@
 
           <section class="calendar-sidebar__group calendar-sidebar__footer">
             <input type="range" name="zoom" min="1.5" max="8" step="0.5" value="3"
-              class="calendar-sidebar__zoom" z-var="--hour-height" z-unit="rem">
+              class="calendar-sidebar__zoom" z-var="--hour-height" z-unit="em">
           </section>
         </form>
       </aside>
@@ -98,7 +98,7 @@
         <?php fragment("calendar/week", ["skeleton" => "1"]) ?>
       </section>
 
-      <div class="calendar-editor" hidden></div>
+      <div class="popover calendar-editor" hidden></div>
     </main>
   </body>
 </html>

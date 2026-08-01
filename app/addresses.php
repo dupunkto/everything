@@ -7,12 +7,12 @@
   </head>
   <body>
     <?php include __DIR__ . "/shell/menu.php" ?>
-    <main class="main main--semi-wide main--scrollable" z-nav="#address-search input, .address-item">
+    <main class="main main--semi-wide main--scrollable addresses" z-nav="#address-search input, .address-item">
       <header class="page-header"><h2>Addresses</h2></header>
 
       <section id="address-editor" x-get="<?= esc_attr(@$_GET['edit'] ? "/addresses/edit?id=" . rawurlencode($_GET['edit']) : "/addresses/edit") ?>"><?php fragment("addresses/edit", ["id" => @$_GET['edit']]) ?></section>
 
-      <p class="addresses-or">or</p>
+      <p class="addresses__or">or</p>
 
       <form id="address-search">
         <input

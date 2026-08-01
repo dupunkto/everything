@@ -34,12 +34,12 @@ $about_rows = [
   <body>
     <?php include __DIR__ . "/../shell/menu.php" ?>
     <main class="main about">
-      <hgroup class="about-heading">
+      <hgroup class="about__heading">
         <h1>Everything</h1>
         <p>a <a href="//dupunkto.org">{du}punkto</a> project</p>
       </hgroup>
 
-      <p class="about-version">
+      <p class="about__version">
         <span>v<?= EVERYTHING_VERSION ?>-<?= STORE_VERSION ?></span> &middot;
         <?php if(defined('GIT_SHA')): ?>
           built from <span><a href="//git.dupunkto.org/dupunkto/everything/commit/<?= GIT_SHA ?>"><?= substr(GIT_SHA, 0, 7) ?></a></span>
@@ -48,7 +48,7 @@ $about_rows = [
         <?php endif; ?>
       </p>
 
-      <table class="about-info">
+      <table class="about__info">
         <tbody>
           <?php foreach($about_rows as [$label, $value]): ?>
             <tr>
@@ -59,7 +59,7 @@ $about_rows = [
         </tbody>
       </table>
 
-      <a class="about-licenses" href="<?= CANONICAL ?>/about/licenses">Licenses &rarr;</a>
+      <a class="about__licenses" href="<?= CANONICAL ?>/about/licenses">Licenses &rarr;</a>
     </main>
   </body>
 </html>

@@ -41,26 +41,6 @@
   padding-inline: 1em;
 }
 
-.bookmark-editor .field {
-  display: flex;
-  flex-direction: column;
-}
-
-.bookmark-editor__saved {
-  flex-direction: row !important;
-  align-items: center;
-  gap: 0.5em;
-}
-
-.bookmark-editor .datetime-pair {
-  display: flex;
-  gap: 0.25em;
-}
-
-.bookmark-editor .datetime-pair input {
-  flex: 1;
-}
-
 .bookmark__favicon {
   display: flex;
   align-items: center;
@@ -95,7 +75,7 @@
   display: inline;
   padding: 0;
   margin: 0 0 0 0.5em;
-  color: light-dark(#0645ad, #7ab7ff);
+  color: var(--link);
   background: none;
   pointer-events: auto;
 }

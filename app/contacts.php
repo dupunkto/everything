@@ -38,7 +38,7 @@
         </section>
       </aside>
 
-      <section id="contacts-panel" class="contacts__panel"<?php if($url): ?> x-get="<?= esc_attr($url) ?>"<?php endif ?>>
+      <section id="contacts-panel" class="contacts__panel detail"<?php if($url): ?> x-get="<?= esc_attr($url) ?>"<?php endif ?>>
         <?php
           if(@$_GET['edit']) fragment("contacts/edit", ["kind" => $kind, "id" => $_GET['edit']]);
           elseif(@$_GET['view']) fragment("contacts/detail", ["kind" => $kind, "id" => $_GET['view']]);
