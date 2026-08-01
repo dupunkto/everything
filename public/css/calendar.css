@@ -390,6 +390,7 @@ body:has(.calendar-page) {
   height: calc(var(--timing-height) * 1%);
   background: var(--timing-color);
   border-radius: 2px;
+  z-index: 4;
 }
 
 .calendar-week .day__timing-dot {
