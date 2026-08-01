@@ -39,11 +39,23 @@ foreach($subscriptions as $subscription) {
     or fail("Parsing {$subscription['url']} failed: not an iCalendar feed.");
 
   $upstream = [];
+  $slots = [];
+  $duplicates = [];
 
   foreach($feed['events'] as $event) {
     // Skip recurrence exceptions, since we do not support them, and cancelled events,
     // because we do not display those either.
     if($event['is_exception'] || $event['status'] == 'CANCELLED') continue;
+
+    if(cast_boolean($subscription['deduplicate'])) {
+      $slot = $event['starts_at'] . ':' . ($event['ends_at'] - $event['starts_at']);
+      if(isset($slots[$slot])) {
+        $duplicates[$event['uid']] = true;
+        continue;
+      }
+      $slots[$slot] = true;
+    }
+
     $upstream[$event['uid']] = normalize_feed_event($event);
   }
 
@@ -84,7 +96,8 @@ foreach($subscriptions as $subscription) {
       \store\put_audit_log('appointments', $row['id'], "Updated [" . join(", ", $fields) . "] for appointments/{$row['id']}.", 'syncer');
       $stats['updated']++;
     }
-    elseif(cast_boolean($subscription['history'])
+    elseif(!isset($duplicates[$row['id']])
+      && cast_boolean($subscription['history'])
       && ($row['ends_at'] < $now || $row['recurrence'])) {
       $stats['kept']++;
     }

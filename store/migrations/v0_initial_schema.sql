@@ -360,6 +360,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   color text NOT NULL,
   filter text,
   history boolean NOT NULL DEFAULT true,
+  deduplicate boolean NOT NULL DEFAULT false,
   position int(11) NOT NULL DEFAULT 0,
   PRIMARY KEY (id)
 );
