@@ -19,9 +19,10 @@ switch($_DATABASE['scheme']) {
   default: fail("Unsupported database driver '{$_DATABASE['scheme']}'.");
 }
 
-define('ENUM_SSL_MODE', ['plain', 'tls', 'ssl']);
+define('ENUM_TIMEZONE', \DateTimeZone::listIdentifiers());
 define('ENUM_TASK_STATUS', ['todo', 'wip', 'backlog', 'blocked', 'done', 'nvm']);
 define('ENUM_WISH_STATUS', ['dream', 'bought', 'nvm']);
+define('ENUM_SSL_MODE', ['plain', 'tls', 'ssl']);
 
 // Notes
 
@@ -1469,16 +1470,17 @@ function put_contact(
   $birth_day,
   $birth_month,
   $birth_year,
+  $timezone,
   $note
 ) {
   [$birth_day, $birth_month, $birth_year] = validate_birthday($birth_day, $birth_month, $birth_year);
 
   exec_query('INSERT INTO contacts
     (display_name, first_name, middle_name, legal_infix, legal_name, family_infix, family_name, name_order,
-      birth_day, birth_month, birth_year, note)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      birth_day, birth_month, birth_year, timezone, note)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
     [$display_name, $first_name, $middle_name, $legal_infix, $legal_name, $family_infix, $family_name, $name_order,
-      $birth_day, $birth_month, $birth_year, $note]);
+      $birth_day, $birth_month, $birth_year, $timezone, $note]);
 
   return DBH->lastInsertId();
 }
@@ -1496,16 +1498,17 @@ function update_contact(
   $birth_day,
   $birth_month,
   $birth_year,
+  $timezone,
   $note
 ) {
   [$birth_day, $birth_month, $birth_year] = validate_birthday($birth_day, $birth_month, $birth_year);
 
   return exec_query('UPDATE contacts SET
     display_name = ?, first_name = ?, middle_name = ?, legal_infix = ?, legal_name = ?,
-    family_infix = ?, family_name = ?, name_order = ?, birth_day = ?, birth_month = ?, birth_year = ?, note = ?
-    WHERE id = ?',
+    family_infix = ?, family_name = ?, name_order = ?, birth_day = ?, birth_month = ?, birth_year = ?,
+    timezone = ?, note = ? WHERE id = ?',
     [$display_name, $first_name, $middle_name, $legal_infix, $legal_name, $family_infix, $family_name, $name_order,
-      $birth_day, $birth_month, $birth_year, $note, $id]);
+      $birth_day, $birth_month, $birth_year, $timezone, $note, $id]);
 }
 
 function update_contact_note($id, $note) {
@@ -1640,23 +1643,24 @@ function list_organisation_tags($id) {
   return inherit_tag_colors($tags);
 }
 
-function put_organisation($display_name, $legal_name, $registration_number, $vat_number, $note) {
+function put_organisation($display_name, $legal_name, $registration_number, $vat_number, $timezone, $note) {
   exec_query('INSERT INTO organisations
-    (display_name, legal_name, registration_number, vat_number, note)
-    VALUES (?, ?, ?, ?, ?)',
-    [$display_name, $legal_name, $registration_number, $vat_number, $note]);
+    (display_name, legal_name, registration_number, vat_number, timezone, note)
+    VALUES (?, ?, ?, ?, ?, ?)',
+    [$display_name, $legal_name, $registration_number, $vat_number, $timezone, $note]);
 
   return DBH->lastInsertId();
 }
 
-function update_organisation($id, $display_name, $legal_name, $registration_number, $vat_number, $note) {
+function update_organisation($id, $display_name, $legal_name, $registration_number, $vat_number, $timezone, $note) {
   return exec_query('UPDATE organisations SET
     display_name = ?,
     legal_name = ?,
     registration_number = ?,
     vat_number = ?,
+    timezone = ?,
     note = ? WHERE id = ?',
-    [$display_name, $legal_name, $registration_number, $vat_number, $note, $id]);
+    [$display_name, $legal_name, $registration_number, $vat_number, $timezone, $note, $id]);
 }
 
 function update_organisation_note($id, $note) {
@@ -1702,87 +1706,60 @@ function set_children($table, $fk, $id, $rows) {
 
 function list_addresses() {
   return all("SELECT * FROM addresses
-    ORDER BY CASE WHEN label IS NULL OR label = '' THEN 1 ELSE 0 END, city, street_name");
+    ORDER BY CASE WHEN label IS NULL OR label = '' THEN 1 ELSE 0 END, city, street_address");
 }
 
 function get_address($id) {
   return one("SELECT * FROM addresses WHERE id = ?", [$id]);
 }
 
-function find_address($street_name, $street_number, $postal_code, $city, $country) {
+function find_address($street_address, $postal_code, $city, $country) {
   return one('SELECT id FROM addresses
-    WHERE street_name = ? AND street_number = ? AND postal_code = ? AND city = ? AND country = ?',
-    [$street_name, $street_number, $postal_code, $city, $country]);
+    WHERE street_address = ? AND postal_code = ? AND city = ? AND country = ?',
+    [$street_address, $postal_code, $city, $country]);
 }
 
-function put_address(
-  $label,
-  $street_name,
-  $street_number,
-  $postal_code,
-  $city,
-  $province,
-  $country,
-  $timezone
-) {
+function put_address($label, $street_address, $postal_code, $city, $province, $country) {
   // If an address already exists verbatim, we reuse the existing address row.
   // This keeps the database free of duplicates.
 
-  $existing = find_address($street_name, $street_number, $postal_code, $city, $country);
+  $existing = find_address($street_address, $postal_code, $city, $country);
   if($existing) return $existing['id'];
 
   exec_query('INSERT INTO addresses (
     label,
-    street_name,
-    street_number,
+    street_address,
     postal_code,
     city,
     province,
-    country,
-    timezone
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [
+    country
+  ) VALUES (?, ?, ?, ?, ?, ?)', [
     $label,
-    $street_name,
-    $street_number,
+    $street_address,
     $postal_code,
     $city,
     $province,
-    $country,
-    $timezone
+    $country
   ]);
 
   return DBH->lastInsertId();
 }
 
-function update_address(
-  $id,
-  $label,
-  $street_name,
-  $street_number,
-  $postal_code,
-  $city,
-  $province,
-  $country,
-  $timezone
-) {
+function update_address($id, $label, $street_address, $postal_code, $city, $province, $country) {
   return exec_query('UPDATE addresses SET
     label = ?,
-    street_name = ?,
-    street_number = ?,
+    street_address = ?,
     postal_code = ?,
     city = ?,
     province = ?,
-    country = ?,
-    timezone = ?
+    country = ?
   WHERE id = ?', [
     $label,
-    $street_name,
-    $street_number,
+    $street_address,
     $postal_code,
     $city,
     $province,
     $country,
-    $timezone,
     $id
   ]);
 }
@@ -1791,12 +1768,14 @@ function set_address_links($table, $fk, $id, $rows) {
   exec_query("DELETE FROM $table WHERE $fk = ?", [$id]);
 
   foreach($rows as $row) {
+    if(!in_array($row['country'], \country_codes()))
+      fail("Invalid address country.", status: 400);
+
     $current = @$row['id'] ? get_address($row['id']) : null;
     if(@$row['id'] && !$current) fail("Address not found.", status: 400);
 
     $existing = find_address(
-      $row['street_name'],
-      $row['street_number'],
+      $row['street_address'],
       $row['postal_code'],
       $row['city'],
       $row['country']
@@ -1806,26 +1785,22 @@ function set_address_links($table, $fk, $id, $rows) {
       update_address(
         $current['id'],
         $current['label'],
-        $row['street_name'],
-        $row['street_number'],
+        $row['street_address'],
         $row['postal_code'],
         $row['city'],
         $row['province'],
-        $row['country'],
-        $row['timezone']
+        $row['country']
       );
       $address_id = $current['id'];
     }
     else {
       $address_id = put_address(
         label: null,
-        street_name: $row['street_name'],
-        street_number: $row['street_number'],
+        street_address: $row['street_address'],
         postal_code: $row['postal_code'],
         city: $row['city'],
         province: $row['province'],
-        country: $row['country'],
-        timezone: $row['timezone']
+        country: $row['country']
       );
     }
 

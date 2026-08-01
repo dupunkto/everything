@@ -24,14 +24,9 @@
     $subtitle = (is_nonempty_str($full) && $full !== $title) ? $full : '';
   }
 
-  $timezone = null;
-  foreach($item['addresses'] as $address) {
-    $zone = $address['timezone'];
-
-    if(is_nonempty_str($zone) && $zone !== TIMEZONE) {
-      $timezone = $zone; break;
-    }
-  }
+  $timezone = is_nonempty_str($item['timezone']) && $item['timezone'] != TIMEZONE
+    ? $item['timezone']
+    : null;
 
 ?>
 <header class="detail__header" data-contact-state="view" data-kind="<?= esc_attr($kind) ?>" data-id="<?= esc_attr($item['id']) ?>">
@@ -71,10 +66,10 @@
         $meta[] = star_sign($birthday->format('n'), $birthday->format('j'));
       }
     }
+  }
 
-    if($timezone) {
-      $meta[] = local_date('H:i', 'now', $timezone);
-    }
+  if($timezone) {
+    $meta[] = local_date('H:i', 'now', $timezone);
   }
 ?>
 
@@ -122,7 +117,7 @@
       <div class="detail__addresses">
         <?php foreach($item['addresses'] as $address):
           $lines = [
-            "{$address['street_name']} {$address['street_number']}",
+            $address['street_address'],
             "{$address['postal_code']}  {$address['city']}", // double space between postcode and city
             is_nonempty_str($address['province']) ? "{$address['province']}, {$address['country']}" : $address['country'],
           ];

@@ -350,17 +350,18 @@
   flex: 2;
 }
 
-.repeat__row:has([name="address_street_name[]"]) {
+.repeat__row:has([name="address_street_address[]"]) {
   align-items: flex-start;
 }
 
 .address-row__fields {
   display: grid;
   flex: 1;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 0.25em;
 }
 
-.address-row__fields input {
+.address-row__fields input,
+.address-row__fields select {
   min-width: 0;
 }

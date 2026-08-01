@@ -38,13 +38,18 @@
       'phone_number' => normalize_phone_number($row['phone_number'])
     ], unfold($_POST, 'phone', 'phone_number'));
 
+    $timezone = cast_string($_POST['timezone']);
+    if($timezone && !in_array($timezone, ENUM_TIMEZONE))
+      fail("Invalid 'timezone' parameter.", status: 400);
+
     if($kind === "org") {
       if($id) {
         $fields = \core\diff($item,
           display_name: cast_string($_POST['display_name']),
           legal_name: cast_string($_POST['legal_name']),
           registration_number: cast_string($_POST['registration_number']),
-          vat_number: cast_string($_POST['vat_number']), note: cast_string($_POST['note']));
+          vat_number: cast_string($_POST['vat_number']), timezone: $timezone,
+          note: cast_string($_POST['note']));
 
         \store\update_organisation(
           $id,
@@ -52,6 +57,7 @@
           cast_string($_POST['legal_name']),
           cast_string($_POST['registration_number']),
           cast_string($_POST['vat_number']),
+          $timezone,
           cast_string($_POST['note'])
         );
       } else {
@@ -60,6 +66,7 @@
           cast_string($_POST['legal_name']),
           cast_string($_POST['registration_number']),
           cast_string($_POST['vat_number']),
+          $timezone,
           cast_string($_POST['note'])
         );
       }
@@ -68,7 +75,7 @@
       \store\set_organisation_phone_numbers($id, $phones);
       \store\set_organisation_urls($id, unfold($_POST, 'url', 'url'));
       \store\set_organisation_socials($id, unfold($_POST, 'social', 'handle'));
-      \store\set_organisation_addresses($id, unfold($_POST, 'address', 'street_name'));
+      \store\set_organisation_addresses($id, unfold($_POST, 'address', 'street_address'));
 
       if(!$creating) $fields = [...$fields, 'emails', 'phone_numbers', 'urls', 'socials', 'addresses'];
     }
@@ -80,7 +87,7 @@
           legal_name: cast_string($_POST['legal_name']), family_infix: cast_string($_POST['family_infix']),
           family_name: cast_string($_POST['family_name']), name_order: cast_string($_POST['name_order']),
           birth_day: cast_int($_POST['birth_day']), birth_month: cast_int($_POST['birth_month']),
-          birth_year: cast_int($_POST['birth_year']), note: cast_string($_POST['note']));
+          birth_year: cast_int($_POST['birth_year']), timezone: $timezone, note: cast_string($_POST['note']));
 
         \store\update_contact(
           $id,
@@ -95,6 +102,7 @@
           cast_int($_POST['birth_day']),
           cast_int($_POST['birth_month']),
           cast_int($_POST['birth_year']),
+          $timezone,
           cast_string($_POST['note'])
         );
       } else {
@@ -110,6 +118,7 @@
           cast_int($_POST['birth_day']),
           cast_int($_POST['birth_month']),
           cast_int($_POST['birth_year']),
+          $timezone,
           cast_string($_POST['note'])
         );
       }
@@ -119,7 +128,7 @@
       \store\set_contact_urls($id, unfold($_POST, 'url', 'url'));
       \store\set_contact_socials($id, unfold($_POST, 'social', 'handle'));
       \store\set_contact_roles($id, unfold($_POST, 'role', 'org_id'));
-      \store\set_contact_addresses($id, unfold($_POST, 'address', 'street_name'));
+      \store\set_contact_addresses($id, unfold($_POST, 'address', 'street_address'));
       \store\set_contact_tags($id, $_POST['tags'] ?? []);
 
       if(!$creating) $fields = [...$fields, 'emails', 'phone_numbers', 'urls', 'socials', 'roles', 'addresses', 'tags'];
@@ -167,13 +176,15 @@
     <div class="address-row__fields">
       <input type="hidden" name="address_id[]" value="<?= esc_attr(@$row['id']) ?>">
       <input name="address_label[]" placeholder="label" value="<?= esc_attr(@$row['link_label']) ?>">
-      <input name="address_street_name[]" placeholder="street" value="<?= esc_attr(@$row['street_name']) ?>" required data-value>
-      <input name="address_street_number[]" placeholder="number" value="<?= esc_attr(@$row['street_number']) ?>" required>
+      <input name="address_street_address[]" placeholder="street address" value="<?= esc_attr(@$row['street_address']) ?>" required data-value>
       <input name="address_postal_code[]" placeholder="postal code" value="<?= esc_attr(@$row['postal_code']) ?>" required>
       <input name="address_city[]" placeholder="city" value="<?= esc_attr(@$row['city']) ?>" required>
-      <input name="address_province[]" placeholder="province" value="<?= esc_attr(@$row['province']) ?>" required>
-      <input name="address_country[]" placeholder="country" value="<?= esc_attr(@$row['country']) ?>" required>
-      <input name="address_timezone[]" placeholder="timezone" value="<?= esc_attr(@$row['timezone']) ?>" required>
+      <input name="address_province[]" placeholder="province" value="<?= esc_attr(@$row['province']) ?>">
+      <select name="address_country[]" required>
+        <?php foreach(country_codes() as $country): ?>
+          <option value="<?= $country ?>" <?= (@$row['country'] ?: COUNTRY) == $country ? 'selected' : '' ?>><?= $country ?></option>
+        <?php endforeach ?>
+      </select>
     </div>
   <?php };
 
@@ -245,6 +256,11 @@
       <?php tags_field(isset($item['id']) ? \store\list_contact_tags($item['id']) : []) ?>
     </div>
   <?php endif ?>
+
+  <div class="field">
+    <label for="timezone">Timezone</label>
+    <?php \forms\options('timezone', ['' => 'None', ...timezone_options()], @$item['timezone'], flat: true) ?>
+  </div>
 
   <hr>
 

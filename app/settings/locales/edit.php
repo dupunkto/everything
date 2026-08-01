@@ -2,6 +2,7 @@
 
   // These would be loaded in the store, but since neuro is not yet available when
   // the store loads, we define them here instead, since this is the only callsite at this point.
+  define('ENUM_COUNTRY', country_codes());
   define('ENUM_CURRENCY', array_keys(CURRENCY_SYMBOLS));
   define('ENUM_MAP_PROVIDER', array_keys(map_provider_options()));
   define('ENUM_PHONE_REGION', array_keys(phone_region_options()));
@@ -16,11 +17,19 @@
   }
 
   if(isset($_POST['timezone'])) {
-    if(!in_array($_POST['timezone'], \DateTimeZone::listIdentifiers()))
+    if(!in_array($_POST['timezone'], ENUM_TIMEZONE))
       fail("Invalid 'timezone' parameter.", status: 400);
 
     \store\update_config('timezone', $_POST['timezone']);
     \store\put_audit_log('config', 'general', "Set timezone to '{$_POST['timezone']}'.", 'user');
+  }
+
+  if(isset($_POST['country'])) {
+    if(!in_array($_POST['country'], ENUM_COUNTRY))
+      fail("Invalid 'country' parameter.", status: 400);
+
+    \store\update_config('country', $_POST['country']);
+    \store\put_audit_log('config', 'general', "Set country to '{$_POST['country']}'.", 'user');
   }
 
   if(isset($_POST['time-format'])) {
@@ -47,12 +56,6 @@
     \store\put_audit_log('config', 'general', "Set currency to '{$_POST['currency']}'.", 'user');
   }
 
-  function timezone_options() {
-    $timezones = \DateTimeZone::listIdentifiers();
-    return array_combine($timezones, array_map(fn($tz) =>
-      str_replace("_", " ", $tz), $timezones));
-  }
-
   function currency_options() {
     return array_combine(ENUM_CURRENCY, array_map(fn($c) =>
       strtoupper($c) . " (" . CURRENCY_SYMBOLS[$c] . ")", ENUM_CURRENCY));
@@ -67,6 +70,10 @@
   <label>
     Time format
     <?php \forms\options('time-format', ENUM_TIME_FORMAT, \config\fresh_value('time-format')) ?>
+  </label>
+  <label>
+    Country
+    <?php \forms\options('country', country_options(), \config\fresh_value('country'), flat: true) ?>
   </label>
   <label>
     Phone region
