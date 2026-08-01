@@ -283,7 +283,7 @@ body:has(.calendar-page) {
 .calendar-week .appointment__circle {
   width: 0;
   height: 0;
-  z-index: 3;
+  z-index: var(--layer-overlay);
 }
 
 .calendar-week .appointment__duration {
@@ -390,7 +390,7 @@ body:has(.calendar-page) {
   height: calc(var(--timing-height) * 1%);
   background: var(--timing-color);
   border-radius: 2px;
-  z-index: 4;
+  z-index: var(--layer-overlay-raised);
 }
 
 .calendar-week .day__timing-dot {
@@ -429,7 +429,7 @@ body:has(.calendar-page) {
   right: 0;
   height: 7px;
   cursor: ns-resize;
-  z-index: 1;
+  z-index: var(--layer-content);
 }
 
 .calendar-week .appointment__handle--top {
@@ -446,7 +446,7 @@ body:has(.calendar-page) {
   grid-row: 3;
   left: 0;
   right: 0;
-  z-index: 3;
+  z-index: var(--layer-overlay);
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 1px;
@@ -521,7 +521,7 @@ body:has(.calendar-page) {
   left: 0;
   right: 0;
   border-top: 2px solid red;
-  z-index: 2;
+  z-index: var(--layer-content-raised);
 }
 
 .calendar-week__now::before {
@@ -598,7 +598,7 @@ body:has(.calendar-page) {
 
 .calendar-editor {
   position: fixed;
-  z-index: 200;
+  z-index: var(--layer-dialog);
   box-sizing: border-box;
   width: 18rem;
   padding: 0.75rem;

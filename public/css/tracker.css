@@ -45,7 +45,7 @@
 
 .tracker-time-popup {
   position: absolute;
-  z-index: 20;
+  z-index: var(--layer-popover);
   top: calc(100% + 0.5rem);
   left: 50%;
   transform: translateX(-50%);
@@ -126,7 +126,7 @@
 
 .tracker-popup-editor {
   position: fixed;
-  z-index: 200;
+  z-index: var(--layer-dialog);
   box-sizing: border-box;
   width: min(32rem, calc(100vw - 2rem));
   padding: 0.75rem;

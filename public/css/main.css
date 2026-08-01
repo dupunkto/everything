@@ -1,4 +1,11 @@
 :root {
+  --layer-content: 1;
+  --layer-content-raised: 2;
+  --layer-overlay: 3;
+  --layer-overlay-raised: 4;
+  --layer-popover: 20;
+  --layer-navigation: 100;
+  --layer-dialog: 200;
   --sidebar-padding: 10px;
   --sidebar-collapsed: 4rem;
   --sidebar-expanded: 250px;
@@ -13,7 +20,7 @@
   height: calc(100% + 0.7em);
   overflow: visible;
   pointer-events: none;
-  z-index: 3;
+  z-index: var(--layer-overlay);
 }
 
 .circle path {
@@ -263,7 +270,7 @@ button,
   height: 1.3em;
   margin: 0;
   position: relative;
-  z-index: 1;
+  z-index: var(--layer-content);
 }
 
 .listing__title {
@@ -332,7 +339,7 @@ button,
   transform: translateY(-50%);
   width: auto;
   cursor: pointer;
-  z-index: 4;
+  z-index: var(--layer-overlay-raised);
   font-size: 1.2em;
 }
 
@@ -414,7 +421,7 @@ button,
 
 .tags__suggestions {
   position: absolute;
-  z-index: 20;
+  z-index: var(--layer-popover);
   top: calc(100% + 0.25em);
   left: 0;
   min-width: 12em;
@@ -446,7 +453,7 @@ button,
   text-wrap: nowrap;
   overflow: hidden;
   transition: width 0.3s ease;
-  z-index: 100;
+  z-index: var(--layer-navigation);
 }
 
 .nav--expanded .nav {

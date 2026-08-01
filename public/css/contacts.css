@@ -57,7 +57,7 @@
   top: 0;
   margin: 0.5em 0 0.2em;
   background: Canvas;
-  z-index: 1;
+  z-index: var(--layer-content);
 }
 
 .contact-item {
