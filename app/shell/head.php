@@ -8,6 +8,10 @@
 <link rel="stylesheet" href="<?= CANONICAL ?>/css/main__<?= esc_attr(UI_BORDER_RADIUS) ?>.css">
 <link rel="stylesheet" href="<?= CANONICAL ?>/css/main__<?= esc_attr(UI_PANEL_POSITION) ?>.css">
 
+<?php if(defined('DEVELOPER_CUSTOM_CSS')): ?>
+<style><?= str_replace("<", "\\3c ", DEVELOPER_CUSTOM_CSS) ?></style>
+<?php endif ?>
+
 <!-- NOTE: Order is significant, zhtml must load before xhtml to restore persisted state before onload requests fire -->
 
 <script src="<?= CANONICAL ?>/vendor/zhtml.min.js"></script>

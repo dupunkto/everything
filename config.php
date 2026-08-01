@@ -30,6 +30,8 @@ fallback('ui.sidebar-position', "left");
 fallback('ui.habits-position', "bottom");
 fallback('ui.border-radius', "subtle");
 
+optional('developer.custom-css');
+
 fallback('calendar.default_calendar', @\store\get_first_calendar()['id']);
 
 fallback('notes.layout', "masonry");

@@ -42,6 +42,17 @@
   margin-bottom: 10px;
 }
 
+.custom-code-form {
+  align-items: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+}
+
+.custom-code-form__input {
+  width: 100%;
+}
+
 .settings-form__phrase {
   align-items: center;
   display: flex;
