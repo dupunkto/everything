@@ -17,7 +17,7 @@
         <li><a href="<?= CANONICAL ?>/settings/calendars">Calendars</a></li>
         <li><a href="<?= CANONICAL ?>/settings/subscriptions">Subscriptions</a></li>
         <li><a href="<?= CANONICAL ?>/settings/habits">Habits</a></li>
-        <li><a>Sharing</a></li>
+        <li><a href="<?= CANONICAL ?>/settings/shares">Sharing</a></li>
       </ul>
     </main>
   </body>

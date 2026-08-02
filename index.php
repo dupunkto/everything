@@ -16,10 +16,12 @@ require_once __DIR__ . "/core.php";
 require_once __DIR__ . "/router.php";
 
 $_AUTHENTICATED = false;
+$_SHARED = route('^/shared/([a-f0-9]{64})\.ics$');
 
-require_once __DIR__ . "/auth.php";
-
-$_AUTHENTICATED = true;
+if(!$_SHARED) {
+  require_once __DIR__ . "/auth.php";
+  $_AUTHENTICATED = true;
+}
 
 $requested_file = path_join(__DIR__, "public", $path);
 
@@ -40,6 +42,10 @@ if(!in_array($method, ['GET', 'HEAD', 'OPTIONS', 'PROPFIND', 'REPORT'])) {
 }
 
 // TODO(robin): improve this routing
+if($_SHARED) {
+  include __DIR__ . "/app/shared.php"; exit;
+}
+
 if($path == "/caldav" || str_starts_with($path, "/caldav/")) {
   include __DIR__ . "/app/caldav.php"; exit;
 }

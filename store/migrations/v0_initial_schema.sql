@@ -389,6 +389,32 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   PRIMARY KEY (id)
 );
 
+CREATE TABLE IF NOT EXISTS shares (
+  id text NOT NULL, -- humid
+  name text NOT NULL,
+  token text NOT NULL,
+  birthdays boolean NOT NULL DEFAULT false,
+  deadlines boolean NOT NULL DEFAULT false,
+  PRIMARY KEY (id),
+  UNIQUE (token)
+);
+
+CREATE TABLE IF NOT EXISTS share_sources (
+  id int(11) NOT NULL AUTO_INCREMENT,
+  share_id text NOT NULL,
+  calendar_id text,
+  subscription_id text,
+  mode text NOT NULL,
+  FOREIGN KEY (share_id) REFERENCES shares (id) ON DELETE CASCADE,
+  FOREIGN KEY (calendar_id) REFERENCES calendars (id) ON DELETE CASCADE,
+  FOREIGN KEY (subscription_id) REFERENCES subscriptions (id) ON DELETE CASCADE,
+  UNIQUE (share_id, calendar_id),
+  UNIQUE (share_id, subscription_id),
+  CHECK ((calendar_id IS NULL) <> (subscription_id IS NULL)),
+  CHECK (mode IN ('full', 'redacted')),
+  PRIMARY KEY (id)
+);
+
 CREATE VIEW IF NOT EXISTS sources AS
   SELECT 'calendar' AS type, id, title, subtitle, color, position FROM calendars
   UNION ALL

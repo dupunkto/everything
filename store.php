@@ -1002,6 +1002,63 @@ function delete_subscription($id) {
   return exec_query('DELETE FROM subscriptions WHERE id = ?', [$id]);
 }
 
+// Shares
+
+function put_share($name, $token) {
+  exec_query('INSERT INTO shares (id, name, token) VALUES (?, ?, ?)', [
+    $id = generate_humid(), $name, $token
+  ]);
+  return $id;
+}
+
+function update_share($id, $name, $birthdays, $deadlines) {
+  return exec_query('UPDATE shares SET
+    name = ?,
+    birthdays = ?,
+    deadlines = ?
+  WHERE id = ?', [$name, $birthdays, $deadlines, $id]);
+}
+
+function update_share_token($id, $token) {
+  return exec_query('UPDATE shares SET token = ? WHERE id = ?', [$token, $id]);
+}
+
+function list_shares() {
+  return all('SELECT * FROM shares ORDER BY name, id');
+}
+
+function get_share($id) {
+  return one('SELECT * FROM shares WHERE id = ?', [$id]);
+}
+
+function get_share_by_token($token) {
+  return one('SELECT * FROM shares WHERE token = ?', [$token]);
+}
+
+function delete_share($id) {
+  return exec_query('DELETE FROM shares WHERE id = ?', [$id]);
+}
+
+function list_share_sources($share_id) {
+  return all('SELECT share_sources.* FROM share_sources
+    LEFT JOIN calendars ON calendars.id = share_sources.calendar_id
+    LEFT JOIN subscriptions ON subscriptions.id = share_sources.subscription_id
+    WHERE share_id = ?
+    ORDER BY COALESCE(calendars.position, subscriptions.position),
+      COALESCE(calendars.title, subscriptions.title)', [$share_id]);
+}
+
+function set_share_sources($share_id, $sources) {
+  exec_query('DELETE FROM share_sources WHERE share_id = ?', [$share_id]);
+  foreach($sources as $source)
+    exec_query('INSERT INTO share_sources (
+      share_id, calendar_id, subscription_id, mode
+    ) VALUES (?, ?, ?, ?)', [
+      $share_id, $source['calendar_id'], $source['subscription_id'], $source['mode']
+    ]);
+  return true;
+}
+
 // Sources
 
 function list_sources() {

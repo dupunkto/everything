@@ -26,13 +26,13 @@ $about_rows = [
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <?php include __DIR__ . "/../shell/head.php" ?>
+    <?php include __DIR__ . "/shell/head.php" ?>
     <title>About</title>
     <link rel="stylesheet" href="<?= CANONICAL ?>/css/settings.css">
     <script src="<?= CANONICAL ?>/client/draggable.js" defer></script>
   </head>
   <body>
-    <?php include __DIR__ . "/../shell/menu.php" ?>
+    <?php include __DIR__ . "/shell/menu.php" ?>
     <main class="main about">
       <hgroup class="about__heading">
         <h1>Everything</h1>

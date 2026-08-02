@@ -256,6 +256,44 @@
   margin-bottom: 0.5em;
 }
 
+.settings-listing--shares {
+  display: grid;
+  gap: 1em;
+}
+
+.settings-listing--shares li {
+  margin: 0;
+}
+
+.share-editor {
+  border: 1px solid var(--border);
+  padding: 0.75em;
+}
+
+.share-editor__header {
+  display: flex;
+  gap: 0.25em;
+}
+
+.share-editor__header input[type="text"],
+.share-editor__url {
+  flex: 1;
+}
+
+.share-editor__url {
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.share-editor .repeat {
+  margin-top: 0.75em;
+}
+
+.share-editor__toggles {
+  display: flex;
+  gap: 1em;
+}
+
 .subscription-new-form input[type="url"] {
   flex: 1;
 }
