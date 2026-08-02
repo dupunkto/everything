@@ -2,6 +2,7 @@
 <?php
 // Manual Git export maintenance: initialization, recovery and verification.
 //
+//   php export.php enable     [repository]
 //   php export.php initialize [repository]
 //   php export.php recover    [repository]
 //   php export.php verify     [repository]
@@ -23,6 +24,32 @@ if(!is_str($repository) && $command !== null)
 
 try {
   switch($command) {
+    // The full enable lifecycle, mirroring the Settings action: create the
+    // repository if needed, commit the baseline, store the config rows and
+    // commit the enabled state.
+    case 'enable':
+      \export\create_repository($repository);
+      $repository = realpath($repository);
+      \export\validate($repository);
+      \export\lock($repository);
+
+      if(\export\enabled()) {
+        $current = \export\repository();
+        if(!is_str($current) || realpath($current) != $repository)
+          bail("Git export is already enabled for '$current'; disable it first.");
+      }
+
+      if(\export\initialized($repository)) \export\recover($repository);
+      else \export\initialize_baseline($repository);
+
+      \store\update_config('developer.git-repository', $repository);
+      \store\update_config('developer.git-enabled', 'true');
+      \store\put_audit_log('config', 'developer', "Enabled Git export.", 'system');
+
+      \export\commit_state($repository, "Enable Git export");
+      say("Git export enabled, committing into $repository.");
+      break;
+
     case 'initialize':
       \export\create_repository($repository);
       \export\validate($repository);
@@ -66,7 +93,7 @@ try {
       exit(1);
 
     default:
-      say("Usage: php export.php <initialize|recover|verify> [repository]");
+      say("Usage: php export.php <enable|initialize|recover|verify> [repository]");
       exit(64);
   }
 }
