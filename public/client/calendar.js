@@ -122,7 +122,8 @@
 
   // Editor popup
 
-  let editing = null;
+  let editing = editor.querySelector('[name="id"]')?.value;
+  let initial_edit = !!editing;
 
   const anchor = () =>
     editing && view.querySelector(`.appointment[data-id="${CSS.escape(editing)}"]`);
@@ -131,6 +132,11 @@
     editor.hidden = true;
     editor.innerHTML = "";
     editing = null;
+
+    // Unpin the closed editor without resetting the current view.
+    const url = new URL(view.getAttribute("x-get"), location.origin);
+    url.searchParams.delete("edit");
+    view.setAttribute("x-get", url.pathname + url.search);
   };
 
   const position_editor = () => {
@@ -152,6 +158,26 @@
 
     editor.style.left = left + "px";
     editor.style.top = top + "px";
+  };
+
+  const reveal_editor = () => {
+    const target = anchor();
+    if(!target) return close_editor();
+
+    requestAnimationFrame(() => {
+      const scroller = target.closest(".calendar-week__days");
+      if(scroller) {
+        const target_box = target.getBoundingClientRect();
+        const scroll_box = scroller.getBoundingClientRect();
+        scroller.scrollTop += target_box.top - scroll_box.top
+          - (scroller.clientHeight - target_box.height) / 2;
+      }
+
+      requestAnimationFrame(() => {
+        editor.hidden = false;
+        position_editor();
+      });
+    });
   };
 
   const open_editor = async (appointment) => {
@@ -388,6 +414,15 @@
   view.addEventListener("x-swap", () => {
     fit_circles();
 
+    // Keep refreshes on the displayed week and preserve the active editor.
+    const url = new URL(view.getAttribute("x-get"), location.origin);
+    const date = view.querySelector(".calendar-week__all-day").dataset.start;
+  
+    if(date) url.searchParams.set("date", date);
+    if(editing) url.searchParams.set("edit", editing);
+
+    view.setAttribute("x-get", url.pathname + url.search);
+
     const days = view.querySelector(".calendar-week__days");
 
     if(days) {
@@ -397,6 +432,12 @@
       if(scroll_top != null) days.scrollTop = scroll_top;
       else if(now) days.scrollTop = now.offsetTop - days.clientHeight / 4;
       else if(day) days.scrollTop = day.offsetHeight / 24 * 6.5; // open at 06:30
+    }
+
+    if(initial_edit) {
+      initial_edit = false;
+      reveal_editor();
+      return;
     }
 
     if(editor.hidden) return;

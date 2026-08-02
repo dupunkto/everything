@@ -35,6 +35,7 @@ $show_filtered_events = isset($_GET['filtered']);
 
 $appointments = [];
 foreach($skeleton ? [] : \calendar\appointments($from, $to) as $a) {
+  if($a['id'] == cast_str(@$_GET['edit'])) { $appointments[] = $a; continue; }
   if($visible !== null && !in_array($a['calendar_id'] ?? $a['subscription_id'], $visible)) continue;
 
   $hidden_by_filter = !empty($a['subscription_filter']) && stripos($a['title'], $a['subscription_filter']) === false;

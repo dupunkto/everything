@@ -767,6 +767,17 @@ function list_timings_paginated($limit, $offset = 0) {
   return paginate('SELECT * FROM timings ORDER BY starts_at DESC, id DESC', $limit, offset: $offset);
 }
 
+function resolve_timing_page($id, $limit) {
+  $timing = get_timing($id) or fail("Timing not found.", status: 404);
+
+  $before = one('SELECT COUNT(*) AS count FROM timings
+    WHERE starts_at > ? OR (starts_at = ? AND id > ?)',
+    [$timing['starts_at'], $timing['starts_at'], $id])['count'];
+
+  $page = intdiv($before, $limit) + 1;
+  return [$page, ($page - 1) * $limit];
+}
+
 // Timings overlapping [$from, $to), each carrying its first tag (lowest id).
 // The caller resolves that tag to its root to pick a colour; keeping it a bare
 // id keeps this query portable across the SQL engines we target.

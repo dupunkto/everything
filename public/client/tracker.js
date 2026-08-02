@@ -109,7 +109,9 @@ zhtml.directive("z-timer", (form) => {
   const listing = () => document.getElementById("tracker-listing");
   const editor = () => document.querySelector(".tracker-popup-editor");
 
-  let editing = null;
+  let editing = editor()?.querySelector('[name="id"]')?.value;
+  let initial_edit = !!editing;
+
   let restoring_history = false;
 
   const push_editor_state = (id) => {
@@ -153,6 +155,24 @@ zhtml.directive("z-timer", (form) => {
     popup.style.top = top + "px";
   };
 
+  const reveal_editor = () => {
+    const popup = editor();
+    const target = anchor();
+    if(!popup || !target) return close_editor();
+
+    requestAnimationFrame(() => {
+      const target_box = target.getBoundingClientRect();
+      const scroll_box = listing().getBoundingClientRect();
+      listing().scrollTop += target_box.top - scroll_box.top
+        - (listing().clientHeight - target_box.height) / 2;
+
+      requestAnimationFrame(() => {
+        popup.hidden = false;
+        position_editor();
+      });
+    });
+  };
+
   const close_editor = () => {
     const popup = editor();
     if(popup) {
@@ -160,6 +180,12 @@ zhtml.directive("z-timer", (form) => {
       popup.innerHTML = "";
     }
     editing = null;
+
+    // Unpin the closed editor without resetting the current view.
+    const url = new URL(listing().getAttribute("x-get"), location.origin);
+    url.searchParams.delete("id");
+    listing().setAttribute("x-get", url.pathname + url.search);
+
     push_editor_state(null);
   };
 
@@ -202,6 +228,11 @@ zhtml.directive("z-timer", (form) => {
       const wanted = new URLSearchParams(location.search).get("edit");
       if(wanted && !editing) return void open_editor(wanted);
 
+      if(initial_edit) {
+        initial_edit = false;
+        reveal_editor();
+        return;
+      }
       anchor() ? position_editor() : close_editor();
       return;
     }

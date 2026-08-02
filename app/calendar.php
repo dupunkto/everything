@@ -12,6 +12,15 @@
     <?php include __DIR__ . "/shell/menu.php" ?>
 
     <?php
+      $date = cast_date(@$_GET['date']);
+
+      if(isset($_GET['edit'])) {
+        $appointment = \store\get_appointment($_GET['edit'])
+          or fail("Appointment not found.", status: 404);
+
+        $date = local_date('Y-m-d', $appointment['starts_at']);
+      }
+
       // The color of the drag-to-create ghost should match the event color,
       // which is the color of the default calendar.
       $ghost_color = @\store\get_calendar(CALENDAR_DEFAULT_CALENDAR)['color'] ?: '#cccccc';
@@ -94,11 +103,11 @@
            x-on="load" still fetches the real view through the one
            filtered code path, so appointments never flash before
            persisted filters apply. -->
-      <section id="calendar-view" x-get="/calendar/week" x-data="#calendar-filters" x-on="load">
-        <?php fragment("calendar/week", ["skeleton" => "1"]) ?>
+      <section id="calendar-view" x-get="/calendar/week?<?= http_build_query(['date' => $date, 'id' => @$_GET['edit']]) ?>" x-data="#calendar-filters" x-on="load">
+        <?php fragment("calendar/week", ["skeleton" => "1", "date" => $date]) ?>
       </section>
 
-      <div class="popover calendar-editor" <?= @$_GET['edit'] ? '' : 'hidden' ?>>
+      <div class="popover calendar-editor" hidden>
         <?php if(@$_GET['edit']) fragment("calendar/edit", ["id" => $_GET['edit']]) ?>
       </div>
     </main>

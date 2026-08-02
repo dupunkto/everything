@@ -10,8 +10,8 @@
     <?php include __DIR__ . "/shell/menu.php" ?>
     <main class="main main--wide main--scrollable">
       <section id="tracker-new" x-get="/tracker/new"><?php fragment("tracker/new") ?></section>
-      <section id="tracker-listing" class="main__scroll" x-get="/tracker/listing"><?php fragment("tracker/listing") ?></section>
-      <aside class="popover tracker-popup-editor" <?= @$_GET['edit'] ? '' : 'hidden' ?>>
+      <section id="tracker-listing" class="main__scroll" x-get="/tracker/listing?<?= http_build_query(["id" => @$_GET['edit']]) ?>"><?php fragment("tracker/listing", ["id" => @$_GET['edit']]) ?></section>
+      <aside class="popover tracker-popup-editor" hidden>
         <?php if(@$_GET['edit']) fragment("tracker/edit", ["id" => $_GET['edit']]) ?>
       </aside>
     </main>

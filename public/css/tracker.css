@@ -69,6 +69,13 @@
   margin-top: 1em;
 }
 
+.tracker-list--focused::before,
+.tracker-list--focused::after {
+  content: "";
+  display: block;
+  height: 40vh;
+}
+
 .tracker-list__item {
   padding: 0.7em 1em;
   margin-bottom: 0.25em;
