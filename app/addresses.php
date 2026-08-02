@@ -7,6 +7,7 @@
   </head>
   <body>
     <?php include __DIR__ . "/shell/menu.php" ?>
+    <?php $query = cast_str(@$_GET['q']) ?? "" ?>
     <main class="main main--semi-wide main--scrollable addresses" z-nav="#address-search input, .address-item">
       <header class="page-header"><h2>Addresses</h2></header>
 
@@ -20,6 +21,7 @@
           type="search"
           z-key="/"
           placeholder="find existing address…"
+          value="<?= esc_attr($query) ?>"
           x-get="/addresses/listing"
           x-on="input"
           x-target="#addresses-list"
@@ -28,7 +30,7 @@
       </form>
 
       <section id="addresses-list" class="listing main__scroll" x-get="/addresses/listing" x-data="#address-search">
-        <?php fragment("addresses/listing") ?>
+        <?php fragment("addresses/listing", ["q" => $query]) ?>
       </section>
     </main>
   </body>

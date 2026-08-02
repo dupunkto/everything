@@ -8,7 +8,7 @@
   </head>
   <body>
     <?php include __DIR__ . "/shell/menu.php" ?>
-    <?php $query = TODO_DEFAULT_QUERY ?>
+    <?php $query = cast_str(@$_GET['q']) ?? TODO_DEFAULT_QUERY ?>
     <main class="main main--wide main--scrollable todo" z-nav="#todo-search, .listing__item">
       <input
         id="todo-search"

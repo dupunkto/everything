@@ -10,7 +10,7 @@
     <?php include __DIR__ . "/shell/menu.php" ?>
     <?php
       $kind = @$_GET['kind'] ?: 'person';
-      $query = isset($_GET['kind']) ? "is:$kind" : CONTACTS_DEFAULT_QUERY;
+      $query = cast_str(@$_GET['q']) ?? (isset($_GET['kind']) ? "is:$kind" : CONTACTS_DEFAULT_QUERY);
       $url = null;
 
       if(@$_GET['edit']) $url = "/contacts/edit?kind=" . rawurlencode($kind) . "&id=" . rawurlencode($_GET['edit']);
