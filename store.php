@@ -478,7 +478,7 @@ function get_wish($id) {
 }
 
 function list_wish_urls($id) {
-  return all('SELECT url, price FROM wish_urls WHERE wish_id = ?', [$id]);
+  return all('SELECT url, price FROM wish_urls WHERE wish_id = ? ORDER BY id', [$id]);
 }
 
 function set_wish_urls($id, $rows) {
@@ -2402,6 +2402,55 @@ function list_appointment_rows() {
 
 function list_quota_rows() {
   return all('SELECT * FROM quotas ORDER BY tag_id');
+}
+
+function list_all_note_tags() {
+  return all('SELECT note_id, tag_id FROM notes_tags ORDER BY note_id, tag_id');
+}
+
+function list_all_task_tags() {
+  return all('SELECT task_id, tag_id FROM tasks_tags ORDER BY task_id, tag_id');
+}
+
+function list_all_wish_tags() {
+  return all('SELECT wish_id, tag_id FROM wishes_tags ORDER BY wish_id, tag_id');
+}
+
+function list_all_bookmark_tags() {
+  return all('SELECT bookmark_id, tag_id FROM bookmarks_tags ORDER BY bookmark_id, tag_id');
+}
+
+function list_all_timing_tags() {
+  return all('SELECT timing_id, tag_id FROM timings_tags ORDER BY timing_id, tag_id');
+}
+
+function list_all_appointment_tags() {
+  return all('SELECT at.appointment_id, t.id, t.label FROM appointments_tags at
+    JOIN tags t ON t.id = at.tag_id
+    ORDER BY at.appointment_id, t.position ASC, t.id DESC');
+}
+
+function list_all_task_logs() {
+  return all('SELECT * FROM task_log ORDER BY task_id, changed_at, id');
+}
+
+function list_all_wish_logs() {
+  return all('SELECT * FROM wish_log ORDER BY wish_id, changed_at, id');
+}
+
+function list_all_wish_urls() {
+  return all('SELECT * FROM wish_urls ORDER BY wish_id, id');
+}
+
+function list_all_alarms() {
+  return all('SELECT * FROM alarms ORDER BY id');
+}
+
+function list_log_dates($table) {
+  return all('SELECT record_id,
+    MIN(changed_at) AS created_at,
+    MAX(changed_at) AS modified_at
+    FROM audit_log WHERE table_name = ? GROUP BY record_id', [$table]);
 }
 
 // Configuration

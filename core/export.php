@@ -45,6 +45,10 @@ function git_dir($repo) {
   static $cache = [];
   if(array_key_exists($repo, $cache)) return $cache[$repo];
 
+  // A .git directory directly under the path makes it a worktree root by
+  // construction. Only linked worktrees and submodules need to ask Git.
+  if(is_dir("$repo/.git")) return $cache[$repo] = "$repo/.git";
+
   [$exit, $root] = git($repo, 'rev-parse', '--show-toplevel');
   if($exit || realpath($root) != realpath($repo)) return $cache[$repo] = null;
 
@@ -125,12 +129,14 @@ function mark_initialized($repo) {
 
 function read_manifest($repo) {
   $body = @file_get_contents(state_dir($repo) . "/manifest.json");
-  return $body ? (json_decode($body, true) ?: []) : [];
+  $manifest = $body ? (json_decode($body, true) ?: []) : [];
+  // Manifests written before content hashing were plain path lists.
+  return array_is_list($manifest) ? array_fill_keys($manifest, null) : $manifest;
 }
 
-function write_manifest($repo, $paths) {
+function write_manifest($repo, $hashes) {
   atomic_write(state_dir($repo) . "/manifest.json",
-    json_encode(array_values($paths), JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) . "\n");
+    json_encode($hashes, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) . "\n");
 }
 
 // Request lifecycle. guard() runs for every mutating request while export
@@ -254,12 +260,19 @@ function initialize_baseline($repo) {
 // transaction they commit on their own.
 function commit_state($repo, $message) {
   reconcile_identities();
-  return export_and_commit($repo, $message);
+  return export_and_commit($repo, $message, everything: true);
 }
 
-function export_and_commit($repo, $message) {
-  $staged = write_tree($repo, tree());
-  stage($repo, $staged);
+// A request starts against a clean worktree, so only the paths this export
+// changed can differ from HEAD and normal requests stage just those (or
+// skip Git entirely when nothing changed). Recovery and initialization
+// cannot trust the worktree and stage every exporter-owned path.
+function export_and_commit($repo, $message, $everything = false) {
+  [$changed, $all] = write_tree($repo, tree());
+  $paths = $everything ? $all : $changed;
+  if(!$paths) return false;
+
+  stage($repo, $paths);
   if(!staged_diff($repo)) return false;
 
   // --no-verify: exported commits are machine-generated on every mutating
@@ -270,30 +283,36 @@ function export_and_commit($repo, $message) {
   return true;
 }
 
-// Writes changed files through temporary files and atomic renames, deletes
-// previously generated paths absent from the tree, and returns every path
-// that needs staging (current and previously generated).
+// Writes changed files through temporary files and atomic renames, and
+// deletes previously generated paths absent from the tree. The manifest
+// keeps a content hash per path, so unchanged files are skipped without
+// reading them back. Returns the changed paths and the full set of
+// exporter-owned paths.
 function write_tree($repo, $tree) {
   ksort($tree);
-  $previous = read_manifest($repo);
+  $manifest = read_manifest($repo);
+  $hashes = [];
+  $changed = [];
 
   foreach($tree as $path => $content) {
+    $hashes[$path] = $hash = sha1($content);
     $target = "$repo/$path";
-    if(is_file($target) && file_get_contents($target) === $content) continue;
-    $dir = dirname($target);
-    if(!is_dir($dir)) mkdir($dir, 0777, true);
+    if(@$manifest[$path] === $hash && is_file($target)) continue;
+    if(!is_dir(dirname($target))) mkdir(dirname($target), 0777, true);
     atomic_write($target, $content);
+    $changed[] = $path;
   }
 
-  foreach($previous as $path) {
+  foreach($manifest as $path => $hash) {
     if(isset($tree[$path])) continue;
     @unlink("$repo/$path");
     $dir = dirname("$repo/$path");
     while($dir != $repo && @rmdir($dir)) $dir = dirname($dir);
+    $changed[] = $path;
   }
 
-  write_manifest($repo, array_keys($tree));
-  return array_values(array_unique([...$previous, ...array_keys($tree)]));
+  write_manifest($repo, $hashes);
+  return [$changed, array_values(array_unique([...array_keys($manifest), ...array_keys($tree)]))];
 }
 
 // Stages exactly the exporter-owned paths, additions and deletions alike,
@@ -328,7 +347,7 @@ function verify($repo) {
     elseif($current !== $content) $differences[] = "differs: $path";
   }
 
-  foreach(read_manifest($repo) as $path)
+  foreach(read_manifest($repo) as $path => $hash)
     if(!isset($tree[$path]) && is_file("$repo/$path")) $differences[] = "stale: $path";
 
   return $differences;
@@ -343,6 +362,8 @@ function dry_tree() {
   finally {
     DBH->rollBack();
     \carddav\forget();
+    \caldav\forget();
+    forget_book();
   }
 }
 
@@ -367,6 +388,16 @@ function reconcile_identities() {
 // The exported tree: a complete path => content map of the database state.
 
 function tree() {
+  \caldav\preload();
+  forget_book();
+
+  $caldav = [];
+  foreach(\store\list_caldav_resources() as $resource)
+    $caldav[$resource['entity_type'] . ':' . $resource['entity_id']] = $resource;
+  $carddav = [];
+  foreach(\store\list_carddav_resources() as $resource)
+    $carddav[$resource['entity_type'] . ':' . $resource['entity_id']] = $resource;
+
   $tree = [];
 
   $tree['config.json'] = json(config_map());
@@ -384,13 +415,20 @@ function tree() {
     $folder = $row['calendar_id']
       ? "calendar/" . filename($row['calendar_id'])
       : "subscriptions/" . filename($row['subscription_id']);
-    $tree[$folder . "/" . filename($row['id']) . ".ics"] = appointment_ics($row);
+    $resource = @$caldav['appointment:' . $row['id']]
+      or fail("Missing CalDAV identity for appointment '{$row['id']}'.");
+    $tree[$folder . "/" . filename($row['id']) . ".ics"] = \caldav\serialize($resource)
+      ?? fail("Could not serialize appointment '{$row['id']}'.");
   }
 
-  foreach(\carddav\book()['contacts'] as $id => $row)
-    $tree["contacts/$id.vcf"] = card('contact', $id);
-  foreach(\carddav\book()['organisations'] as $id => $row)
-    $tree["organisations/$id.vcf"] = card('organisation', $id);
+  foreach(['contact' => 'contacts', 'organisation' => 'organisations'] as $type => $folder) {
+    foreach(\carddav\book()[$folder] as $id => $row) {
+      $resource = @$carddav["$type:$id"]
+        or fail("Missing CardDAV identity for $type '$id'.");
+      $tree["$folder/$id.vcf"] = \carddav\serialize($resource)
+        ?? fail("Could not serialize $type '$id'.");
+    }
+  }
 
   foreach(\store\list_note_rows() as $row)
     $tree["notes/" . filename($row['id']) . ".md"] = note_markdown($row);
@@ -401,7 +439,53 @@ function tree() {
   foreach(\store\list_bookmark_rows() as $row)
     $tree["bookmarks/" . filename($row['id']) . ".md"] = bookmark_markdown($row);
 
+  \caldav\forget();
   return $tree;
+}
+
+// The exporter's own bulk data, mirroring carddav's book: child rows for
+// the markdown builders come from one query per table instead of a query
+// per entity.
+
+$_EXPORT_BOOK = null;
+
+function book() {
+  global $_EXPORT_BOOK;
+  if($_EXPORT_BOOK !== null) return $_EXPORT_BOOK;
+
+  $group = function($rows, $key) {
+    $result = [];
+    foreach($rows as $row) $result[$row[$key]][] = $row;
+    return $result;
+  };
+  $tag_map = function($rows, $key) {
+    $map = [];
+    foreach($rows as $row) $map[$row[$key]][] = (int)$row['tag_id'];
+    return $map;
+  };
+
+  $alarms = \store\list_all_alarms();
+
+  return $_EXPORT_BOOK = [
+    'note_tags' => $tag_map(\store\list_all_note_tags(), 'note_id'),
+    'task_tags' => $tag_map(\store\list_all_task_tags(), 'task_id'),
+    'wish_tags' => $tag_map(\store\list_all_wish_tags(), 'wish_id'),
+    'bookmark_tags' => $tag_map(\store\list_all_bookmark_tags(), 'bookmark_id'),
+    'timing_tags' => $tag_map(\store\list_all_timing_tags(), 'timing_id'),
+    'task_logs' => $group(\store\list_all_task_logs(), 'task_id'),
+    'wish_logs' => $group(\store\list_all_wish_logs(), 'wish_id'),
+    'wish_urls' => $group(\store\list_all_wish_urls(), 'wish_id'),
+    'task_alarms' => $group(array_filter($alarms, fn($alarm) => $alarm['task_id'] !== null), 'task_id'),
+    'wish_alarms' => $group(array_filter($alarms, fn($alarm) => $alarm['wish_id'] !== null), 'wish_id'),
+    'task_properties' => $group(\store\list_all_properties('task'), 'task_id'),
+    'wish_properties' => $group(\store\list_all_properties('wish'), 'wish_id'),
+    'alarm_properties' => $group(\store\list_all_properties('alarm'), 'alarm_id'),
+  ];
+}
+
+function forget_book() {
+  global $_EXPORT_BOOK;
+  $_EXPORT_BOOK = null;
 }
 
 // External subscription ids can contain characters hostile to file paths;
@@ -424,12 +508,6 @@ function by_id($rows) {
   return $rows;
 }
 
-function tag_ids($ids) {
-  $ids = array_map('intval', $ids);
-  sort($ids);
-  return $ids;
-}
-
 function property_data($row) {
   $data = [
     'name' => $row['name'],
@@ -441,7 +519,7 @@ function property_data($row) {
 }
 
 function properties_data($type, $id) {
-  return array_map(property_data(...), \store\list_properties($type, $id));
+  return array_map(property_data(...), @book()[$type . '_properties'][$id] ?: []);
 }
 
 function alarms_data($type, $id) {
@@ -452,7 +530,7 @@ function alarms_data($type, $id) {
     'relative_to' => $alarm['relative_to'],
     'description' => $alarm['description'],
     'properties' => properties_data('alarm', $alarm['id']),
-  ], \store\list_alarms($type, $id));
+  ], @book()[$type . '_alarms'][$id] ?: []);
 }
 
 // JSON files
@@ -549,27 +627,11 @@ function timings_by_month() {
       'starts_at' => $starts,
       'ends_at' => utc($row['ends_at']),
       'task_id' => $row['task_id'],
-      'tags' => tag_ids(\store\list_timing_tag_ids($row['id'])),
+      'tags' => @book()['timing_tags'][$row['id']] ?: [],
     ];
   }
   ksort($months);
   return $months;
-}
-
-// DAV-serialized files
-
-function appointment_ics($row) {
-  $resource = \store\get_caldav_resource('appointment', $row['id'])
-    or fail("Missing CalDAV identity for appointment '{$row['id']}'.");
-  return \caldav\serialize($resource)
-    ?? fail("Could not serialize appointment '{$row['id']}'.");
-}
-
-function card($type, $id) {
-  $resource = \store\get_carddav_resource($type, $id)
-    or fail("Missing CardDAV identity for $type '$id'.");
-  return \carddav\serialize($resource)
-    ?? fail("Could not serialize $type '$id'.");
 }
 
 // Markdown files
@@ -580,12 +642,12 @@ function note_markdown($row) {
     'id' => $row['id'],
     'title' => $row['title'],
     'written_at' => utc($row['written_at']),
-    'tags' => tag_ids(\store\list_note_tag_ids($row['id'])),
+    'tags' => @book()['note_tags'][$row['id']] ?: [],
   ], $row['content']);
 }
 
 function task_markdown($row) {
-  $log = \store\get_task_log($row['id']);
+  $log = @book()['task_logs'][$row['id']] ?: [];
 
   return document([
     'schema' => EXPORT_SCHEMA,
@@ -598,7 +660,7 @@ function task_markdown($row) {
     'due_at' => utc($row['due_at']),
     'due_all_day' => cast_bool($row['due_all_day']),
     'expire_at' => utc($row['expire_at']),
-    'tags' => tag_ids(\store\list_task_tag_ids($row['id'])),
+    'tags' => @book()['task_tags'][$row['id']] ?: [],
     'alarms' => alarms_data('task', $row['id']),
     'properties' => properties_data('task', $row['id']),
     'log' => status_log($log),
@@ -606,7 +668,7 @@ function task_markdown($row) {
 }
 
 function wish_markdown($row) {
-  $log = \store\get_wish_log($row['id']);
+  $log = @book()['wish_logs'][$row['id']] ?: [];
 
   return document([
     'schema' => EXPORT_SCHEMA,
@@ -618,8 +680,8 @@ function wish_markdown($row) {
     'urls' => array_map(fn($url) => [
       'url' => $url['url'],
       'price' => $url['price'],
-    ], \store\list_wish_urls($row['id'])),
-    'tags' => tag_ids(\store\list_wish_tag_ids($row['id'])),
+    ], @book()['wish_urls'][$row['id']] ?: []),
+    'tags' => @book()['wish_tags'][$row['id']] ?: [],
     'alarms' => alarms_data('wish', $row['id']),
     'properties' => properties_data('wish', $row['id']),
     'log' => status_log($log),
@@ -634,7 +696,7 @@ function bookmark_markdown($row) {
     'url' => $row['url'],
     'favicon' => $row['favicon'],
     'saved_at' => utc($row['saved_at']),
-    'tags' => tag_ids(\store\list_bookmark_tag_ids($row['id'])),
+    'tags' => @book()['bookmark_tags'][$row['id']] ?: [],
   ], $row['note']);
 }
 

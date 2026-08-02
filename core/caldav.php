@@ -266,11 +266,83 @@ function mark_resource_deleted($type, $id) {
 }
 
 function entity($resource) {
+  global $_BULK;
+  if($_BULK !== null && in_array($resource['entity_type'], ['appointment', 'travel_before', 'travel_after']))
+    return @$_BULK['appointments'][$resource['entity_id']];
+
   return match($resource['entity_type']) {
     'appointment', 'travel_before', 'travel_after' => \store\get_appointment($resource['entity_id']),
     'task' => \store\get_task($resource['entity_id']),
     'wish' => \store\get_wish($resource['entity_id']),
   };
+}
+
+// Bulk cache for the Git exporter, mirroring carddav's book: serializing
+// every appointment reads from one set of bulk queries instead of a query
+// storm per entity. DAV requests serialize single resources and skip it.
+
+$_BULK = null;
+
+function preload() {
+  global $_BULK;
+
+  $group = function($rows, $key) {
+    $result = [];
+    foreach($rows as $row) $result[$row[$key]][] = $row;
+    return $result;
+  };
+
+  $appointments = [];
+  foreach(\store\list_appointment_rows() as $row) $appointments[$row['id']] = $row;
+
+  $alarms = array_filter(\store\list_all_alarms(), fn($alarm) => $alarm['appointment_id'] !== null);
+
+  $log_dates = [];
+  foreach(\store\list_log_dates('appointments') as $row) $log_dates[$row['record_id']] = $row;
+
+  $_BULK = [
+    'appointments' => $appointments,
+    'log_dates' => $log_dates,
+    'properties' => $group(\store\list_all_properties('appointment'), 'appointment_id'),
+    'alarm_properties' => $group(\store\list_all_properties('alarm'), 'alarm_id'),
+    'tags' => $group(\store\list_all_appointment_tags(), 'appointment_id'),
+    'alarms' => $group($alarms, 'appointment_id'),
+  ];
+}
+
+function forget() {
+  global $_BULK;
+  $_BULK = null;
+}
+
+function properties_of($type, $id) {
+  global $_BULK;
+  if($_BULK !== null && $type == 'appointment') return @$_BULK['properties'][$id] ?: [];
+  if($_BULK !== null && $type == 'alarm') return @$_BULK['alarm_properties'][$id] ?: [];
+  return \store\list_properties($type, $id);
+}
+
+function alarms_of($type, $id) {
+  global $_BULK;
+  if($_BULK !== null && $type == 'appointment') return @$_BULK['alarms'][$id] ?: [];
+  return \store\list_alarms($type, $id);
+}
+
+function tags_of($type, $id) {
+  global $_BULK;
+  if($_BULK !== null && $type == 'appointment') return @$_BULK['tags'][$id] ?: [];
+  return match($type) {
+    'appointment' => \store\list_appointment_tags($id),
+    'task' => \store\list_task_tags($id),
+    'wish' => \store\list_wish_tags($id),
+  };
+}
+
+function log_dates($table, $id) {
+  global $_BULK;
+  if($_BULK !== null && $table == 'appointments')
+    return @$_BULK['log_dates'][$id] ?: ['created_at' => null, 'modified_at' => null];
+  return \store\get_log_dates($table, $id);
 }
 
 function parameter($name, $values) {
@@ -330,7 +402,7 @@ function duration($seconds) {
 }
 
 function priority($type, $id, $urgent) {
-  foreach(\store\list_properties($type, $id) as $property) {
+  foreach(properties_of($type, $id) as $property) {
     if($property['name'] != 'PRIORITY') continue;
     $value = (int)$property['value'];
     if(($urgent && $value > 0 && $value < 9) || (!$urgent && ($value == 0 || $value == 9))) return $value;
@@ -340,7 +412,7 @@ function priority($type, $id, $urgent) {
 
 function unknown_lines($type, $id, $skip = []) {
   $result = "";
-  foreach(\store\list_properties($type, $id) as $property) {
+  foreach(properties_of($type, $id) as $property) {
     if(in_array($property['name'], $skip)) continue;
     $params = json_decode($property['parameters'], true) ?: [];
     $result .= line($property['name'], $property['value'], $params);
@@ -377,12 +449,12 @@ function private_lines($type, $row) {
       $body .= line('X-EVERYTHING-TRAVEL', (int)$row['travel_before'] . ';' . (int)$row['travel_after']);
     if($row['address_id'])
       $body .= line('X-EVERYTHING-ADDRESS', (string)$row['address_id']);
-    $body .= tag_lines(\store\list_appointment_tags($row['id']));
+    $body .= tag_lines(tags_of('appointment', $row['id']));
   }
   elseif($type == 'task') {
     $body .= line('X-EVERYTHING-STATUS', $row['status']);
     if($row['expire_at']) $body .= line('X-EVERYTHING-EXPIRE', utc($row['expire_at']));
-    $body .= tag_lines(\store\list_task_tags($row['id']));
+    $body .= tag_lines(tags_of('task', $row['id']));
   }
   elseif($type == 'wish') {
     foreach(\store\list_wish_urls($row['id']) as $url) {
@@ -390,7 +462,7 @@ function private_lines($type, $row) {
         ? [['name' => 'X-PRICE', 'values' => [\format_price_value($url['price'])]]] : [];
       $body .= line('X-EVERYTHING-URL', $url['url'], $params);
     }
-    $body .= tag_lines(\store\list_wish_tags($row['id']));
+    $body .= tag_lines(tags_of('wish', $row['id']));
   }
 
   return $body . line('X-EVERYTHING-SCHEMA', '1');
@@ -398,7 +470,7 @@ function private_lines($type, $row) {
 
 function alarm_lines($type, $id) {
   $alarms = [];
-  foreach(\store\list_alarms($type, $id) as $alarm) {
+  foreach(alarms_of($type, $id) as $alarm) {
     $body = "BEGIN:VALARM\r\n";
     $body .= line('ACTION', 'DISPLAY');
     if($alarm['trigger_at']) $body .= line('TRIGGER', utc($alarm['trigger_at']), [
@@ -424,7 +496,7 @@ function serialize($resource) {
   $type = $resource['entity_type'];
   $is_travel = in_array($type, ['travel_before', 'travel_after']);
   $table = $type == 'appointment' || $is_travel ? 'appointments' : $type . 's';
-  $dates = \store\get_log_dates($table, $row['id']);
+  $dates = log_dates($table, $row['id']);
   $component = $type == 'appointment' || $is_travel ? 'VEVENT' : 'VTODO';
 
   $body = "BEGIN:VCALENDAR\r\n";
@@ -484,7 +556,7 @@ function serialize($resource) {
     if($row['location']) $body .= line('LOCATION', \icalendar\escape_text($row['location']));
     if($row['meeting']) {
       $stored_url = null;
-      foreach(\store\list_properties($type, $row['id']) as $property)
+      foreach(properties_of($type, $row['id']) as $property)
         if($property['name'] == 'URL') $stored_url = $property;
       if(!$stored_url) $body .= line('URL', $row['meeting']);
       $body .= line('CONFERENCE', $row['meeting'], [['name' => 'VALUE', 'values' => ['URI']]]);
