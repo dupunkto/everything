@@ -17,7 +17,7 @@
   <div>
     <input name="addr_city" placeholder="city" value="<?= esc_attr(@$address['city']) ?>">
     <input name="addr_province" placeholder="province" value="<?= esc_attr(@$address['province']) ?>">
-    <?php \forms\options('addr_country', ['' => "Country", ...country_options()],
+    <?php \forms\options('addr_country', [...country_options(), '' => "No country"],
       isset($address) ? $address['country'] : COUNTRY, flat: true) ?>
   </div>
   <div class="actions">

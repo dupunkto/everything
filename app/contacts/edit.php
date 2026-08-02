@@ -177,7 +177,7 @@
 
   $roles_field = function($row) use ($organisations) { ?>
     <select name="role_org_id[]" required data-value>
-      <option value="">Organisation</option>
+      <option value="" disabled <?= @$row['org_id'] ? '' : 'selected' ?>>Choose organisation</option>
       <?php foreach($organisations as $organisation): ?>
         <option value="<?= esc_attr($organisation['id']) ?>" <?= @$row['org_id'] == $organisation['id'] ? 'selected' : '' ?>>
           <?= esc_inner($organisation['display_name']) ?>
@@ -202,10 +202,10 @@
       <input name="address_province[]" placeholder="province" value="<?= esc_attr(@$row['province']) ?>">
       <?php $selected = array_key_exists('country', $row ?: []) ? $row['country'] : COUNTRY ?>
       <select name="address_country[]">
-        <option value="">country</option>
         <?php foreach(country_codes() as $country): ?>
           <option value="<?= $country ?>" <?= $selected == $country ? 'selected' : '' ?>><?= $country ?></option>
         <?php endforeach ?>
+        <option value="" <?= $selected ? '' : 'selected' ?>>No country</option>
       </select>
     </div>
   <?php };
@@ -303,7 +303,7 @@
   <?php }) ?>
   <?php repeat_field("Socials", "Social", @$item['socials'] ?: [], $social_field) ?>
   <?php repeat_field("Websites", "Website", @$item['urls'] ?: [], $generic_field('url', 'url', 'url')) ?>
-  <?php if($kind === "person"): ?>
+  <?php if($kind === "person" && $organisations): ?>
     <?php repeat_field("Roles", "Role", @$item['roles'] ?: [], $roles_field) ?>
   <?php endif ?>
 
@@ -322,7 +322,7 @@
 
   <div class="field">
     <label for="timezone">Timezone</label>
-    <?php \forms\options('timezone', ['' => 'None', ...timezone_options()], @$item['timezone'], flat: true) ?>
+    <?php \forms\options('timezone', ['' => "No timezone", ...timezone_options()], @$item['timezone'], flat: true) ?>
   </div>
 
   <hr>
