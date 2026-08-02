@@ -23,6 +23,7 @@
     ],
     "Lists" => [
       ["/", "Focus search"],
+      ["r", "Refresh"],
       ["n", "Create new item"],
       ["↑ / ↓", "Select item"],
       ["enter / o", "Open selected item"],
