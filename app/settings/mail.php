@@ -2,19 +2,20 @@
 <html lang="en">
   <head>
     <?php include __DIR__ . "/../shell/head.php" ?>
-    <title>Tracker settings</title>
+    <title>Mail & notes</title>
     <link rel="stylesheet" href="<?= CANONICAL ?>/css/settings.css">
   </head>
   <body>
     <?php include __DIR__ . "/../shell/menu.php" ?>
     <main class="main">
       <header class="page-header">
-        <?php $parent = "/settings/applications"; include __DIR__ . "/back.php" ?>
-        <h2>Tracker</h2>
+        <?php $parent = "/settings/setup"; include __DIR__ . "/back.php" ?>
+        <h2>Mail & notes</h2>
       </header>
 
       <ul class="settings-menu">
-        <li><a href="<?= CANONICAL ?>/settings/quotas">Quotas</a></li>
+        <li><a>IMAP</a></li>
+        <li><a>SMTP</a></li>
       </ul>
     </main>
   </body>

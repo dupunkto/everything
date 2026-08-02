@@ -78,7 +78,7 @@
     <?php include __DIR__ . "/shell/menu.php" ?>
     <main class="main main--semi-wide">
       <header class="page-header">
-        <?php $parent = "/settings"; include __DIR__ . "/settings/back.php" ?>
+        <?php $parent = "/settings/general"; include __DIR__ . "/settings/back.php" ?>
         <h2>Shortcuts</h2>
       </header>
 

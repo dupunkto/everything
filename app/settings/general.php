@@ -14,9 +14,10 @@
       </header>
 
       <ul class="settings-menu">
+        <?php if(defined('GIT_SHA')): ?><li><a href="<?= CANONICAL ?>/settings/updates">Updates</a></li><?php endif ?>
         <li><a href="<?= CANONICAL ?>/settings/ui">Interface</a></li>
-        <li><a href="<?= CANONICAL ?>/settings/tags">Tags</a></li>
         <li><a href="<?= CANONICAL ?>/settings/locales">Localisation</a></li>
+        <li><a href="<?= CANONICAL ?>/shortcuts">Shortcuts</a></li>
       </ul>
     </main>
   </body>

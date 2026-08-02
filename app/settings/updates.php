@@ -14,7 +14,7 @@ if(!defined('GIT_SHA')) fail("Updates are only available when running from a Git
     <?php include __DIR__ . "/../shell/menu.php" ?>
     <main class="main">
       <header class="page-header">
-        <?php $parent = "/settings"; include __DIR__ . "/back.php" ?>
+        <?php $parent = "/settings/general"; include __DIR__ . "/back.php" ?>
         <h2>Updates</h2>
       </header>
 

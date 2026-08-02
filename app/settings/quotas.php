@@ -9,7 +9,7 @@
     <?php include __DIR__ . "/../shell/menu.php" ?>
     <main class="main">
       <header class="page-header">
-        <?php $parent = "/settings/tracker"; include __DIR__ . "/back.php" ?>
+        <?php $parent = "/settings/setup"; include __DIR__ . "/back.php" ?>
         <h2>Quotas</h2>
         <section id="quota-new" x-get="/settings/quotas/new"><?php fragment("settings/quotas/new") ?></section>
       </header>

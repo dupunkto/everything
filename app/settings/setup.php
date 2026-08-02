@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <?php include __DIR__ . "/../shell/head.php" ?>
-    <title>Accounts</title>
+    <title>Setup</title>
     <link rel="stylesheet" href="<?= CANONICAL ?>/css/settings.css">
   </head>
   <body>
@@ -10,12 +10,14 @@
     <main class="main">
       <header class="page-header">
         <?php $parent = "/settings"; include __DIR__ . "/back.php" ?>
-        <h2>Accounts</h2>
+        <h2>Setup</h2>
       </header>
 
       <ul class="settings-menu">
-        <li><a>IMAP</a></li>
-        <li><a>SMTP</a></li>
+        <li><a href="<?= CANONICAL ?>/settings/mail">Mail & notes</a></li>
+        <li><a href="<?= CANONICAL ?>/settings/calendar">Calendar</a></li>
+        <li><a href="<?= CANONICAL ?>/settings/tags">Tags</a></li>
+        <li><a href="<?= CANONICAL ?>/settings/quotas">Quotas</a></li>
       </ul>
     </main>
   </body>
