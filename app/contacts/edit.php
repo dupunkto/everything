@@ -177,7 +177,6 @@
 
   $roles_field = function($row) use ($organisations) { ?>
     <select name="role_org_id[]" required data-value>
-      <option value="" disabled <?= @$row['org_id'] ? '' : 'selected' ?>>Choose organisation</option>
       <?php foreach($organisations as $organisation): ?>
         <option value="<?= esc_attr($organisation['id']) ?>" <?= @$row['org_id'] == $organisation['id'] ? 'selected' : '' ?>>
           <?= esc_inner($organisation['display_name']) ?>
