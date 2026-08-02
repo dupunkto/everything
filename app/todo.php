@@ -23,6 +23,8 @@
         x-target="#todo-listing"
       >
 
+      <button type="button" z-key="r" x-refresh="#todo-listing" hidden></button>
+
       <section id="todo-listing" x-get="/todo/listing" x-data="#todo-search">
         <?php fragment("todo/listing", ["q" => $query]) ?>
       </section>

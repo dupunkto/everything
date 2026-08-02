@@ -19,6 +19,8 @@
         x-target="#wishlist-listing"
       >
 
+      <button type="button" z-key="r" x-refresh="#wishlist-listing" hidden></button>
+
       <section id="wishlist-listing" class="main__scroll" x-get="/wishlist/listing" x-data="#wishlist-filter">
         <?php fragment("wishlist/listing", ["show" => $show]) ?>
       </section>
