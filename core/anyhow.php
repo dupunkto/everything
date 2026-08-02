@@ -130,6 +130,27 @@ function clear_response() {
   ob_start();
 }
 
+// Response buffering
+
+$_RESPONSE_FLUSHED = false;
+$_RESPONSE_BYTES = null;
+
+function flush_response() {
+  global $_RESPONSE_FLUSHED, $_RESPONSE_BYTES;
+  if($_RESPONSE_FLUSHED) return;
+  $_RESPONSE_FLUSHED = true;
+  $_RESPONSE_BYTES = ob_get_length() ?: 0;
+
+  ignore_user_abort(true);
+  if(!headers_sent()) {
+    header("Content-Length: " . $_RESPONSE_BYTES);
+    header("Connection: close");
+  }
+  while(ob_get_level()) ob_end_flush();
+  flush();
+  if(function_exists('fastcgi_finish_request')) fastcgi_finish_request();
+}
+
 // Error rendering
 
 function render_error($error) {
@@ -220,6 +241,7 @@ register_shutdown_function(function() {
     return;
   }
 
+  global $_RESPONSE_FLUSHED;
   $committed = false;
   try {
     request_hook('before_commit');
@@ -230,6 +252,7 @@ register_shutdown_function(function() {
   catch(Throwable $error) {
     if(!$committed) abandon_request();
     report_error($error);
+    if($_RESPONSE_FLUSHED) return;
     clear_response();
     render_error($error);
   }
@@ -239,7 +262,7 @@ register_shutdown_function(function() {
 // (argueably doesn't below here but it was convient to put it here)
 
 register_shutdown_function(function() {
-  global $_NOW, $_AUTHENTICATED;
+  global $_NOW, $_AUTHENTICATED, $_RESPONSE_BYTES;
 
   $failure = error_get_last();
   $status = http_response_code();
@@ -258,7 +281,7 @@ register_shutdown_function(function() {
       'referer' => @$_SERVER['HTTP_REFERER'],
       'content_type' => @$_SERVER['CONTENT_TYPE'],
       'request_bytes' => @$_SERVER['CONTENT_LENGTH'],
-      'response_bytes' => ob_get_length() ?: null,
+      'response_bytes' => ob_get_length() ?: $_RESPONSE_BYTES ?: null,
       'duration_ms' => (int)((hrtime(true) - $_NOW) / 1e6),
     ]);
   }

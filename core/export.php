@@ -200,6 +200,10 @@ function after_commit() {
   global $_EXPORT_ACTIVE, $_EXPORT_REPO;
   if(!$_EXPORT_ACTIVE) return;
 
+  // Run the export asynchronously, send the
+  // response to the client already.
+  flush_response();
+
   $pending = read_pending($_EXPORT_REPO);
   $message = $pending ? "{$pending['method']} {$pending['path']}" : "Export";
   export_and_commit($_EXPORT_REPO, $message);
