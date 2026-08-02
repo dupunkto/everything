@@ -44,6 +44,10 @@ function must_git($repo, ...$args) {
 function git_dir($repo) {
   static $cache = [];
   if(array_key_exists($repo, $cache)) return $cache[$repo];
+
+  [$exit, $root] = git($repo, 'rev-parse', '--show-toplevel');
+  if($exit || realpath($root) != realpath($repo)) return $cache[$repo] = null;
+
   [$exit, $output] = git($repo, 'rev-parse', '--absolute-git-dir');
   return $cache[$repo] = ($exit ? null : $output);
 }
@@ -230,8 +234,9 @@ function create_repository($repo) {
     if(!mkdir($repo)) fail("Could not create '$repo'.");
   }
 
-  [$exit] = git($repo, 'rev-parse', '--is-inside-work-tree');
-  if($exit) must_git($repo, 'init', '--quiet');
+  [$exit, $root] = git($repo, 'rev-parse', '--show-toplevel');
+  if($exit || realpath($root) != realpath($repo))
+    must_git($repo, 'init', '--quiet');
 }
 
 function initialize_baseline($repo) {
