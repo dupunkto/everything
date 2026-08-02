@@ -6,7 +6,7 @@
 
   $groups = [
     "Global" => [
-      ["mod+k", "Open global search"],
+      ["mod+/ / mod+k", "Open global search"],
       ["1", "Open mail"],
       ["2", "Open calendar"],
       ["3", "Open ToDo"],

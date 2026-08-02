@@ -98,7 +98,9 @@
         <?php fragment("calendar/week", ["skeleton" => "1"]) ?>
       </section>
 
-      <div class="popover calendar-editor" hidden></div>
+      <div class="popover calendar-editor" <?= @$_GET['edit'] ? '' : 'hidden' ?>>
+        <?php if(@$_GET['edit']) fragment("calendar/edit", ["id" => $_GET['edit']]) ?>
+      </div>
     </main>
   </body>
 </html>

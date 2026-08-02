@@ -218,6 +218,126 @@ button,
   content: "#";
 }
 
+.global-search {
+  position: fixed;
+  inset: 0;
+  z-index: var(--layer-dialog);
+  padding: 8vh 1em 1em;
+}
+
+.global-search__backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  border: 0;
+  border-radius: 0;
+  background: light-dark(rgb(255 255 255 / 75%), rgb(0 0 0 / 70%));
+}
+
+.global-search__backdrop:hover {
+  opacity: 1;
+}
+
+.global-search__content {
+  position: relative;
+  width: min(900px, 100%);
+  margin: auto;
+}
+
+.global-search__bar {
+  display: contents;
+}
+
+.global-search__input,
+.global-search__panel {
+  background: var(--popover-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 1em 3em rgb(0 0 0 / 25%);
+}
+
+.global-search__panel {
+  position: relative;
+  z-index: var(--layer-content-raised);
+  padding: 0.25em;
+  max-height: calc(80vh - 4em);
+  margin-top: 0.75em;
+  overflow-y: auto;
+}
+
+.global-search__panel:has(#global-search-results:empty) {
+  display: none;
+}
+
+.global-search__input {
+  width: 100%;
+  font-size: 1.75em !important;
+}
+
+.global-search__item {
+  min-width: 0;
+}
+
+.global-search__item:hover {
+  opacity: 1;
+  background: var(--surface-hover);
+}
+
+.global-search__item:last-child {
+  margin-bottom: 0;
+}
+
+.global-search__icon {
+  flex: 0 0 1.3em;
+  width: 1.3em;
+  height: 1.3em;
+  object-fit: contain;
+  text-align: center;
+}
+
+.global-search__title {
+  flex: 1 1 14em;
+}
+
+.global-search__extra {
+  flex: 1 1 10em;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.global-search__badges {
+  position: relative;
+  z-index: var(--layer-content);
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.25em;
+}
+
+.global-search__type {
+  color: var(--muted);
+}
+
+.global-search__empty {
+  margin-bottom: 0;
+  text-align: center;
+}
+
+@media (max-width: 700px) {
+  .global-search__item {
+    flex-wrap: wrap;
+  }
+
+  .global-search__badges {
+    width: 100%;
+    padding-left: 1.8em;
+    flex-wrap: wrap;
+  }
+}
+
 .page-header {
   display: flex;
   flex-direction: row;

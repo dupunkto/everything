@@ -24,6 +24,55 @@ define('ENUM_TASK_STATUS', ['todo', 'wip', 'backlog', 'blocked', 'done', 'nvm'])
 define('ENUM_WISH_STATUS', ['dream', 'bought', 'nvm']);
 define('ENUM_SSL_MODE', ['plain', 'tls', 'ssl']);
 
+function get_anything($humid) {
+  $entry = one('SELECT * FROM humids WHERE id = ?', [$humid]);
+  if(!$entry) return false;
+
+  $item = match($entry['type']) {
+    'note' => get_note($humid),
+    'todo' => get_task($humid),
+    'wish' => get_wish($humid),
+    'appointment' => get_appointment_by_humid($humid),
+    'timing' => get_timing($humid),
+    'bookmark' => get_bookmark($humid),
+    'contact' => get_contact($humid),
+    'organisation' => get_organisation($humid),
+    'address' => get_address($humid),
+    default => false,
+  };
+
+  return $item ? ['type' => $entry['type'], ...$item] : false;
+}
+
+function list_anything_tags($item) {
+  return match($item['type']) {
+    'note' => list_note_tags($item['id']),
+    'todo' => list_task_tags($item['id']),
+    'wish' => list_wish_tags($item['id']),
+    'appointment' => list_appointment_tags($item['id']),
+    'timing' => list_timing_tags($item['id']),
+    'bookmark' => list_bookmark_tags($item['id']),
+    'contact' => list_contact_tags($item['id']),
+    'organisation' => list_organisation_tags($item['id']),
+    'address' => [],
+  };
+}
+
+// HumIDs
+
+function put_humid($type, $id = null) {
+  $id ??= generate_humid();
+  exec_query('INSERT INTO humids (id, type) VALUES (?, ?)', [$id, $type]);
+  return $id;
+}
+
+function reserve_humid($type, $id) {
+  $entry = one('SELECT type FROM humids WHERE id = ?', [$id]);
+  if(!$entry) return put_humid($type, $id);
+  if($entry['type'] != $type) fail("HumID $id already belongs to {$entry['type']}.");
+  return $id;
+}
+
 // Notes
 
 function put_note($title, $content, $date = null) {
@@ -33,7 +82,7 @@ function put_note($title, $content, $date = null) {
     content,
     written_at
   ) VALUES (?, ?, ?, ?)', [
-    $id = generate_humid(),
+    $id = put_humid('note'),
     $title,
     $content,
     $date ?? gmdate('c')
@@ -137,7 +186,7 @@ function put_task(
     due_all_day,
     expire_at
   ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [
-    $id = generate_humid(),
+    $id = put_humid('todo'),
     $title,
     $content,
     $urgent,
@@ -413,7 +462,7 @@ function put_wish($title, $content, $status, $urgent = false, $date = null) {
     urgent,
     added_at
   ) VALUES (?, ?, ?, ?, ?)', [
-    $id = generate_humid(),
+    $id = put_humid('wish'),
     $title,
     $content,
     $urgent,
@@ -564,7 +613,7 @@ function put_bookmark($url, $label = null, $note = null, $favicon = null, $date 
     favicon,
     saved_at
   ) VALUES (?, ?, ?, ?, ?, ?)', [
-    $id = generate_humid(),
+    $id = put_humid('bookmark'),
     $label,
     $url,
     $note,
@@ -660,7 +709,7 @@ function put_timing($description, $starts_at, $ends_at, $task_id = null) {
     ends_at,
     task_id
   ) VALUES (?, ?, ?, ?, ?)', [
-    $id = generate_humid(),
+    $id = put_humid('timing'),
     $description,
     $starts_at,
     $ends_at,
@@ -917,7 +966,7 @@ function put_calendar($title, $subtitle, $color) {
     color,
     position
   ) VALUES (?, ?, ?, ?, ?)', [
-    $id = generate_humid(),
+    $id = put_humid('calendar'),
     $title,
     $subtitle,
     $color,
@@ -964,7 +1013,7 @@ function put_subscription($title, $subtitle, $url, $color, $filter = null) {
     filter,
     position
   ) VALUES (?, ?, ?, ?, ?, ?, ?)', [
-    $id = generate_humid(),
+    $id = put_humid('subscription'),
     $title,
     $subtitle,
     $url,
@@ -1006,7 +1055,7 @@ function delete_subscription($id) {
 
 function put_share($name, $token) {
   exec_query('INSERT INTO shares (id, name, token) VALUES (?, ?, ?)', [
-    $id = generate_humid(), $name, $token
+    $id = put_humid('share'), $name, $token
   ]);
   return $id;
 }
@@ -1114,6 +1163,7 @@ function put_calendar_appointment(
 ) {
   exec_query('INSERT INTO appointments (
     id,
+    humid,
     calendar_id,
     subscription_id,
     title,
@@ -1128,8 +1178,9 @@ function put_calendar_appointment(
     urgent,
     travel_before,
     travel_after
-  ) VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
-    $id = generate_humid(),
+  ) VALUES (?, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+    $id = put_humid('appointment'),
+    $id,
     $calendar_id,
     $title,
     $content,
@@ -1162,6 +1213,7 @@ function put_subscription_appointment(
 ) {
   return exec_query('INSERT INTO appointments (
     id,
+    humid,
     subscription_id,
     title,
     content,
@@ -1171,8 +1223,9 @@ function put_subscription_appointment(
     meeting,
     all_day,
     recurrence
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
     $id,
+    put_humid('appointment'),
     $subscription_id,
     $title,
     $content,
@@ -1367,6 +1420,11 @@ function get_appointment($id) {
   WHERE a.id = ?', [$id]);
 }
 
+function get_appointment_by_humid($humid) {
+  $appointment = one('SELECT id FROM appointments WHERE humid = ?', [$humid]);
+  return $appointment ? get_appointment($appointment['id']) : false;
+}
+
 function delete_appointment($id) {
   return exec_query('DELETE FROM appointments WHERE id = ?', [$id]);
 }
@@ -1381,7 +1439,7 @@ function put_habit($title, $every, $color, $icon) {
     color,
     icon
   ) VALUES (?, ?, ?, ?, ?)', [
-    $id = generate_humid(),
+    $id = put_humid('habit'),
     $title,
     $every,
     $color,
@@ -1553,20 +1611,22 @@ function put_contact(
   $timezone,
   $note
 ) {
-  [$birth_day, $birth_month, $birth_year] = validate_birthday($birth_day, $birth_month, $birth_year);
+  [$birth_day, $birth_month, $birth_year] =
+    validate_date($birth_day, $birth_month, $birth_year, what: "birthday");
+
   [$anniversary_day, $anniversary_month, $anniversary_year] =
-    validate_birthday($anniversary_day, $anniversary_month, $anniversary_year, what: "anniversary");
+    validate_date($anniversary_day, $anniversary_month, $anniversary_year, what: "anniversary");
 
   exec_query('INSERT INTO contacts
-    (display_name, first_name, middle_name, legal_infix, legal_name, family_infix, family_name, name_order,
+    (id, display_name, first_name, middle_name, legal_infix, legal_name, family_infix, family_name, name_order,
       nickname, pronouns, birth_day, birth_month, birth_year,
       anniversary_day, anniversary_month, anniversary_year, timezone, note)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    [$display_name, $first_name, $middle_name, $legal_infix, $legal_name, $family_infix, $family_name, $name_order,
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [$id = put_humid('contact'), $display_name, $first_name, $middle_name, $legal_infix, $legal_name, $family_infix, $family_name, $name_order,
       $nickname, $pronouns, $birth_day, $birth_month, $birth_year,
       $anniversary_day, $anniversary_month, $anniversary_year, $timezone, $note]);
 
-  return DBH->lastInsertId();
+  return $id;
 }
 
 function update_contact(
@@ -1590,9 +1650,11 @@ function update_contact(
   $timezone,
   $note
 ) {
-  [$birth_day, $birth_month, $birth_year] = validate_birthday($birth_day, $birth_month, $birth_year);
+  [$birth_day, $birth_month, $birth_year] =
+    validate_date($birth_day, $birth_month, $birth_year, what: "birthday");
+
   [$anniversary_day, $anniversary_month, $anniversary_year] =
-    validate_birthday($anniversary_day, $anniversary_month, $anniversary_year, what: "anniversary");
+    validate_date($anniversary_day, $anniversary_month, $anniversary_year, what: "anniversary");
 
   return exec_query('UPDATE contacts SET
     display_name = ?, first_name = ?, middle_name = ?, legal_infix = ?, legal_name = ?,
@@ -1651,12 +1713,32 @@ function delete_contact($id) {
   return exec_query('DELETE FROM contacts WHERE id = ?', [$id]);
 }
 
-function validate_birthday($day, $month, $year, $what = "birthday") {
-  if(($day === null) !== ($month === null)) fail("Invalid $what.", status: 400);
-  if($year !== null && $day === null) fail("Invalid $what.", status: 400);
-  if($day !== null && !checkdate($month, $day, $year ?: 2000)) fail("Invalid $what.", status: 400);
+function list_all_contact_emails() {
+  return all('SELECT * FROM contact_emails ORDER BY contact_id, id');
+}
 
-  return [$day, $month, $year];
+function list_all_contact_phone_numbers() {
+  return all('SELECT * FROM contact_phone_numbers ORDER BY contact_id, id');
+}
+
+function list_all_contact_urls() {
+  return all('SELECT * FROM contact_urls ORDER BY contact_id, id');
+}
+
+function list_all_contact_socials() {
+  return all('SELECT * FROM contact_socials ORDER BY contact_id, id');
+}
+
+function list_all_contact_roles() {
+  return all('SELECT contact_roles.*, organisations.display_name AS organisation_name
+    FROM contact_roles
+    JOIN organisations ON organisations.id = contact_roles.org_id
+    ORDER BY contact_roles.contact_id, contact_roles.id');
+}
+
+function list_all_contact_addresses() {
+  return all('SELECT a.*, ca.contact_id, ca.label AS link_label FROM contact_addresses ca
+    JOIN addresses a ON a.id = ca.address_id ORDER BY ca.contact_id, ca.id');
 }
 
 function list_organisations() {
@@ -1682,6 +1764,11 @@ function list_organisations() {
       FROM org_socials
       WHERE org_socials.org_id = organisations.id
     ) AS handles FROM organisations");
+}
+
+function list_organisations_by_normalized_name($name) {
+  return all('SELECT * FROM organisations
+    WHERE EXO_NORMALIZE(display_name) = EXO_NORMALIZE(?)', [$name]);
 }
 
 function get_organisation($id) {
@@ -1750,11 +1837,11 @@ function set_organisation_tags($id, $tag_ids) {
 
 function put_organisation($display_name, $legal_name, $registration_number, $vat_number, $timezone, $note) {
   exec_query('INSERT INTO organisations
-    (display_name, legal_name, registration_number, vat_number, timezone, note)
-    VALUES (?, ?, ?, ?, ?, ?)',
-    [$display_name, $legal_name, $registration_number, $vat_number, $timezone, $note]);
+    (id, display_name, legal_name, registration_number, vat_number, timezone, note)
+    VALUES (?, ?, ?, ?, ?, ?, ?)',
+    [$id = put_humid('organisation'), $display_name, $legal_name, $registration_number, $vat_number, $timezone, $note]);
 
-  return DBH->lastInsertId();
+  return $id;
 }
 
 function update_organisation($id, $display_name, $legal_name, $registration_number, $vat_number, $timezone, $note) {
@@ -1796,6 +1883,50 @@ function delete_organisation($id) {
   return exec_query('DELETE FROM organisations WHERE id = ?', [$id]);
 }
 
+function list_all_org_emails() {
+  return all('SELECT * FROM org_emails ORDER BY org_id, id');
+}
+
+function list_all_org_phone_numbers() {
+  return all('SELECT * FROM org_phone_numbers ORDER BY org_id, id');
+}
+
+function list_all_org_urls() {
+  return all('SELECT * FROM org_urls ORDER BY org_id, id');
+}
+
+function list_all_org_socials() {
+  return all('SELECT * FROM org_socials ORDER BY org_id, id');
+}
+
+function list_all_org_addresses() {
+  return all('SELECT a.*, oa.org_id, oa.label AS link_label FROM org_addresses oa
+    JOIN addresses a ON a.id = oa.address_id ORDER BY oa.org_id, oa.id');
+}
+
+// Contact & organisations helpers
+
+function validate_date($day, $month, $year, $what) {
+  if(($day === null) !== ($month === null)) fail("Invalid $what.", status: 400);
+  if($year !== null && $day === null) fail("Invalid $what.", status: 400);
+  if($day !== null && !checkdate($month, $day, $year ?: 2000)) fail("Invalid $what.", status: 400);
+
+  return [$day, $month, $year];
+}
+
+function set_children($table, $fk, $id, $rows) {
+  exec_query("DELETE FROM $table WHERE $fk = ?", [$id]);
+
+  foreach($rows as $row) {
+    $cols = array_keys($row);
+    $names = implode(", ", array_map(fn($c) => "$c", [$fk, ...$cols]));
+    $marks = implode(", ", array_fill(0, count($cols) + 1, "?"));
+    exec_query("INSERT INTO $table ($names) VALUES ($marks)", [$id, ...array_values($row)]);
+  }
+}
+
+// Profile pictures
+
 function get_profile_picture($type, $id) {
   $fk = match($type) {
     'contact' => 'contact_id',
@@ -1834,17 +1965,6 @@ function delete_profile_picture($type, $id) {
   return exec_query("DELETE FROM profile_pictures WHERE $fk = ?", [$id]);
 }
 
-function set_children($table, $fk, $id, $rows) {
-  exec_query("DELETE FROM $table WHERE $fk = ?", [$id]);
-
-  foreach($rows as $row) {
-    $cols = array_keys($row);
-    $names = implode(", ", array_map(fn($c) => "$c", [$fk, ...$cols]));
-    $marks = implode(", ", array_fill(0, count($cols) + 1, "?"));
-    exec_query("INSERT INTO $table ($names) VALUES ($marks)", [$id, ...array_values($row)]);
-  }
-}
-
 // Addresses
 
 function list_addresses() {
@@ -1873,13 +1993,15 @@ function put_address($label, $street_address, $postal_code, $city, $province, $c
   if($existing) return $existing['id'];
 
   exec_query('INSERT INTO addresses (
+    id,
     label,
     street_address,
     postal_code,
     city,
     province,
     country
-  ) VALUES (?, ?, ?, ?, ?, ?)', [
+  ) VALUES (?, ?, ?, ?, ?, ?, ?)', [
+    $id = put_humid('address'),
     $label,
     $street_address,
     $postal_code,
@@ -1888,7 +2010,7 @@ function put_address($label, $street_address, $postal_code, $city, $province, $c
     $country
   ]);
 
-  return DBH->lastInsertId();
+  return $id;
 }
 
 function update_address($id, $label, $street_address, $postal_code, $city, $province, $country) {
@@ -2047,7 +2169,7 @@ function replace_alarms($type, $id, $alarms) {
       id, appointment_id, task_id, wish_id, trigger_at,
       trigger_offset, relative_to, description
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [
-      @$alarm['id'] ?: generate_humid(),
+      @$alarm['id'] ? reserve_humid('alarm', $alarm['id']) : put_humid('alarm'),
       $values['appointment_id'],
       $values['task_id'],
       $values['wish_id'],
@@ -2061,7 +2183,7 @@ function replace_alarms($type, $id, $alarms) {
   return true;
 }
 
-// Retained DAV properties
+// CalDav and CardDAV properties
 
 define('PROPERTY_OWNERS', [
   'appointment' => 'appointment_id',
@@ -2115,18 +2237,23 @@ function replace_properties($type, $id, $properties, $log = true) {
   return true;
 }
 
-// Debug-logs which retained properties appeared and disappeared in a
-// replacement. Properties are compared as a multiset over group, name,
-// parameters and value, so a changed parameter or value shows up as one
-// deletion plus one addition. Values never reach the log. Alarms have no
-// stable identity across CalDAV writes, so callers diff those as one
-// aggregated multiset per parent entity instead of per alarm row.
+function list_all_properties($type) {
+  $key = @PROPERTY_OWNERS[$type];
+
+  return $key ? all("SELECT * FROM properties
+    WHERE $key IS NOT NULL ORDER BY $key, position, id") : [];
+}
+
+// TODO(robin): this does not belong in store!! bad agent.
+// (but also bad human bc i shouldve checked the output better)
 function log_property_changes($entity, $previous, $stored) {
   $counts = [];
+
   foreach($previous as $row) {
     $key = json_encode([@$row['group_name'], $row['name'], $row['parameters'], $row['value']]);
     $counts[$key] = @$counts[$key] - 1;
   }
+
   foreach($stored as $row) {
     $key = json_encode([@$row['group_name'], $row['name'], $row['parameters'], $row['value']]);
     $counts[$key] = @$counts[$key] + 1;
@@ -2142,8 +2269,10 @@ function log_property_changes($entity, $previous, $stored) {
   }
 
   if(!$added && !$deleted) return;
+
   sort($added);
   sort($deleted);
+
   \logger\debug("Replaced retained properties for $entity.", [
     'entity' => $entity,
     'added' => $added,
@@ -2288,8 +2417,45 @@ function list_carddav_changes($collection, $revision) {
     ORDER BY c.revision, c.href', [$collection, $revision]);
 }
 
-// Bulk contact-book listings, used by the CardDAV reconciliation to
-// fingerprint every card without a query storm per entity.
+// Tags
+
+function list_all_contact_tags() {
+  return all('SELECT ct.contact_id, t.id, t.label FROM contacts_tags ct
+    JOIN tags t ON t.id = ct.tag_id ORDER BY ct.contact_id, ct.id');
+}
+
+function list_all_org_tags() {
+  return all('SELECT ot.org_id, t.id, t.label FROM orgs_tags ot
+    JOIN tags t ON t.id = ot.tag_id ORDER BY ot.org_id, ot.id');
+}
+
+function list_all_note_tags() {
+  return all('SELECT note_id, tag_id FROM notes_tags ORDER BY note_id, tag_id');
+}
+
+function list_all_task_tags() {
+  return all('SELECT task_id, tag_id FROM tasks_tags ORDER BY task_id, tag_id');
+}
+
+function list_all_wish_tags() {
+  return all('SELECT wish_id, tag_id FROM wishes_tags ORDER BY wish_id, tag_id');
+}
+
+function list_all_bookmark_tags() {
+  return all('SELECT bookmark_id, tag_id FROM bookmarks_tags ORDER BY bookmark_id, tag_id');
+}
+
+function list_all_timing_tags() {
+  return all('SELECT timing_id, tag_id FROM timings_tags ORDER BY timing_id, tag_id');
+}
+
+function list_all_appointment_tags() {
+  return all('SELECT at.appointment_id, t.id, t.label FROM appointments_tags at
+    JOIN tags t ON t.id = at.tag_id
+    ORDER BY at.appointment_id, t.position ASC, t.id DESC');
+}
+
+// Bulk exports.
 
 function list_contact_rows() {
   return all('SELECT * FROM contacts ORDER BY id');
@@ -2302,79 +2468,6 @@ function list_organisation_rows() {
 function list_tag_rows() {
   return all('SELECT * FROM tags ORDER BY id');
 }
-
-function list_all_contact_emails() {
-  return all('SELECT * FROM contact_emails ORDER BY contact_id, id');
-}
-
-function list_all_contact_phone_numbers() {
-  return all('SELECT * FROM contact_phone_numbers ORDER BY contact_id, id');
-}
-
-function list_all_contact_urls() {
-  return all('SELECT * FROM contact_urls ORDER BY contact_id, id');
-}
-
-function list_all_contact_socials() {
-  return all('SELECT * FROM contact_socials ORDER BY contact_id, id');
-}
-
-function list_all_contact_roles() {
-  return all('SELECT contact_roles.*, organisations.display_name AS organisation_name
-    FROM contact_roles
-    JOIN organisations ON organisations.id = contact_roles.org_id
-    ORDER BY contact_roles.contact_id, contact_roles.id');
-}
-
-function list_all_contact_addresses() {
-  return all('SELECT a.*, ca.contact_id, ca.label AS link_label FROM contact_addresses ca
-    JOIN addresses a ON a.id = ca.address_id ORDER BY ca.contact_id, ca.id');
-}
-
-function list_all_contact_tags() {
-  return all('SELECT ct.contact_id, t.id, t.label FROM contacts_tags ct
-    JOIN tags t ON t.id = ct.tag_id ORDER BY ct.contact_id, ct.id');
-}
-
-function list_all_org_emails() {
-  return all('SELECT * FROM org_emails ORDER BY org_id, id');
-}
-
-function list_all_org_phone_numbers() {
-  return all('SELECT * FROM org_phone_numbers ORDER BY org_id, id');
-}
-
-function list_all_org_urls() {
-  return all('SELECT * FROM org_urls ORDER BY org_id, id');
-}
-
-function list_all_org_socials() {
-  return all('SELECT * FROM org_socials ORDER BY org_id, id');
-}
-
-function list_all_org_addresses() {
-  return all('SELECT a.*, oa.org_id, oa.label AS link_label FROM org_addresses oa
-    JOIN addresses a ON a.id = oa.address_id ORDER BY oa.org_id, oa.id');
-}
-
-function list_all_org_tags() {
-  return all('SELECT ot.org_id, t.id, t.label FROM orgs_tags ot
-    JOIN tags t ON t.id = ot.tag_id ORDER BY ot.org_id, ot.id');
-}
-
-function list_all_properties($type) {
-  $key = @PROPERTY_OWNERS[$type];
-
-  return $key ? all("SELECT * FROM properties
-    WHERE $key IS NOT NULL ORDER BY $key, position, id") : [];
-}
-
-function list_organisations_by_normalized_name($name) {
-  return all('SELECT * FROM organisations
-    WHERE EXO_NORMALIZE(display_name) = EXO_NORMALIZE(?)', [$name]);
-}
-
-// Bulk exports.
 
 function list_note_rows() {
   return all('SELECT * FROM notes ORDER BY id');
@@ -2404,32 +2497,6 @@ function list_quota_rows() {
   return all('SELECT * FROM quotas ORDER BY tag_id');
 }
 
-function list_all_note_tags() {
-  return all('SELECT note_id, tag_id FROM notes_tags ORDER BY note_id, tag_id');
-}
-
-function list_all_task_tags() {
-  return all('SELECT task_id, tag_id FROM tasks_tags ORDER BY task_id, tag_id');
-}
-
-function list_all_wish_tags() {
-  return all('SELECT wish_id, tag_id FROM wishes_tags ORDER BY wish_id, tag_id');
-}
-
-function list_all_bookmark_tags() {
-  return all('SELECT bookmark_id, tag_id FROM bookmarks_tags ORDER BY bookmark_id, tag_id');
-}
-
-function list_all_timing_tags() {
-  return all('SELECT timing_id, tag_id FROM timings_tags ORDER BY timing_id, tag_id');
-}
-
-function list_all_appointment_tags() {
-  return all('SELECT at.appointment_id, t.id, t.label FROM appointments_tags at
-    JOIN tags t ON t.id = at.tag_id
-    ORDER BY at.appointment_id, t.position ASC, t.id DESC');
-}
-
 function list_all_task_logs() {
   return all('SELECT * FROM task_log ORDER BY task_id, changed_at, id');
 }
@@ -2451,6 +2518,144 @@ function list_log_dates($table) {
     MIN(changed_at) AS created_at,
     MAX(changed_at) AS modified_at
     FROM audit_log WHERE table_name = ? GROUP BY record_id', [$table]);
+}
+
+// Global search
+
+function search($query) {
+  [$tags, $terms, $selectors] = \core\parse_query($query);
+
+  $aliases = [
+    'note' => 'note', 'notes' => 'note',
+    'todo' => 'todo', 'task' => 'todo', 'tasks' => 'todo',
+    'wish' => 'wish', 'wishes' => 'wish',
+    'appointment' => 'appointment', 'appointments' => 'appointment',
+    'timing' => 'timing', 'timings' => 'timing',
+    'bookmark' => 'bookmark', 'bookmarks' => 'bookmark',
+    'contact' => 'contact', 'person' => 'contact', 'people' => 'contact',
+    'organisation' => 'organisation', 'organisations' => 'organisation',
+    'organization' => 'organisation', 'organizations' => 'organisation', 'org' => 'organisation',
+    'address' => 'address', 'addresses' => 'address',
+  ];
+
+  $selected = [];
+  foreach($selectors as [$key, $value]) {
+    if($key == 'type' && isset($aliases[strtolower($value)]))
+      $selected[] = $aliases[strtolower($value)];
+  }
+  $selected = array_values(array_unique($selected));
+  $allows = fn($type) => !$selected || in_array($type, $selected);
+  $rows = [];
+
+  if($allows('note')) foreach(search_entity('notes', $terms, $tags,
+    ['notes.id', 'notes.title', 'notes.content'], 'notes_tags', 'note_id') as $row) {
+    $rows[] = [...$row, 'type' => 'note', 'humid' => $row['id'],
+      'title' => $row['title'] ?: "Untitled note"];
+  }
+
+  if($allows('todo')) foreach(search_entity('tasks', $terms, $tags,
+    ['tasks.id', 'tasks.title', 'tasks.content'], 'tasks_tags', 'task_id') as $row) {
+    $row['status'] = @one('SELECT status FROM task_log WHERE task_id = ? ORDER BY changed_at DESC, id DESC', [$row['id']])['status'];
+    $rows[] = [...$row, 'type' => 'todo', 'humid' => $row['id']];
+  }
+
+  if($allows('wish')) foreach(search_entity('wishes', $terms, $tags,
+    ['wishes.id', 'wishes.title', 'wishes.content'], 'wishes_tags', 'wish_id') as $row) {
+    $row['status'] = @one('SELECT status FROM wish_log WHERE wish_id = ? ORDER BY changed_at DESC, id DESC', [$row['id']])['status'];
+    $row['total_price'] = one('SELECT SUM(price) AS total FROM wish_urls WHERE wish_id = ?', [$row['id']])['total'];
+    $rows[] = [...$row, 'type' => 'wish', 'humid' => $row['id']];
+  }
+
+  if($allows('appointment')) foreach(search_entity('appointments', $terms, $tags,
+    ['appointments.humid', 'appointments.id', 'appointments.title', 'appointments.content',
+      'appointments.location', 'appointments.meeting'], 'appointments_tags', 'appointment_id') as $row) {
+    $rows[] = [...$row, 'type' => 'appointment'];
+  }
+
+  if($allows('timing')) foreach(search_entity('timings', $terms, $tags,
+    ['timings.id', 'timings.description'], 'timings_tags', 'timing_id') as $row) {
+    $rows[] = [...$row, 'type' => 'timing', 'humid' => $row['id'], 'title' => $row['description']];
+  }
+
+  if($allows('bookmark')) foreach(search_entity('bookmarks', $terms, $tags,
+    ['bookmarks.id', 'bookmarks.label', 'bookmarks.url', 'bookmarks.note'], 'bookmarks_tags', 'bookmark_id') as $row) {
+    $rows[] = [...$row, 'type' => 'bookmark', 'humid' => $row['id'],
+      'title' => $row['label'] ?: $row['url'], 'extra' => $row['label'] ? $row['url'] : null];
+  }
+
+  if($allows('contact')) foreach(search_entity('contacts', $terms, $tags,
+    ['contacts.id', 'contacts.display_name', 'contacts.first_name', 'contacts.middle_name',
+      'contacts.legal_infix', 'contacts.legal_name', 'contacts.family_infix', 'contacts.family_name',
+      'contacts.nickname', 'contacts.note',
+      "(SELECT EXO_CONCAT(email, ' ') FROM contact_emails WHERE contact_id = contacts.id)",
+      "(SELECT EXO_CONCAT(phone_number, ' ') FROM contact_phone_numbers WHERE contact_id = contacts.id)",
+      "(SELECT EXO_CONCAT(handle, ' ') FROM contact_socials WHERE contact_id = contacts.id)",
+      "(SELECT EXO_CONCAT(organisations.display_name, ' ') FROM contact_roles JOIN organisations ON organisations.id = contact_roles.org_id WHERE contact_roles.contact_id = contacts.id)"],
+      'contacts_tags', 'contact_id') as $row) {
+    $title = str_implode(" ", [$row['first_name'], $row['middle_name'], \contacts\contact_surname($row)]);
+    $display = CONTACTS_PREFER_NICKNAME && is_nonempty_str($row['nickname'])
+      ? $row['nickname'] : $row['display_name'];
+    $rows[] = [...$row, 'type' => 'contact', 'humid' => $row['id'], 'title' => $title,
+      'extra' => $display != $title ? $display : null];
+  }
+
+  if($allows('organisation')) foreach(search_entity('organisations', $terms, $tags,
+    ['organisations.id', 'organisations.display_name', 'organisations.legal_name',
+      'organisations.registration_number', 'organisations.vat_number', 'organisations.note',
+      "(SELECT EXO_CONCAT(email, ' ') FROM org_emails WHERE org_id = organisations.id)",
+      "(SELECT EXO_CONCAT(phone_number, ' ') FROM org_phone_numbers WHERE org_id = organisations.id)",
+      "(SELECT EXO_CONCAT(handle, ' ') FROM org_socials WHERE org_id = organisations.id)"],
+      'orgs_tags', 'org_id') as $row) {
+    $rows[] = [...$row, 'type' => 'organisation', 'humid' => $row['id'],
+      'title' => $row['display_name'], 'extra' => $row['legal_name']];
+  }
+
+  if($allows('address')) foreach(search_entity('addresses', $terms, $tags,
+    ['addresses.id', 'addresses.label', 'addresses.street_address', 'addresses.postal_code',
+      'addresses.city', 'addresses.province', 'addresses.country']) as $row) {
+    $line = address_line($row);
+    $rows[] = [...$row, 'type' => 'address', 'humid' => $row['id'],
+      'title' => $row['label'] ?: $line, 'extra' => $row['label'] ? $line : null];
+  }
+
+  $score = function($row) use ($terms) {
+    $title = str_normalize($row['title']);
+    $positions = array_map(function($term) use ($title) {
+      $position = mb_strpos($title, str_normalize($term));
+      return $position === false ? 1000 : $position;
+    }, $terms);
+    return array_sum($positions);
+  };
+
+  usort($rows, fn($a, $b) =>
+    $score($a) <=> $score($b) ?:
+    strcasecmp($a['title'], $b['title']));
+
+  return $rows;
+}
+
+function search_entity($table, $terms, $tags, $columns, $tag_table = null, $tag_fk = null) {
+  $where = [];
+  $params = [];
+
+  foreach($terms as $term) {
+    $matches = [];
+    foreach($columns as $column) {
+      $matches[] = "EXO_NORMALIZE($column) LIKE EXO_NORMALIZE(?)";
+      $params[] = "%$term%";
+    }
+    $where[] = '(' . join(' OR ', $matches) . ')';
+  }
+
+  foreach($tags as $tag) {
+    if(!$tag_table) return [];
+    $where[] = "EXISTS (SELECT 1 FROM $tag_table st WHERE st.$tag_fk = $table.id AND st.tag_id = ?)";
+    $params[] = $tag;
+  }
+
+  $sql = "SELECT $table.* FROM $table";
+  if($where) $sql .= ' WHERE ' . join(' AND ', $where);
+  return all($sql, $params);
 }
 
 // Configuration

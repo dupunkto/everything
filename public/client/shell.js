@@ -28,3 +28,49 @@ if (!window.autocomplete_bound) {
     if (e.target.matches?.("input:not([autocomplete])")) e.target.setAttribute("autocomplete", "off");
   });
 }
+
+if (!window.global_search_bound) {
+  window.global_search_bound = true;
+
+  const restore_search_focus = (search) => {
+    search?.z_return_focus?.focus?.();
+    delete search?.z_return_focus;
+  };
+
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest("[data-global-search-toggle]")) return;
+
+    const search = document.querySelector("#global-search");
+    if (!search || search.hidden) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+    const input = search.querySelector(".global-search__input");
+    input?.focus();
+    input?.select();
+  }, true);
+
+  document.addEventListener("click", (e) => {
+    const search = document.querySelector("#global-search");
+
+    if (e.target.closest("[data-global-search-toggle]")) {
+      if (!search) return;
+      if (search.hidden) {
+        restore_search_focus(search);
+        return;
+      }
+      search.z_return_focus = document.activeElement;
+      const input = search.querySelector(".global-search__input");
+      input?.focus();
+      input?.select();
+      return;
+    }
+
+    if (e.target.closest(".global-search__backdrop") && search?.hidden) restore_search_focus(search);
+  });
+
+  document.addEventListener("keydown", (e) => {
+    const search = document.querySelector("#global-search");
+    if (e.key == "Escape" && search?.hidden) restore_search_focus(search);
+  });
+}

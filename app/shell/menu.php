@@ -27,3 +27,26 @@ $actions = $section ? path_join(__DIR__, "..", $section, "actions.php") : null;
     <i class="fa-solid fa-chevron-left"></i>
   </button>
 </nav>
+
+<button type="button" z-key="mod+/ mod+k" z-toggle="#global-search" data-global-search-toggle hidden></button>
+<div id="global-search" class="global-search" role="dialog" aria-modal="true" aria-label="Global search" z-dismiss="escape" hidden>
+  <button type="button" class="global-search__backdrop" z-toggle="#global-search" aria-label="Close search"></button>
+  <section class="global-search__content" z-nav=".global-search__input, .global-search__item">
+    <form id="global-search-form" class="global-search__bar">
+      <input
+        class="global-search__input"
+        name="q"
+        type="search"
+        placeholder="Search everything…"
+        aria-label="Search everything"
+        x-get="/search/listing"
+        x-on="input"
+        x-target="#global-search-results"
+        x-data="#global-search-form"
+      >
+    </form>
+    <section class="global-search__panel">
+      <section id="global-search-results" aria-live="polite"></section>
+    </section>
+  </section>
+</div>

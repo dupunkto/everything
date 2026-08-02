@@ -58,8 +58,15 @@ CREATE TABLE IF NOT EXISTS tags (
   PRIMARY KEY (id)
 );
 
+CREATE TABLE IF NOT EXISTS humids (
+  id text NOT NULL,
+  type text NOT NULL,
+  CHECK (type IN ('note', 'todo', 'wish', 'appointment', 'timing', 'bookmark', 'contact', 'organisation', 'address', 'habit', 'calendar', 'subscription', 'share', 'alarm')),
+  PRIMARY KEY (id)
+);
+
 CREATE TABLE IF NOT EXISTS contacts (
-  id int(11) NOT NULL AUTO_INCREMENT,
+  id text NOT NULL, -- humid
   display_name text,
   first_name text NOT NULL,
   middle_name text,
@@ -83,24 +90,26 @@ CREATE TABLE IF NOT EXISTS contacts (
   CHECK (birth_year IS NULL OR (birth_day IS NOT NULL AND birth_month IS NOT NULL)),
   CHECK ((anniversary_day IS NULL) = (anniversary_month IS NULL)),
   CHECK (anniversary_year IS NULL OR (anniversary_day IS NOT NULL AND anniversary_month IS NOT NULL)),
+  FOREIGN KEY (id) REFERENCES humids (id),
   PRIMARY KEY (id)
 );
 
 CREATE TABLE IF NOT EXISTS organisations (
-  id int(11) NOT NULL AUTO_INCREMENT,
+  id text NOT NULL, -- humid
   display_name text NOT NULL,
   legal_name text,
   registration_number text,
   vat_number text,
   timezone text,
   note text,
+  FOREIGN KEY (id) REFERENCES humids (id),
   PRIMARY KEY (id)
 );
 
 CREATE TABLE IF NOT EXISTS profile_pictures (
   id int(11) NOT NULL AUTO_INCREMENT,
-  contact_id int(11),
-  org_id int(11),
+  contact_id text,
+  org_id text,
   mime_type text NOT NULL,
   content mediumblob NOT NULL,
   content_hash text NOT NULL,
@@ -114,7 +123,7 @@ CREATE TABLE IF NOT EXISTS profile_pictures (
 
 CREATE TABLE IF NOT EXISTS contacts_tags (
   id int(11) NOT NULL AUTO_INCREMENT,
-  contact_id int(11) NOT NULL,
+  contact_id text NOT NULL,
   tag_id int(11) NOT NULL,
   FOREIGN KEY (contact_id) REFERENCES contacts (id) ON DELETE CASCADE,
   FOREIGN KEY (tag_id) REFERENCES tags (id) ON DELETE CASCADE,
@@ -124,7 +133,7 @@ CREATE TABLE IF NOT EXISTS contacts_tags (
 
 CREATE TABLE IF NOT EXISTS orgs_tags (
   id int(11) NOT NULL AUTO_INCREMENT,
-  org_id int(11) NOT NULL,
+  org_id text NOT NULL,
   tag_id int(11) NOT NULL,
   FOREIGN KEY (org_id) REFERENCES organisations (id) ON DELETE CASCADE,
   FOREIGN KEY (tag_id) REFERENCES tags (id) ON DELETE CASCADE,
@@ -134,8 +143,8 @@ CREATE TABLE IF NOT EXISTS orgs_tags (
 
 CREATE TABLE IF NOT EXISTS contact_roles (
   id int(11) NOT NULL AUTO_INCREMENT,
-  contact_id int(11) NOT NULL,
-  org_id int(11) NOT NULL,
+  contact_id text NOT NULL,
+  org_id text NOT NULL,
   role text,
   main boolean NOT NULL DEFAULT false,
   FOREIGN KEY (contact_id) REFERENCES contacts (id) ON DELETE CASCADE,
@@ -145,7 +154,7 @@ CREATE TABLE IF NOT EXISTS contact_roles (
 
 CREATE TABLE IF NOT EXISTS contact_socials (
   id int(11) NOT NULL AUTO_INCREMENT,
-  contact_id int(11) NOT NULL,
+  contact_id text NOT NULL,
   handle text NOT NULL,
   type text NOT NULL, -- str<instagram|discord|snapchat|linkedin|matrix|pinterest
                         -- twitter|youtube|facebook|activitypub|bsky>
@@ -155,7 +164,7 @@ CREATE TABLE IF NOT EXISTS contact_socials (
 
 CREATE TABLE IF NOT EXISTS org_socials (
   id int(11) NOT NULL AUTO_INCREMENT,
-  org_id int(11) NOT NULL,
+  org_id text NOT NULL,
   type text NOT NULL, -- instagram|discord|snapchat|linkedin|pinterest|youtube|facebook
   handle text NOT NULL,
   FOREIGN KEY (org_id) REFERENCES organisations (id) ON DELETE CASCADE,
@@ -164,7 +173,7 @@ CREATE TABLE IF NOT EXISTS org_socials (
 
 CREATE TABLE IF NOT EXISTS contact_urls (
   id int(11) NOT NULL AUTO_INCREMENT,
-  contact_id int(11) NOT NULL,
+  contact_id text NOT NULL,
   label text,
   url text NOT NULL,
   FOREIGN KEY (contact_id) REFERENCES contacts (id) ON DELETE CASCADE,
@@ -174,7 +183,7 @@ CREATE TABLE IF NOT EXISTS contact_urls (
 
 CREATE TABLE IF NOT EXISTS org_urls (
   id int(11) NOT NULL AUTO_INCREMENT,
-  org_id int(11) NOT NULL,
+  org_id text NOT NULL,
   label text,
   url text NOT NULL,
   FOREIGN KEY (org_id) REFERENCES organisations (id) ON DELETE CASCADE,
@@ -184,7 +193,7 @@ CREATE TABLE IF NOT EXISTS org_urls (
 
 CREATE TABLE IF NOT EXISTS contact_emails (
   id int(11) NOT NULL AUTO_INCREMENT,
-  contact_id int(11) NOT NULL,
+  contact_id text NOT NULL,
   label text,
   email text NOT NULL,
   FOREIGN KEY (contact_id) REFERENCES contacts (id) ON DELETE CASCADE,
@@ -194,7 +203,7 @@ CREATE TABLE IF NOT EXISTS contact_emails (
 
 CREATE TABLE IF NOT EXISTS org_emails (
   id int(11) NOT NULL AUTO_INCREMENT,
-  org_id int(11) NOT NULL,
+  org_id text NOT NULL,
   label text,
   email text NOT NULL,
   FOREIGN KEY (org_id) REFERENCES organisations (id) ON DELETE CASCADE,
@@ -204,7 +213,7 @@ CREATE TABLE IF NOT EXISTS org_emails (
 
 CREATE TABLE IF NOT EXISTS contact_phone_numbers (
   id int(11) NOT NULL AUTO_INCREMENT,
-  contact_id int(11) NOT NULL,
+  contact_id text NOT NULL,
   label text,
   phone_number text NOT NULL,
   FOREIGN KEY (contact_id) REFERENCES contacts (id) ON DELETE CASCADE,
@@ -214,7 +223,7 @@ CREATE TABLE IF NOT EXISTS contact_phone_numbers (
 
 CREATE TABLE IF NOT EXISTS org_phone_numbers (
   id int(11) NOT NULL AUTO_INCREMENT,
-  org_id int(11) NOT NULL,
+  org_id text NOT NULL,
   label text,
   phone_number text NOT NULL,
   FOREIGN KEY (org_id) REFERENCES organisations (id) ON DELETE CASCADE,
@@ -223,7 +232,7 @@ CREATE TABLE IF NOT EXISTS org_phone_numbers (
 );
 
 CREATE TABLE IF NOT EXISTS addresses (
-  id int(11) NOT NULL AUTO_INCREMENT,
+  id text NOT NULL, -- humid
   label text,
   street_address text NOT NULL,
   postal_code text,
@@ -231,14 +240,15 @@ CREATE TABLE IF NOT EXISTS addresses (
   province text,
   country text,
   CHECK (country IN ('AD', 'AE', 'AF', 'AG', 'AI', 'AL', 'AM', 'AO', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AW', 'AX', 'AZ', 'BA', 'BB', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 'BJ', 'BL', 'BM', 'BN', 'BO', 'BQ', 'BR', 'BS', 'BT', 'BV', 'BW', 'BY', 'BZ', 'CA', 'CC', 'CD', 'CF', 'CG', 'CH', 'CI', 'CK', 'CL', 'CM', 'CN', 'CO', 'CR', 'CU', 'CV', 'CW', 'CX', 'CY', 'CZ', 'DE', 'DJ', 'DK', 'DM', 'DO', 'DZ', 'EC', 'EE', 'EG', 'EH', 'ER', 'ES', 'ET', 'FI', 'FJ', 'FK', 'FM', 'FO', 'FR', 'GA', 'GB', 'GD', 'GE', 'GF', 'GG', 'GH', 'GI', 'GL', 'GM', 'GN', 'GP', 'GQ', 'GR', 'GS', 'GT', 'GU', 'GW', 'GY', 'HK', 'HM', 'HN', 'HR', 'HT', 'HU', 'ID', 'IE', 'IL', 'IM', 'IN', 'IO', 'IQ', 'IR', 'IS', 'IT', 'JE', 'JM', 'JO', 'JP', 'KE', 'KG', 'KH', 'KI', 'KM', 'KN', 'KP', 'KR', 'KW', 'KY', 'KZ', 'LA', 'LB', 'LC', 'LI', 'LK', 'LR', 'LS', 'LT', 'LU', 'LV', 'LY', 'MA', 'MC', 'MD', 'ME', 'MF', 'MG', 'MH', 'MK', 'ML', 'MM', 'MN', 'MO', 'MP', 'MQ', 'MR', 'MS', 'MT', 'MU', 'MV', 'MW', 'MX', 'MY', 'MZ', 'NA', 'NC', 'NE', 'NF', 'NG', 'NI', 'NL', 'NO', 'NP', 'NR', 'NU', 'NZ', 'OM', 'PA', 'PE', 'PF', 'PG', 'PH', 'PK', 'PL', 'PM', 'PN', 'PR', 'PS', 'PT', 'PW', 'PY', 'QA', 'RE', 'RO', 'RS', 'RU', 'RW', 'SA', 'SB', 'SC', 'SD', 'SE', 'SG', 'SH', 'SI', 'SJ', 'SK', 'SL', 'SM', 'SN', 'SO', 'SR', 'SS', 'ST', 'SV', 'SX', 'SY', 'SZ', 'TC', 'TD', 'TF', 'TG', 'TH', 'TJ', 'TK', 'TL', 'TM', 'TN', 'TO', 'TR', 'TT', 'TV', 'TW', 'TZ', 'UA', 'UG', 'UM', 'US', 'UY', 'UZ', 'VA', 'VC', 'VE', 'VG', 'VI', 'VN', 'VU', 'WF', 'WS', 'YE', 'YT', 'ZA', 'ZM', 'ZW')),
+  FOREIGN KEY (id) REFERENCES humids (id),
   PRIMARY KEY (id)
 );
 
 CREATE TABLE IF NOT EXISTS contact_addresses (
   id int(11) NOT NULL AUTO_INCREMENT,
-  contact_id int(11) NOT NULL,
+  contact_id text NOT NULL,
   label text,
-  address_id int(11) NOT NULL,
+  address_id text NOT NULL,
   FOREIGN KEY (contact_id) REFERENCES contacts (id) ON DELETE CASCADE,
   FOREIGN KEY (address_id) REFERENCES addresses (id) ON DELETE CASCADE,
   UNIQUE (contact_id, address_id),
@@ -247,9 +257,9 @@ CREATE TABLE IF NOT EXISTS contact_addresses (
 
 CREATE TABLE IF NOT EXISTS org_addresses (
   id int(11) NOT NULL AUTO_INCREMENT,
-  org_id int(11) NOT NULL,
+  org_id text NOT NULL,
   label text,
-  address_id int(11) NOT NULL,
+  address_id text NOT NULL,
   FOREIGN KEY (org_id) REFERENCES organisations (id) ON DELETE CASCADE,
   FOREIGN KEY (address_id) REFERENCES addresses (id) ON DELETE CASCADE,
   UNIQUE (org_id, address_id),
@@ -261,6 +271,7 @@ CREATE TABLE IF NOT EXISTS notes (
   title text,
   content text,
   written_at datetime NOT NULL,
+  FOREIGN KEY (id) REFERENCES humids (id),
   PRIMARY KEY (id)
 );
 
@@ -285,6 +296,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   due_all_day boolean NOT NULL DEFAULT false,
   expire_at datetime,
   -- status is a virtual field, derived from task_log
+  FOREIGN KEY (id) REFERENCES humids (id),
   PRIMARY KEY (id)
 );
 
@@ -315,6 +327,7 @@ CREATE TABLE IF NOT EXISTS wishes (
   added_at datetime NOT NULL,
   -- this name was chosen to stay consistent with the tasks schema
   urgent boolean NOT NULL,
+  FOREIGN KEY (id) REFERENCES humids (id),
   PRIMARY KEY (id)
 );
 
@@ -355,6 +368,7 @@ CREATE TABLE IF NOT EXISTS habits (
   start_date date NOT NULL DEFAULT current_date,
   color text NOT NULL,
   icon text NOT NULL,
+  FOREIGN KEY (id) REFERENCES humids (id),
   PRIMARY KEY (id)
 );
 
@@ -373,6 +387,7 @@ CREATE TABLE IF NOT EXISTS calendars (
   subtitle text,
   color text NOT NULL,
   position int(11) NOT NULL DEFAULT 0,
+  FOREIGN KEY (id) REFERENCES humids (id),
   PRIMARY KEY (id)
 );
 
@@ -386,6 +401,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   history boolean NOT NULL DEFAULT true,
   deduplicate boolean NOT NULL DEFAULT false,
   position int(11) NOT NULL DEFAULT 0,
+  FOREIGN KEY (id) REFERENCES humids (id),
   PRIMARY KEY (id)
 );
 
@@ -395,6 +411,7 @@ CREATE TABLE IF NOT EXISTS shares (
   token text NOT NULL,
   birthdays boolean NOT NULL DEFAULT false,
   deadlines boolean NOT NULL DEFAULT false,
+  FOREIGN KEY (id) REFERENCES humids (id),
   PRIMARY KEY (id),
   UNIQUE (token)
 );
@@ -424,7 +441,8 @@ CREATE TABLE IF NOT EXISTS appointments (
   id text NOT NULL, -- humid|external
   calendar_id text,
   subscription_id text,
-  address_id int(11),
+  humid text NOT NULL,
+  address_id text,
   location text,
   recurrence text, -- RFC 5545 RRULE value
   going boolean NOT NULL DEFAULT true,
@@ -437,12 +455,14 @@ CREATE TABLE IF NOT EXISTS appointments (
   travel_after int(11) NOT NULL DEFAULT 0, -- minutes
   starts_at datetime NOT NULL,
   ends_at datetime NOT NULL,
+  FOREIGN KEY (humid) REFERENCES humids (id),
   FOREIGN KEY (calendar_id) REFERENCES calendars (id) ON DELETE CASCADE,
   FOREIGN KEY (subscription_id) REFERENCES subscriptions (id) ON DELETE CASCADE,
   FOREIGN KEY (address_id) REFERENCES addresses (id) ON DELETE SET NULL,
   CHECK ((calendar_id IS NULL) <> (subscription_id IS NULL)),
   CHECK (ends_at >= starts_at),
   CHECK (travel_before >= 0 AND travel_after >= 0),
+  UNIQUE (humid),
   PRIMARY KEY (id)
 );
 
@@ -486,6 +506,7 @@ CREATE TABLE IF NOT EXISTS alarms (
     (appointment_id IS NULL AND task_id IS NULL AND wish_id IS NOT NULL)
   ),
   CHECK ((trigger_at IS NULL) <> (trigger_offset IS NULL)),
+  FOREIGN KEY (id) REFERENCES humids (id),
   CHECK (
     (trigger_offset IS NULL AND relative_to IS NULL)
     OR
@@ -500,8 +521,8 @@ CREATE TABLE IF NOT EXISTS properties (
   task_id text,
   wish_id text,
   alarm_id text,
-  contact_id int(11),
-  org_id int(11),
+  contact_id text,
+  org_id text,
   tag_id int(11),
   group_name text, -- vCard property group (item1.TEL / item1.X-ABLabel)
   name text NOT NULL,
@@ -592,6 +613,7 @@ CREATE TABLE IF NOT EXISTS timings (
   starts_at datetime NOT NULL,
   ends_at datetime NOT NULL,
   task_id text,
+  FOREIGN KEY (id) REFERENCES humids (id),
   FOREIGN KEY (task_id) REFERENCES tasks (id) ON DELETE SET NULL,
   CHECK (ends_at >= starts_at),
   PRIMARY KEY (id)
@@ -637,6 +659,7 @@ CREATE TABLE IF NOT EXISTS bookmarks (
   note text,
   favicon text,
   saved_at datetime NOT NULL,
+  FOREIGN KEY (id) REFERENCES humids (id),
   PRIMARY KEY (id)
 );
 
