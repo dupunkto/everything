@@ -21,14 +21,14 @@
     $feed = \icalendar\parse_feed($response['body'])
       or fail("Parsing {$_POST['url']} failed: not an iCalendar feed.", status: 400);
 
-    $title = cast_string($feed['title'])
+    $title = cast_str($feed['title'])
       ?? parse_url($_POST['url'], PHP_URL_HOST)
       ?? "Untitled subscription";
 
     $id = \store\put_subscription(
-      cast_string($title),
+      cast_str($title),
       null,
-      cast_string($_POST['url']),
+      cast_str($_POST['url']),
       cast_color($feed['color'] ?? "#efefef")
     );
 

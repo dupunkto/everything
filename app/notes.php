@@ -7,7 +7,7 @@
   </head>
   <body>
     <?php include __DIR__ . "/shell/menu.php" ?>
-    <?php $query = cast_string(@$_GET['q']) ?? "" ?>
+    <?php $query = cast_str(@$_GET['q']) ?? "" ?>
     <main class="main<?= NOTES_LAYOUT == 'masonry' ? ' main--wide' : '' ?> main--scrollable notes notes--<?= esc_attr(NOTES_LAYOUT) ?>" z-nav="#notes-search, .note-card, .listing__item">
       <div class="page-header">
         <h1 class="page-header__title"><strong>Notes</strong></h1>

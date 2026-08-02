@@ -314,7 +314,7 @@ function list_tasks($query = "", $override = [], $respect_horizon = true) {
     if($respect_horizon && !$is_expired && !$state['visible']) continue;
 
     $due = $task['next'] ? new \DateTimeImmutable($task['next']) : null;
-    if($due && cast_boolean($task['due_all_day'])) {
+    if($due && cast_bool($task['due_all_day'])) {
       $due = $due->setTimezone(new \DateTimeZone(TIMEZONE))->modify('+1 day');
     }
     $is_overdue = $due && $due <= $now;
@@ -878,6 +878,14 @@ function get_tag_by_label($label) {
   return one('SELECT * FROM tags WHERE label = ?', [$label]);
 }
 
+function set_tag_members($tag_id, $contact_ids) {
+  exec_query('DELETE FROM contacts_tags WHERE tag_id = ?', [$tag_id]);
+
+  foreach($contact_ids as $contact_id)
+    exec_query('INSERT INTO contacts_tags (contact_id, tag_id) VALUES (?, ?)',
+      [$contact_id, $tag_id]);
+}
+
 function delete_tag($id) {
   return exec_query('DELETE FROM tags WHERE id = ?', [$id]);
 }
@@ -1282,6 +1290,10 @@ function list_recurring_appointments($from, $to) {
   ORDER BY a.starts_at', [$to]);
 }
 
+function list_appointment_tags($id) {
+  return tags_of('appointments_tags', 'appointment_id', $id);
+}
+
 function get_appointment($id) {
   return one('SELECT
     a.*,
@@ -1467,20 +1479,29 @@ function put_contact(
   $family_infix,
   $family_name,
   $name_order,
+  $nickname,
+  $pronouns,
   $birth_day,
   $birth_month,
   $birth_year,
+  $anniversary_day,
+  $anniversary_month,
+  $anniversary_year,
   $timezone,
   $note
 ) {
   [$birth_day, $birth_month, $birth_year] = validate_birthday($birth_day, $birth_month, $birth_year);
+  [$anniversary_day, $anniversary_month, $anniversary_year] =
+    validate_birthday($anniversary_day, $anniversary_month, $anniversary_year, what: "anniversary");
 
   exec_query('INSERT INTO contacts
     (display_name, first_name, middle_name, legal_infix, legal_name, family_infix, family_name, name_order,
-      birth_day, birth_month, birth_year, timezone, note)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      nickname, pronouns, birth_day, birth_month, birth_year,
+      anniversary_day, anniversary_month, anniversary_year, timezone, note)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
     [$display_name, $first_name, $middle_name, $legal_infix, $legal_name, $family_infix, $family_name, $name_order,
-      $birth_day, $birth_month, $birth_year, $timezone, $note]);
+      $nickname, $pronouns, $birth_day, $birth_month, $birth_year,
+      $anniversary_day, $anniversary_month, $anniversary_year, $timezone, $note]);
 
   return DBH->lastInsertId();
 }
@@ -1495,20 +1516,30 @@ function update_contact(
   $family_infix,
   $family_name,
   $name_order,
+  $nickname,
+  $pronouns,
   $birth_day,
   $birth_month,
   $birth_year,
+  $anniversary_day,
+  $anniversary_month,
+  $anniversary_year,
   $timezone,
   $note
 ) {
   [$birth_day, $birth_month, $birth_year] = validate_birthday($birth_day, $birth_month, $birth_year);
+  [$anniversary_day, $anniversary_month, $anniversary_year] =
+    validate_birthday($anniversary_day, $anniversary_month, $anniversary_year, what: "anniversary");
 
   return exec_query('UPDATE contacts SET
     display_name = ?, first_name = ?, middle_name = ?, legal_infix = ?, legal_name = ?,
-    family_infix = ?, family_name = ?, name_order = ?, birth_day = ?, birth_month = ?, birth_year = ?,
+    family_infix = ?, family_name = ?, name_order = ?, nickname = ?, pronouns = ?,
+    birth_day = ?, birth_month = ?, birth_year = ?,
+    anniversary_day = ?, anniversary_month = ?, anniversary_year = ?,
     timezone = ?, note = ? WHERE id = ?',
     [$display_name, $first_name, $middle_name, $legal_infix, $legal_name, $family_infix, $family_name, $name_order,
-      $birth_day, $birth_month, $birth_year, $timezone, $note, $id]);
+      $nickname, $pronouns, $birth_day, $birth_month, $birth_year,
+      $anniversary_day, $anniversary_month, $anniversary_year, $timezone, $note, $id]);
 }
 
 function update_contact_note($id, $note) {
@@ -1532,6 +1563,12 @@ function set_contact_socials($id, $rows) {
 }
 
 function set_contact_roles($id, $rows) {
+  $rows = array_map(fn($row) => [...$row,
+    'main' => cast_bool(@$row['main']) ? 1 : 0], $rows);
+
+  if(count(array_filter(array_column($rows, 'main'))) > 1)
+    fail("A contact can only have one main role.", status: 400);
+
   set_children('contact_roles', 'contact_id', $id, $rows);
 }
 
@@ -1551,10 +1588,10 @@ function delete_contact($id) {
   return exec_query('DELETE FROM contacts WHERE id = ?', [$id]);
 }
 
-function validate_birthday($day, $month, $year) {
-  if(($day === null) !== ($month === null)) fail("Invalid birthday.", status: 400);
-  if($year !== null && $day === null) fail("Invalid birthday.", status: 400);
-  if($day !== null && !checkdate($month, $day, $year ?: 2000)) fail("Invalid birthday.", status: 400);
+function validate_birthday($day, $month, $year, $what = "birthday") {
+  if(($day === null) !== ($month === null)) fail("Invalid $what.", status: 400);
+  if($year !== null && $day === null) fail("Invalid $what.", status: 400);
+  if($day !== null && !checkdate($month, $day, $year ?: 2000)) fail("Invalid $what.", status: 400);
 
   return [$day, $month, $year];
 }
@@ -1643,6 +1680,10 @@ function list_organisation_tags($id) {
   return inherit_tag_colors($tags);
 }
 
+function set_organisation_tags($id, $tag_ids) {
+  set_tags('orgs_tags', 'org_id', $id, $tag_ids);
+}
+
 function put_organisation($display_name, $legal_name, $registration_number, $vat_number, $timezone, $note) {
   exec_query('INSERT INTO organisations
     (display_name, legal_name, registration_number, vat_number, timezone, note)
@@ -1715,8 +1756,11 @@ function get_address($id) {
 
 function find_address($street_address, $postal_code, $city, $country) {
   return one('SELECT id FROM addresses
-    WHERE street_address = ? AND postal_code = ? AND city = ? AND country = ?',
-    [$street_address, $postal_code, $city, $country]);
+    WHERE street_address = ?
+      AND (postal_code = ? OR (postal_code IS NULL AND ? IS NULL))
+      AND (city = ? OR (city IS NULL AND ? IS NULL))
+      AND (country = ? OR (country IS NULL AND ? IS NULL))',
+    [$street_address, $postal_code, $postal_code, $city, $city, $country, $country]);
 }
 
 function put_address($label, $street_address, $postal_code, $city, $province, $country) {
@@ -1768,7 +1812,7 @@ function set_address_links($table, $fk, $id, $rows) {
   exec_query("DELETE FROM $table WHERE $fk = ?", [$id]);
 
   foreach($rows as $row) {
-    if(!in_array($row['country'], \country_codes()))
+    if(@$row['country'] !== null && !in_array($row['country'], \country_codes()))
       fail("Invalid address country.", status: 400);
 
     $current = @$row['id'] ? get_address($row['id']) : null;
@@ -1915,56 +1959,94 @@ function replace_alarms($type, $id, $alarms) {
   return true;
 }
 
-// CalDAV properties
+// Retained DAV properties
+
+define('PROPERTY_OWNERS', [
+  'appointment' => 'appointment_id',
+  'task' => 'task_id',
+  'wish' => 'wish_id',
+  'alarm' => 'alarm_id',
+  'contact' => 'contact_id',
+  'organisation' => 'org_id',
+  'tag' => 'tag_id',
+]);
 
 function list_properties($type, $id) {
-  $key = match($type) {
-    'appointment' => 'appointment_id',
-    'task' => 'task_id',
-    'wish' => 'wish_id',
-    'alarm' => 'alarm_id',
-    default => null
-  };
+  $key = @PROPERTY_OWNERS[$type];
 
   return $key ? all("SELECT * FROM properties WHERE $key = ? ORDER BY position, id", [$id]) : [];
 }
 
-function replace_properties($type, $id, $properties) {
-  $key = match($type) {
-    'appointment' => 'appointment_id',
-    'task' => 'task_id',
-    'wish' => 'wish_id',
-    'alarm' => 'alarm_id',
-    default => null
-  };
-  if(!$key) fail("type $type does not support properties");
+function replace_properties($type, $id, $properties, $log = true) {
+  $key = @PROPERTY_OWNERS[$type] or fail("type $type does not support properties");
+
+  $previous = list_properties($type, $id);
   exec_query("DELETE FROM properties WHERE $key = ?", [$id]);
 
+  $stored = [];
   foreach(array_values($properties) as $position => $property) {
-    $values = [
-      'appointment_id' => null,
-      'task_id' => null,
-      'wish_id' => null,
-      'alarm_id' => null,
+    $values = array_map(fn($column) => null, PROPERTY_OWNERS);
+    $values[$type] = $id;
+
+    $row = [
+      'group_name' => @$property['group'] ?: null,
+      'name' => strtoupper($property['name']),
+      'parameters' => json_encode($property['parameters'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+      'value' => $property['value'],
     ];
-    $values[$key] = $id;
+    $stored[] = $row;
 
     exec_query('INSERT INTO properties (
-      appointment_id, task_id, wish_id, alarm_id,
-      name, parameters, value, position
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [
-      $values['appointment_id'],
-      $values['task_id'],
-      $values['wish_id'],
-      $values['alarm_id'],
-      strtoupper($property['name']),
-      json_encode($property['parameters'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
-      $property['value'],
+      appointment_id, task_id, wish_id, alarm_id, contact_id, org_id, tag_id,
+      group_name, name, parameters, value, position
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+      ...array_values($values),
+      $row['group_name'],
+      $row['name'],
+      $row['parameters'],
+      $row['value'],
       $position,
     ]);
   }
 
+  if($log) log_property_changes("$type/$id", $previous, $stored);
   return true;
+}
+
+// Debug-logs which retained properties appeared and disappeared in a
+// replacement. Properties are compared as a multiset over group, name,
+// parameters and value, so a changed parameter or value shows up as one
+// deletion plus one addition. Values never reach the log. Alarms have no
+// stable identity across CalDAV writes, so callers diff those as one
+// aggregated multiset per parent entity instead of per alarm row.
+function log_property_changes($entity, $previous, $stored) {
+  $counts = [];
+  foreach($previous as $row) {
+    $key = json_encode([@$row['group_name'], $row['name'], $row['parameters'], $row['value']]);
+    $counts[$key] = @$counts[$key] - 1;
+  }
+  foreach($stored as $row) {
+    $key = json_encode([@$row['group_name'], $row['name'], $row['parameters'], $row['value']]);
+    $counts[$key] = @$counts[$key] + 1;
+  }
+
+  $added = [];
+  $deleted = [];
+  foreach($counts as $key => $count) {
+    [$group, $name] = json_decode($key, true);
+    $label = $group ? "$group.$name" : $name;
+    for($i = 0; $i < $count; $i++) $added[] = $label;
+    for($i = 0; $i < -$count; $i++) $deleted[] = $label;
+  }
+
+  if(!$added && !$deleted) return;
+  sort($added);
+  sort($deleted);
+  \logger\debug("Replaced retained properties for $entity.", [
+    'entity' => $entity,
+    'added' => $added,
+    'deleted' => $deleted,
+  ]);
 }
 
 // CalDAV change tracking
@@ -2006,6 +2088,188 @@ function list_caldav_changes($collection, $revision) {
           AND newer.revision > c.revision
       )
     ORDER BY c.revision, c.href', [$collection, $revision]);
+}
+
+// CardDAV resources
+
+function list_carddav_resources() {
+  return all('SELECT * FROM carddav_resources ORDER BY entity_type, entity_id');
+}
+
+function list_carddav_resources_by_collection($collection) {
+  return all('SELECT * FROM carddav_resources
+    WHERE collection = ? ORDER BY href', [$collection]);
+}
+
+function get_carddav_resource($type, $id) {
+  return one('SELECT * FROM carddav_resources
+    WHERE entity_type = ? AND entity_id = ?', [$type, $id]);
+}
+
+function get_carddav_resource_by_uid($uid) {
+  return one('SELECT * FROM carddav_resources WHERE uid = ?', [$uid]);
+}
+
+function get_carddav_resource_by_href($collection, $href) {
+  return one('SELECT * FROM carddav_resources
+    WHERE collection = ? AND href = ?', [$collection, $href]);
+}
+
+function update_carddav_resource($type, $id, $href, $collection, $uid = null, $fingerprint = null) {
+  $resource = get_carddav_resource($type, $id);
+  $uid ??= @$resource['uid'] ?: generate_uuid();
+  $fingerprint ??= @$resource['fingerprint'];
+  $revision = @$resource['revision'] ?: 0;
+  $touched_at = @$resource['touched_at'] ?: gmdate('c');
+
+  exec_query('DELETE FROM carddav_resources
+    WHERE entity_type = ? AND entity_id = ?', [$type, $id]);
+
+  return exec_query('INSERT INTO carddav_resources (
+    entity_type, entity_id, uid, href, collection, revision, fingerprint, touched_at
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [
+    $type, $id, $uid, $href, $collection, $revision, $fingerprint, $touched_at
+  ]);
+}
+
+function touch_carddav_resource($type, $id, $fingerprint = null) {
+  return exec_query('UPDATE carddav_resources SET
+    revision = revision + 1,
+    fingerprint = COALESCE(?, fingerprint),
+    touched_at = ?
+    WHERE entity_type = ? AND entity_id = ?', [$fingerprint, gmdate('c'), $type, $id]);
+}
+
+function delete_carddav_resource($type, $id) {
+  return exec_query('DELETE FROM carddav_resources
+    WHERE entity_type = ? AND entity_id = ?', [$type, $id]);
+}
+
+// CardDAV change tracking
+
+function carddav_global_revision() {
+  return (int) (@one('SELECT revision FROM carddav_revision WHERE id = 1')['revision'] ?: 0);
+}
+
+function carddav_collection_revision($collection) {
+  return (int) (@one('SELECT MAX(revision) AS revision FROM carddav_changes
+    WHERE collection = ?', [$collection])['revision'] ?: 0);
+}
+
+function put_carddav_changes($changes) {
+  exec_query('UPDATE carddav_revision SET revision = revision + 1 WHERE id = 1', []);
+  $revision = carddav_global_revision();
+
+  foreach($changes as $change) {
+    exec_query('INSERT INTO carddav_changes (
+      revision, collection, href, operation
+    ) VALUES (?, ?, ?, ?)', [
+      $revision,
+      $change['collection'],
+      $change['href'],
+      $change['operation'],
+    ]);
+  }
+
+  return $revision;
+}
+
+function list_carddav_changes($collection, $revision) {
+  return all('SELECT c.* FROM carddav_changes c
+    WHERE c.collection = ? AND c.revision > ?
+      AND NOT EXISTS (
+        SELECT 1 FROM carddav_changes newer
+        WHERE newer.collection = c.collection
+          AND newer.href = c.href
+          AND newer.revision > c.revision
+      )
+    ORDER BY c.revision, c.href', [$collection, $revision]);
+}
+
+// Bulk contact-book listings, used by the CardDAV reconciliation to
+// fingerprint every card without a query storm per entity.
+
+function list_contact_rows() {
+  return all('SELECT * FROM contacts ORDER BY id');
+}
+
+function list_organisation_rows() {
+  return all('SELECT * FROM organisations ORDER BY id');
+}
+
+function list_tag_rows() {
+  return all('SELECT * FROM tags ORDER BY id');
+}
+
+function list_all_contact_emails() {
+  return all('SELECT * FROM contact_emails ORDER BY contact_id, id');
+}
+
+function list_all_contact_phone_numbers() {
+  return all('SELECT * FROM contact_phone_numbers ORDER BY contact_id, id');
+}
+
+function list_all_contact_urls() {
+  return all('SELECT * FROM contact_urls ORDER BY contact_id, id');
+}
+
+function list_all_contact_socials() {
+  return all('SELECT * FROM contact_socials ORDER BY contact_id, id');
+}
+
+function list_all_contact_roles() {
+  return all('SELECT contact_roles.*, organisations.display_name AS organisation_name
+    FROM contact_roles
+    JOIN organisations ON organisations.id = contact_roles.org_id
+    ORDER BY contact_roles.contact_id, contact_roles.id');
+}
+
+function list_all_contact_addresses() {
+  return all('SELECT a.*, ca.contact_id, ca.label AS link_label FROM contact_addresses ca
+    JOIN addresses a ON a.id = ca.address_id ORDER BY ca.contact_id, ca.id');
+}
+
+function list_all_contact_tags() {
+  return all('SELECT ct.contact_id, t.id, t.label FROM contacts_tags ct
+    JOIN tags t ON t.id = ct.tag_id ORDER BY ct.contact_id, ct.id');
+}
+
+function list_all_org_emails() {
+  return all('SELECT * FROM org_emails ORDER BY org_id, id');
+}
+
+function list_all_org_phone_numbers() {
+  return all('SELECT * FROM org_phone_numbers ORDER BY org_id, id');
+}
+
+function list_all_org_urls() {
+  return all('SELECT * FROM org_urls ORDER BY org_id, id');
+}
+
+function list_all_org_socials() {
+  return all('SELECT * FROM org_socials ORDER BY org_id, id');
+}
+
+function list_all_org_addresses() {
+  return all('SELECT a.*, oa.org_id, oa.label AS link_label FROM org_addresses oa
+    JOIN addresses a ON a.id = oa.address_id ORDER BY oa.org_id, oa.id');
+}
+
+function list_all_org_tags() {
+  return all('SELECT ot.org_id, t.id, t.label FROM orgs_tags ot
+    JOIN tags t ON t.id = ot.tag_id ORDER BY ot.org_id, ot.id');
+}
+
+function list_all_properties($type) {
+  $key = @PROPERTY_OWNERS[$type];
+
+  return $key ? all("SELECT * FROM properties
+    WHERE $key IS NOT NULL ORDER BY $key, position, id") : [];
+}
+
+function list_organisations_by_normalized_name($name) {
+  return all('SELECT * FROM organisations
+    WHERE EXO_NORMALIZE(display_name) = EXO_NORMALIZE(?)', [$name]);
 }
 
 // Configuration

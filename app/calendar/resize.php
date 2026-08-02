@@ -12,8 +12,8 @@
   if(!empty($appointment['subscription_id']) || !empty($appointment['recurrence']))
     fail("This appointment can't be moved or resized.", status: 403);
 
-  $starts_at = cast_datetime_utc($_POST['start_date'], $_POST['start_time']);
-  $ends_at = cast_datetime_utc($_POST['end_date'], $_POST['end_time']);
+  $starts_at = cast_dt_utc($_POST['start_date'], $_POST['start_time']);
+  $ends_at = cast_dt_utc($_POST['end_date'], $_POST['end_time']);
 
   \store\update_appointment_times($appointment['id'], $starts_at, $ends_at);
 

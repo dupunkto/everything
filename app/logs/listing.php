@@ -1,10 +1,10 @@
 <?php
 
   function logs_parse_datetime($value) {
-    $value = cast_string($value);
+    $value = cast_str($value);
     if(!$value) return null;
 
-    $utc = cast_datetime_utc(substr($value, 0, 10), substr($value, 11));
+    $utc = cast_dt_utc(substr($value, 0, 10), substr($value, 11));
     return $utc ? (new \DateTimeImmutable($utc))->format('Y-m-d H:i:s') : null;
   }
 
@@ -69,15 +69,15 @@
   $logs = \store\list_logs_filtered(
     $sources,
     $levels,
-    cast_string(@$_GET['message']),
+    cast_str(@$_GET['message']),
     logs_parse_datetime(@$_GET['from']),
     logs_parse_datetime(@$_GET['to']),
-    max(1, cast_int(@$_GET['limit']) ?: 1000)
+    max(1, cast_num(@$_GET['limit']) ?: 1000)
   );
 
 ?>
 <?php foreach($logs as $log): ?>
-  <?php $context = $log['source'] == 'system' ? json_decode(cast_string($log['system_context']), true) : [] ?>
+  <?php $context = $log['source'] == 'system' ? json_decode(cast_str($log['system_context']), true) : [] ?>
   <?php if(!is_array($context)) $context = [] ?>
   <?php if($log['source'] == 'http') [$log['table_name'], $log['record_id']] = logs_http_entity($log['message']) ?>
   <?php $message = $log['message'] ?>

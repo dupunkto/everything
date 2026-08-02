@@ -132,7 +132,8 @@ function clear_response() {
 function render_error($error) {
   http_response_code(error_status($error));
 
-  if($error instanceof DAVError || str_starts_with(@$_SERVER['REQUEST_URI'] ?: '', '/caldav')) {
+  $uri = @$_SERVER['REQUEST_URI'] ?: '';
+  if($error instanceof DAVError || str_starts_with($uri, '/caldav') || str_starts_with($uri, '/carddav')) {
     render_dav_error($error);
     return;
   }
@@ -150,16 +151,22 @@ function render_error($error) {
     __DIR__ . "/../app/error/page.php";
 }
 
+// Renders a DAV error document. Bare condition names resolve to the
+// protocol namespace of the request path (CalDAV or CardDAV); the D:
+// prefix pins a condition to the DAV: namespace instead.
 function render_dav_error($error) {
   $condition = $error instanceof DAVError ? $error->condition : null;
 
   if($condition) {
     header("Content-Type: application/xml; charset=utf-8");
+    $carddav = str_starts_with(@$_SERVER['REQUEST_URI'] ?: '', '/carddav');
+    $protocol_prefix = $carddav ? 'CARD' : 'C';
+    $protocol_namespace = $carddav ? 'urn:ietf:params:xml:ns:carddav' : 'urn:ietf:params:xml:ns:caldav';
     $name = str_replace('D:', '', $condition);
-    $prefix = str_starts_with($condition, 'D:') ? 'D' : 'C';
+    $prefix = str_starts_with($condition, 'D:') ? 'D' : $protocol_prefix;
     $name = htmlspecialchars($name, ENT_XML1 | ENT_QUOTES, 'UTF-8');
     echo '<?xml version="1.0" encoding="utf-8"?>';
-    echo '<D:error xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">';
+    echo "<D:error xmlns:D=\"DAV:\" xmlns:$protocol_prefix=\"$protocol_namespace\">";
     echo "<$prefix:$name/>";
     echo '</D:error>';
     return;

@@ -3518,6 +3518,507 @@ class IntegerValue extends Property
     }
 }
 
+namespace Sabre\VObject\Property;
+
+use Sabre\VObject\Property;
+
+/**
+ * BINARY property.
+ *
+ * This object represents BINARY values.
+ *
+ * Binary values are most commonly used by the iCalendar ATTACH property, and
+ * the vCard PHOTO property.
+ *
+ * This property will transparently encode and decode to base64.
+ *
+ * @copyright Copyright (C) fruux GmbH (https://fruux.com/)
+ * @author Evert Pot (http://evertpot.com/)
+ * @license http://sabre.io/license/ Modified BSD License
+ */
+class Binary extends Property
+{
+    /**
+     * In case this is a multi-value property. This string will be used as a
+     * delimiter.
+     *
+     * @var string
+     */
+    public $delimiter = '';
+
+    /**
+     * Updates the current value.
+     *
+     * This may be either a single, or multiple strings in an array.
+     *
+     * @param string|array $value
+     */
+    public function setValue($value)
+    {
+        if (is_array($value)) {
+            if (1 === count($value)) {
+                $this->value = $value[0];
+            } else {
+                throw new \InvalidArgumentException('The argument must either be a string or an array with only one child');
+            }
+        } else {
+            $this->value = $value;
+        }
+    }
+
+    /**
+     * Sets a raw value coming from a mimedir (iCalendar/vCard) file.
+     *
+     * This has been 'unfolded', so only 1 line will be passed. Unescaping is
+     * not yet done, but parameters are not included.
+     *
+     * @param string $val
+     */
+    public function setRawMimeDirValue($val)
+    {
+        $this->value = base64_decode($val);
+    }
+
+    /**
+     * Returns a raw mime-dir representation of the value.
+     *
+     * @return string
+     */
+    public function getRawMimeDirValue()
+    {
+        return base64_encode($this->value);
+    }
+
+    /**
+     * Returns the type of value.
+     *
+     * This corresponds to the VALUE= parameter. Every property also has a
+     * 'default' valueType.
+     *
+     * @return string
+     */
+    public function getValueType()
+    {
+        return 'BINARY';
+    }
+
+    /**
+     * Returns the value, in the format it should be encoded for json.
+     *
+     * This method must always return an array.
+     *
+     * @return array
+     */
+    public function getJsonValue()
+    {
+        return [base64_encode($this->getValue())];
+    }
+
+    /**
+     * Sets the json value, as it would appear in a jCard or jCal object.
+     *
+     * The value must always be an array.
+     */
+    public function setJsonValue(array $value)
+    {
+        $value = array_map('base64_decode', $value);
+        parent::setJsonValue($value);
+    }
+}
+
+namespace Sabre\VObject\Property;
+
+use Sabre\VObject\Property;
+
+/**
+ * Boolean property.
+ *
+ * This object represents BOOLEAN values. These are always the case-insensitive
+ * string TRUE or FALSE.
+ *
+ * Automatic conversion to PHP's true and false are done.
+ *
+ * @copyright Copyright (C) fruux GmbH (https://fruux.com/)
+ * @author Evert Pot (http://evertpot.com/)
+ * @license http://sabre.io/license/ Modified BSD License
+ */
+class Boolean extends Property
+{
+    /**
+     * Sets a raw value coming from a mimedir (iCalendar/vCard) file.
+     *
+     * This has been 'unfolded', so only 1 line will be passed. Unescaping is
+     * not yet done, but parameters are not included.
+     *
+     * @param string $val
+     */
+    public function setRawMimeDirValue($val)
+    {
+        $val = 'TRUE' === strtoupper($val) ? true : false;
+        $this->setValue($val);
+    }
+
+    /**
+     * Returns a raw mime-dir representation of the value.
+     *
+     * @return string
+     */
+    public function getRawMimeDirValue()
+    {
+        return $this->value ? 'TRUE' : 'FALSE';
+    }
+
+    /**
+     * Returns the type of value.
+     *
+     * This corresponds to the VALUE= parameter. Every property also has a
+     * 'default' valueType.
+     *
+     * @return string
+     */
+    public function getValueType()
+    {
+        return 'BOOLEAN';
+    }
+
+    /**
+     * Hydrate data from a XML subtree, as it would appear in a xCard or xCal
+     * object.
+     */
+    public function setXmlValue(array $value)
+    {
+        $value = array_map(
+            function ($value) {
+                return 'true' === $value;
+            },
+            $value
+        );
+        parent::setXmlValue($value);
+    }
+}
+
+namespace Sabre\VObject\Property;
+
+use Sabre\VObject\Property;
+use Sabre\Xml;
+
+/**
+ * Float property.
+ *
+ * This object represents FLOAT values. These can be 1 or more floating-point
+ * numbers.
+ *
+ * @copyright Copyright (C) fruux GmbH (https://fruux.com/)
+ * @author Evert Pot (http://evertpot.com/)
+ * @license http://sabre.io/license/ Modified BSD License
+ */
+class FloatValue extends Property
+{
+    /**
+     * In case this is a multi-value property. This string will be used as a
+     * delimiter.
+     *
+     * @var string
+     */
+    public $delimiter = ';';
+
+    /**
+     * Sets a raw value coming from a mimedir (iCalendar/vCard) file.
+     *
+     * This has been 'unfolded', so only 1 line will be passed. Unescaping is
+     * not yet done, but parameters are not included.
+     *
+     * @param string $val
+     */
+    public function setRawMimeDirValue($val)
+    {
+        $val = explode($this->delimiter, $val);
+        foreach ($val as &$item) {
+            $item = (float) $item;
+        }
+        $this->setParts($val);
+    }
+
+    /**
+     * Returns a raw mime-dir representation of the value.
+     *
+     * @return string
+     */
+    public function getRawMimeDirValue()
+    {
+        return implode(
+            $this->delimiter,
+            $this->getParts()
+        );
+    }
+
+    /**
+     * Returns the type of value.
+     *
+     * This corresponds to the VALUE= parameter. Every property also has a
+     * 'default' valueType.
+     *
+     * @return string
+     */
+    public function getValueType()
+    {
+        return 'FLOAT';
+    }
+
+    /**
+     * Returns the value, in the format it should be encoded for JSON.
+     *
+     * This method must always return an array.
+     *
+     * @return array
+     */
+    public function getJsonValue()
+    {
+        $val = array_map('floatval', $this->getParts());
+
+        // Special-casing the GEO property.
+        //
+        // See:
+        // http://tools.ietf.org/html/draft-ietf-jcardcal-jcal-04#section-3.4.1.2
+        if ('GEO' === $this->name) {
+            return [$val];
+        }
+
+        return $val;
+    }
+
+    /**
+     * Hydrate data from a XML subtree, as it would appear in a xCard or xCal
+     * object.
+     */
+    public function setXmlValue(array $value)
+    {
+        $value = array_map('floatval', $value);
+        parent::setXmlValue($value);
+    }
+
+    /**
+     * This method serializes only the value of a property. This is used to
+     * create xCard or xCal documents.
+     *
+     * @param Xml\Writer $writer XML writer
+     */
+    protected function xmlSerializeValue(Xml\Writer $writer)
+    {
+        // Special-casing the GEO property.
+        //
+        // See:
+        // http://tools.ietf.org/html/rfc6321#section-3.4.1.2
+        if ('GEO' === $this->name) {
+            $value = array_map('floatval', $this->getParts());
+
+            $writer->writeElement('latitude', $value[0]);
+            $writer->writeElement('longitude', $value[1]);
+        } else {
+            parent::xmlSerializeValue($writer);
+        }
+    }
+}
+
+namespace Sabre\VObject\Property;
+
+use Sabre\VObject\DateTimeParser;
+
+/**
+ * Time property.
+ *
+ * This object encodes TIME values.
+ *
+ * @copyright Copyright (C) fruux GmbH (https://fruux.com/)
+ * @author Evert Pot (http://evertpot.com/)
+ * @license http://sabre.io/license/ Modified BSD License
+ */
+class Time extends Text
+{
+    /**
+     * In case this is a multi-value property. This string will be used as a
+     * delimiter.
+     *
+     * @var string
+     */
+    public $delimiter = '';
+
+    /**
+     * Returns the type of value.
+     *
+     * This corresponds to the VALUE= parameter. Every property also has a
+     * 'default' valueType.
+     *
+     * @return string
+     */
+    public function getValueType()
+    {
+        return 'TIME';
+    }
+
+    /**
+     * Sets the JSON value, as it would appear in a jCard or jCal object.
+     *
+     * The value must always be an array.
+     */
+    public function setJsonValue(array $value)
+    {
+        // Removing colons from value.
+        $value = str_replace(
+            ':',
+            '',
+            $value
+        );
+
+        if (1 === count($value)) {
+            $this->setValue(reset($value));
+        } else {
+            $this->setValue($value);
+        }
+    }
+
+    /**
+     * Returns the value, in the format it should be encoded for json.
+     *
+     * This method must always return an array.
+     *
+     * @return array
+     */
+    public function getJsonValue()
+    {
+        $parts = DateTimeParser::parseVCardTime($this->getValue());
+        $timeStr = '';
+
+        // Hour
+        if (!is_null($parts['hour'])) {
+            $timeStr .= $parts['hour'];
+
+            if (!is_null($parts['minute'])) {
+                $timeStr .= ':';
+            }
+        } else {
+            // We know either minute or second _must_ be set, so we insert a
+            // dash for an empty value.
+            $timeStr .= '-';
+        }
+
+        // Minute
+        if (!is_null($parts['minute'])) {
+            $timeStr .= $parts['minute'];
+
+            if (!is_null($parts['second'])) {
+                $timeStr .= ':';
+            }
+        } else {
+            if (isset($parts['second'])) {
+                // Dash for empty minute
+                $timeStr .= '-';
+            }
+        }
+
+        // Second
+        if (!is_null($parts['second'])) {
+            $timeStr .= $parts['second'];
+        }
+
+        // Timezone
+        if (!is_null($parts['timezone'])) {
+            if ('Z' === $parts['timezone']) {
+                $timeStr .= 'Z';
+            } else {
+                $timeStr .=
+                    preg_replace('/([0-9]{2})([0-9]{2})$/', '$1:$2', $parts['timezone']);
+            }
+        }
+
+        return [$timeStr];
+    }
+
+    /**
+     * Hydrate data from a XML subtree, as it would appear in a xCard or xCal
+     * object.
+     */
+    public function setXmlValue(array $value)
+    {
+        $value = array_map(
+            function ($value) {
+                return str_replace(':', '', $value);
+            },
+            $value
+        );
+        parent::setXmlValue($value);
+    }
+}
+
+namespace Sabre\VObject\Property;
+
+/**
+ * UtcOffset property.
+ *
+ * This object encodes UTC-OFFSET values.
+ *
+ * @copyright Copyright (C) fruux GmbH (https://fruux.com/)
+ * @author Evert Pot (http://evertpot.com/)
+ * @license http://sabre.io/license/ Modified BSD License
+ */
+class UtcOffset extends Text
+{
+    /**
+     * In case this is a multi-value property. This string will be used as a
+     * delimiter.
+     *
+     * @var string
+     */
+    public $delimiter = '';
+
+    /**
+     * Returns the type of value.
+     *
+     * This corresponds to the VALUE= parameter. Every property also has a
+     * 'default' valueType.
+     *
+     * @return string
+     */
+    public function getValueType()
+    {
+        return 'UTC-OFFSET';
+    }
+
+    /**
+     * Sets the JSON value, as it would appear in a jCard or jCal object.
+     *
+     * The value must always be an array.
+     */
+    public function setJsonValue(array $value)
+    {
+        $value = array_map(
+            function ($value) {
+                return str_replace(':', '', $value);
+            },
+            $value
+        );
+        parent::setJsonValue($value);
+    }
+
+    /**
+     * Returns the value, in the format it should be encoded for JSON.
+     *
+     * This method must always return an array.
+     *
+     * @return array
+     */
+    public function getJsonValue()
+    {
+        return array_map(
+            function ($value) {
+                return substr($value, 0, -2).':'.
+                       substr($value, -2);
+            },
+            parent::getJsonValue()
+        );
+    }
+}
+
 namespace Sabre\VObject\Property\ICalendar;
 
 use DateTimeInterface;
@@ -4321,6 +4822,595 @@ class Recur extends Property
     }
 }
 
+namespace Sabre\VObject\Property\VCard;
+
+use DateTime;
+use DateTimeImmutable;
+use DateTimeInterface;
+use Sabre\VObject\DateTimeParser;
+use Sabre\VObject\InvalidDataException;
+use Sabre\VObject\Property;
+use Sabre\Xml;
+
+/**
+ * DateAndOrTime property.
+ *
+ * This object encodes DATE-AND-OR-TIME values.
+ *
+ * @copyright Copyright (C) fruux GmbH (https://fruux.com/)
+ * @author Evert Pot (http://evertpot.com/)
+ * @license http://sabre.io/license/ Modified BSD License
+ */
+class DateAndOrTime extends Property
+{
+    /**
+     * Field separator.
+     *
+     * @var string
+     */
+    public $delimiter = '';
+
+    /**
+     * Returns the type of value.
+     *
+     * This corresponds to the VALUE= parameter. Every property also has a
+     * 'default' valueType.
+     *
+     * @return string
+     */
+    public function getValueType()
+    {
+        return 'DATE-AND-OR-TIME';
+    }
+
+    /**
+     * Sets a multi-valued property.
+     *
+     * You may also specify DateTimeInterface objects here.
+     */
+    public function setParts(array $parts)
+    {
+        if (count($parts) > 1) {
+            throw new \InvalidArgumentException('Only one value allowed');
+        }
+        if (isset($parts[0]) && $parts[0] instanceof DateTimeInterface) {
+            $this->setDateTime($parts[0]);
+        } else {
+            parent::setParts($parts);
+        }
+    }
+
+    /**
+     * Updates the current value.
+     *
+     * This may be either a single, or multiple strings in an array.
+     *
+     * Instead of strings, you may also use DateTimeInterface here.
+     *
+     * @param string|array|DateTimeInterface $value
+     */
+    public function setValue($value)
+    {
+        if ($value instanceof DateTimeInterface) {
+            $this->setDateTime($value);
+        } else {
+            parent::setValue($value);
+        }
+    }
+
+    /**
+     * Sets the property as a DateTime object.
+     */
+    public function setDateTime(DateTimeInterface $dt)
+    {
+        $tz = $dt->getTimeZone();
+        $isUtc = in_array($tz->getName(), ['UTC', 'GMT', 'Z']);
+
+        if ($isUtc) {
+            $value = $dt->format('Ymd\\THis\\Z');
+        } else {
+            // Calculating the offset.
+            $value = $dt->format('Ymd\\THisO');
+        }
+
+        $this->value = $value;
+    }
+
+    /**
+     * Returns a date-time value.
+     *
+     * Note that if this property contained more than 1 date-time, only the
+     * first will be returned. To get an array with multiple values, call
+     * getDateTimes.
+     *
+     * If no time was specified, we will always use midnight (in the default
+     * timezone) as the time.
+     *
+     * If parts of the date were omitted, such as the year, we will grab the
+     * current values for those. So at the time of writing, if the year was
+     * omitted, we would have filled in 2014.
+     *
+     * @return DateTimeImmutable
+     */
+    public function getDateTime()
+    {
+        $now = new DateTime();
+
+        $tzFormat = 0 === $now->getTimezone()->getOffset($now) ? '\\Z' : 'O';
+        $nowParts = DateTimeParser::parseVCardDateTime($now->format('Ymd\\This'.$tzFormat));
+
+        $dateParts = DateTimeParser::parseVCardDateTime($this->getValue());
+
+        // This sets all the missing parts to the current date/time.
+        // So if the year was missing for a birthday, we're making it 'this
+        // year'.
+        foreach ($dateParts as $k => $v) {
+            if (is_null($v)) {
+                $dateParts[$k] = $nowParts[$k];
+            }
+        }
+
+        return new DateTimeImmutable("$dateParts[year]-$dateParts[month]-$dateParts[date] $dateParts[hour]:$dateParts[minute]:$dateParts[second] $dateParts[timezone]");
+    }
+
+    /**
+     * Returns the value, in the format it should be encoded for json.
+     *
+     * This method must always return an array.
+     *
+     * @return array
+     */
+    public function getJsonValue()
+    {
+        $parts = DateTimeParser::parseVCardDateTime($this->getValue());
+
+        $dateStr = '';
+
+        // Year
+        if (!is_null($parts['year'])) {
+            $dateStr .= $parts['year'];
+
+            if (!is_null($parts['month'])) {
+                // If a year and a month is set, we need to insert a separator
+                // dash.
+                $dateStr .= '-';
+            }
+        } else {
+            if (!is_null($parts['month']) || !is_null($parts['date'])) {
+                // Inserting two dashes
+                $dateStr .= '--';
+            }
+        }
+
+        // Month
+        if (!is_null($parts['month'])) {
+            $dateStr .= $parts['month'];
+
+            if (isset($parts['date'])) {
+                // If month and date are set, we need the separator dash.
+                $dateStr .= '-';
+            }
+        } elseif (isset($parts['date'])) {
+            // If the month is empty, and a date is set, we need a 'empty
+            // dash'
+            $dateStr .= '-';
+        }
+
+        // Date
+        if (!is_null($parts['date'])) {
+            $dateStr .= $parts['date'];
+        }
+
+        // Early exit if we don't have a time string.
+        if (is_null($parts['hour']) && is_null($parts['minute']) && is_null($parts['second'])) {
+            return [$dateStr];
+        }
+
+        $dateStr .= 'T';
+
+        // Hour
+        if (!is_null($parts['hour'])) {
+            $dateStr .= $parts['hour'];
+
+            if (!is_null($parts['minute'])) {
+                $dateStr .= ':';
+            }
+        } else {
+            // We know either minute or second _must_ be set, so we insert a
+            // dash for an empty value.
+            $dateStr .= '-';
+        }
+
+        // Minute
+        if (!is_null($parts['minute'])) {
+            $dateStr .= $parts['minute'];
+
+            if (!is_null($parts['second'])) {
+                $dateStr .= ':';
+            }
+        } elseif (isset($parts['second'])) {
+            // Dash for empty minute
+            $dateStr .= '-';
+        }
+
+        // Second
+        if (!is_null($parts['second'])) {
+            $dateStr .= $parts['second'];
+        }
+
+        // Timezone
+        if (!is_null($parts['timezone'])) {
+            $dateStr .= $parts['timezone'];
+        }
+
+        return [$dateStr];
+    }
+
+    /**
+     * This method serializes only the value of a property. This is used to
+     * create xCard or xCal documents.
+     *
+     * @param Xml\Writer $writer XML writer
+     */
+    protected function xmlSerializeValue(Xml\Writer $writer)
+    {
+        $valueType = strtolower($this->getValueType());
+        $parts = DateTimeParser::parseVCardDateAndOrTime($this->getValue());
+        $value = '';
+
+        // $d = defined
+        $d = function ($part) use ($parts) {
+            return !is_null($parts[$part]);
+        };
+
+        // $r = read
+        $r = function ($part) use ($parts) {
+            return $parts[$part];
+        };
+
+        // From the Relax NG Schema.
+        //
+        // # 4.3.1
+        // value-date = element date {
+        //     xsd:string { pattern = "\d{8}|\d{4}-\d\d|--\d\d(\d\d)?|---\d\d" }
+        //   }
+        if (($d('year') || $d('month') || $d('date'))
+            && (!$d('hour') && !$d('minute') && !$d('second') && !$d('timezone'))) {
+            if ($d('year') && $d('month') && $d('date')) {
+                $value .= $r('year').$r('month').$r('date');
+            } elseif ($d('year') && $d('month') && !$d('date')) {
+                $value .= $r('year').'-'.$r('month');
+            } elseif (!$d('year') && $d('month')) {
+                $value .= '--'.$r('month').$r('date');
+            } elseif (!$d('year') && !$d('month') && $d('date')) {
+                $value .= '---'.$r('date');
+            }
+
+            // # 4.3.2
+        // value-time = element time {
+        //     xsd:string { pattern = "(\d\d(\d\d(\d\d)?)?|-\d\d(\d\d?)|--\d\d)"
+        //                          ~ "(Z|[+\-]\d\d(\d\d)?)?" }
+        //   }
+        } elseif ((!$d('year') && !$d('month') && !$d('date'))
+                  && ($d('hour') || $d('minute') || $d('second'))) {
+            if ($d('hour')) {
+                $value .= $r('hour').$r('minute').$r('second');
+            } elseif ($d('minute')) {
+                $value .= '-'.$r('minute').$r('second');
+            } elseif ($d('second')) {
+                $value .= '--'.$r('second');
+            }
+
+            $value .= $r('timezone');
+
+        // # 4.3.3
+        // value-date-time = element date-time {
+        //     xsd:string { pattern = "(\d{8}|--\d{4}|---\d\d)T\d\d(\d\d(\d\d)?)?"
+        //                          ~ "(Z|[+\-]\d\d(\d\d)?)?" }
+        //   }
+        } elseif ($d('date') && $d('hour')) {
+            if ($d('year') && $d('month') && $d('date')) {
+                $value .= $r('year').$r('month').$r('date');
+            } elseif (!$d('year') && $d('month') && $d('date')) {
+                $value .= '--'.$r('month').$r('date');
+            } elseif (!$d('year') && !$d('month') && $d('date')) {
+                $value .= '---'.$r('date');
+            }
+
+            $value .= 'T'.$r('hour').$r('minute').$r('second').
+                      $r('timezone');
+        }
+
+        $writer->writeElement($valueType, $value);
+    }
+
+    /**
+     * Sets a raw value coming from a mimedir (iCalendar/vCard) file.
+     *
+     * This has been 'unfolded', so only 1 line will be passed. Unescaping is
+     * not yet done, but parameters are not included.
+     *
+     * @param string $val
+     */
+    public function setRawMimeDirValue($val)
+    {
+        $this->setValue($val);
+    }
+
+    /**
+     * Returns a raw mime-dir representation of the value.
+     *
+     * @return string
+     */
+    public function getRawMimeDirValue()
+    {
+        return implode($this->delimiter, $this->getParts());
+    }
+
+    /**
+     * Validates the node for correctness.
+     *
+     * The following options are supported:
+     *   Node::REPAIR - May attempt to automatically repair the problem.
+     *
+     * This method returns an array with detected problems.
+     * Every element has the following properties:
+     *
+     *  * level - problem level.
+     *  * message - A human-readable string describing the issue.
+     *  * node - A reference to the problematic node.
+     *
+     * The level means:
+     *   1 - The issue was repaired (only happens if REPAIR was turned on)
+     *   2 - An inconsequential issue
+     *   3 - A severe issue.
+     *
+     * @param int $options
+     *
+     * @return array
+     */
+    public function validate($options = 0)
+    {
+        $messages = parent::validate($options);
+        $value = $this->getValue();
+
+        try {
+            DateTimeParser::parseVCardDateTime($value);
+        } catch (InvalidDataException $e) {
+            $messages[] = [
+                'level' => 3,
+                'message' => 'The supplied value ('.$value.') is not a correct DATE-AND-OR-TIME property',
+                'node' => $this,
+            ];
+        }
+
+        return $messages;
+    }
+}
+
+namespace Sabre\VObject\Property\VCard;
+
+/**
+ * Date property.
+ *
+ * This object encodes vCard DATE values.
+ *
+ * @copyright Copyright (C) fruux GmbH (https://fruux.com/)
+ * @author Evert Pot (http://evertpot.com/)
+ * @license http://sabre.io/license/ Modified BSD License
+ */
+class Date extends DateAndOrTime
+{
+    /**
+     * Returns the type of value.
+     *
+     * This corresponds to the VALUE= parameter. Every property also has a
+     * 'default' valueType.
+     *
+     * @return string
+     */
+    public function getValueType()
+    {
+        return 'DATE';
+    }
+
+    /**
+     * Sets the property as a DateTime object.
+     */
+    public function setDateTime(\DateTimeInterface $dt)
+    {
+        $this->value = $dt->format('Ymd');
+    }
+}
+
+namespace Sabre\VObject\Property\VCard;
+
+/**
+ * DateTime property.
+ *
+ * This object encodes DATE-TIME values for vCards.
+ *
+ * @copyright Copyright (C) fruux GmbH (https://fruux.com/)
+ * @author Evert Pot (http://evertpot.com/)
+ * @license http://sabre.io/license/ Modified BSD License
+ */
+class DateTime extends DateAndOrTime
+{
+    /**
+     * Returns the type of value.
+     *
+     * This corresponds to the VALUE= parameter. Every property also has a
+     * 'default' valueType.
+     *
+     * @return string
+     */
+    public function getValueType()
+    {
+        return 'DATE-TIME';
+    }
+}
+
+namespace Sabre\VObject\Property\VCard;
+
+use Sabre\VObject\Property;
+
+/**
+ * LanguageTag property.
+ *
+ * This object represents LANGUAGE-TAG values as used in vCards.
+ *
+ * @copyright Copyright (C) fruux GmbH (https://fruux.com/)
+ * @author Evert Pot (http://evertpot.com/)
+ * @license http://sabre.io/license/ Modified BSD License
+ */
+class LanguageTag extends Property
+{
+    /**
+     * Sets a raw value coming from a mimedir (iCalendar/vCard) file.
+     *
+     * This has been 'unfolded', so only 1 line will be passed. Unescaping is
+     * not yet done, but parameters are not included.
+     *
+     * @param string $val
+     */
+    public function setRawMimeDirValue($val)
+    {
+        $this->setValue($val);
+    }
+
+    /**
+     * Returns a raw mime-dir representation of the value.
+     *
+     * @return string
+     */
+    public function getRawMimeDirValue()
+    {
+        return $this->getValue();
+    }
+
+    /**
+     * Returns the type of value.
+     *
+     * This corresponds to the VALUE= parameter. Every property also has a
+     * 'default' valueType.
+     *
+     * @return string
+     */
+    public function getValueType()
+    {
+        return 'LANGUAGE-TAG';
+    }
+}
+
+namespace Sabre\VObject\Property\VCard;
+
+use Sabre\VObject\Property;
+
+/**
+ * PhoneNumber property.
+ *
+ * This object encodes PHONE-NUMBER values.
+ *
+ * @author Christian Kraus <christian@kraus.work>
+ */
+class PhoneNumber extends Property\Text
+{
+    protected $structuredValues = [];
+
+    /**
+     * Returns the type of value.
+     *
+     * This corresponds to the VALUE= parameter. Every property also has a
+     * 'default' valueType.
+     *
+     * @return string
+     */
+    public function getValueType()
+    {
+        return 'PHONE-NUMBER';
+    }
+}
+
+namespace Sabre\VObject\Property\VCard;
+
+use Sabre\VObject\DateTimeParser;
+use Sabre\VObject\Property\Text;
+use Sabre\Xml;
+
+/**
+ * TimeStamp property.
+ *
+ * This object encodes TIMESTAMP values.
+ *
+ * @copyright Copyright (C) fruux GmbH (https://fruux.com/)
+ * @author Evert Pot (http://evertpot.com/)
+ * @license http://sabre.io/license/ Modified BSD License
+ */
+class TimeStamp extends Text
+{
+    /**
+     * In case this is a multi-value property. This string will be used as a
+     * delimiter.
+     *
+     * @var string
+     */
+    public $delimiter = '';
+
+    /**
+     * Returns the type of value.
+     *
+     * This corresponds to the VALUE= parameter. Every property also has a
+     * 'default' valueType.
+     *
+     * @return string
+     */
+    public function getValueType()
+    {
+        return 'TIMESTAMP';
+    }
+
+    /**
+     * Returns the value, in the format it should be encoded for json.
+     *
+     * This method must always return an array.
+     *
+     * @return array
+     */
+    public function getJsonValue()
+    {
+        $parts = DateTimeParser::parseVCardDateTime($this->getValue());
+
+        $dateStr =
+            $parts['year'].'-'.
+            $parts['month'].'-'.
+            $parts['date'].'T'.
+            $parts['hour'].':'.
+            $parts['minute'].':'.
+            $parts['second'];
+
+        // Timezone
+        if (!is_null($parts['timezone'])) {
+            $dateStr .= $parts['timezone'];
+        }
+
+        return [$dateStr];
+    }
+
+    /**
+     * This method serializes only the value of a property. This is used to
+     * create xCard or xCal documents.
+     *
+     * @param Xml\Writer $writer XML writer
+     */
+    protected function xmlSerializeValue(Xml\Writer $writer)
+    {
+        // xCard is the only XML and JSON format that has the same date and time
+        // format than vCard.
+        $valueType = strtolower($this->getValueType());
+        $writer->writeElement($valueType, $this->getValue());
+    }
+}
+
 namespace Sabre\VObject\Component;
 
 use Sabre\VObject;
@@ -4373,6 +5463,165 @@ class VCalendar extends VObject\Document
     public function getDocumentType()
     {
         return self::ICALENDAR20;
+    }
+}
+
+namespace Sabre\VObject\Component;
+
+use Sabre\VObject;
+
+/**
+ * (Subset of) VCard parser.
+ *
+ * @copyright Copyright (C) fruux GmbH (https://fruux.com/)
+ * @license http://sabre.io/license/ Modified BSD License
+ */
+class VCard extends VObject\Document
+{
+    public static $defaultName = 'VCARD';
+
+    /**
+     * Caching the version number.
+     *
+     * @var int
+     */
+    private $version = null;
+
+    public static $componentMap = [
+        'VCARD' => self::class,
+    ];
+
+    public static $valueMap = [
+        'BINARY' => VObject\Property\Binary::class,
+        'BOOLEAN' => VObject\Property\Boolean::class,
+        'CONTENT-ID' => VObject\Property\FlatText::class,   // vCard 2.1 only
+        'DATE' => VObject\Property\VCard\Date::class,
+        'DATE-TIME' => VObject\Property\VCard\DateTime::class,
+        'DATE-AND-OR-TIME' => VObject\Property\VCard\DateAndOrTime::class, // vCard only
+        'FLOAT' => VObject\Property\FloatValue::class,
+        'INTEGER' => VObject\Property\IntegerValue::class,
+        'LANGUAGE-TAG' => VObject\Property\VCard\LanguageTag::class,
+        'PHONE-NUMBER' => VObject\Property\VCard\PhoneNumber::class, // vCard 3.0 only
+        'TIMESTAMP' => VObject\Property\VCard\TimeStamp::class,
+        'TEXT' => VObject\Property\Text::class,
+        'TIME' => VObject\Property\Time::class,
+        'UNKNOWN' => VObject\Property\Unknown::class, // jCard / jCal-only.
+        'URI' => VObject\Property\Uri::class,
+        'URL' => VObject\Property\Uri::class, // vCard 2.1 only
+        'UTC-OFFSET' => VObject\Property\UtcOffset::class,
+    ];
+
+    public static $propertyMap = [
+        // vCard 2.1 properties and up
+        'N' => VObject\Property\Text::class,
+        'FN' => VObject\Property\FlatText::class,
+        'PHOTO' => VObject\Property\Binary::class,
+        'BDAY' => VObject\Property\VCard\DateAndOrTime::class,
+        'ADR' => VObject\Property\Text::class,
+        'LABEL' => VObject\Property\FlatText::class, // Removed in vCard 4.0
+        'TEL' => VObject\Property\FlatText::class,
+        'EMAIL' => VObject\Property\FlatText::class,
+        'MAILER' => VObject\Property\FlatText::class, // Removed in vCard 4.0
+        'GEO' => VObject\Property\FlatText::class,
+        'TITLE' => VObject\Property\FlatText::class,
+        'ROLE' => VObject\Property\FlatText::class,
+        'LOGO' => VObject\Property\Binary::class,
+        'ORG' => VObject\Property\Text::class,
+        'NOTE' => VObject\Property\FlatText::class,
+        'REV' => VObject\Property\VCard\TimeStamp::class,
+        'SOUND' => VObject\Property\FlatText::class,
+        'URL' => VObject\Property\Uri::class,
+        'UID' => VObject\Property\FlatText::class,
+        'VERSION' => VObject\Property\FlatText::class,
+        'KEY' => VObject\Property\FlatText::class,
+        'TZ' => VObject\Property\Text::class,
+
+        // vCard 3.0 properties
+        'CATEGORIES' => VObject\Property\Text::class,
+        'SORT-STRING' => VObject\Property\FlatText::class,
+        'PRODID' => VObject\Property\FlatText::class,
+        'NICKNAME' => VObject\Property\Text::class,
+        'CLASS' => VObject\Property\FlatText::class, // Removed in vCard 4.0
+
+        // rfc2739 properties
+        'FBURL' => VObject\Property\Uri::class,
+        'CAPURI' => VObject\Property\Uri::class,
+        'CALURI' => VObject\Property\Uri::class,
+        'CALADRURI' => VObject\Property\Uri::class,
+
+        // rfc4770 properties
+        'IMPP' => VObject\Property\Uri::class,
+
+        // vCard 4.0 properties
+        'SOURCE' => VObject\Property\Uri::class,
+        'XML' => VObject\Property\FlatText::class,
+        'ANNIVERSARY' => VObject\Property\VCard\DateAndOrTime::class,
+        'CLIENTPIDMAP' => VObject\Property\Text::class,
+        'LANG' => VObject\Property\VCard\LanguageTag::class,
+        'GENDER' => VObject\Property\Text::class,
+        'KIND' => VObject\Property\FlatText::class,
+        'MEMBER' => VObject\Property\Uri::class,
+        'RELATED' => VObject\Property\Uri::class,
+
+        // rfc6474 properties
+        'BIRTHPLACE' => VObject\Property\FlatText::class,
+        'DEATHPLACE' => VObject\Property\FlatText::class,
+        'DEATHDATE' => VObject\Property\VCard\DateAndOrTime::class,
+
+        // rfc6715 properties
+        'EXPERTISE' => VObject\Property\FlatText::class,
+        'HOBBY' => VObject\Property\FlatText::class,
+        'INTEREST' => VObject\Property\FlatText::class,
+        'ORG-DIRECTORY' => VObject\Property\FlatText::class,
+    ];
+
+    /**
+     * Returns the current document type.
+     *
+     * @return int
+     */
+    public function getDocumentType()
+    {
+        if (!$this->version) {
+            $version = (string) $this->VERSION;
+
+            switch ($version) {
+                case '2.1':
+                    $this->version = self::VCARD21;
+                    break;
+                case '3.0':
+                    $this->version = self::VCARD30;
+                    break;
+                case '4.0':
+                    $this->version = self::VCARD40;
+                    break;
+                default:
+                    // We don't want to cache the version if it's unknown,
+                    // because we might get a version property in a bit.
+                    return self::UNKNOWN;
+            }
+        }
+
+        return $this->version;
+    }
+
+    /**
+     * Returns the default class for a property name.
+     *
+     * @param string $propertyName
+     *
+     * @return string
+     */
+    public function getClassNameForPropertyName($propertyName)
+    {
+        $className = parent::getClassNameForPropertyName($propertyName);
+
+        // In vCard 4, BINARY no longer exists, and we need URI instead.
+        if (VObject\Property\Binary::class == $className && self::VCARD40 === $this->getDocumentType()) {
+            return VObject\Property\Uri::class;
+        }
+
+        return $className;
     }
 }
 
@@ -4454,6 +5703,7 @@ namespace Sabre\VObject\Parser;
 
 use Sabre\VObject\Component;
 use Sabre\VObject\Component\VCalendar;
+use Sabre\VObject\Component\VCard;
 use Sabre\VObject\Document;
 use Sabre\VObject\EofException;
 use Sabre\VObject\Node;
@@ -4462,8 +5712,11 @@ use Sabre\VObject\ParseException;
 /**
  * MimeDir parser.
  *
- * This class parses iCalendar 2.0 files and returns a
- * Sabre\VObject\Component\VCalendar.
+ * This class parses iCalendar 2.0 and vCard 2.1, 3.0 and 4.0 files. This
+ * parser will return one of the following two objects from the parse method:
+ *
+ * Sabre\VObject\Component\VCalendar
+ * Sabre\VObject\Component\VCard
  *
  * @copyright Copyright (C) fruux GmbH (https://fruux.com/)
  * @author Evert Pot (http://evertpot.com/)
@@ -4608,8 +5861,11 @@ class MimeDir extends Parser
             case 'BEGIN:VCALENDAR':
                 $class = VCalendar::$componentMap['VCALENDAR'];
                 break;
+            case 'BEGIN:VCARD':
+                $class = VCard::$componentMap['VCARD'];
+                break;
             default:
-                throw new ParseException('This parser only supports VCALENDAR files');
+                throw new ParseException('This parser only supports VCARD and VCALENDAR files');
         }
 
         $this->root = new $class([], false);

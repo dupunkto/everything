@@ -43,17 +43,17 @@ foreach($skeleton ? [] : \calendar\appointments($from, $to) as $a) {
     $a['going'] = false;
   }
 
-  if(!$hidden_by_filter && !$show('declined') && !cast_boolean($a['going'])) continue;
+  if(!$hidden_by_filter && !$show('declined') && !cast_bool($a['going'])) continue;
   $appointments[] = $a;
 }
 
-$timed = array_filter($appointments, fn($a) => !cast_boolean($a['all_day']));
-$all_day_appointments = array_filter($appointments, fn($a) => cast_boolean($a['all_day']));
+$timed = array_filter($appointments, fn($a) => !cast_bool($a['all_day']));
+$all_day_appointments = array_filter($appointments, fn($a) => cast_bool($a['all_day']));
 
 if($show('tasks')) {
   $tasks = \calendar\task_deadlines($from, $to);
-  $timed = array_merge($timed, array_filter($tasks, fn($a) => !cast_boolean($a['all_day'])));
-  $all_day_appointments = array_merge($all_day_appointments, array_filter($tasks, fn($a) => cast_boolean($a['all_day'])));
+  $timed = array_merge($timed, array_filter($tasks, fn($a) => !cast_bool($a['all_day'])));
+  $all_day_appointments = array_merge($all_day_appointments, array_filter($tasks, fn($a) => cast_bool($a['all_day'])));
 }
 
 if($show('birthdays')) $all_day_appointments = array_merge($all_day_appointments, \calendar\birthdays($from, $to));
@@ -113,10 +113,10 @@ $sidebar_right = UI_SIDEBAR_POSITION == 'right';
   <div class="calendar-week__all-day" data-start="<?= $from->format('Y-m-d') ?>">
     <?php foreach($all_day as $appointment): ?>
       <?php
-        $is_birthday = cast_boolean(@$appointment['is_birthday']);
-        $is_task = cast_boolean(@$appointment['is_task'])
+        $is_birthday = cast_bool(@$appointment['is_birthday']);
+        $is_task = cast_bool(@$appointment['is_task'])
       ?>
-      <article class="appointment appointment--all-day<?= cast_boolean($appointment['going']) ? "" : " appointment--not-going" ?><?= $is_birthday ? " appointment--birthday" : "" ?><?= $is_task ? " appointment--task" : "" ?>"
+      <article class="appointment appointment--all-day<?= cast_bool($appointment['going']) ? "" : " appointment--not-going" ?><?= $is_birthday ? " appointment--birthday" : "" ?><?= $is_task ? " appointment--task" : "" ?>"
                <?= !$is_birthday && !$is_task ? 'data-id="' . esc_attr($appointment['id']) . '"' : '' ?>
                <?= $is_task ? 'data-task-id="' . esc_attr($appointment['id']) . '"' : '' ?>
                <?= $is_birthday ? 'data-contact-id="' . esc_attr($appointment['contact_id']) . '"' : '' ?>
@@ -132,7 +132,7 @@ $sidebar_right = UI_SIDEBAR_POSITION == 'right';
             </span>
           <?php endif ?>
       </article>
-      <?php if(cast_boolean(@$appointment['urgent'])) circle("circle--tight appointment__circle") ?>
+      <?php if(cast_bool(@$appointment['urgent'])) circle("circle--tight appointment__circle") ?>
     <?php endforeach ?>
   </div>
 
@@ -161,12 +161,12 @@ $sidebar_right = UI_SIDEBAR_POSITION == 'right';
           </div>
         <?php endforeach ?>
 
-        <?php foreach($day as $appointment): $layout = $appointment['layout']; $is_task = cast_boolean(@$appointment['is_task']) ?>
-          <article class="appointment<?= cast_boolean($appointment['going']) ? "" : " appointment--not-going" ?><?= $is_task ? " appointment--task" : "" ?>"
+        <?php foreach($day as $appointment): $layout = $appointment['layout']; $is_task = cast_bool(@$appointment['is_task']) ?>
+          <article class="appointment<?= cast_bool($appointment['going']) ? "" : " appointment--not-going" ?><?= $is_task ? " appointment--task" : "" ?>"
                    <?= $is_task ? 'data-task-id="' . esc_attr($appointment['id']) . '"' : 'data-id="' . esc_attr($appointment['id']) . '"' ?>
                    style="--appointment-top: <?= $layout['top'] ?>;
                           --appointment-height: <?= $layout['height'] ?>;
-                          <?= cast_boolean($appointment['going'])
+                          <?= cast_bool($appointment['going'])
                             ? "--appointment-width: {$layout['width']}; --appointment-left: {$layout['left']};"
                             : "--appointment-inset: {$layout['inset']};" ?>
                           --appointment-color: <?= $color($appointment) ?>">
@@ -191,12 +191,12 @@ $sidebar_right = UI_SIDEBAR_POSITION == 'right';
               </span>
             <?php endif ?>
 
-            <?php if(cast_boolean(@$appointment['editable'])): ?>
+            <?php if(cast_bool(@$appointment['editable'])): ?>
               <span class="appointment__handle appointment__handle--top"></span>
               <span class="appointment__handle appointment__handle--bottom"></span>
             <?php endif ?>
           </article>
-          <?php if(cast_boolean(@$appointment['urgent'])) circle("circle--tight appointment__circle") ?>
+          <?php if(cast_bool(@$appointment['urgent'])) circle("circle--tight appointment__circle") ?>
         <?php endforeach ?>
       </section>
     <?php endforeach ?>

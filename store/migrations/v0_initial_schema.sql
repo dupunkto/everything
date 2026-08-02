@@ -10,8 +10,8 @@ CREATE TABLE IF NOT EXISTS audit_log (
   table_name text NOT NULL,
   record_id text NOT NULL,
   message text NOT NULL,
+  author text NOT NULL, -- user|system|syncer|caldav|carddav|agent
   operation text NOT NULL DEFAULT 'update',
-  author text NOT NULL, -- user|system|syncer|caldav|agent
   PRIMARY KEY (id),
   CHECK (operation IN ('insert', 'update', 'delete'))
 );
@@ -68,14 +68,21 @@ CREATE TABLE IF NOT EXISTS contacts (
   family_infix text,
   family_name text,
   name_order text NOT NULL DEFAULT 'family_legal',
+  nickname text,
+  pronouns text,
   birth_day int(2),
   birth_month int(2),
   birth_year int(4),
+  anniversary_day int(2),
+  anniversary_month int(2),
+  anniversary_year int(4),
   timezone text,
   note text,
   CHECK (name_order IN ('legal_family', 'family_legal')),
   CHECK ((birth_day IS NULL) = (birth_month IS NULL)),
   CHECK (birth_year IS NULL OR (birth_day IS NOT NULL AND birth_month IS NOT NULL)),
+  CHECK ((anniversary_day IS NULL) = (anniversary_month IS NULL)),
+  CHECK (anniversary_year IS NULL OR (anniversary_day IS NOT NULL AND anniversary_month IS NOT NULL)),
   PRIMARY KEY (id)
 );
 
@@ -115,6 +122,7 @@ CREATE TABLE IF NOT EXISTS contact_roles (
   contact_id int(11) NOT NULL,
   org_id int(11) NOT NULL,
   role text,
+  main boolean NOT NULL DEFAULT false,
   FOREIGN KEY (contact_id) REFERENCES contacts (id) ON DELETE CASCADE,
   FOREIGN KEY (org_id) REFERENCES organisations (id) ON DELETE CASCADE,
   PRIMARY KEY (id)
@@ -203,10 +211,10 @@ CREATE TABLE IF NOT EXISTS addresses (
   id int(11) NOT NULL AUTO_INCREMENT,
   label text,
   street_address text NOT NULL,
-  postal_code text NOT NULL,
-  city text NOT NULL, -- or locality for international addresses
+  postal_code text,
+  city text, -- or locality for international addresses
   province text,
-  country text NOT NULL,
+  country text,
   CHECK (country IN ('AD', 'AE', 'AF', 'AG', 'AI', 'AL', 'AM', 'AO', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AW', 'AX', 'AZ', 'BA', 'BB', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 'BJ', 'BL', 'BM', 'BN', 'BO', 'BQ', 'BR', 'BS', 'BT', 'BV', 'BW', 'BY', 'BZ', 'CA', 'CC', 'CD', 'CF', 'CG', 'CH', 'CI', 'CK', 'CL', 'CM', 'CN', 'CO', 'CR', 'CU', 'CV', 'CW', 'CX', 'CY', 'CZ', 'DE', 'DJ', 'DK', 'DM', 'DO', 'DZ', 'EC', 'EE', 'EG', 'EH', 'ER', 'ES', 'ET', 'FI', 'FJ', 'FK', 'FM', 'FO', 'FR', 'GA', 'GB', 'GD', 'GE', 'GF', 'GG', 'GH', 'GI', 'GL', 'GM', 'GN', 'GP', 'GQ', 'GR', 'GS', 'GT', 'GU', 'GW', 'GY', 'HK', 'HM', 'HN', 'HR', 'HT', 'HU', 'ID', 'IE', 'IL', 'IM', 'IN', 'IO', 'IQ', 'IR', 'IS', 'IT', 'JE', 'JM', 'JO', 'JP', 'KE', 'KG', 'KH', 'KI', 'KM', 'KN', 'KP', 'KR', 'KW', 'KY', 'KZ', 'LA', 'LB', 'LC', 'LI', 'LK', 'LR', 'LS', 'LT', 'LU', 'LV', 'LY', 'MA', 'MC', 'MD', 'ME', 'MF', 'MG', 'MH', 'MK', 'ML', 'MM', 'MN', 'MO', 'MP', 'MQ', 'MR', 'MS', 'MT', 'MU', 'MV', 'MW', 'MX', 'MY', 'MZ', 'NA', 'NC', 'NE', 'NF', 'NG', 'NI', 'NL', 'NO', 'NP', 'NR', 'NU', 'NZ', 'OM', 'PA', 'PE', 'PF', 'PG', 'PH', 'PK', 'PL', 'PM', 'PN', 'PR', 'PS', 'PT', 'PW', 'PY', 'QA', 'RE', 'RO', 'RS', 'RU', 'RW', 'SA', 'SB', 'SC', 'SD', 'SE', 'SG', 'SH', 'SI', 'SJ', 'SK', 'SL', 'SM', 'SN', 'SO', 'SR', 'SS', 'ST', 'SV', 'SX', 'SY', 'SZ', 'TC', 'TD', 'TF', 'TG', 'TH', 'TJ', 'TK', 'TL', 'TM', 'TN', 'TO', 'TR', 'TT', 'TV', 'TW', 'TZ', 'UA', 'UG', 'UM', 'US', 'UY', 'UZ', 'VA', 'VC', 'VE', 'VG', 'VI', 'VN', 'VU', 'WF', 'WS', 'YE', 'YT', 'ZA', 'ZM', 'ZW')),
   PRIMARY KEY (id)
 );
@@ -451,6 +459,10 @@ CREATE TABLE IF NOT EXISTS properties (
   task_id text,
   wish_id text,
   alarm_id text,
+  contact_id int(11),
+  org_id int(11),
+  tag_id int(11),
+  group_name text, -- vCard property group (item1.TEL / item1.X-ABLabel)
   name text NOT NULL,
   parameters text NOT NULL, -- JSON
   value text NOT NULL,
@@ -459,14 +471,17 @@ CREATE TABLE IF NOT EXISTS properties (
   FOREIGN KEY (task_id) REFERENCES tasks (id) ON DELETE CASCADE,
   FOREIGN KEY (wish_id) REFERENCES wishes (id) ON DELETE CASCADE,
   FOREIGN KEY (alarm_id) REFERENCES alarms (id) ON DELETE CASCADE,
+  FOREIGN KEY (contact_id) REFERENCES contacts (id) ON DELETE CASCADE,
+  FOREIGN KEY (org_id) REFERENCES organisations (id) ON DELETE CASCADE,
+  FOREIGN KEY (tag_id) REFERENCES tags (id) ON DELETE CASCADE,
   CHECK (
-    (appointment_id IS NOT NULL AND task_id IS NULL AND wish_id IS NULL AND alarm_id IS NULL)
-    OR
-    (appointment_id IS NULL AND task_id IS NOT NULL AND wish_id IS NULL AND alarm_id IS NULL)
-    OR
-    (appointment_id IS NULL AND task_id IS NULL AND wish_id IS NOT NULL AND alarm_id IS NULL)
-    OR
-    (appointment_id IS NULL AND task_id IS NULL AND wish_id IS NULL AND alarm_id IS NOT NULL)
+    (CASE WHEN appointment_id IS NOT NULL THEN 1 ELSE 0 END
+      + CASE WHEN task_id IS NOT NULL THEN 1 ELSE 0 END
+      + CASE WHEN wish_id IS NOT NULL THEN 1 ELSE 0 END
+      + CASE WHEN alarm_id IS NOT NULL THEN 1 ELSE 0 END
+      + CASE WHEN contact_id IS NOT NULL THEN 1 ELSE 0 END
+      + CASE WHEN org_id IS NOT NULL THEN 1 ELSE 0 END
+      + CASE WHEN tag_id IS NOT NULL THEN 1 ELSE 0 END) = 1
   ),
   PRIMARY KEY (id)
 );
@@ -491,6 +506,36 @@ CREATE TABLE IF NOT EXISTS caldav_resources (
 );
 
 CREATE TABLE IF NOT EXISTS caldav_changes (
+  revision int(11) NOT NULL,
+  collection text NOT NULL,
+  href text NOT NULL,
+  operation text NOT NULL, -- upsert|delete
+  changed_at datetime NOT NULL DEFAULT current_timestamp,
+  CHECK (operation IN ('upsert', 'delete')),
+  PRIMARY KEY (revision, collection, href)
+);
+
+CREATE TABLE IF NOT EXISTS carddav_revision (
+  id int(11) NOT NULL,
+  revision int(11) NOT NULL DEFAULT 0,
+  PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS carddav_resources (
+  entity_type text NOT NULL, -- contact|organisation|tag
+  entity_id text NOT NULL,
+  uid text NOT NULL,
+  href text NOT NULL,
+  collection text,
+  revision int(11) NOT NULL DEFAULT 0,
+  fingerprint text,
+  touched_at datetime NOT NULL DEFAULT current_timestamp,
+  PRIMARY KEY (entity_type, entity_id),
+  UNIQUE (uid),
+  UNIQUE (collection, href)
+);
+
+CREATE TABLE IF NOT EXISTS carddav_changes (
   revision int(11) NOT NULL,
   collection text NOT NULL,
   href text NOT NULL,
@@ -573,5 +618,7 @@ CREATE INDEX task_log_lookup ON task_log (task_id, changed_at);
 CREATE INDEX audit_log_lookup ON audit_log (table_name, record_id, changed_at);
 CREATE INDEX caldav_changes_lookup ON caldav_changes (collection, revision);
 CREATE INDEX caldav_changes_href_lookup ON caldav_changes (collection, href, revision);
+CREATE INDEX carddav_changes_lookup ON carddav_changes (collection, revision);
+CREATE INDEX carddav_changes_href_lookup ON carddav_changes (collection, href, revision);
 CREATE INDEX http_logs_lookup ON http_logs (authenticated, changed_at);
 CREATE INDEX system_logs_lookup ON system_logs (changed_at);

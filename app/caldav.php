@@ -2,138 +2,13 @@
 // CalDAV server for calendars, subscriptions, reminders and wishlists.
 // Written by Claude. (dont judge me ok.)
 
-define('CALDAV_XML_DAV', 'DAV:');
-define('CALDAV_XML_CALDAV', 'urn:ietf:params:xml:ns:caldav');
-define('CALDAV_XML_SERVER', 'http://calendarserver.org/ns/');
-define('CALDAV_XML_APPLE', 'http://apple.com/ns/ical/');
+use function webdav\href, webdav\text, webdav\xml_body, webdav\request_properties,
+  webdav\response, webdav\multistatus;
 
 \caldav\reconcile();
 
-function href($path) {
-  return htmlspecialchars($path, ENT_XML1 | ENT_QUOTES, 'UTF-8');
-}
-
-function text($value) {
-  return htmlspecialchars((string)$value, ENT_XML1 | ENT_QUOTES, 'UTF-8');
-}
-
-function xml_body() {
-  $body = file_get_contents('php://input');
-  if(!$body) return null;
-  if(stripos($body, '<!DOCTYPE') !== false) dav_error(400, "DTD is not allowed.");
-
-  $document = new DOMDocument();
-  $previous = libxml_use_internal_errors(true);
-  $ok = $document->loadXML($body, LIBXML_NONET | LIBXML_NOBLANKS);
-  $error = libxml_get_last_error();
-  libxml_clear_errors();
-  libxml_use_internal_errors($previous);
-  if(!$ok) {
-    $detail = $error ? trim($error->message) . " at line {$error->line}, column {$error->column}" : "unknown parser error";
-    dav_error(400, "Invalid XML request: $detail.");
-  }
-  return $document;
-}
-
-function dav_error($status, $message, $condition = null) {
-  throw new DAVError($message, $status, $condition);
-}
-
-function request_properties($document) {
-  if(!$document || $document->documentElement->localName == 'allprop') return null;
-  foreach($document->documentElement->childNodes as $child) {
-    if(!$child instanceof DOMElement || $child->localName != 'prop') continue;
-    $properties = [];
-    foreach($child->childNodes as $property) {
-      if($property instanceof DOMElement)
-        $properties[] = $property->namespaceURI . '|' . $property->localName;
-    }
-    return $properties;
-  }
-  return null;
-}
-
-function property_xml($name, $value) {
-  [$namespace, $local] = explode('|', $name, 2);
-  $prefix = match($namespace) {
-    CALDAV_XML_DAV => 'D',
-    CALDAV_XML_CALDAV => 'C',
-    CALDAV_XML_SERVER => 'CS',
-    CALDAV_XML_APPLE => 'A',
-    default => null,
-  };
-  $content = @$value['raw'] ?: text(@$value['text']);
-  if(!$prefix) return '<X:' . text($local) . ' xmlns:X="' . text($namespace) . '">' . $content . '</X:' . text($local) . '>';
-  return "<$prefix:$local>$content</$prefix:$local>";
-}
-
-function response($href, $available, $requested = null, $status = 200) {
-  if($status != 200) return '<D:response><D:href>' . href($href) . '</D:href><D:status>HTTP/1.1 '
-    . $status . ' ' . ($status == 404 ? 'Not Found' : 'Error') . '</D:status></D:response>';
-
-  $known = [];
-  $missing = [];
-  foreach($requested ?? array_keys($available) as $name) {
-    if(isset($available[$name])) $known[$name] = $available[$name];
-    else $missing[] = $name;
-  }
-
-  $xml = '<D:response><D:href>' . href($href) . '</D:href>';
-  if($known) {
-    $xml .= '<D:propstat><D:prop>';
-    foreach($known as $name => $value) $xml .= property_xml($name, $value);
-    $xml .= '</D:prop><D:status>HTTP/1.1 200 OK</D:status></D:propstat>';
-  }
-  if($missing) {
-    $xml .= '<D:propstat><D:prop>';
-    foreach($missing as $name) $xml .= property_xml($name, ['text' => '']);
-    $xml .= '</D:prop><D:status>HTTP/1.1 404 Not Found</D:status></D:propstat>';
-  }
-  return $xml . '</D:response>';
-}
-
-function multistatus($responses) {
-  http_response_code(207);
-  header("Content-Type: application/xml; charset=utf-8");
-  echo '<?xml version="1.0" encoding="utf-8"?>';
-  echo '<D:multistatus xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav" '
-    . 'xmlns:CS="http://calendarserver.org/ns/" xmlns:A="http://apple.com/ns/ical/">';
-  echo implode('', $responses);
-  echo '</D:multistatus>';
-  exit;
-}
-
-function root_properties() {
-  return [
-    CALDAV_XML_DAV . '|resourcetype' => ['raw' => '<D:collection/>'],
-    CALDAV_XML_DAV . '|displayname' => ['text' => 'Everything'],
-    CALDAV_XML_DAV . '|current-user-principal' => ['raw' => '<D:href>/caldav/principals/' . CALDAV_PRINCIPAL . '/</D:href>'],
-  ];
-}
-
-function principal_properties() {
-  return [
-    CALDAV_XML_DAV . '|resourcetype' => ['raw' => '<D:principal/>'],
-    CALDAV_XML_DAV . '|displayname' => ['text' => 'Everything'],
-    CALDAV_XML_DAV . '|principal-URL' => ['raw' => '<D:href>/caldav/principals/' . CALDAV_PRINCIPAL . '/</D:href>'],
-    CALDAV_XML_CALDAV . '|calendar-home-set' => ['raw' => '<D:href>/caldav/calendars/' . CALDAV_PRINCIPAL . '/</D:href>'],
-  ];
-}
-
-function home_properties() {
-  return [
-    CALDAV_XML_DAV . '|resourcetype' => ['raw' => '<D:collection/>'],
-    CALDAV_XML_DAV . '|displayname' => ['text' => 'Everything calendars'],
-    CALDAV_XML_DAV . '|current-user-principal' => ['raw' => '<D:href>/caldav/principals/' . CALDAV_PRINCIPAL . '/</D:href>'],
-  ];
-}
-
 function collection_href($id) {
   return '/caldav/calendars/' . CALDAV_PRINCIPAL . '/' . rawurlencode($id) . '/';
-}
-
-function sync_token($collection, $revision) {
-  return CANONICAL . '/caldav/sync/' . rawurlencode($collection) . '/' . $revision;
 }
 
 function collection_properties($collection) {
@@ -145,21 +20,21 @@ function collection_properties($collection) {
   $resource_type = '<D:collection/><C:calendar/>';
   if($collection['subscription']) $resource_type .= '<CS:subscribed/>';
   $properties = [
-    CALDAV_XML_DAV . '|resourcetype' => ['raw' => $resource_type],
-    CALDAV_XML_DAV . '|displayname' => ['text' => $collection['displayname']],
-    CALDAV_XML_DAV . '|sync-token' => ['text' => sync_token($collection['id'], $revision)],
-    CALDAV_XML_DAV . '|supported-report-set' => ['raw' => '<D:supported-report><D:report><C:calendar-query/></D:report></D:supported-report>'
+    WEBDAV_XML_DAV . '|resourcetype' => ['raw' => $resource_type],
+    WEBDAV_XML_DAV . '|displayname' => ['text' => $collection['displayname']],
+    WEBDAV_XML_DAV . '|sync-token' => ['text' => \webdav\sync_token('caldav', $collection['id'], $revision)],
+    WEBDAV_XML_DAV . '|supported-report-set' => ['raw' => '<D:supported-report><D:report><C:calendar-query/></D:report></D:supported-report>'
       . '<D:supported-report><D:report><C:calendar-multiget/></D:report></D:supported-report>'
       . '<D:supported-report><D:report><D:sync-collection/></D:report></D:supported-report>'],
-    CALDAV_XML_CALDAV . '|supported-calendar-component-set' => ['raw' => '<C:comp name="' . $collection['component'] . '"/>'],
-    CALDAV_XML_SERVER . '|getctag' => ['text' => (string)$revision],
-    CALDAV_XML_DAV . '|current-user-privilege-set' => ['raw' => $privileges],
+    WEBDAV_XML_CALDAV . '|supported-calendar-component-set' => ['raw' => '<C:comp name="' . $collection['component'] . '"/>'],
+    WEBDAV_XML_SERVER . '|getctag' => ['text' => (string)$revision],
+    WEBDAV_XML_DAV . '|current-user-privilege-set' => ['raw' => $privileges],
   ];
-  if($collection['subscription']) $properties[CALDAV_XML_SERVER . '|source'] = [
+  if($collection['subscription']) $properties[WEBDAV_XML_SERVER . '|source'] = [
     'raw' => '<D:href>' . href($collection['subscription']['url']) . '</D:href>',
   ];
-  if($collection['color']) $properties[CALDAV_XML_APPLE . '|calendar-color'] = ['text' => $collection['color'] . 'FF'];
-  if($collection['position'] !== null) $properties[CALDAV_XML_APPLE . '|calendar-order'] = ['text' => (string)$collection['position']];
+  if($collection['color']) $properties[WEBDAV_XML_APPLE . '|calendar-color'] = ['text' => $collection['color'] . 'FF'];
+  if($collection['position'] !== null) $properties[WEBDAV_XML_APPLE . '|calendar-order'] = ['text' => (string)$collection['position']];
   return $properties;
 }
 
@@ -167,13 +42,13 @@ function resource_properties($collection, $resource, $calendar_data = false) {
   $body = \caldav\serialize($resource);
   if($body === null) return null;
   $properties = [
-    CALDAV_XML_DAV . '|resourcetype' => ['text' => ''],
-    CALDAV_XML_DAV . '|getetag' => ['text' => \caldav\etag($body)],
-    CALDAV_XML_DAV . '|getcontenttype' => ['text' => 'text/calendar; charset=utf-8; component=' . $collection['component']],
-    CALDAV_XML_DAV . '|getcontentlength' => ['text' => (string)strlen($body)],
-    CALDAV_XML_DAV . '|getlastmodified' => ['text' => gmdate('D, d M Y H:i:s', strtotime($resource['touched_at'])) . ' GMT'],
+    WEBDAV_XML_DAV . '|resourcetype' => ['text' => ''],
+    WEBDAV_XML_DAV . '|getetag' => ['text' => \webdav\etag($body)],
+    WEBDAV_XML_DAV . '|getcontenttype' => ['text' => 'text/calendar; charset=utf-8; component=' . $collection['component']],
+    WEBDAV_XML_DAV . '|getcontentlength' => ['text' => (string)strlen($body)],
+    WEBDAV_XML_DAV . '|getlastmodified' => ['text' => gmdate('D, d M Y H:i:s', strtotime($resource['touched_at'])) . ' GMT'],
   ];
-  if($calendar_data) $properties[CALDAV_XML_CALDAV . '|calendar-data'] = ['text' => $body];
+  if($calendar_data) $properties[WEBDAV_XML_CALDAV . '|calendar-data'] = ['text' => $body];
   return $properties;
 }
 
@@ -202,15 +77,18 @@ function propfind() {
   $location = locate();
   $responses = [];
 
+  $principal_properties = \webdav\principal_properties('caldav',
+    WEBDAV_XML_CALDAV . '|calendar-home-set', '/caldav/calendars/' . CALDAV_PRINCIPAL . '/');
+
   if($location[0] == 'root') {
-    $responses[] = response('/caldav/', root_properties(), $requested);
-    if($depth == '1') $responses[] = response('/caldav/principals/' . CALDAV_PRINCIPAL . '/', principal_properties(), $requested);
+    $responses[] = response('/caldav/', \webdav\root_properties('caldav'), $requested);
+    if($depth == '1') $responses[] = response('/caldav/principals/' . CALDAV_PRINCIPAL . '/', $principal_properties, $requested);
   }
   elseif($location[0] == 'principal') {
-    $responses[] = response('/caldav/principals/' . CALDAV_PRINCIPAL . '/', principal_properties(), $requested);
+    $responses[] = response('/caldav/principals/' . CALDAV_PRINCIPAL . '/', $principal_properties, $requested);
   }
   elseif($location[0] == 'home') {
-    $responses[] = response('/caldav/calendars/' . CALDAV_PRINCIPAL . '/', home_properties(), $requested);
+    $responses[] = response('/caldav/calendars/' . CALDAV_PRINCIPAL . '/', \webdav\home_properties('caldav', 'Everything calendars'), $requested);
     if($depth == '1') foreach(\caldav\collections() as $collection)
       $responses[] = response(collection_href($collection['id']), collection_properties($collection), $requested);
   }
@@ -271,11 +149,11 @@ function report() {
   $requested = request_properties($document);
   $responses = [];
   foreach(['expand', 'limit-recurrence-set', 'limit-freebusy-set'] as $modifier)
-    if($document->getElementsByTagNameNS(CALDAV_XML_CALDAV, $modifier)->length)
+    if($document->getElementsByTagNameNS(WEBDAV_XML_CALDAV, $modifier)->length)
       \logger\warn("Ignored unsupported CalDAV calendar data modifier $modifier.");
 
   if($report == 'calendar-multiget') {
-    foreach($document->getElementsByTagNameNS(CALDAV_XML_DAV, 'href') as $node) {
+    foreach($document->getElementsByTagNameNS(WEBDAV_XML_DAV, 'href') as $node) {
       $name = rawurldecode(basename(parse_url($node->textContent, PHP_URL_PATH)));
       $resource = \store\get_caldav_resource_by_href($collection['id'], $name);
       $url = collection_href($collection['id']) . rawurlencode($name);
@@ -286,15 +164,15 @@ function report() {
   }
   elseif($report == 'calendar-query') {
     foreach(['prop-filter', 'param-filter', 'text-match', 'is-not-defined'] as $filter)
-      if($document->getElementsByTagNameNS(CALDAV_XML_CALDAV, $filter)->length)
+      if($document->getElementsByTagNameNS(WEBDAV_XML_CALDAV, $filter)->length)
         \logger\warn("Ignored unsupported CalDAV calendar filter $filter.");
 
     $component_match = true;
-    foreach($document->getElementsByTagNameNS(CALDAV_XML_CALDAV, 'comp-filter') as $filter) {
+    foreach($document->getElementsByTagNameNS(WEBDAV_XML_CALDAV, 'comp-filter') as $filter) {
       $name = strtoupper($filter->getAttribute('name'));
       if($name != 'VCALENDAR' && $name != $collection['component']) $component_match = false;
     }
-    $ranges = $document->getElementsByTagNameNS(CALDAV_XML_CALDAV, 'time-range');
+    $ranges = $document->getElementsByTagNameNS(WEBDAV_XML_CALDAV, 'time-range');
     $start = $ranges->length ? $ranges->item(0)->getAttribute('start') : null;
     $end = $ranges->length ? $ranges->item(0)->getAttribute('end') : null;
     foreach(\store\list_caldav_resources_by_collection($collection['id']) as $resource) {
@@ -304,12 +182,11 @@ function report() {
     }
   }
   elseif($report == 'sync-collection') {
-    $tokens = $document->getElementsByTagNameNS(CALDAV_XML_DAV, 'sync-token');
+    $tokens = $document->getElementsByTagNameNS(WEBDAV_XML_DAV, 'sync-token');
     $token = $tokens->length ? trim($tokens->item(0)->textContent) : '';
-    $pattern = '@/sync/' . preg_quote(rawurlencode($collection['id']), '@') . '/(\d+)$@';
-    if($token && !preg_match($pattern, $token, $match))
+    $revision = \webdav\sync_revision($token, $collection['id']);
+    if($revision === false)
       dav_error(403, "Sync token '$token' is invalid for collection '{$collection['id']}'.", 'D:valid-sync-token');
-    $revision = $token ? (int)$match[1] : null;
 
     if($revision === null) {
       foreach(\store\list_caldav_resources_by_collection($collection['id']) as $resource)
@@ -330,13 +207,8 @@ function report() {
     }
 
     $current = \store\caldav_collection_revision($collection['id']);
-    http_response_code(207);
-    header("Content-Type: application/xml; charset=utf-8");
-    echo '<?xml version="1.0" encoding="utf-8"?>';
-    echo '<D:multistatus xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">';
-    echo implode('', $responses);
-    echo '<D:sync-token>' . text(sync_token($collection['id'], $current)) . '</D:sync-token></D:multistatus>';
-    exit;
+    multistatus($responses,
+      '<D:sync-token>' . text(\webdav\sync_token('caldav', $collection['id'], $current)) . '</D:sync-token>');
   }
   else {
     dav_error(403, "CalDAV REPORT '$report' is unsupported.", 'D:supported-report');
@@ -346,27 +218,28 @@ function report() {
 }
 
 function precondition($resource) {
-  $match = @$_SERVER['HTTP_IF_MATCH'];
-  $none = @$_SERVER['HTTP_IF_NONE_MATCH'];
-  if($none == '*' && $resource)
-    dav_error(412, "Resource already exists with ETag " . \caldav\etag(\caldav\serialize($resource)) . ".");
-  if($match) {
-    if(!$resource) dav_error(412, "If-Match '$match' was supplied, but the resource does not exist.");
-    $body = \caldav\serialize($resource);
-    $etag = \caldav\etag($body);
-    if($match != '*' && !in_array($etag, array_map('trim', explode(',', $match))))
-      dav_error(412, "If-Match '$match' does not match current ETag $etag.");
-  }
+  \webdav\precondition($resource ? \webdav\etag(\caldav\serialize($resource)) : null);
 }
 
 function save_properties($type, $id, $data) {
   \store\replace_properties($type, $id, $data['properties']);
 
+  // Alarm rows get fresh ids on every write, so retained alarm properties
+  // are diffed as one aggregated multiset per parent entity.
+  $previous = [];
+  foreach(\store\list_alarms($type, $id) as $alarm)
+    $previous = [...$previous, ...\store\list_properties('alarm', $alarm['id'])];
+
   foreach($data['alarms'] as &$alarm) $alarm['id'] = \generate_humid();
   unset($alarm);
   \store\replace_alarms($type, $id, $data['alarms']);
-  foreach($data['alarms'] as $alarm)
-    \store\replace_properties('alarm', $alarm['id'], $alarm['properties']);
+
+  $stored = [];
+  foreach($data['alarms'] as $alarm) {
+    \store\replace_properties('alarm', $alarm['id'], $alarm['properties'], log: false);
+    $stored = [...$stored, ...\store\list_properties('alarm', $alarm['id'])];
+  }
+  \store\log_property_changes("$type/$id/alarms", $previous, $stored);
 }
 
 function put() {
@@ -462,6 +335,10 @@ function put() {
   }
 
   save_properties($type, $id, $data);
+  if($type == 'wish' && $data['wish_urls'] !== null) {
+    \store\set_wish_urls($id, $data['wish_urls']);
+    if(!$created) $fields = [...$fields, 'urls'];
+  }
   if(!$created) $fields = [...$fields, 'properties', 'alarms'];
   $occupied = \store\get_caldav_resource_by_href($saved_collection, $saved_name);
   if($occupied && ($occupied['entity_type'] != $type || $occupied['entity_id'] != $id))
@@ -483,7 +360,7 @@ function put() {
 
   http_response_code($created ? 201 : 204);
   $saved = \store\get_caldav_resource_by_href($saved_collection, $saved_name);
-  header('ETag: ' . \caldav\etag(\caldav\serialize($saved)));
+  header('ETag: ' . \webdav\etag(\caldav\serialize($saved)));
   if($saved_collection != $collection['id'] || $saved_name != $name)
     header('Content-Location: ' . collection_href($saved_collection) . rawurlencode($saved_name));
   exit;
@@ -589,10 +466,10 @@ function proppatch() {
   $position = $collection['position'];
 
   foreach($document->getElementsByTagNameNS('*', '*') as $element) {
-    if($element->namespaceURI == CALDAV_XML_DAV && $element->localName == 'displayname')
+    if($element->namespaceURI == WEBDAV_XML_DAV && $element->localName == 'displayname')
       [$title, $subtitle] = \caldav\parse_displayname($element->textContent);
-    elseif($element->namespaceURI == CALDAV_XML_APPLE && $element->localName == 'calendar-color') $color = substr(trim($element->textContent), 0, 7);
-    elseif($element->namespaceURI == CALDAV_XML_APPLE && $element->localName == 'calendar-order') $position = (int)$element->textContent;
+    elseif($element->namespaceURI == WEBDAV_XML_APPLE && $element->localName == 'calendar-color') $color = substr(trim($element->textContent), 0, 7);
+    elseif($element->namespaceURI == WEBDAV_XML_APPLE && $element->localName == 'calendar-order') $position = (int)$element->textContent;
   }
   if(!$title) dav_error(409, "Calendar display name cannot be empty.");
   if(!preg_match('/^#[0-9a-fA-F]{6}$/', $color))
@@ -613,7 +490,7 @@ function get_resource($head = false) {
     dav_error(404, "Requested CalDAV resource was not found.");
   [$kind, $collection, $name, $resource] = $location;
   $body = \caldav\serialize($resource);
-  $etag = \caldav\etag($body);
+  $etag = \webdav\etag($body);
   if(@$_SERVER['HTTP_IF_NONE_MATCH'] == $etag) { http_response_code(304); exit; }
   header("Content-Type: text/calendar; charset=utf-8");
   header("Content-Length: " . strlen($body));

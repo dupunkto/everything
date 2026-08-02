@@ -48,6 +48,9 @@
   $meta = [];
 
   if($kind == "person") {
+    if(is_nonempty_str($item['nickname'])) $meta[] = "\"{$item['nickname']}\"";
+    if(is_nonempty_str($item['pronouns'])) $meta[] = $item['pronouns'];
+
     if($item['birth_day'] && $item['birth_month']) {
       // If the birth year is unknown, we take 2000 as a safe default,
       // so we can still do calculations on a proper DateTime object.
@@ -65,6 +68,15 @@
         $meta[] = $birthday->format('F, j');
         $meta[] = star_sign($birthday->format('n'), $birthday->format('j'));
       }
+    }
+
+    if($item['anniversary_day'] && $item['anniversary_month']) {
+      $anniversary = DateTime::createFromFormat('!Y-m-d', join("-", [
+        str_pad($item['anniversary_year'] ?: 2000, 4, "0", STR_PAD_LEFT),
+        str_pad($item['anniversary_month'], 2, "0", STR_PAD_LEFT),
+        str_pad($item['anniversary_day'], 2, "0", STR_PAD_LEFT),
+      ]));
+      if($anniversary) $meta[] = "anniversary " . $anniversary->format('F, j');
     }
   }
 
@@ -164,9 +176,6 @@
           <li>
             <?php
               $raw = trim($social['handle']);
-              $h = ltrim($raw, "@");
-              $enc = rawurlencode($h);
-              $ap = explode("@", $h); // activitypub: user@instance
 
               $icon = match($social['type']) {
                 'instagram' => 'fa-brands fa-instagram',
@@ -190,27 +199,7 @@
                 default => 'fa-solid fa-at',
               };
 
-              $url = match($social['type']) {
-                'instagram' => "https://instagram.com/$enc",
-                'discord' => ctype_digit($h) ? "https://discord.com/users/$enc" : null,
-                'snapchat' => "https://snapchat.com/add/$enc",
-                'spacehey' => ctype_digit($h) ? "https://spacehey.com/profile?id=$enc" : "https://spacehey.com/$enc",
-                'airbuds' => "https://i.airbuds.fm/$enc",
-                'tiktok' => "https://tiktok.com/@$enc",
-                'wattpad' => "https://wattpad.com/user/$enc",
-                'github' => "https://github.com/$enc",
-                'codeberg' => "https://codeberg.org/$enc",
-                'gitlab' => "https://gitlab.com/$enc",
-                'linkedin' => $kind == "org" ? "https://linkedin.com/company/$enc" : "https://linkedin.com/in/$enc",
-                'matrix' => "https://matrix.to/#/" . rawurlencode($raw),
-                'pinterest' => "https://pinterest.com/$enc",
-                'twitter' => "https://twitter.com/$enc",
-                'youtube' => "https://youtube.com/@$enc",
-                'facebook' => "https://facebook.com/$enc",
-                'activitypub' => count($ap) == 2 ? "https://{$ap[1]}/@{$ap[0]}" : null,
-                'bsky' => "https://bsky.app/profile/$enc",
-                default => null,
-              };
+              $url = \contacts\social_url($social['type'], $social['handle'], $kind);
 
               $label = $social['type'] == 'linkedin' ? preg_replace('/-[a-z0-9]*\d[a-z0-9]*$/i', "", $raw) : $raw;
             ?>

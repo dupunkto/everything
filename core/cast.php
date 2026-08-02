@@ -1,29 +1,41 @@
 <?php
 // Scalar casting helpers for data coming from HTML forms and storage.
 
-function cast_string($value): ?string {
+function is_str($value): bool {
+  return cast_str($value) !== null;
+}
+
+function is_num($value): bool {
+  return $value !== null && is_numeric(trim((string)$value));
+}
+
+function is_date($value): bool {
+  return cast_date($value) !== null;
+}
+
+function cast_str($value): ?string {
   if($value === null) return null;
 
   $value = trim((string)$value);
   return $value == "" ? null : $value;
 }
 
-function cast_int($value): ?int {
-  $value = cast_string($value);
+function cast_num($value): ?int {
+  $value = cast_str($value);
   return $value === null ? null : (int)$value;
 }
 
 function cast_float($value): ?float {
-  $value = cast_string($value);
+  $value = cast_str($value);
   return $value === null ? null : (float)$value;
 }
 
-function cast_boolean($value): bool {
+function cast_bool($value): bool {
   return filter_var($value, FILTER_VALIDATE_BOOLEAN);
 }
 
 function cast_date($value): ?string {
-  $value = cast_string($value);
+  $value = cast_str($value);
   if($value === null) return null;
 
   $date = DateTimeImmutable::createFromFormat('!Y-m-d', $value);
@@ -31,15 +43,15 @@ function cast_date($value): ?string {
 }
 
 function cast_color($color): ?string {
-  $color = cast_string($color);
+  $color = cast_str($color);
   if($color === null) return null;
 
   return strcasecmp($color, "#ffffff") == 0 ? null : $color;
 }
 
-function cast_datetime_utc($date, $time, $timezone = null): ?string {
+function cast_dt_utc($date, $time, $timezone = null): ?string {
   $date = cast_date($date);
-  $time = cast_string($time);
+  $time = cast_str($time);
   if($date === null || $time === null) return null;
 
   $value = strlen($time) == 5 ? "$date $time:00" : "$date $time";
@@ -50,8 +62,8 @@ function cast_datetime_utc($date, $time, $timezone = null): ?string {
     : null;
 }
 
-function cast_datetime_local($datetime, $timezone = null): ?string {
-  $datetime = cast_string($datetime);
+function cast_dt_local($datetime, $timezone = null): ?string {
+  $datetime = cast_str($datetime);
   if($datetime === null) return null;
 
   $timezone = $timezone ?? TIMEZONE;

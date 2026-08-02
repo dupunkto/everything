@@ -2,10 +2,10 @@
 
   if(isset($_POST["title"], $_POST["status"], $_POST["urgent"])) {
     $id = \store\put_wish(
-      cast_string($_POST['title']),
-      cast_string(@$_POST['content']),
-      cast_string($_POST['status']),
-      cast_boolean($_POST['urgent'])
+      cast_str($_POST['title']),
+      cast_str(@$_POST['content']),
+      cast_str($_POST['status']),
+      cast_bool($_POST['urgent'])
     );
 
     $urls = array_map(fn($row) => [...$row, 'price' => cast_float(@$row['price'])],

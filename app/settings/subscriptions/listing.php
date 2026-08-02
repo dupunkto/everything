@@ -6,7 +6,7 @@
       $filter = $subscription['filter'] ?? '';
       $has_filter = is_nonempty_str($filter);
       $is_open = $current_filter == $subscription['id'];
-      $retain = cast_boolean($subscription['history']);
+      $retain = cast_bool($subscription['history']);
     ?>
     <li class="settings-listing__item" data-order-id="<?= esc_attr($subscription['id']) ?>">
       <form class="settings-editor settings-editor--subscription" x-post="/settings/subscriptions/edit<?php if($current_filter) echo "?filter=" . urlencode($current_filter) ?>" x-on="change" x-target="#subscriptions-listing">

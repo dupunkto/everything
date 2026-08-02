@@ -165,13 +165,13 @@ function reconcile() {
       ...\store\list_subscription_appointments(),
     ];
     foreach($appointments as $row) {
-      $going = \cast_boolean($row['going']);
+      $going = \cast_bool($row['going']);
       $filtered = $row['subscription_id'] && $row['subscription_filter']
         && stripos($row['title'], $row['subscription_filter']) === false;
       $visible = $going && !$filtered;
       $collection = $row['calendar_id'] ?: $row['subscription_id'];
       $visit('appointment', $row, $visible ? $collection : null);
-      $travel = $visible && !\cast_boolean($row['all_day']);
+      $travel = $visible && !\cast_bool($row['all_day']);
       $before = $travel && (int)$row['travel_before'] > 0 ? 'travel' : null;
       $after = $travel && (int)$row['travel_after'] > 0 ? 'travel' : null;
       $visit('travel_before', $row, $before,
@@ -348,6 +348,52 @@ function unknown_lines($type, $id, $skip = []) {
   return $result;
 }
 
+// Private projections of model data that plain iCalendar cannot carry:
+// internal statuses, tag references, travel settings, address links,
+// expiry data and wishlist links. References carry a stable uid, never
+// database row ids.
+define('CALDAV_PRIVATE_PROPERTIES', [
+  'X-EVERYTHING-SCHEMA', 'X-EVERYTHING-STATUS', 'X-EVERYTHING-EXPIRE',
+  'X-EVERYTHING-TRAVEL', 'X-EVERYTHING-ADDRESS', 'X-EVERYTHING-TAG',
+  'X-EVERYTHING-URL',
+]);
+
+function tag_lines($tags) {
+  $result = "";
+  foreach($tags as $tag)
+    $result .= line('X-EVERYTHING-TAG', (string)$tag['id'], [
+      ['name' => 'X-LABEL', 'values' => [$tag['label']]],
+    ]);
+  return $result;
+}
+
+function private_lines($type, $row) {
+  $body = "";
+
+  if($type == 'appointment') {
+    if((int)$row['travel_before'] > 0 || (int)$row['travel_after'] > 0)
+      $body .= line('X-EVERYTHING-TRAVEL', (int)$row['travel_before'] . ';' . (int)$row['travel_after']);
+    if($row['address_id'])
+      $body .= line('X-EVERYTHING-ADDRESS', (string)$row['address_id']);
+    $body .= tag_lines(\store\list_appointment_tags($row['id']));
+  }
+  elseif($type == 'task') {
+    $body .= line('X-EVERYTHING-STATUS', $row['status']);
+    if($row['expire_at']) $body .= line('X-EVERYTHING-EXPIRE', utc($row['expire_at']));
+    $body .= tag_lines(\store\list_task_tags($row['id']));
+  }
+  elseif($type == 'wish') {
+    foreach(\store\list_wish_urls($row['id']) as $url) {
+      $params = $url['price'] !== null
+        ? [['name' => 'X-PRICE', 'values' => [\format_price_value($url['price'])]]] : [];
+      $body .= line('X-EVERYTHING-URL', $url['url'], $params);
+    }
+    $body .= tag_lines(\store\list_wish_tags($row['id']));
+  }
+
+  return $body . line('X-EVERYTHING-SCHEMA', '1');
+}
+
 function alarm_lines($type, $id) {
   $alarms = [];
   foreach(\store\list_alarms($type, $id) as $alarm) {
@@ -394,7 +440,7 @@ function serialize($resource) {
   if(!$is_travel && $row['content'] !== null && $row['content'] !== "")
     $body .= line('DESCRIPTION', \icalendar\escape_text($row['content']));
   if(!$is_travel)
-    $body .= line('PRIORITY', (string)priority($type, $row['id'], \cast_boolean($row['urgent'])));
+    $body .= line('PRIORITY', (string)priority($type, $row['id'], \cast_bool($row['urgent'])));
 
   $skip = ['UID', 'DTSTAMP', 'SEQUENCE', 'CREATED', 'LAST-MODIFIED', 'SUMMARY', 'DESCRIPTION', 'PRIORITY'];
 
@@ -420,7 +466,7 @@ function serialize($resource) {
     }
   }
   elseif($type == 'appointment') {
-    if(\cast_boolean($row['all_day'])) {
+    if(\cast_bool($row['all_day'])) {
       $body .= line('DTSTART', local_day($row['starts_at']), [['name' => 'VALUE', 'values' => ['DATE']]]);
       $body .= line('DTEND', local_day($row['ends_at']), [['name' => 'VALUE', 'values' => ['DATE']]]);
     }
@@ -450,7 +496,7 @@ function serialize($resource) {
       ? line('DTSTART', local_time($row['open_at']), $timezone)
       : line('DTSTART', utc($row['open_at']));
     if($row['due_at']) {
-      if(\cast_boolean($row['due_all_day']))
+      if(\cast_bool($row['due_all_day']))
         $body .= line('DUE', local_day($row['due_at']), [['name' => 'VALUE', 'values' => ['DATE']]]);
       elseif($row['recurrence']) $body .= line('DUE', local_time($row['due_at']), $timezone);
       else $body .= line('DUE', utc($row['due_at']));
@@ -470,15 +516,12 @@ function serialize($resource) {
   }
 
   if(!$is_travel) {
-    $body .= unknown_lines($type, $row['id'], $skip);
+    $body .= private_lines($type, $row);
+    $body .= unknown_lines($type, $row['id'], [...$skip, ...CALDAV_PRIVATE_PROPERTIES]);
     $body .= alarm_lines($type, $row['id']);
   }
   $body .= "END:$component\r\nEND:VCALENDAR\r\n";
   return $body;
-}
-
-function etag($body) {
-  return '"' . hash('sha256', $body) . '"';
 }
 
 function parameters(Property $property) {
@@ -708,6 +751,20 @@ function parse($body, $expected, $type = null) {
   if($data['recurrence'] && !\recurrence\valid($data['recurrence'], $base->setTimezone(new \DateTimeZone(TIMEZONE))))
     throw new \InvalidArgumentException("Invalid RRULE '{$data['recurrence']}' on {$data['uid']}.");
 
-  $data['properties'] = properties($component, $native);
+  // Private X-EVERYTHING projections are regenerated on output and must not
+  // linger as retained copies. Wishlist links are the one writable set:
+  // when present they replace the wish's URLs, when absent the URLs stay.
+  $data['wish_urls'] = null;
+  if($type == 'wish') {
+    $urls = [];
+    foreach($component->select('X-EVERYTHING-URL') as $property)
+      $urls[] = [
+        'url' => $property->getRawMimeDirValue(),
+        'price' => isset($property['X-PRICE']) ? \cast_str((string)$property['X-PRICE']) : null,
+      ];
+    if($urls) $data['wish_urls'] = $urls;
+  }
+
+  $data['properties'] = properties($component, [...$native, ...CALDAV_PRIVATE_PROPERTIES]);
   return $data;
 }

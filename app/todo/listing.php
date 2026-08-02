@@ -29,7 +29,7 @@
   $is_overdue = fn($task) =>
     in_array($task['status'], ['todo', 'wip', 'blocked'])
     && $task['next']
-    && (cast_boolean($task['due_all_day'])
+    && (cast_bool($task['due_all_day'])
       ? local_date("Y-m-d", $task['next']) < $today
       : strtotime($task['next']) < $now);
 
@@ -194,13 +194,13 @@
         <?php foreach($list['tasks'] as $task): ?>
           <?php $state = json_encode(array_replace($pinned, [$task['id'] => $task['virtual_status']])) ?>
           <li class="listing__item<?= $task['overdue'] ? " todo__item--overdue" : "" ?>" tabindex="0">
-            <?php if(cast_boolean($task['urgent'])) circle() ?>
+            <?php if(cast_bool($task['urgent'])) circle() ?>
             <form x-post="/todo/urgent" x-target="#todo-listing" x-on="change" hidden>
               <input type="hidden" name="id" value="<?= esc_attr($task['id']) ?>">
               <input type="hidden" name="urgent" value="false">
               <input type="hidden" name="q" value="<?= esc_attr($query) ?>">
               <input type="hidden" name="i" value="<?= esc_attr($state) ?>">
-              <input type="checkbox" name="urgent" value="true" z-key="m" <?php if(cast_boolean($task['urgent'])) echo "checked" ?> hidden>
+              <input type="checkbox" name="urgent" value="true" z-key="m" <?php if(cast_bool($task['urgent'])) echo "checked" ?> hidden>
             </form>
             <form x-post="/todo/status" x-target="#todo-listing" x-on="change">
               <input type="hidden" name="id" value="<?= esc_attr($task['id']) ?>">

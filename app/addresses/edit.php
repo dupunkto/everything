@@ -12,12 +12,13 @@
   <div>
     <input name="addr_label" type="text" z-key="n" placeholder="label" value="<?= esc_attr(@$address['label']) ?>">
     <input name="addr_street_address" placeholder="street address" required value="<?= esc_attr(@$address['street_address']) ?>">
-    <input name="addr_postal_code" placeholder="postal code" required value="<?= esc_attr(@$address['postal_code']) ?>">
+    <input name="addr_postal_code" placeholder="postal code" value="<?= esc_attr(@$address['postal_code']) ?>">
   </div>
   <div>
-    <input name="addr_city" placeholder="city" required value="<?= esc_attr(@$address['city']) ?>">
+    <input name="addr_city" placeholder="city" value="<?= esc_attr(@$address['city']) ?>">
     <input name="addr_province" placeholder="province" value="<?= esc_attr(@$address['province']) ?>">
-    <?php \forms\options('addr_country', country_options(), @$address['country'] ?: COUNTRY, flat: true) ?>
+    <?php \forms\options('addr_country', ['' => "Country", ...country_options()],
+      isset($address) ? $address['country'] : COUNTRY, flat: true) ?>
   </div>
   <div class="actions">
     <div>

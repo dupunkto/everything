@@ -1,13 +1,13 @@
 <?php
 
   if(isset($_POST['url'])) {
-    $url = cast_string($_POST['url']) or fail("URL is required.");
+    $url = cast_str($_POST['url']) or fail("URL is required.");
     $meta = \bookmarks\fetch_meta($url);
 
     $id = \store\put_bookmark(
       $url,
       $meta['label'],
-      cast_string(@$_POST['note']),
+      cast_str(@$_POST['note']),
       $meta['favicon'],
       gmdate('c')
     );

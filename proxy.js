@@ -20,6 +20,12 @@ const server = https.createServer(tls_options, (request, response) => {
     return;
   }
 
+  if(request.url == '/.well-known/carddav') {
+    response.writeHead(301, {location: `https://${request.headers.host}/carddav/`});
+    response.end();
+    return;
+  }
+
   const upstream = http.request({
     hostname: '127.0.0.1',
     port: php_port,

@@ -332,6 +332,11 @@
   gap: 0.25em;
 }
 
+.birthday-fields button {
+  padding: 0.3em 0.6em;
+  align-self: center;
+}
+
 .detail__delete {
   margin-top: 2em;
   align-self: flex-start;
@@ -363,5 +368,26 @@
 
 .address-row__fields input,
 .address-row__fields select {
+  min-width: 0;
+}
+
+.repeat .role-main {
+  font-size: 0.7em;
+  padding: 6.5px;
+}
+
+.detail__nickname {
+  display: flex;
+  flex-direction: row;
+  gap: 0.25em;
+}
+
+.detail__nickname input[name="nickname"] {
+  flex: 2;
+  min-width: 0;
+}
+
+.detail__nickname input[name="pronouns"] {
+  flex: 1;
   min-width: 0;
 }

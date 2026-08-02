@@ -4,13 +4,13 @@
     $note = \store\get_note($_POST['id']) or fail("Note not found.", status: 404);
     $fields = \core\diff([...$note, 'tags' => \store\list_note_tag_ids($_POST['id'])],
       title: $_POST['title'], content: $_POST['content'],
-      written_at: cast_datetime_utc($_POST['date'], $_POST['time']), tags: $_POST['tags'] ?? []);
+      written_at: cast_dt_utc($_POST['date'], $_POST['time']), tags: $_POST['tags'] ?? []);
 
     \store\update_note(
       $_POST['id'],
       $_POST['title'],
       $_POST['content'],
-      cast_datetime_utc($_POST['date'], $_POST['time'])
+      cast_dt_utc($_POST['date'], $_POST['time'])
     );
 
     \store\set_note_tags($_POST['id'], $_POST['tags'] ?? []);

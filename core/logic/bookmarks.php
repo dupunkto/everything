@@ -24,7 +24,7 @@ function parse_label($html) {
   if(!preg_match('/<title\b[^>]*>(.*?)<\/title>/is', $html, $match)) return null;
 
   $label = html_entity_decode(strip_tags($match[1]), ENT_QUOTES | ENT_HTML5, 'UTF-8');
-  return \cast_string(preg_replace('/\s+/u', ' ', $label));
+  return \cast_str(preg_replace('/\s+/u', ' ', $label));
 }
 
 function parse_favicon($url, $html) {
@@ -45,7 +45,7 @@ function parse_favicon($url, $html) {
 }
 
 function absolute_url($base, $url) {
-  $url = \cast_string($url);
+  $url = \cast_str($url);
   if($url === null) return null;
   if(parse_url($url, PHP_URL_SCHEME)) return $url;
 

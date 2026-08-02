@@ -96,6 +96,24 @@ document.addEventListener("input", (e) => {
 });
 
 document.addEventListener("click", (e) => {
+  const star = e.target.closest?.("[data-role-main]");
+  if(star) {
+    const row = star.closest(".repeat__row");
+    const was_main = row.querySelector("[name='role_main[]']").value == "1";
+
+    for(const other of star.closest("fieldset").querySelectorAll(".repeat__row")) {
+      other.querySelector("[name='role_main[]']").value = "0";
+      other.querySelector("[data-role-main] i").className = "fa-regular fa-star";
+    }
+
+    if(!was_main) {
+      row.querySelector("[name='role_main[]']").value = "1";
+      star.querySelector("i").className = "fa-solid fa-star";
+    }
+
+    star.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+
   const legal = e.target.closest?.("[data-legal-name-toggle]");
   if(legal) {
     const form = legal.closest("form");

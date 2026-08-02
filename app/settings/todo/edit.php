@@ -6,7 +6,7 @@
   }
 
   if(isset($_POST['recurrence_horizon'])) {
-    \store\update_config('todo.recurrence-horizon', cast_int($_POST['recurrence_horizon']));
+    \store\update_config('todo.recurrence-horizon', cast_num($_POST['recurrence_horizon']));
     \store\put_audit_log('config', 'todo', "Set todo.recurrence-horizon to '{$_POST['recurrence_horizon']}'.", 'user');
   }
 

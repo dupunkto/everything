@@ -47,7 +47,7 @@ foreach($subscriptions as $subscription) {
     // because we do not display those either.
     if($event['is_exception'] || $event['status'] == 'CANCELLED') continue;
 
-    if(cast_boolean($subscription['deduplicate'])) {
+    if(cast_bool($subscription['deduplicate'])) {
       $slot = $event['starts_at'] . ':' . ($event['ends_at'] - $event['starts_at']);
       if(isset($slots[$slot])) {
         $duplicates[$event['uid']] = true;
@@ -77,7 +77,7 @@ foreach($subscriptions as $subscription) {
         && $row['meeting'] == $data['meeting']
         && $row['starts_at'] == $data['starts_at']
         && $row['ends_at'] == $data['ends_at']
-        && cast_boolean($row['all_day']) == $data['all_day']
+        && cast_bool($row['all_day']) == $data['all_day']
         && $row['recurrence'] == $data['recurrence']) continue;
 
       $fields = \core\diff($row, ...$data);
@@ -97,7 +97,7 @@ foreach($subscriptions as $subscription) {
       $stats['updated']++;
     }
     elseif(!isset($duplicates[$row['id']])
-      && cast_boolean($subscription['history'])
+      && cast_bool($subscription['history'])
       && ($row['ends_at'] < $now || $row['recurrence'])) {
       $stats['kept']++;
     }

@@ -1,29 +1,29 @@
 <?php
 
   if(isset($_POST["status"], $_POST["recurrence"], $_POST["urgent"], $_POST["open_date"], $_POST["open_time"], $_POST["due_date"], $_POST["due_time"], $_POST["expire_date"], $_POST["expire_time"])) {
-    $all_day = cast_string($_POST['due_date']) != null
-      && cast_string(@$_POST['due_time']) == null;
+    $all_day = cast_str($_POST['due_date']) != null
+      && cast_str(@$_POST['due_time']) == null;
 
-    $open_at = cast_datetime_utc($_POST['open_date'], $_POST['open_time']);
-    $due_at = cast_datetime_utc($_POST['due_date'], @$_POST['due_time'] ?: "00:00");
+    $open_at = cast_dt_utc($_POST['open_date'], $_POST['open_time']);
+    $due_at = cast_dt_utc($_POST['due_date'], @$_POST['due_time'] ?: "00:00");
 
-    $recurrence = cast_string($_POST['recurrence']);
+    $recurrence = cast_str($_POST['recurrence']);
     $recurrence_start = new \DateTimeImmutable($due_at ?: $open_at);
     if($recurrence && !\recurrence\valid($recurrence,
       $recurrence_start->setTimezone(new \DateTimeZone(TIMEZONE))))
       fail("Invalid recurrence rule.", status: 400);
 
     $id = \store\put_task(
-      cast_string($_POST['title']),
-      cast_string(@$_POST['content']),
-      cast_string($_POST['status']),
-      cast_boolean($_POST['urgent']),
+      cast_str($_POST['title']),
+      cast_str(@$_POST['content']),
+      cast_str($_POST['status']),
+      cast_bool($_POST['urgent']),
       $recurrence,
       $open_at,
       $due_at,
       $all_day,
-      cast_datetime_utc($_POST['expire_date'], @$_POST['expire_time'] ?: "00:00"),
-      cast_string($_POST['comment'])
+      cast_dt_utc($_POST['expire_date'], @$_POST['expire_time'] ?: "00:00"),
+      cast_str($_POST['comment'])
     );
 
     \store\set_task_tags($id, $_POST['tags'] ?? []);

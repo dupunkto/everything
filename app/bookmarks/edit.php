@@ -3,18 +3,18 @@
   if(isset($_POST['id'])) {
     $bookmark = \store\get_bookmark($_POST['id']) or fail("Bookmark not found.", status: 404);
     $fields = \core\diff([...$bookmark, 'tags' => \store\list_bookmark_tag_ids($_POST['id'])],
-      label: cast_string(@$_POST['label']),
-      url: cast_string($_POST['url']),
-      note: cast_string(@$_POST['note']),
-      saved_at: cast_datetime_utc($_POST['date'], $_POST['time']),
+      label: cast_str(@$_POST['label']),
+      url: cast_str($_POST['url']),
+      note: cast_str(@$_POST['note']),
+      saved_at: cast_dt_utc($_POST['date'], $_POST['time']),
       tags: $_POST['tags'] ?? []);
 
     \store\update_bookmark(
       $_POST['id'],
-      cast_string(@$_POST['label']),
-      cast_string($_POST['url']),
-      cast_string(@$_POST['note']),
-      cast_datetime_utc($_POST['date'], $_POST['time'])
+      cast_str(@$_POST['label']),
+      cast_str($_POST['url']),
+      cast_str(@$_POST['note']),
+      cast_dt_utc($_POST['date'], $_POST['time'])
     );
 
     \store\set_bookmark_tags($_POST['id'], $_POST['tags'] ?? []);

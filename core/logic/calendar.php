@@ -13,7 +13,7 @@ define('TASK_COLOR', "#cccccc");
 define('TASK_DONE_COLOR', "#4caf50");
 
 function wall($utc) {
-  return str_replace("T", " ", \cast_datetime_local($utc));
+  return str_replace("T", " ", \cast_dt_local($utc));
 }
 
 // Every date in [$from, $to) as "Y-m-d" strings.
@@ -27,8 +27,8 @@ function dates($from, $to) {
 // Appointments overlapping [$from, $to), localised, with recurring series
 // expanded into their individual occurrences.
 function appointments($from, $to) {
-  $utc_from = \cast_datetime_utc($from->format('Y-m-d'), $from->format('H:i:s'));
-  $utc_to = \cast_datetime_utc($to->format('Y-m-d'), $to->format('H:i:s'));
+  $utc_from = \cast_dt_utc($from->format('Y-m-d'), $from->format('H:i:s'));
+  $utc_to = \cast_dt_utc($to->format('Y-m-d'), $to->format('H:i:s'));
 
   $appointments = \store\list_appointments($utc_from, $utc_to);
 
@@ -82,7 +82,7 @@ function task_deadlines($from, $to) {
 
     $due = new \DateTime(wall($task['next']));
 
-    if(cast_boolean(@$task['due_all_day'])) {
+    if(cast_bool(@$task['due_all_day'])) {
       $start = (clone $due)->setTime(0, 0);
       $end = (clone $start)->modify('+1 day');
       if($start >= $to || $end <= $from) continue;
@@ -97,7 +97,7 @@ function task_deadlines($from, $to) {
       'title' => \esc_inner($task['title']),
       'starts_at' => $start->format("Y-m-d H:i:s"),
       'ends_at' => $end->format("Y-m-d H:i:s"),
-      'all_day' => cast_boolean(@$task['due_all_day']),
+      'all_day' => cast_bool(@$task['due_all_day']),
       'going' => true,
       'calendar_id' => null,
       'subscription_id' => null,
@@ -173,7 +173,7 @@ function day_segments($appointments, $from, $to) {
 
     $cursor = max((clone $start)->setTime(0, 0), clone $from);
 
-    if(cast_boolean(@$appointment['is_task']) && $start == $end) {
+    if(cast_bool(@$appointment['is_task']) && $start == $end) {
       $date = $start->format('Y-m-d');
 
       if(isset($days[$date]) && $start >= $from && $start < $to) {
@@ -200,7 +200,7 @@ function day_segments($appointments, $from, $to) {
         $segment['ends_at'] = $segment_end->format("Y-m-d H:i:s");
         $segment['layout_end'] = max($segment_end, (clone $segment_start)->modify('+30 minutes'))->format("Y-m-d H:i:s");
         $segment['editable'] = empty($appointment['subscription_id'])
-          && !cast_boolean(@$appointment['is_task'])
+          && !cast_bool(@$appointment['is_task'])
           && empty($appointment['recurrence'])
           && $segment_start == $start
           && $segment_end == $end;
@@ -239,8 +239,8 @@ function vertical($segment) {
 function layout($day) {
   chronological($day);
 
-  $skipped = array_filter($day, fn($a) => !cast_boolean($a['going']));
-  $day = array_filter($day, fn($a) => cast_boolean($a['going']));
+  $skipped = array_filter($day, fn($a) => !cast_bool($a['going']));
+  $day = array_filter($day, fn($a) => cast_bool($a['going']));
 
   $overlaps = fn($a, $b) =>
     $a['starts_at'] < $b['layout_end'] && $a['layout_end'] > $b['starts_at'];
@@ -344,7 +344,7 @@ function travel_bands($appointments, $from, $to) {
   $bands = array_fill_keys(dates($from, $to), []);
 
   foreach($appointments as $appointment) {
-    if(!cast_boolean($appointment['going'])) continue;
+    if(!cast_bool($appointment['going'])) continue;
 
     $windows = [];
 
@@ -397,8 +397,8 @@ function timing_lines($from, $to) {
   $lines = array_fill_keys(dates($from, $to), []);
 
   foreach(\store\list_timings_between(
-    \cast_datetime_utc($from->format('Y-m-d'), $from->format('H:i:s')),
-    \cast_datetime_utc($to->format('Y-m-d'), $to->format('H:i:s'))
+    \cast_dt_utc($from->format('Y-m-d'), $from->format('H:i:s')),
+    \cast_dt_utc($to->format('Y-m-d'), $to->format('H:i:s'))
   ) as $timing) {
     $start = new \DateTime(wall($timing['starts_at']));
     $end = new \DateTime(wall($timing['ends_at']));

@@ -3,22 +3,22 @@
   if(isset($_POST['id'])) {
     $wish = \store\get_wish($_POST['id']) or fail("Wish not found.", status: 404);
     $fields = \core\diff([...$wish, 'tags' => \store\list_wish_tag_ids($_POST['id'])],
-      title: cast_string($_POST['title']), content: cast_string($_POST['content']),
-      urgent: cast_boolean($_POST['urgent']), added_at: cast_datetime_utc($_POST['date'], $_POST['time']),
-      status: $_POST['status'], comment: cast_string(@$_POST['comment']),
+      title: cast_str($_POST['title']), content: cast_str($_POST['content']),
+      urgent: cast_bool($_POST['urgent']), added_at: cast_dt_utc($_POST['date'], $_POST['time']),
+      status: $_POST['status'], comment: cast_str(@$_POST['comment']),
       tags: $_POST['tags'] ?? [],
       urls: array_map(fn($row) => [...$row, 'price' => cast_float(@$row['price'])],
         unfold($_POST, 'url', 'url')));
 
     \store\update_wish(
       $_POST['id'],
-      cast_string($_POST['title']),
-      cast_string($_POST['content']),
-      cast_boolean($_POST['urgent']),
-      cast_datetime_utc($_POST['date'], $_POST['time'])
+      cast_str($_POST['title']),
+      cast_str($_POST['content']),
+      cast_bool($_POST['urgent']),
+      cast_dt_utc($_POST['date'], $_POST['time'])
     );
 
-    \store\set_wish_status($_POST['id'], $_POST['status'], cast_string(@$_POST['comment']));
+    \store\set_wish_status($_POST['id'], $_POST['status'], cast_str(@$_POST['comment']));
 
     \store\set_wish_urls($_POST['id'],
       array_map(fn($row) => [...$row, 'price' => cast_float(@$row['price'])],

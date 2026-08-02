@@ -44,6 +44,10 @@ if($path == "/caldav" || str_starts_with($path, "/caldav/")) {
   include __DIR__ . "/app/caldav.php"; exit;
 }
 
+if($path == "/carddav" || str_starts_with($path, "/carddav/")) {
+  include __DIR__ . "/app/carddav.php"; exit;
+}
+
 if($path == "/") $path = "/index";
 $controller = path_join(__DIR__, "app", "$path.php");
 

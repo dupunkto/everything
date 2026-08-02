@@ -1,13 +1,13 @@
 <?php
 
   if(isset($_POST['id'])) {
-    $all_day = cast_string($_POST['due_date']) != null
-      && cast_string(@$_POST['due_time']) == null;
+    $all_day = cast_str($_POST['due_date']) != null
+      && cast_str(@$_POST['due_time']) == null;
 
-    $open_at = cast_datetime_utc($_POST['open_date'], $_POST['open_time']);
-    $due_at = cast_datetime_utc($_POST['due_date'], @$_POST['due_time'] ?: "00:00");
+    $open_at = cast_dt_utc($_POST['open_date'], $_POST['open_time']);
+    $due_at = cast_dt_utc($_POST['due_date'], @$_POST['due_time'] ?: "00:00");
 
-    $recurrence = cast_string($_POST['recurrence']);
+    $recurrence = cast_str($_POST['recurrence']);
     $recurrence_start = new \DateTimeImmutable($due_at ?: $open_at);
     if($recurrence && !\recurrence\valid($recurrence,
       $recurrence_start->setTimezone(new \DateTimeZone(TIMEZONE))))
@@ -18,7 +18,7 @@
       title: $_POST['title'], content: $_POST['content'], urgent: $_POST['urgent'],
       recurrence: $recurrence, open_at: $open_at, due_at: $due_at,
       due_all_day: $all_day,
-      expire_at: cast_datetime_utc($_POST['expire_date'], @$_POST['expire_time'] ?: "00:00"),
+      expire_at: cast_dt_utc($_POST['expire_date'], @$_POST['expire_time'] ?: "00:00"),
       status: $_POST['status'],
       comment: $_POST['comment'], tags: $_POST['tags'] ?? []);
 
@@ -31,7 +31,7 @@
       $open_at,
       $due_at,
       $all_day,
-      cast_datetime_utc($_POST['expire_date'], @$_POST['expire_time'] ?: "00:00")
+      cast_dt_utc($_POST['expire_date'], @$_POST['expire_time'] ?: "00:00")
     );
 
     if(isset($_POST['amend'])) {
@@ -160,7 +160,7 @@
             <label for="due_date">Due</label>
             <span class="datetime-pair">
               <input type="date" id="due_date" name="due_date" value="<?= esc_attr($task['due_at'] ? local_date("Y-m-d", $task['due_at']) : '') ?>">
-              <input type="time" name="due_time" lang="<?= TIME_LANG ?>" value="<?= esc_attr($task['due_at'] && !cast_boolean($task['due_all_day']) ? local_date("H:i", $task['due_at']) : '') ?>">
+              <input type="time" name="due_time" lang="<?= TIME_LANG ?>" value="<?= esc_attr($task['due_at'] && !cast_bool($task['due_all_day']) ? local_date("H:i", $task['due_at']) : '') ?>">
             </span>
           </div>
 
@@ -178,7 +178,7 @@
           </div>
 
           <?php if($task['recurrence'] && $task['status'] == 'done' && $task['next']): ?>
-            <p class="todo-editor__next"><small>Next occurrence <?= esc_inner(local_date(cast_boolean($task['due_all_day']) ? "l j M" : "l j M, H:i", $task['next'])) ?></small></p>
+            <p class="todo-editor__next"><small>Next occurrence <?= esc_inner(local_date(cast_bool($task['due_all_day']) ? "l j M" : "l j M, H:i", $task['next'])) ?></small></p>
           <?php endif ?>
         </aside>
       </form>

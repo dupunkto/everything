@@ -1,6 +1,6 @@
 <?php
 
-  $ids = array_map('cast_string', $_POST['ids'] ?? []);
+  $ids = array_map('cast_str', $_POST['ids'] ?? []);
   $ids = array_values(array_filter($ids));
 
   \store\reorder_source_by_type('calendars', $ids);

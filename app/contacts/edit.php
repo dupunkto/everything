@@ -38,36 +38,36 @@
       'phone_number' => normalize_phone_number($row['phone_number'])
     ], unfold($_POST, 'phone', 'phone_number'));
 
-    $timezone = cast_string($_POST['timezone']);
+    $timezone = cast_str($_POST['timezone']);
     if($timezone && !in_array($timezone, ENUM_TIMEZONE))
       fail("Invalid 'timezone' parameter.", status: 400);
 
     if($kind === "org") {
       if($id) {
         $fields = \core\diff($item,
-          display_name: cast_string($_POST['display_name']),
-          legal_name: cast_string($_POST['legal_name']),
-          registration_number: cast_string($_POST['registration_number']),
-          vat_number: cast_string($_POST['vat_number']), timezone: $timezone,
-          note: cast_string($_POST['note']));
+          display_name: cast_str($_POST['display_name']),
+          legal_name: cast_str($_POST['legal_name']),
+          registration_number: cast_str($_POST['registration_number']),
+          vat_number: cast_str($_POST['vat_number']), timezone: $timezone,
+          note: cast_str($_POST['note']));
 
         \store\update_organisation(
           $id,
-          cast_string($_POST['display_name']),
-          cast_string($_POST['legal_name']),
-          cast_string($_POST['registration_number']),
-          cast_string($_POST['vat_number']),
+          cast_str($_POST['display_name']),
+          cast_str($_POST['legal_name']),
+          cast_str($_POST['registration_number']),
+          cast_str($_POST['vat_number']),
           $timezone,
-          cast_string($_POST['note'])
+          cast_str($_POST['note'])
         );
       } else {
         $id = \store\put_organisation(
-          cast_string($_POST['display_name']),
-          cast_string($_POST['legal_name']),
-          cast_string($_POST['registration_number']),
-          cast_string($_POST['vat_number']),
+          cast_str($_POST['display_name']),
+          cast_str($_POST['legal_name']),
+          cast_str($_POST['registration_number']),
+          cast_str($_POST['vat_number']),
           $timezone,
-          cast_string($_POST['note'])
+          cast_str($_POST['note'])
         );
       }
 
@@ -82,44 +82,58 @@
     else {
       if($id) {
         $fields = \core\diff($item,
-          display_name: cast_string($_POST['display_name']), first_name: cast_string($_POST['first_name']),
-          middle_name: cast_string($_POST['middle_name']), legal_infix: cast_string($_POST['legal_infix']),
-          legal_name: cast_string($_POST['legal_name']), family_infix: cast_string($_POST['family_infix']),
-          family_name: cast_string($_POST['family_name']), name_order: cast_string($_POST['name_order']),
-          birth_day: cast_int($_POST['birth_day']), birth_month: cast_int($_POST['birth_month']),
-          birth_year: cast_int($_POST['birth_year']), timezone: $timezone, note: cast_string($_POST['note']));
+          first_name: cast_str($_POST['first_name']),
+          middle_name: cast_str($_POST['middle_name']), legal_infix: cast_str($_POST['legal_infix']),
+          legal_name: cast_str($_POST['legal_name']), family_infix: cast_str($_POST['family_infix']),
+          family_name: cast_str($_POST['family_name']), name_order: cast_str($_POST['name_order']),
+          nickname: cast_str($_POST['nickname']), pronouns: cast_str($_POST['pronouns']),
+          birth_day: cast_num($_POST['birth_day']), birth_month: cast_num($_POST['birth_month']),
+          birth_year: cast_num($_POST['birth_year']),
+          anniversary_day: cast_num($_POST['anniversary_day']), anniversary_month: cast_num($_POST['anniversary_month']),
+          anniversary_year: cast_num($_POST['anniversary_year']),
+          timezone: $timezone, note: cast_str($_POST['note']));
 
         \store\update_contact(
           $id,
-          cast_string($_POST['display_name']),
-          cast_string($_POST['first_name']),
-          cast_string($_POST['middle_name']),
-          cast_string($_POST['legal_infix']),
-          cast_string($_POST['legal_name']),
-          cast_string($_POST['family_infix']),
-          cast_string($_POST['family_name']),
-          cast_string($_POST['name_order']),
-          cast_int($_POST['birth_day']),
-          cast_int($_POST['birth_month']),
-          cast_int($_POST['birth_year']),
+          $item['display_name'],
+          cast_str($_POST['first_name']),
+          cast_str($_POST['middle_name']),
+          cast_str($_POST['legal_infix']),
+          cast_str($_POST['legal_name']),
+          cast_str($_POST['family_infix']),
+          cast_str($_POST['family_name']),
+          cast_str($_POST['name_order']),
+          cast_str($_POST['nickname']),
+          cast_str($_POST['pronouns']),
+          cast_num($_POST['birth_day']),
+          cast_num($_POST['birth_month']),
+          cast_num($_POST['birth_year']),
+          cast_num($_POST['anniversary_day']),
+          cast_num($_POST['anniversary_month']),
+          cast_num($_POST['anniversary_year']),
           $timezone,
-          cast_string($_POST['note'])
+          cast_str($_POST['note'])
         );
       } else {
         $id = \store\put_contact(
-          cast_string($_POST['display_name']),
-          cast_string($_POST['first_name']),
-          cast_string($_POST['middle_name']),
-          cast_string($_POST['legal_infix']),
-          cast_string($_POST['legal_name']),
-          cast_string($_POST['family_infix']),
-          cast_string($_POST['family_name']),
-          cast_string($_POST['name_order']),
-          cast_int($_POST['birth_day']),
-          cast_int($_POST['birth_month']),
-          cast_int($_POST['birth_year']),
+          null,
+          cast_str($_POST['first_name']),
+          cast_str($_POST['middle_name']),
+          cast_str($_POST['legal_infix']),
+          cast_str($_POST['legal_name']),
+          cast_str($_POST['family_infix']),
+          cast_str($_POST['family_name']),
+          cast_str($_POST['name_order']),
+          cast_str($_POST['nickname']),
+          cast_str($_POST['pronouns']),
+          cast_num($_POST['birth_day']),
+          cast_num($_POST['birth_month']),
+          cast_num($_POST['birth_year']),
+          cast_num($_POST['anniversary_day']),
+          cast_num($_POST['anniversary_month']),
+          cast_num($_POST['anniversary_year']),
           $timezone,
-          cast_string($_POST['note'])
+          cast_str($_POST['note'])
         );
       }
 
@@ -127,7 +141,8 @@
       \store\set_contact_phone_numbers($id, $phones);
       \store\set_contact_urls($id, unfold($_POST, 'url', 'url'));
       \store\set_contact_socials($id, unfold($_POST, 'social', 'handle'));
-      \store\set_contact_roles($id, unfold($_POST, 'role', 'org_id'));
+      \store\set_contact_roles($id, array_values(array_filter(
+        unfold($_POST, 'role', 'org_id'), fn($row) => @$row['org_id'] !== null)));
       \store\set_contact_addresses($id, unfold($_POST, 'address', 'street_address'));
       \store\set_contact_tags($id, $_POST['tags'] ?? []);
 
@@ -170,6 +185,11 @@
       <?php endforeach ?>
     </select>
     <input name="role_role[]" placeholder="role" value="<?= esc_attr(@$row['role']) ?>">
+    <?php $main = cast_bool(@$row['main']) ?>
+    <input type="hidden" name="role_main[]" value="<?= $main ? 1 : 0 ?>">
+    <button type="button" class="role-main" title="Make main role" data-role-main>
+      <i class="fa-<?= $main ? 'solid' : 'regular' ?> fa-star"></i>
+    </button>
   <?php };
 
   $address_field = function($row) { ?>
@@ -177,12 +197,14 @@
       <input type="hidden" name="address_id[]" value="<?= esc_attr(@$row['id']) ?>">
       <input name="address_label[]" placeholder="label" value="<?= esc_attr(@$row['link_label']) ?>">
       <input name="address_street_address[]" placeholder="street address" value="<?= esc_attr(@$row['street_address']) ?>" required data-value>
-      <input name="address_postal_code[]" placeholder="postal code" value="<?= esc_attr(@$row['postal_code']) ?>" required>
-      <input name="address_city[]" placeholder="city" value="<?= esc_attr(@$row['city']) ?>" required>
+      <input name="address_postal_code[]" placeholder="postal code" value="<?= esc_attr(@$row['postal_code']) ?>">
+      <input name="address_city[]" placeholder="city" value="<?= esc_attr(@$row['city']) ?>">
       <input name="address_province[]" placeholder="province" value="<?= esc_attr(@$row['province']) ?>">
-      <select name="address_country[]" required>
+      <?php $selected = array_key_exists('country', $row ?: []) ? $row['country'] : COUNTRY ?>
+      <select name="address_country[]">
+        <option value="">country</option>
         <?php foreach(country_codes() as $country): ?>
-          <option value="<?= $country ?>" <?= (@$row['country'] ?: COUNTRY) == $country ? 'selected' : '' ?>><?= $country ?></option>
+          <option value="<?= $country ?>" <?= $selected == $country ? 'selected' : '' ?>><?= $country ?></option>
         <?php endforeach ?>
       </select>
     </div>
@@ -241,26 +263,32 @@
       <input name="legal_infix" placeholder="Legal infix" value="<?= esc_attr(@$item['legal_infix']) ?>">
       <input name="legal_name" placeholder="Legal name" value="<?= esc_attr(@$item['legal_name']) ?>">
     </div>
-    <div class="field">
-      <input id="display_name" name="display_name" placeholder="Display name" value="<?= esc_attr(@$item['display_name']) ?>">
+    <div class="field detail__nickname">
+      <input name="nickname" placeholder="Nickname" value="<?= esc_attr(@$item['nickname']) ?>">
+      <input name="pronouns" placeholder="Pronouns" value="<?= esc_attr(@$item['pronouns']) ?>">
     </div>
+    <?php $has_anniversary = @$item['anniversary_day'] || @$item['anniversary_month'] || @$item['anniversary_year'] ?>
     <div class="field">
       <label for="birth_day">Birthday</label>
       <span class="birthday-fields">
         <input id="birth_day" name="birth_day" type="number" min="1" max="31" placeholder="day" value="<?= esc_attr(@$item['birth_day']) ?>">
         <input name="birth_month" type="number" min="1" max="12" placeholder="month" value="<?= esc_attr(@$item['birth_month']) ?>">
         <input name="birth_year" type="number" min="1" max="9999" placeholder="year" value="<?= esc_attr(@$item['birth_year']) ?>">
+        <button type="button" class="js-anniversary" title="Add anniversary" z-toggle=".js-anniversary" <?= $has_anniversary ? 'hidden' : '' ?>>+</button>
+      </span>
+    </div>
+    <div class="field js-anniversary" <?= $has_anniversary ? '' : 'hidden' ?>>
+      <label for="anniversary_day">Anniversary</label>
+      <span class="birthday-fields">
+        <input id="anniversary_day" name="anniversary_day" type="number" min="1" max="31" placeholder="day" value="<?= esc_attr(@$item['anniversary_day']) ?>">
+        <input name="anniversary_month" type="number" min="1" max="12" placeholder="month" value="<?= esc_attr(@$item['anniversary_month']) ?>">
+        <input name="anniversary_year" type="number" min="1" max="9999" placeholder="year" value="<?= esc_attr(@$item['anniversary_year']) ?>">
       </span>
     </div>
     <div class="field">
       <?php tags_field(isset($item['id']) ? \store\list_contact_tags($item['id']) : []) ?>
     </div>
   <?php endif ?>
-
-  <div class="field">
-    <label for="timezone">Timezone</label>
-    <?php \forms\options('timezone', ['' => 'None', ...timezone_options()], @$item['timezone'], flat: true) ?>
-  </div>
 
   <hr>
 
@@ -291,6 +319,11 @@
       <input id="vat_number" name="vat_number" value="<?= esc_attr(@$item['vat_number']) ?>">
     </div>
   <?php endif; ?>
+
+  <div class="field">
+    <label for="timezone">Timezone</label>
+    <?php \forms\options('timezone', ['' => 'None', ...timezone_options()], @$item['timezone'], flat: true) ?>
+  </div>
 
   <hr>
 

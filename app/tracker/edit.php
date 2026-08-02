@@ -1,8 +1,8 @@
 <?php
 
   if(isset($_POST["id"], $_POST["description"], $_POST["start_date"], $_POST["start_time"], $_POST["end_date"], $_POST["end_time"])) {
-    $starts_at = cast_datetime_utc($_POST['start_date'], $_POST['start_time']);
-    $ends_at = cast_datetime_utc($_POST['end_date'], $_POST['end_time']);
+    $starts_at = cast_dt_utc($_POST['start_date'], $_POST['start_time']);
+    $ends_at = cast_dt_utc($_POST['end_date'], $_POST['end_time']);
 
     $timing = \store\get_timing($_POST['id']) or fail("Timing not found.", status: 404);
     $fields = \core\diff([...$timing, 'tags' => \store\list_timing_tag_ids($_POST['id'])],
@@ -19,8 +19,8 @@
   }
 
   $timing = \store\get_timing($_GET['id']) or fail("Timing not found.", status: 404);
-  $starts = new DateTime(cast_datetime_local($timing['starts_at']));
-  $ends = new DateTime(cast_datetime_local($timing['ends_at']));
+  $starts = new DateTime(cast_dt_local($timing['starts_at']));
+  $ends = new DateTime(cast_dt_local($timing['ends_at']));
   $show_dates = $starts->format('Y-m-d') != $ends->format('Y-m-d');
 
 ?>

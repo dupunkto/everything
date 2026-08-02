@@ -6,7 +6,7 @@
 
   if(isset($_POST['tag_id'])) {
     \store\put_quota(
-      cast_int($_POST['tag_id']),
+      cast_num($_POST['tag_id']),
       'week',
       60,
       local_date("Y-m-d")

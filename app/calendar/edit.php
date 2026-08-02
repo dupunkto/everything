@@ -7,9 +7,9 @@
   $is_subscription = !empty($appointment['subscription_id']);
 
   if(isset($_POST['id'])) {
-    $going = cast_boolean(@$_POST['going']);
-    $urgent = cast_boolean(@$_POST['urgent']);
-    $travel = cast_boolean(@$_POST['travel']);
+    $going = cast_bool(@$_POST['going']);
+    $urgent = cast_bool(@$_POST['urgent']);
+    $travel = cast_bool(@$_POST['travel']);
 
     $travel_before = $travel ? max(0, (int) $_POST['travel_before']) : 0;
     $travel_after = $travel ? max(0, (int) $_POST['travel_after']) : 0;
@@ -29,8 +29,8 @@
       $recurrence = isset($_POST['repeating']) && isset($_POST['recurrence']) ?
         $_POST['recurrence'] : null;
 
-      $starts_at = cast_datetime_utc($_POST['start_date'], $_POST['start_time']);
-      $ends_at = cast_datetime_utc($_POST['end_date'], $_POST['end_time']);
+      $starts_at = cast_dt_utc($_POST['start_date'], $_POST['start_time']);
+      $ends_at = cast_dt_utc($_POST['end_date'], $_POST['end_time']);
 
       $recurrence_start = (new \DateTimeImmutable($starts_at))->setTimezone(new \DateTimeZone(TIMEZONE));
       if($recurrence && !\recurrence\valid($recurrence, $recurrence_start))
@@ -44,7 +44,7 @@
         location: $_POST['location'],
         meeting: $_POST['meeting'],
         recurrence: $recurrence,
-        all_day: cast_boolean(@$_POST['all_day']),
+        all_day: cast_bool(@$_POST['all_day']),
         going: $going,
         urgent: $urgent,
         travel_before: $travel_before,
@@ -60,7 +60,7 @@
         $_POST['location'],
         $_POST['meeting'],
         $recurrence,
-        cast_boolean(@$_POST['all_day']),
+        cast_bool(@$_POST['all_day']),
         $going,
         $urgent,
         $travel_before,
@@ -78,8 +78,8 @@
     http_response_code(204); exit;
   }
 
-  $starts = new DateTime(cast_datetime_local($appointment['starts_at']));
-  $ends = new DateTime(cast_datetime_local($appointment['ends_at']));
+  $starts = new DateTime(cast_dt_local($appointment['starts_at']));
+  $ends = new DateTime(cast_dt_local($appointment['ends_at']));
 
   $is_repeating = !empty($appointment['recurrence']);
   $has_travel = (int) $appointment['travel_before'] || (int) $appointment['travel_after'];
@@ -94,7 +94,7 @@
       <?= $is_subscription ? 'readonly' : 'required autofocus' ?>><?= esc_inner($appointment['title']) ?></textarea>
     <?php circle() ?>
     <label class="title-check__urgent" title="Circle">
-      <input type="checkbox" name="urgent" aria-label="Circle" <?= cast_boolean($appointment['urgent']) ? 'checked' : '' ?>>
+      <input type="checkbox" name="urgent" aria-label="Circle" <?= cast_bool($appointment['urgent']) ? 'checked' : '' ?>>
       <i class="fa-regular fa-flag"></i>
       <i class="fa-solid fa-flag"></i>
     </label>
@@ -141,7 +141,7 @@
       </span>
     </label>
 
-    <label class="check"><input type="checkbox" name="all_day" <?= cast_boolean($appointment['all_day']) ? 'checked' : '' ?>> All day</label>
+    <label class="check"><input type="checkbox" name="all_day" <?= cast_bool($appointment['all_day']) ? 'checked' : '' ?>> All day</label>
 
     <label class="check">
       <input type="checkbox" name="repeating" z-toggle="#calendar-edit-recurrence" <?= $is_repeating ? 'checked' : '' ?>>
@@ -153,7 +153,7 @@
     </div>
   <?php endif ?>
 
-  <label class="check"><input type="checkbox" name="going" <?= cast_boolean($appointment['going']) ? 'checked' : '' ?>> Going</label>
+  <label class="check"><input type="checkbox" name="going" <?= cast_bool($appointment['going']) ? 'checked' : '' ?>> Going</label>
 
   <label class="check">
     <input type="checkbox" name="travel" z-toggle="#calendar-edit-travel" <?= $has_travel ? 'checked' : '' ?>>

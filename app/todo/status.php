@@ -3,12 +3,12 @@
   if(isset($_POST["id"], $_POST["status"])) {
     $task = \store\get_task($_POST['id']) or fail("Task not found.", status: 404);
     $fields = \core\diff($task,
-      status: $_POST['status'], comment: cast_string(@$_POST['comment']));
+      status: $_POST['status'], comment: cast_str(@$_POST['comment']));
 
     \store\set_task_status(
       $_POST["id"],
       $_POST["status"],
-      cast_string(@$_POST['comment'])
+      cast_str(@$_POST['comment'])
     );
 
     \store\put_audit_log('tasks', $_POST['id'],

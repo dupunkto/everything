@@ -24,9 +24,16 @@
     \store\put_audit_log('config', 'contacts', "Set contacts.sort-order to '{$_POST['sort-order']}'.", 'user');
   }
 
+  if(isset($_POST['prefer-nickname'])) {
+    $prefer = cast_bool($_POST['prefer-nickname']) ? 'true' : 'false';
+    \store\update_config('contacts.prefer-nickname', $prefer);
+    \store\put_audit_log('config', 'contacts', "Set contacts.prefer-nickname to '$prefer'.", 'user');
+  }
+
 
   $display = \config\fresh_value('contacts.display-format');
   $sort = \config\fresh_value('contacts.sort-order');
+  $prefer_nickname = \config\fresh_value('contacts.prefer-nickname');
 
 ?>
 <form class="settings-form settings-form--spaced" x-post="/settings/contacts/edit" x-on="change" x-target="#contacts-settings">
@@ -51,5 +58,10 @@
       'first' => 'First name',
       'last' => 'Last name',
     ], $sort, flat: true) ?>
+  </label>
+  <label>
+    Prefer nickname
+    <input type="hidden" name="prefer-nickname" value="false">
+    <input type="checkbox" name="prefer-nickname" value="true" <?= $prefer_nickname ? 'checked' : '' ?>>
   </label>
 </form>

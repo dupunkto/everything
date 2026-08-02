@@ -11,8 +11,8 @@
     fail("Missing event times.", status: 400);
   }
 
-  $starts_at = cast_datetime_utc($_POST['start_date'], $_POST['start_time']);
-  $ends_at = cast_datetime_utc($_POST['end_date'], $_POST['end_time']);
+  $starts_at = cast_dt_utc($_POST['start_date'], $_POST['start_time']);
+  $ends_at = cast_dt_utc($_POST['end_date'], $_POST['end_time']);
 
   $id = \store\put_calendar_appointment(
     CALENDAR_DEFAULT_CALENDAR,
@@ -20,7 +20,7 @@
     null,
     $starts_at,
     $ends_at,
-    all_day: cast_boolean(@$_POST['all_day'])
+    all_day: cast_bool(@$_POST['all_day'])
   );
 
   \store\put_audit_log('appointments', $id, "Created appointments/$id.", 'user', operation: 'insert');

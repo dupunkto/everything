@@ -44,6 +44,7 @@ fallback('todo.display', "tag");
 fallback('contacts.default-query', "is:person");
 fallback('contacts.display-format', "first_last");
 fallback('contacts.sort-order', "first");
+fallback('contacts.prefer-nickname', false);
 
 function required($key) {
   if(!defined(normalize_key($key))) {

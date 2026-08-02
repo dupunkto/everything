@@ -2,7 +2,7 @@
 
   if($method != 'POST') fail("Method not allowed.", status: 405);
 
-  $sources = array_map('cast_string', $_POST['ids'] ?? []);
+  $sources = array_map('cast_str', $_POST['ids'] ?? []);
   $sources = array_values(array_filter($sources));
 
   \store\reorder_sources($sources);

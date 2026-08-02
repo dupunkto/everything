@@ -8,7 +8,7 @@
   </head>
   <body>
     <?php include __DIR__ . "/shell/menu.php" ?>
-    <?php $query = cast_string(@$_GET['q']) ?? "" ?>
+    <?php $query = cast_str(@$_GET['q']) ?? "" ?>
     <main class="main main--scrollable bookmarks" z-nav="#bookmarks-search, .listing__item">
       <div class="page-header">
         <h1 class="page-header__title"><strong>Bookmarks</strong></h1>
