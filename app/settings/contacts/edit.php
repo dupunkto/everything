@@ -53,15 +53,15 @@
     ], $display, flat: true) ?>
   </label>
   <label>
+    <input type="hidden" name="prefer-nickname" value="false">
+    <input type="checkbox" name="prefer-nickname" value="true" <?= $prefer_nickname ? 'checked' : '' ?>>
+    Prefer nickname over display name
+  </label>
+  <label>
     Sort by
     <?php \forms\options('sort-order', [
       'first' => 'First name',
       'last' => 'Last name',
     ], $sort, flat: true) ?>
-  </label>
-  <label>
-    Prefer nickname
-    <input type="hidden" name="prefer-nickname" value="false">
-    <input type="checkbox" name="prefer-nickname" value="true" <?= $prefer_nickname ? 'checked' : '' ?>>
   </label>
 </form>

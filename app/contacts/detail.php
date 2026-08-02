@@ -40,7 +40,7 @@
         <button type="button" class="detail__avatar" z-toggle="#picture-actions-<?= esc_attr("$kind-{$item['id']}") ?>" title="Profile picture actions">
           <img src="<?= esc_attr($picture_url) ?>" alt="">
         </button>
-        <div id="picture-actions-<?= esc_attr("$kind-{$item['id']}") ?>" class="popover detail__picture-actions" z-dismiss="escape" hidden>
+        <div id="picture-actions-<?= esc_attr("$kind-{$item['id']}") ?>" class="popover detail__picture-actions" z-dismiss="escape outside" hidden>
           <form x-post="/contacts/picture" x-on="change" x-target="#contacts-panel">
             <input type="hidden" name="kind" value="<?= esc_attr($kind) ?>">
             <input type="hidden" name="id" value="<?= esc_attr($item['id']) ?>">
