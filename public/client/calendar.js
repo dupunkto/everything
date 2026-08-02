@@ -241,16 +241,21 @@
     close_editor();
   };
 
-  const close_on_escape = (event) => {
+  const close_on_keydown = (event) => {
     if(event.key == "Escape") close_editor();
+    else if(event.key == "Enter" && event.target.matches(".calendar-editor textarea[name=title]")) {
+      event.preventDefault();
+      event.target.blur();
+      close_editor();
+    }
   };
 
   document.addEventListener("click", close_on_click);
-  document.addEventListener("keydown", close_on_escape);
+  document.addEventListener("keydown", close_on_keydown);
 
   window.calendar_teardown = () => {
     document.removeEventListener("click", close_on_click);
-    document.removeEventListener("keydown", close_on_escape);
+    document.removeEventListener("keydown", close_on_keydown);
     zoom?.removeEventListener("input", fit_after_zoom);
     circle_observer.disconnect();
   };
