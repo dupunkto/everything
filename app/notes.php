@@ -25,6 +25,8 @@
         >
       </div>
 
+      <button type="button" z-key="r" x-refresh="#notes-listing" hidden></button>
+
       <section id="notes-listing" class="main__scroll" x-get="/notes/listing" x-data="#notes-search"><?php fragment("notes/listing", ["q" => $query]) ?></section>
     </main>
   </body>
