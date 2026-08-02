@@ -355,7 +355,7 @@ function unknown_lines($type, $id, $skip = []) {
 define('CALDAV_PRIVATE_PROPERTIES', [
   'X-EVERYTHING-SCHEMA', 'X-EVERYTHING-STATUS', 'X-EVERYTHING-EXPIRE',
   'X-EVERYTHING-TRAVEL', 'X-EVERYTHING-ADDRESS', 'X-EVERYTHING-TAG',
-  'X-EVERYTHING-URL',
+  'X-EVERYTHING-URL', 'X-EVERYTHING-GOING',
 ]);
 
 function tag_lines($tags) {
@@ -371,6 +371,8 @@ function private_lines($type, $row) {
   $body = "";
 
   if($type == 'appointment') {
+    if(!\cast_bool($row['going']))
+      $body .= line('X-EVERYTHING-GOING', '0');
     if((int)$row['travel_before'] > 0 || (int)$row['travel_after'] > 0)
       $body .= line('X-EVERYTHING-TRAVEL', (int)$row['travel_before'] . ';' . (int)$row['travel_after']);
     if($row['address_id'])

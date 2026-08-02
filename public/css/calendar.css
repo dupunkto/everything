@@ -312,6 +312,7 @@ body:has(.calendar-page) {
 .calendar-week .appointment__location {
   min-width: 0;
   max-width: 100%;
+  margin-top: 0.25rem;
   flex: 1 0 100%;
   order: 2;
   font-size: 0.9em;

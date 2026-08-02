@@ -30,7 +30,7 @@ function appointments($from, $to) {
   $utc_from = \cast_dt_utc($from->format('Y-m-d'), $from->format('H:i:s'));
   $utc_to = \cast_dt_utc($to->format('Y-m-d'), $to->format('H:i:s'));
 
-  $appointments = \store\list_appointments($utc_from, $utc_to);
+  $appointments = \store\list_appointments_between($utc_from, $utc_to);
 
   foreach($appointments as &$a) {
     $a['starts_at'] = wall($a['starts_at']);
@@ -43,7 +43,7 @@ function appointments($from, $to) {
   $window_from = new \DateTimeImmutable($from->format("Y-m-d H:i:s"));
   $window_to = new \DateTimeImmutable($to->format("Y-m-d H:i:s"));
 
-  foreach(\store\list_recurring_appointments($utc_from, $utc_to) as $series) {
+  foreach(\store\list_recurring_appointments($utc_to) as $series) {
     $base = new \DateTimeImmutable(wall($series['starts_at']));
     $duration = (new \DateTimeImmutable(wall($series['ends_at'])))->getTimestamp() - $base->getTimestamp();
 

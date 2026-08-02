@@ -1287,7 +1287,7 @@ function update_appointment_body(
 // Non-recurring appointments overlapping [$from, $to). Recurring ones are
 // fetched separately and expanded per occurrence by the caller, so excluding
 // them here avoids rendering the master twice.
-function list_appointments($from, $to) {
+function list_appointments_between($from, $to) {
   return all('SELECT
     a.*,
     c.title AS calendar_title,
@@ -1329,7 +1329,7 @@ function list_appointments_by_subscription($subscription_id) {
     WHERE subscription_id = ?', [$subscription_id]);
 }
 
-function list_recurring_appointments($from, $to) {
+function list_recurring_appointments($to) {
   return all('SELECT
     a.*,
     c.title AS calendar_title,
@@ -1412,7 +1412,12 @@ function delete_habit($id) {
   return exec_query('DELETE FROM habits WHERE id = ?', [$id]);
 }
 
-function list_habit_logs($from, $to) {
+function list_habit_logs() {
+  return all('SELECT habit_id, DATE(changed_at) AS date
+    FROM habit_log ORDER BY habit_id, changed_at');
+}
+
+function list_habit_logs_between($from, $to) {
   return all('SELECT habit_id, DATE(changed_at) AS date
     FROM habit_log
     WHERE changed_at >= ? AND changed_at < ?
@@ -2369,6 +2374,36 @@ function list_organisations_by_normalized_name($name) {
     WHERE EXO_NORMALIZE(display_name) = EXO_NORMALIZE(?)', [$name]);
 }
 
+// Bulk exports.
+
+function list_note_rows() {
+  return all('SELECT * FROM notes ORDER BY id');
+}
+
+function list_task_rows() {
+  return all('SELECT * FROM tasks ORDER BY id');
+}
+
+function list_wish_rows() {
+  return all('SELECT * FROM wishes ORDER BY id');
+}
+
+function list_bookmark_rows() {
+  return all('SELECT * FROM bookmarks ORDER BY id');
+}
+
+function list_timing_rows() {
+  return all('SELECT * FROM timings ORDER BY starts_at, id');
+}
+
+function list_appointment_rows() {
+  return all('SELECT * FROM appointments ORDER BY id');
+}
+
+function list_quota_rows() {
+  return all('SELECT * FROM quotas ORDER BY tag_id');
+}
+
 // Configuration
 
 function config() {
@@ -2602,6 +2637,39 @@ function transaction($callback) {
   }
 }
 
+// Request lifecycle.
+
+$_TRANSACTION = false;
+
+function begin_request() {
+  global $_TRANSACTION;
+  if($_TRANSACTION) return;
+  DBH->beginTransaction();
+  $_TRANSACTION = true;
+}
+
+function commit_request() {
+  global $_TRANSACTION;
+  if(!$_TRANSACTION) return;
+  $_TRANSACTION = false;
+
+  if(!DBH->inTransaction()) return;
+
+  try { DBH->commit(); }
+  catch(\Throwable $error) {
+    if(DBH->inTransaction()) DBH->rollBack();
+    throw $error;
+  }
+}
+
+function rollback_request() {
+  global $_TRANSACTION;
+  if(!$_TRANSACTION) return;
+  $_TRANSACTION = false;
+
+  if(DBH->inTransaction()) DBH->rollBack();
+}
+
 // Initialize database connection
 
 define('DBH', \adapter\establish_connection());
@@ -2626,3 +2694,9 @@ if($current_store_version < $latest_store_version) {
 }
 
 if(INITIAL_RUN) seed();
+
+bracket_request([
+  'begin' => begin_request(...),
+  'commit' => commit_request(...),
+  'rollback' => rollback_request(...),
+]);

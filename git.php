@@ -5,7 +5,11 @@ $_SHA = resolve_git_head(__DIR__);
 if($_SHA) define('GIT_SHA', $_SHA);
 
 function git(...$args) {
-  $command = array_merge(["git", "-C", __DIR__], $args);
+  return git_c(__DIR__, ...$args);
+}
+
+function git_c($directory, ...$args) {
+  $command = array_merge(["git", "-C", $directory], $args);
   $process = proc_open($command, [
     1 => ['pipe', 'w'],
     2 => ['redirect', 1],

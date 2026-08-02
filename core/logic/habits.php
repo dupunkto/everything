@@ -17,7 +17,7 @@ function on_date($habit, $date) {
 function calendar($from, $to) {
   $dates = \calendar\dates($from, $to);
   $habits = \store\list_habits();
-  $logs = \store\list_habit_logs($from->format('Y-m-d'), $to->format('Y-m-d'));
+  $logs = \store\list_habit_logs_between($from->format('Y-m-d'), $to->format('Y-m-d'));
   $done = [];
 
   foreach($logs as $log) $done[$log['date']][$log['habit_id']] = true;

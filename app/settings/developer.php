@@ -15,6 +15,7 @@
 
       <ul class="settings-menu">
         <li><a href="<?= CANONICAL ?>/logs">Logs</a></li>
+        <li><a href="<?= CANONICAL ?>/settings/developer/git">Git</a></li>
         <li><a href="<?= CANONICAL ?>/settings/developer/custom-code">Custom code</a></li>
       </ul>
     </main>

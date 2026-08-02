@@ -92,35 +92,37 @@ function report_error($error) {
   $reporting = false;
 }
 
-// Request-level database transactions
+// Request lifecycle.
 
-$_TRANSACTION = false;
+$_REQUEST_HOOKS = [];
+$_REQUEST_BEGUN = false;
+
+function bracket_request($hooks) {
+  global $_REQUEST_HOOKS;
+  $_REQUEST_HOOKS = [...$_REQUEST_HOOKS, ...$hooks];
+}
+
+function request_hook($name, ...$args) {
+  global $_REQUEST_HOOKS;
+  if(isset($_REQUEST_HOOKS[$name])) return $_REQUEST_HOOKS[$name](...$args);
+}
 
 function begin_request() {
-  global $_TRANSACTION;
-  if($_TRANSACTION) return;
-  \DBH->beginTransaction();
-  $_TRANSACTION = true;
+  global $_REQUEST_BEGUN, $method, $path;
+  if($_REQUEST_BEGUN) return;
+  $_REQUEST_BEGUN = true;
+
+  request_hook('guard', $method, $path);
+  request_hook('begin');
 }
 
-function finish_request($commit) {
-  global $_TRANSACTION;
-  if(!$_TRANSACTION || !defined('DBH')) return;
-  $_TRANSACTION = false;
-
-  if(!\DBH->inTransaction()) return;
-  if(!$commit) { \DBH->rollBack(); return; }
-
-  try { \DBH->commit(); }
-  catch(Throwable $error) {
-    if(\DBH->inTransaction()) \DBH->rollBack();
-    throw $error;
+// The failure path: roll back and release whatever the request brackets
+// hold. One hook failing must not keep the next from running.
+function abandon_request() {
+  foreach(['rollback', 'abandon'] as $hook) {
+    try { request_hook($hook); }
+    catch(Throwable $error) { error_log("Could not run request hook '$hook': " . $error->getMessage()); }
   }
-}
-
-function rollback_request() {
-  try { finish_request(false); }
-  catch(Throwable $error) { error_log("Could not roll back request transaction: " . $error->getMessage()); }
 }
 
 function clear_response() {
@@ -131,36 +133,31 @@ function clear_response() {
 // Error rendering
 
 function render_error($error) {
-  http_response_code(error_status($error));
+  $uri = @$_SERVER['REQUEST_URI'];
 
-  $uri = @$_SERVER['REQUEST_URI'] ?: '';
-  if($error instanceof DAVError || str_starts_with($uri, '/caldav') || str_starts_with($uri, '/carddav')) {
-    render_dav_error($error);
-    return;
-  }
-
-  header("Content-Type: text/html; charset=utf-8");
-
-  $status = error_status($error);
-  $title = error_title($error);
-  $message = error_message($error);
-  $developer = defined('DEVELOPER_MODE') && DEVELOPER_MODE;
-  $fragment = @$_SERVER['HTTP_X_XHTML'] == 'true';
-
-  include $fragment ? 
-    __DIR__ . "/../app/error/fragment.php" :
-    __DIR__ . "/../app/error/page.php";
+  match(true) {
+    php_sapi_name() == 'cli' => render_cli_error($error),
+    $error instanceof DAVError => render_dav_error($error),
+    str_starts_with($uri, '/caldav') => render_dav_error($error),
+    str_starts_with($uri, '/carddav') => render_dav_error($error),
+    default => render_html_error($error),
+  };
 }
 
-// Renders a DAV error document. Bare condition names resolve to the
-// protocol namespace of the request path (CalDAV or CardDAV); the D:
-// prefix pins a condition to the DAV: namespace instead.
+function render_cli_error($error) {
+  fwrite(STDERR, $error->getMessage() . "\n");
+  if(defined('DEVELOPER_MODE') && DEVELOPER_MODE)
+    fwrite(STDERR, $error->getTraceAsString() . "\n");
+  exit(1);
+}
+
 function render_dav_error($error) {
+  http_response_code(error_status($error));
   $condition = $error instanceof DAVError ? $error->condition : null;
 
   if($condition) {
     header("Content-Type: application/xml; charset=utf-8");
-    $carddav = str_starts_with(@$_SERVER['REQUEST_URI'] ?: '', '/carddav');
+    $carddav = str_starts_with($_SERVER['REQUEST_URI'], '/carddav');
     $protocol_prefix = $carddav ? 'CARD' : 'C';
     $protocol_namespace = $carddav ? 'urn:ietf:params:xml:ns:carddav' : 'urn:ietf:params:xml:ns:caldav';
     $name = str_replace('D:', '', $condition);
@@ -177,8 +174,23 @@ function render_dav_error($error) {
   echo error_message($error);
 }
 
+function render_html_error($error) {
+  http_response_code(error_status($error));
+  header("Content-Type: text/html; charset=utf-8");
+
+  $status = error_status($error);
+  $title = error_title($error);
+  $message = error_message($error);
+  $developer = defined('DEVELOPER_MODE') && DEVELOPER_MODE;
+  $fragment = @$_SERVER['HTTP_X_XHTML'] == 'true';
+
+  include $fragment ?
+    __DIR__ . "/../app/error/fragment.php" :
+    __DIR__ . "/../app/error/page.php";
+}
+
 function handle_exception($error) {
-  rollback_request();
+  abandon_request();
   report_error($error);
   clear_response();
   render_error($error);
@@ -201,15 +213,22 @@ register_shutdown_function(function() {
 
   if($fatal) {
     $error = new ErrorException($failure['message'], 0, $failure['type'], $failure['file'], $failure['line']);
-    rollback_request();
+    abandon_request();
     report_error($error);
     clear_response();
     render_error($error);
     return;
   }
 
-  try { finish_request(true); }
+  $committed = false;
+  try {
+    request_hook('before_commit');
+    request_hook('commit');
+    $committed = true;
+    request_hook('after_commit');
+  }
   catch(Throwable $error) {
+    if(!$committed) abandon_request();
     report_error($error);
     clear_response();
     render_error($error);

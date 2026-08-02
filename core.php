@@ -29,6 +29,7 @@ require __DIR__ . "/core/icalendar.php";
 require __DIR__ . "/core/webdav.php";
 require __DIR__ . "/core/caldav.php";
 require __DIR__ . "/core/carddav.php";
+require __DIR__ . "/core/export.php";
 require __DIR__ . "/core/utils.php";
 
 require __DIR__ . "/core/logic/recurrence.php";

@@ -32,6 +32,9 @@ fallback('ui.border-radius', "subtle");
 
 optional('developer.custom-css');
 
+fallback('developer.git-enabled', false);
+optional('developer.git-repository');
+
 fallback('calendar.default_calendar', @\store\get_first_calendar()['id']);
 
 fallback('notes.layout', "masonry");
