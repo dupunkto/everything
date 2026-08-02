@@ -163,7 +163,7 @@ $sidebar_right = UI_SIDEBAR_POSITION == 'right';
         <?php endforeach ?>
 
         <?php foreach($day as $appointment): $layout = $appointment['layout']; $is_task = cast_bool(@$appointment['is_task']) ?>
-          <article class="appointment<?= cast_bool($appointment['going']) ? "" : " appointment--not-going" ?><?= $is_task ? " appointment--task" : "" ?>"
+          <article class="appointment<?= cast_bool($appointment['going']) ? "" : " appointment--not-going" ?><?= $is_task ? " appointment--task" : "" ?><?= cast_bool(@$layout['adjacent']) ? " appointment--adjacent" : "" ?>"
                    <?= $is_task ? 'data-task-id="' . esc_attr($appointment['id']) . '"' : 'data-id="' . esc_attr($appointment['id']) . '"' ?>
                    style="--appointment-top: <?= $layout['top'] ?>;
                           --appointment-height: <?= $layout['height'] ?>;

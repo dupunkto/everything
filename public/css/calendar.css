@@ -357,6 +357,10 @@ body:has(.calendar-page) {
   height: auto;
 }
 
+.calendar-week .day .appointment--adjacent {
+  height: calc(var(--appointment-height) * 1% - 3px);
+}
+
 .calendar-week .day__ghost {
   position: absolute;
   left: 0;

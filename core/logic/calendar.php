@@ -261,7 +261,7 @@ function layout($day) {
   $placed = [];
 
   foreach($columns as $i => $column) {
-    foreach($column as $appointment) {
+    foreach($column as $j => $appointment) {
       $span = 1;
       for($k = $i + 1; $k < $total; $k++) {
         if(array_any($columns[$k], fn($other) => $overlaps($appointment, $other))) break;
@@ -271,6 +271,7 @@ function layout($day) {
       $appointment['layout'] = vertical($appointment) + [
         'width' => $span / $total * 100,
         'left' => $i / $total * 100,
+        'adjacent' => isset($column[$j + 1]) && $appointment['ends_at'] == $column[$j + 1]['starts_at'],
       ];
       $placed[] = $appointment;
     }
