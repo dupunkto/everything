@@ -131,13 +131,17 @@ function task_status($collection, $incoming, $current) {
 function reconcile() {
   \store\transaction(function() {
     $existing = [];
-    foreach(\store\list_caldav_resources() as $resource)
-      $existing[$resource['entity_type'] . ':' . $resource['entity_id']] = $resource;
+    $occupancy = [];
+    foreach(\store\list_caldav_resources() as $resource) {
+      $key = $resource['entity_type'] . ':' . $resource['entity_id'];
+      $existing[$key] = $resource;
+      if($resource['collection']) $occupancy[$resource['collection'] . '|' . $resource['href']] = $key;
+    }
 
     $seen = [];
     $changes = [];
 
-    $visit = function($type, $row, $desired, $default_href = null, $uid = null) use (&$existing, &$seen, &$changes) {
+    $visit = function($type, $row, $desired, $default_href = null, $uid = null) use (&$existing, &$occupancy, &$seen, &$changes) {
       $key = "$type:{$row['id']}";
       $seen[$key] = true;
       $resource = @$existing[$key];
@@ -145,17 +149,26 @@ function reconcile() {
       $href = @$resource['href'] ?: $default_href ?: $row['id'] . ".ics";
       $old_href = @$resource['href'];
       $current = @$resource['collection'];
-      $occupied = $desired ? \store\get_caldav_resource_by_href($desired, $href) : null;
-      if($occupied && ($occupied['entity_type'] != $type || $occupied['entity_id'] != $row['id']))
+      $occupied = $desired ? @$occupancy[$desired . '|' . $href] : null;
+      if($occupied && $occupied != $key)
         $href = $row['id'] . "-$type.ics";
 
       if(!$resource) {
         \store\update_caldav_resource($type, $row['id'], $href, $desired, uid: $uid);
-        if($desired) $changes[] = ['collection' => $desired, 'href' => $href, 'operation' => 'upsert'];
+        if($desired) {
+          $occupancy["$desired|$href"] = $key;
+          $changes[] = ['collection' => $desired, 'href' => $href, 'operation' => 'upsert'];
+        }
       }
       elseif($current != $desired) {
-        if($current) $changes[] = ['collection' => $current, 'href' => $old_href, 'operation' => 'delete'];
-        if($desired) $changes[] = ['collection' => $desired, 'href' => $href, 'operation' => 'upsert'];
+        if($current) {
+          unset($occupancy["$current|$old_href"]);
+          $changes[] = ['collection' => $current, 'href' => $old_href, 'operation' => 'delete'];
+        }
+        if($desired) {
+          $occupancy["$desired|$href"] = $key;
+          $changes[] = ['collection' => $desired, 'href' => $href, 'operation' => 'upsert'];
+        }
         \store\update_caldav_resource($type, $row['id'], $href, $desired, uid: $uid);
       }
     };

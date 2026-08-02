@@ -275,10 +275,12 @@ function export_and_commit($repo, $message, $everything = false) {
   stage($repo, $paths);
   if(!staged_diff($repo)) return false;
 
-  // --no-verify: exported commits are machine-generated on every mutating
-  // request; interactive commit hooks (and hooks that reject committing to
-  // a main branch) must not be able to wedge the application.
+  // Exported commits are machine-generated on every mutating request:
+  // interactive commit hooks (--no-verify) and GPG signing (which costs
+  // ~200ms per commit and would sign as the user, not the app) must not
+  // slow down or wedge the application.
   must_git($repo, '-c', 'user.name=Everything', '-c', 'user.email=export@everything',
+    '-c', 'commit.gpgsign=false',
     'commit', '--quiet', '--no-verify', '-m', $message);
   return true;
 }
