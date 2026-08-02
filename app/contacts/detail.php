@@ -191,6 +191,7 @@
                 'linkedin' => 'fa-brands fa-linkedin',
                 'matrix' => 'fa-solid fa-hashtag',
                 'pinterest' => 'fa-brands fa-pinterest',
+                'flickr' => 'fa-brands fa-flickr',
                 'twitter' => 'fa-brands fa-twitter',
                 'youtube' => 'fa-brands fa-youtube',
                 'facebook' => 'fa-brands fa-facebook',

@@ -8,27 +8,6 @@
     fail("Malformed 'kind' parameter.", status: 400);
   }
 
-  define('SOCIALS_LABELS', [
-    'instagram' => 'Instagram',
-    'discord' => 'Discord',
-    'snapchat' => 'Snapchat',
-    'spacehey' => 'SpaceHey',
-    'airbuds' => 'Airbuds',
-    'tiktok' => 'TikTok',
-    'wattpad' => 'Wattpad',
-    'github' => 'GitHub',
-    'codeberg' => 'Codebeg',
-    'gitlab' => 'GitLab',
-    'linkedin' => 'LinkedIn',
-    'matrix' => 'Matrix',
-    'pinterest' => 'Pinterest',
-    'twitter' => 'Twitter',
-    'youtube' => 'YouTube',
-    'facebook' => 'Facebook',
-    'activitypub' => 'Mastodon',
-    'bsky' => 'Bluesky',
-  ]);
-
   if($kind === "org" ? isset($_POST['display_name']) : isset($_POST['first_name'])) {
     $creating = !$id;
     $item = $id ? ($kind == 'org' ? \store\get_organisation($id) : \store\get_contact($id)) : [];
@@ -212,7 +191,7 @@
   $social_field = function($row) { ?>
     <select name="social_type[]">
       <?php foreach(ENUM_SOCIAL_TYPE as $t): ?>
-        <option value="<?= $t ?>" <?= @$row['type'] == $t ? 'selected' : '' ?>><?= SOCIALS_LABELS[$t] ?? ucfirst($t) ?></option>
+        <option value="<?= $t ?>" <?= @$row['type'] == $t ? 'selected' : '' ?>><?= \contacts\social_label($t) ?></option>
       <?php endforeach ?>
     </select>
     <input name="social_handle[]" placeholder="handle" required value="<?= esc_attr(@$row['handle']) ?>" data-value>

@@ -25,6 +25,8 @@ function collection_properties($collection) {
       . '<D:supported-report><D:report><CARD:addressbook-multiget/></D:report></D:supported-report>'
       . '<D:supported-report><D:report><D:sync-collection/></D:report></D:supported-report>'],
     WEBDAV_XML_SERVER . '|getctag' => ['text' => (string)$revision],
+    WEBDAV_XML_DAV . '|owner' => ['raw' =>
+      '<D:href>/carddav/principals/' . CARDDAV_PRINCIPAL . '/</D:href>'],
     WEBDAV_XML_DAV . '|current-user-privilege-set' => ['raw' =>
       '<D:privilege><D:read/></D:privilege><D:privilege><D:write-content/></D:privilege>'],
   ];
@@ -39,6 +41,8 @@ function resource_properties($collection, $resource, $address_data = false) {
     WEBDAV_XML_DAV . '|getcontenttype' => ['text' => 'text/vcard; charset=utf-8'],
     WEBDAV_XML_DAV . '|getcontentlength' => ['text' => (string)strlen($body)],
     WEBDAV_XML_DAV . '|getlastmodified' => ['text' => gmdate('D, d M Y H:i:s', strtotime($resource['touched_at'])) . ' GMT'],
+    WEBDAV_XML_DAV . '|current-user-privilege-set' => ['raw' =>
+      '<D:privilege><D:read/></D:privilege><D:privilege><D:write/></D:privilege>'],
   ];
   if($address_data) $properties[WEBDAV_XML_CARDDAV . '|address-data'] = ['text' => $body];
   return $properties;
@@ -419,7 +423,7 @@ function get_resource($head = false) {
 
 function options() {
   header("Allow: OPTIONS, PROPFIND, REPORT, GET, HEAD, PUT, DELETE, MOVE");
-  header("DAV: 1, 3, addressbook, sync-collection");
+  header("DAV: 1, 3, addressbook, access-control, sync-collection");
   http_response_code(204); exit;
 }
 

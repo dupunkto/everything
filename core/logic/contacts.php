@@ -4,6 +4,32 @@
 
 namespace contacts;
 
+define('SOCIALS', [
+  'instagram' => 'Instagram',
+  'discord' => 'Discord',
+  'snapchat' => 'Snapchat',
+  'spacehey' => 'SpaceHey',
+  'airbuds' => 'Airbuds',
+  'tiktok' => 'TikTok',
+  'wattpad' => 'Wattpad',
+  'github' => 'GitHub',
+  'codeberg' => 'Codeberg',
+  'gitlab' => 'GitLab',
+  'linkedin' => 'LinkedIn',
+  'matrix' => 'Matrix',
+  'pinterest' => 'Pinterest',
+  'flickr' => 'Flickr',
+  'twitter' => 'Twitter',
+  'youtube' => 'YouTube',
+  'facebook' => 'Facebook',
+  'activitypub' => 'Mastodon',
+  'bsky' => 'Bluesky',
+]);
+
+function social_label($type) {
+  return @SOCIALS[$type] ?: ucfirst($type);
+}
+
 // The display name is generated: the first name plus the surname that
 // name_order puts first. The display_name column still wins when set, but
 // nothing writes it from the app anymore; nicknames took its place.

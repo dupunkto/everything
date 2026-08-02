@@ -13,7 +13,7 @@ const tls_options = {
   cert: fs.readFileSync(path.join(tls_data, 'localhost.crt')),
 };
 
-const server = https.createServer(tls_options, (request, response) => {
+const handler = (request, response) => {
   if(request.url == '/.well-known/caldav') {
     response.writeHead(301, {location: `https://${request.headers.host}/caldav/`});
     response.end();
@@ -24,6 +24,12 @@ const server = https.createServer(tls_options, (request, response) => {
     response.writeHead(301, {location: `https://${request.headers.host}/carddav/`});
     response.end();
     return;
+  }
+
+  // Apple's port-less CardDAV auto-discovery probes /principals/ on the
+  // legacy port 8843; the CardDAV root answers the same questions.
+  if(request.url == '/principals/' || request.url == '/principals') {
+    request.url = '/carddav/';
   }
 
   const upstream = http.request({
@@ -47,8 +53,18 @@ const server = https.createServer(tls_options, (request, response) => {
   });
   
   request.pipe(upstream);
-})
+};
 
-server.listen(tls_port, '0.0.0.0', () => {
-  console.log(`Node ${process.version.slice(1)} Proxy Server (https://0.0.0.0:${tls_port}) started`)
+const server = https.createServer(tls_options, handler);
+const legacy = https.createServer(tls_options, handler);
+
+// No host: binds dual-stack, so localhost resolving to ::1 (as macOS
+// system services do) reaches the proxy too. 8843 is the legacy CardDAV
+// TLS port that Apple's auto-discovery probes when it ignores the
+// configured port (macOS 26 does).
+server.listen(tls_port, () => {
+  console.log(`Node ${process.version.slice(1)} Proxy Server (https://[::]:${tls_port}) started`)
+});
+legacy.listen(8843, () => {
+  console.log(`Node Discovery Server (https://[::]:8843) started`)
 });

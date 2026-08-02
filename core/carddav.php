@@ -286,15 +286,17 @@ function address_lines($rows, &$groups) {
   return $body;
 }
 
+// Services without a public profile URL get Apple's x-apple: URI as the
+// value; a bare handle there renders as username:value garbage in Contacts.
 function social_lines($rows, $kind) {
   $body = "";
   foreach($rows as $row) {
     $url = \contacts\social_url($row['type'], $row['handle'], $kind);
     $params = [
-      ['name' => 'TYPE', 'values' => [$row['type']]],
+      ['name' => 'TYPE', 'values' => [\contacts\social_label($row['type'])]],
       ['name' => 'X-USER', 'values' => [$row['handle']]],
     ];
-    $body .= line('X-SOCIALPROFILE', escape($url ?: $row['handle']), $params);
+    $body .= line('X-SOCIALPROFILE', escape($url ?: 'x-apple:' . $row['handle']), $params);
     if($row['type'] == 'matrix')
       $body .= line('IMPP', 'matrix:' . escape($row['handle']), [
         ['name' => 'X-SERVICE-TYPE', 'values' => ['matrix']],
@@ -762,7 +764,8 @@ function parse_socials(&$bag, &$retained) {
 
     $handle = isset($property['X-USER']) ? trim((string)$property['X-USER']) : "";
     if($handle == "") {
-      $path = parse_url(trim($property->getValue()), PHP_URL_PATH) ?: trim($property->getValue());
+      $value = preg_replace('/^x-apple:/i', '', trim($property->getValue()));
+      $path = parse_url($value, PHP_URL_PATH) ?: $value;
       $handle = ltrim(rawurldecode(basename($path)), "@");
     }
     if($handle == "") { $retained[] = retained_row($property); continue; }

@@ -55,6 +55,7 @@ function error_context($error) {
     'line' => $error->getLine(),
     'method' => @$_SERVER['REQUEST_METHOD'],
     'uri' => @$_SERVER['REQUEST_URI'],
+    'remote_addr' => @$_SERVER['REMOTE_ADDR'],
     'trace' => $error->getTraceAsString(),
   ];
 }

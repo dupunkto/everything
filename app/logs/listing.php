@@ -83,11 +83,13 @@
   <?php $message = $log['message'] ?>
   <?php if($log['source'] == 'system'): ?>
     <?php $log['operation'] = is_scalar(@$context['method']) ? (string)$context['method'] : '' ?>
+    <?php $log['author'] = is_scalar(@$context['remote_addr']) ? (string)$context['remote_addr'] : '' ?>
     <?php $message = is_scalar(@$context['message']) ? (string)$context['message'] : $message ?>
     <?php $uri = is_scalar(@$context['uri']) ? (string)$context['uri'] : '' ?>
     <?php [$log['table_name'], $log['record_id']] = logs_http_entity($uri) ?>
     <?php $entity = $log['table_name'] . ($log['record_id'] ? "/{$log['record_id']}" : '') ?>
-    <?php foreach(['method', 'error', 'message', 'uri'] as $key) unset($context[$key]) ?>
+    <?php foreach(['method', 'error', 'message', 'remote_addr'] as $key) unset($context[$key]) ?>
+    <?php if($entity) unset($context['uri']) ?>
   <?php else: ?>
     <?php $entity = $log['table_name'] . ($log['record_id'] ? "/{$log['record_id']}" : '') ?>
   <?php endif ?>
@@ -112,7 +114,7 @@
       <?php endif ?>
     </td>
     <td><?= esc_inner($log['operation']) ?></td>
-    <td><?php if(in_array($log['source'], ['audit', 'http'])) echo esc_inner($log['author']) ?></td>
+    <td><?= esc_inner($log['author']) ?></td>
     <td>
       <?php if($url): ?>
         <a class="logs__entity" href="<?= esc_attr($url) ?>" title="<?= esc_attr($entity) ?>"><?= esc_inner($entity) ?></a>
