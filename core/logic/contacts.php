@@ -77,6 +77,70 @@ function contact_surname($contact) {
   };
 }
 
+function normalize_binary_picture($content) {
+  if(!is_string($content) || $content == "" || strlen($content) > ini_parse_quantity(CONTACTS_UPLOAD_LIMIT))
+    throw new \InvalidArgumentException("Profile picture must be no larger than " . CONTACTS_UPLOAD_LIMIT . ".");
+
+  $info = @getimagesizefromstring($content);
+
+  if(!$info || !in_array($info['mime'], CONTACTS_PICTURE_MIMES))
+    throw new \InvalidArgumentException("Profile picture must be a JPEG, PNG, WebP or GIF image.");
+
+  if($info[0] * $info[1] > CONTACTS_PICTURE_MAX_PIXELS)
+    throw new \InvalidArgumentException("Profile picture dimensions are too large.");
+
+  $source = @imagecreatefromstring($content);
+  if(!$source) throw new \InvalidArgumentException("Profile picture could not be decoded.");
+
+  $scale = min(1, CONTACTS_PICTURE_MAX_EDGE / max($info[0], $info[1]));
+  $width = max(1, (int)round($info[0] * $scale));
+  $height = max(1, (int)round($info[1] * $scale));
+  $image = imagecreatetruecolor($width, $height);
+
+  if(in_array($info['mime'], ['image/png', 'image/webp', 'image/gif'])) {
+    imagealphablending($image, false);
+    imagesavealpha($image, true);
+    $transparent = imagecolorallocatealpha($image, 0, 0, 0, 127);
+    imagefill($image, 0, 0, $transparent);
+    if($info['mime'] == 'image/gif') imagecolortransparent($image, $transparent);
+  }
+
+  imagecopyresampled($image, $source, 0, 0, 0, 0, $width, $height, $info[0], $info[1]);
+  imagedestroy($source);
+
+  ob_start();
+  $written = match($info['mime']) {
+    'image/jpeg' => imagejpeg($image, null, 85),
+    'image/png' => imagepng($image, null, 6),
+    'image/webp' => imagewebp($image, null, 85),
+    'image/gif' => imagegif($image),
+  };
+  $normalized = ob_get_clean();
+  imagedestroy($image);
+
+  if(!$written || $normalized == "")
+    throw new \InvalidArgumentException("Profile picture could not be processed.");
+
+  return ['mime_type' => $info['mime'], 'content' => $normalized];
+}
+
+function normalize_base64_picture($content) {
+  $decoded = base64_decode(preg_replace('/\s+/', '', $content), true);
+  if($decoded === false) throw new \InvalidArgumentException("VCARD PHOTO contains invalid base64 data.");
+  return normalize_binary_picture($decoded);
+}
+
+function normalize_remote_picture($url) {
+  $response = \http\get($url);
+
+  if($response['state'] != 'success' || $response['status'] < 200 || $response['status'] >= 300) {
+    \logger\warn("Dropped profile picture: remote URL could not be fetched.");
+    return null;
+  }
+
+  return normalize_binary_picture($response['body']);
+}
+
 function social_url($type, $handle, $kind = 'person') {
   $raw = trim($handle);
   $h = ltrim($raw, "@");

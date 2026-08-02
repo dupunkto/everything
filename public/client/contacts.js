@@ -96,6 +96,9 @@ document.addEventListener("input", (e) => {
 });
 
 document.addEventListener("click", (e) => {
+  const picture = e.target.closest?.("[data-picture-select]");
+  if(picture) picture.form.elements.picture.click();
+
   const star = e.target.closest?.("[data-role-main]");
   if(star) {
     const row = star.closest(".repeat__row");

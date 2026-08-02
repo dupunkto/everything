@@ -45,6 +45,10 @@ fallback('contacts.default-query', "is:person");
 fallback('contacts.display-format', "first_last");
 fallback('contacts.sort-order', "first");
 fallback('contacts.prefer-nickname', false);
+fallback('contacts.picture_max_edge', 1024);
+fallback('contacts.picture_max_pixels', 40 * 1000 * 1000);
+fallback('contacts.picture_mimes', ['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+resolute('contacts.upload_limit', ini_get('upload_max_filesize'));
 
 function required($key) {
   if(!defined(normalize_key($key))) {

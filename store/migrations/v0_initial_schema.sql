@@ -97,6 +97,21 @@ CREATE TABLE IF NOT EXISTS organisations (
   PRIMARY KEY (id)
 );
 
+CREATE TABLE IF NOT EXISTS profile_pictures (
+  id int(11) NOT NULL AUTO_INCREMENT,
+  contact_id int(11),
+  org_id int(11),
+  mime_type text NOT NULL,
+  content mediumblob NOT NULL,
+  content_hash text NOT NULL,
+  FOREIGN KEY (contact_id) REFERENCES contacts (id) ON DELETE CASCADE,
+  FOREIGN KEY (org_id) REFERENCES organisations (id) ON DELETE CASCADE,
+  CHECK ((contact_id IS NULL) != (org_id IS NULL)),
+  UNIQUE (contact_id),
+  UNIQUE (org_id),
+  PRIMARY KEY (id)
+);
+
 CREATE TABLE IF NOT EXISTS contacts_tags (
   id int(11) NOT NULL AUTO_INCREMENT,
   contact_id int(11) NOT NULL,

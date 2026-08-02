@@ -1430,6 +1430,7 @@ function get_contact($id) {
   $contact['roles'] = list_contact_roles($id);
   $contact['addresses'] = list_contact_addresses($id);
   $contact['tags'] = list_contact_tags($id);
+  $contact['picture'] = get_profile_picture_metadata('contact', $id);
 
   return $contact;
 }
@@ -1633,6 +1634,7 @@ function get_organisation($id) {
   $organisation['addresses'] = list_organisation_addresses($id);
   $organisation['tags'] = list_organisation_tags($id);
   $organisation['employees'] = list_organisation_employees($id);
+  $organisation['picture'] = get_profile_picture_metadata('organisation', $id);
 
   return $organisation;
 }
@@ -1730,6 +1732,44 @@ function set_organisation_addresses($id, $rows) {
 
 function delete_organisation($id) {
   return exec_query('DELETE FROM organisations WHERE id = ?', [$id]);
+}
+
+function get_profile_picture($type, $id) {
+  $fk = match($type) {
+    'contact' => 'contact_id',
+    'organisation' => 'org_id',
+  };
+  return one("SELECT * FROM profile_pictures WHERE $fk = ?", [$id]);
+}
+
+function get_profile_picture_metadata($type, $id) {
+  $fk = match($type) {
+    'contact' => 'contact_id',
+    'organisation' => 'org_id',
+  };
+  return one("SELECT id, mime_type, content_hash FROM profile_pictures WHERE $fk = ?", [$id]);
+}
+
+function list_profile_picture_metadata() {
+  return all('SELECT id, contact_id, org_id, mime_type, content_hash FROM profile_pictures');
+}
+
+function set_profile_picture($type, $id, $mime_type, $content) {
+  $fk = match($type) {
+    'contact' => 'contact_id',
+    'organisation' => 'org_id',
+  };
+  delete_profile_picture($type, $id);
+  return exec_query("INSERT INTO profile_pictures ($fk, mime_type, content, content_hash)
+    VALUES (?, ?, ?, ?)", [$id, $mime_type, $content, hash('sha256', $content)]);
+}
+
+function delete_profile_picture($type, $id) {
+  $fk = match($type) {
+    'contact' => 'contact_id',
+    'organisation' => 'org_id',
+  };
+  return exec_query("DELETE FROM profile_pictures WHERE $fk = ?", [$id]);
 }
 
 function set_children($table, $fk, $id, $rows) {

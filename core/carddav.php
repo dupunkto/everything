@@ -85,6 +85,7 @@ function book() {
   foreach(\store\list_contact_rows() as $row) $contacts[$row['id']] = $row + [
     'emails' => [], 'phone_numbers' => [], 'urls' => [], 'socials' => [],
     'roles' => [], 'addresses' => [], 'tags' => [], 'properties' => [],
+    'picture' => null,
   ];
   foreach([
     'emails' => \store\list_all_contact_emails(),
@@ -104,6 +105,7 @@ function book() {
   foreach(\store\list_organisation_rows() as $row) $organisations[$row['id']] = $row + [
     'emails' => [], 'phone_numbers' => [], 'urls' => [], 'socials' => [],
     'addresses' => [], 'tags' => [], 'properties' => [],
+    'picture' => null,
   ];
   foreach([
     'emails' => \store\list_all_org_emails(),
@@ -116,6 +118,13 @@ function book() {
   ] as $field => $rows) {
     foreach($group($rows, 'org_id') as $id => $children)
       if(isset($organisations[$id])) $organisations[$id][$field] = $children;
+  }
+
+  foreach(\store\list_profile_picture_metadata() as $picture) {
+    if($picture['contact_id'] && isset($contacts[$picture['contact_id']]))
+      $contacts[$picture['contact_id']]['picture'] = $picture;
+    if($picture['org_id'] && isset($organisations[$picture['org_id']]))
+      $organisations[$picture['org_id']]['picture'] = $picture;
   }
 
   $tags = [];
@@ -324,6 +333,17 @@ function categories_line($tags) {
   return line('CATEGORIES', implode(',', $labels));
 }
 
+function picture_line($type, $id, $picture) {
+  if(!$picture) return "";
+  $stored = \store\get_profile_picture($type, $id);
+  if(!$stored) return "";
+  $format = strtoupper($stored['mime_type'] == 'image/jpeg' ? 'JPEG' : substr($stored['mime_type'], 6));
+  return line('PHOTO', base64_encode($stored['content']), [
+    ['name' => 'ENCODING', 'values' => ['b']],
+    ['name' => 'TYPE', 'values' => [$format]],
+  ]);
+}
+
 function retained_lines($properties, $skip = []) {
   $body = "";
   foreach($properties as $property) {
@@ -348,6 +368,7 @@ function serialize_contact($resource, $row) {
   $body = header_lines($resource, $fn,
     [$surname, $row['first_name'], $row['middle_name'], ...n_extras($row['properties'])]);
 
+  $body .= picture_line('contact', $row['id'], $row['picture']);
   if(is_str($row['nickname'])) $body .= line('NICKNAME', escape($row['nickname']));
   if(is_str($row['pronouns'])) {
     $body .= line('PRONOUNS', escape($row['pronouns']));
@@ -415,6 +436,7 @@ function serialize_organisation($resource, $row) {
   $body .= line('ORG', escape($row['display_name']) . ';');
   $body .= line('KIND', 'org');
   $body .= line('X-ABShowAs', 'COMPANY');
+  $body .= picture_line('organisation', $row['id'], $row['picture']);
 
   $internet = [['name' => 'TYPE', 'values' => ['INTERNET']]];
   $body .= child_lines($row['emails'], 'EMAIL',
@@ -814,6 +836,28 @@ function parse_categories(&$bag, $current_tags) {
   return array_values(array_unique($tag_ids));
 }
 
+function parse_picture(&$bag) {
+  $picture = take($bag, 'PHOTO');
+  take_all($bag, 'PHOTO');
+  if(!$picture) return null;
+
+  if($picture instanceof \Sabre\VObject\Property\Binary) {
+    return \contacts\normalize_binary_picture($picture->getValue());
+  }
+
+  $value = trim($picture->getValue());
+
+  if(preg_match('#^data:image/(?:jpeg|png|webp|gif);base64,(.+)$#is', $value, $match)) {
+    return \contacts\normalize_base64_picture($match[1]);
+  }
+
+  if(preg_match('#^https?://#i', $value)) {
+    return \contacts\normalize_remote_picture($value);
+  }
+
+  throw new \InvalidArgumentException("VCARD PHOTO has an unsupported value.");
+}
+
 function parse_contact(VCard $card, $current) {
   $bag = bag($card);
   $retained = [];
@@ -924,6 +968,7 @@ function parse_contact(VCard $card, $current) {
 
   $tags = parse_categories($bag, $current ? $current['tags'] : []);
   $roles = parse_roles($bag, $current, $retained);
+  $picture = parse_picture($bag);
 
   return [
     'fields' => $fields,
@@ -934,6 +979,7 @@ function parse_contact(VCard $card, $current) {
     'socials' => $socials,
     'tags' => $tags,
     'roles' => $roles,
+    'picture' => $picture,
     'properties' => [...$retained, ...leftovers($bag)],
   ];
 }
@@ -1104,6 +1150,7 @@ function parse_organisation(VCard $card, $current) {
   $addresses = parse_addresses($bag, $retained);
   $socials = parse_socials($bag, $retained);
   $tags = parse_categories($bag, $current ? $current['tags'] : []);
+  $picture = parse_picture($bag);
 
   return [
     'fields' => $fields,
@@ -1113,6 +1160,7 @@ function parse_organisation(VCard $card, $current) {
     'addresses' => $addresses,
     'socials' => $socials,
     'tags' => $tags,
+    'picture' => $picture,
     'properties' => [...$retained, ...leftovers($bag)],
   ];
 }

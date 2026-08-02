@@ -1,7 +1,7 @@
 <?php
   // Contact detail view.
 
-  $kind = @$_GET['kind'] ?? "person";
+  $kind = @$_GET['kind'] ?: @$_POST['kind'] ?: "person";
   $id = @$_GET['id'] ?: @$_POST['id'];
 
   if(!in_array($kind, ['person', 'org'])) {
@@ -28,10 +28,38 @@
     ? $item['timezone']
     : null;
 
+  $picture_query = ['kind' => $kind, 'id' => $item['id']];
+  if($item['picture']) $picture_query['v'] = $item['picture']['content_hash'];
+  $picture_url = "/contacts/picture?" . http_build_query($picture_query);
+
 ?>
 <header class="detail__header" data-contact-state="view" data-kind="<?= esc_attr($kind) ?>" data-id="<?= esc_attr($item['id']) ?>">
   <div class="detail__identity">
-    <span class="detail__avatar"><i class="fa-solid fa-<?= $kind == "org" ? "building-columns" : "user" ?>"></i></span>
+    <div class="detail__picture">
+      <?php if($item['picture']): ?>
+        <button type="button" class="detail__avatar" z-toggle="#picture-actions-<?= esc_attr("$kind-{$item['id']}") ?>" title="Profile picture actions">
+          <img src="<?= esc_attr($picture_url) ?>" alt="">
+        </button>
+        <div id="picture-actions-<?= esc_attr("$kind-{$item['id']}") ?>" class="popover detail__picture-actions" z-dismiss="escape" hidden>
+          <form x-post="/contacts/picture" x-on="change" x-target="#contacts-panel">
+            <input type="hidden" name="kind" value="<?= esc_attr($kind) ?>">
+            <input type="hidden" name="id" value="<?= esc_attr($item['id']) ?>">
+            <button type="button" data-picture-select>Replace</button>
+            <input type="file" name="picture" accept="<?= esc_attr(implode(',', CONTACTS_PICTURE_MIMES)) ?>" hidden>
+          </form>
+          <button type="button" x-delete="<?= esc_attr($picture_url) ?>" x-target="#contacts-panel">Remove</button>
+        </div>
+      <?php else: ?>
+        <form x-post="/contacts/picture" x-on="change" x-target="#contacts-panel">
+          <input type="hidden" name="kind" value="<?= esc_attr($kind) ?>">
+          <input type="hidden" name="id" value="<?= esc_attr($item['id']) ?>">
+          <button type="button" class="detail__avatar" title="Add profile picture" data-picture-select>
+            <i class="fa-solid fa-<?= $kind == "org" ? "building-columns" : "user" ?>"></i>
+          </button>
+          <input type="file" name="picture" accept="<?= esc_attr(implode(',', CONTACTS_PICTURE_MIMES)) ?>" hidden>
+        </form>
+      <?php endif ?>
+    </div>
     <div>
       <h2><?= esc_inner($title) ?></h2>
       <?php if($subtitle): ?><p class="detail__subtitle"><?= esc_inner($subtitle) ?></p><?php endif ?>

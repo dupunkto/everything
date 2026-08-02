@@ -65,8 +65,8 @@ function execute($path) {
       $query = str_replace(",\n  PRIMARY KEY (id)", "", $query);
 
     $query = str_replace(
-      ["int(11)", "NOT NULL AUTO_INCREMENT"],
-      ["INTEGER", "PRIMARY KEY AUTOINCREMENT"],
+      ["int(11)", "NOT NULL AUTO_INCREMENT", "mediumblob"],
+      ["INTEGER", "PRIMARY KEY AUTOINCREMENT", "blob"],
       $query
     );
 

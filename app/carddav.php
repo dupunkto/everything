@@ -216,6 +216,15 @@ function apply_contact($id, $data) {
   \store\set_contact_roles($id, $data['roles']);
   \store\set_contact_addresses($id, $data['addresses']);
   if($data['tags'] !== null) \store\set_contact_tags($id, $data['tags']);
+
+  if($data['picture']) {
+    \store\set_profile_picture('contact', $id,
+    $data['picture']['mime_type'], $data['picture']['content']);
+  }
+  else {
+    \store\delete_profile_picture('contact', $id);
+  }
+
   \store\replace_properties('contact', $id, $data['properties']);
 
   return $id;
@@ -244,6 +253,9 @@ function apply_organisation($id, $data) {
   \store\set_organisation_socials($id, $data['socials']);
   \store\set_organisation_addresses($id, $data['addresses']);
   if($data['tags'] !== null) \store\set_organisation_tags($id, $data['tags']);
+  if($data['picture']) \store\set_profile_picture('organisation', $id,
+    $data['picture']['mime_type'], $data['picture']['content']);
+  else \store\delete_profile_picture('organisation', $id);
   \store\replace_properties('organisation', $id, $data['properties']);
 
   return $id;
