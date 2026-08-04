@@ -23,7 +23,7 @@ fallback('currency', "eur");
 fallback('country', "NL");
 fallback('phone-region', "NL");
 fallback('map-provider', "google_maps");
-fallback('developer-mode', $_ENV == "dev");
+fallback('developer-mode', $_ENV == 'dev');
 
 fallback('ui.panel-position', "right");
 fallback('ui.sidebar-position', "left");
