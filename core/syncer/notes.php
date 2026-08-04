@@ -23,6 +23,7 @@ function plan($client, $account) {
     $note = \imap\parse_note($message['message']);
     if(!$note) continue; // not an Apple note, leave untouched
 
+    $note['title'] = apple_title($note);
     $note['uid'] = $message['uid'];
     $group = &$groups[$note['uuid']];
     $group['uids'][] = $note['uid'];
@@ -84,6 +85,7 @@ function plan($client, $account) {
       $modified = modified_at($row);
 
       if($note['modified_at'] > $modified) {
+        if($row['title'] != "") $note['title'] = $row['title'];
         $fields = \core\diff($row,
           title: $note['title'],
           content: $note['content'],
@@ -200,6 +202,17 @@ function modified_at($row) {
   return utc_timestamp($last['changed_at'] ?? null)
     ?? utc_timestamp($row['written_at'])
     ?? time();
+}
+
+function apple_title($note) {
+  $lines = explode("\n", $note['content']);
+  $title = count($lines) > 1 ? $lines[0] : $note['title'];
+
+  if(count($lines) == 1
+    && ($title == $lines[0] || ($title != "" && str_starts_with($lines[0], $title))))
+    return "";
+
+  return mb_strlen($title, "UTF-8") < 50 ? $title : "";
 }
 
 function html_to_markdown($html) {
