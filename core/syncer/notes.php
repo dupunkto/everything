@@ -213,8 +213,9 @@ function export_title($title, $content) {
 
 function apple_title($note) {
   $lines = explode("\n", $note['content']);
-  $title = count($lines) > 1 ? $lines[0] : $note['title'];
+  if(count($lines) > 1 && trim($lines[1]) != "") return "";
 
+  $title = count($lines) > 1 ? $lines[0] : $note['title'];
   if(count($lines) == 1
     && ($title == $lines[0] || ($title != "" && str_starts_with($lines[0], $title))))
     return "";
