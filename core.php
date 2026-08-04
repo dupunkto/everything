@@ -9,6 +9,7 @@ require __DIR__ . "/core/neuro.php";
 
 require __DIR__ . "/vendor/sabre.php";
 require __DIR__ . "/vendor/parsedown.php";
+require __DIR__ . "/vendor/html2md.php";
 require __DIR__ . "/vendor/libphonenumber.php";
 
 require __DIR__ . "/store.php";
@@ -25,6 +26,7 @@ require __DIR__ . "/core/dates.php";
 require __DIR__ . "/core/geo.php";
 require __DIR__ . "/core/phone.php";
 require __DIR__ . "/core/astro.php";
+require __DIR__ . "/core/imap.php";
 require __DIR__ . "/core/icalendar.php";
 require __DIR__ . "/core/webdav.php";
 require __DIR__ . "/core/caldav.php";
@@ -39,3 +41,5 @@ require __DIR__ . "/core/logic/habits.php";
 require __DIR__ . "/core/logic/shares.php";
 require __DIR__ . "/core/logic/quotas.php";
 require __DIR__ . "/core/logic/bookmarks.php";
+
+require __DIR__ . "/core/syncer/notes.php";

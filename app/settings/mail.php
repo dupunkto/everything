@@ -14,7 +14,7 @@
       </header>
 
       <ul class="settings-menu">
-        <li><a>IMAP</a></li>
+        <li><a href="<?= CANONICAL ?>/settings/mail/imap">IMAP</a></li>
         <li><a>SMTP</a></li>
       </ul>
     </main>

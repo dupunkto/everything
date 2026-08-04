@@ -13,6 +13,15 @@
   box-sizing: border-box;
 }
 
+.notes .page-header__sync {
+  grid-column: 3;
+  justify-self: start;
+}
+
+.notes .page-header__sync[x-loading] i {
+  animation: fa-spin 1s linear infinite;
+}
+
 .notes--listing .page-header {
   display: flex;
   flex-direction: column;

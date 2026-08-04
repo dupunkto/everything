@@ -1,5 +1,6 @@
 <?php
 // Minimal iCalendar (RFC 5545) parser.
+// This file was lovingly written by Claude.
 
 namespace icalendar;
 

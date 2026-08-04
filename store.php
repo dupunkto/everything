@@ -99,8 +99,16 @@ function update_note($id, $title, $content, $date = null) {
   WHERE id = ?', [$title, $content, $date, $id]);
 }
 
+function update_note_apple_id($id, $apple_id) {
+  return exec_query('UPDATE notes SET apple_id = ? WHERE id = ?', [$apple_id, $id]);
+}
+
 function get_note($id) {
   return one('SELECT * FROM notes WHERE id = ?', [$id]);
+}
+
+function get_note_by_apple_id($apple_id) {
+  return one('SELECT * FROM notes WHERE apple_id = ?', [$apple_id]);
 }
 
 function list_note_tags($id) {
@@ -153,8 +161,26 @@ function list_notes_paginated($query, $limit, $offset = 0) {
   return paginate($sql, $limit, offset: $offset, params: $params);
 }
 
+function list_apple_notes() {
+  return all('SELECT * FROM notes WHERE apple_id IS NOT NULL');
+}
+
 function delete_note($id) {
   return exec_query('DELETE FROM notes WHERE id = ?', [$id]);
+}
+
+function put_note_tombstone($apple_id, $deleted_at) {
+  exec_query('DELETE FROM notes_tombstones WHERE apple_id = ?', [$apple_id]);
+  return exec_query('INSERT INTO notes_tombstones (apple_id, deleted_at) VALUES (?, ?)',
+    [$apple_id, $deleted_at]);
+}
+
+function list_note_tombstones() {
+  return all('SELECT * FROM notes_tombstones');
+}
+
+function delete_note_tombstone($apple_id) {
+  return exec_query('DELETE FROM notes_tombstones WHERE apple_id = ?', [$apple_id]);
 }
 
 // Tasks
@@ -2693,9 +2719,68 @@ function update_config($property, $value) {
   return exec_query('INSERT INTO config (property, value) VALUES (?, ?)', [$property, $value]);
 }
 
+// IMAP accounts
+
+function list_imap_credentials() {
+  return all('SELECT * FROM imap_credentials ORDER BY id');
+}
+
+function get_imap_credentials($id) {
+  return one('SELECT * FROM imap_credentials WHERE id = ?', [$id]);
+}
+
+function get_first_imap_credentials() {
+  return one('SELECT id FROM imap_credentials ORDER BY id ASC');
+}
+
+function put_imap_credentials($name, $username, $password, $hostname, $port, $ssl_mode) {
+  if(!in_array($ssl_mode, ENUM_SSL_MODE)) fail("Invalid SSL mode", status: 400);
+  if($port < 1 || $port > 65535) fail("Invalid port number.", status: 400);
+
+  exec_query('INSERT INTO imap_credentials (
+    name,
+    username,
+    password,
+    hostname,
+    port,
+    ssl_mode
+  ) VALUES (?, ?, ?, ?, ?, ?)', [$name, $username, $password, $hostname, $port, $ssl_mode]);
+
+  return DBH->lastInsertId();
+}
+
+function update_imap_credentials($id, $name, $username, $password, $hostname, $port, $ssl_mode) {
+  if(!in_array($ssl_mode, ENUM_SSL_MODE)) fail("Invalid SSL mode", status: 400);
+  if($port < 1 || $port > 65535) fail("Invalid port number.", status: 400);
+
+  return exec_query('UPDATE imap_credentials SET
+    name = ?,
+    username = ?,
+    password = ?,
+    hostname = ?,
+    port = ?,
+    ssl_mode = ?
+  WHERE id = ?', [$name, $username, $password, $hostname, $port, $ssl_mode, $id]);
+}
+
+function delete_imap_credentials($id) {
+  return exec_query('DELETE FROM imap_credentials WHERE id = ?', [$id]);
+}
+
 // Logging
 
-function put_audit_log($table_name, $record_id, $message, $author, $operation = 'update') {
+function put_audit_log($table_name, $record_id, $message, $author, $operation = 'update', $changed_at = null) {
+  if($changed_at !== null) {
+    return exec_query('INSERT INTO audit_log (
+      changed_at,
+      table_name,
+      record_id,
+      message,
+      author,
+      operation
+    ) VALUES (?, ?, ?, ?, ?, ?)', [$changed_at, $table_name, $record_id, $message, $author, $operation]);
+  }
+
   return exec_query('INSERT INTO audit_log (
     table_name,
     record_id,
@@ -2806,6 +2891,12 @@ function list_logs_filtered($sources, $levels, $message, $from, $to, $limit) {
       FROM ($query) AS logs
       ORDER BY changed_at DESC, source DESC, source_id DESC",
     $limit, params: $params);
+}
+
+function get_last_audit_log($table_name, $record_id) {
+  return one('SELECT * FROM audit_log
+    WHERE table_name = ? AND record_id = ?
+    ORDER BY id DESC', [$table_name, $record_id]);
 }
 
 function list_audit_logs($table_name, $record_id) {

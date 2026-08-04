@@ -23,6 +23,10 @@
           x-on="input"
           x-target="#notes-listing"
         >
+        <?php if(defined('MAIL_NOTES_ACCOUNT')): ?>
+          <button type="button" class="page-header__sync" title="Sync notes" x-post="/notes/sync"
+            x-refresh="#notes-listing"><i class="fa-solid fa-rotate"></i></button>
+        <?php endif ?>
       </div>
 
       <button type="button" z-key="r" x-refresh="#notes-listing" hidden></button>

@@ -99,11 +99,13 @@
   </label>
 </form>
 
-<!-- This is a separate form because the panel position form needs to do a full page reload,
-     and these settings do NOT need to do that (and a full reload is disruptive UX imo).
-     Having them in the same form would submit panel-position with changes to sidebar-position,
-     and perform a full reload (and worse yet, do the redirect *before* we even reach the update
-     handler for the sidebar-position). -->
+<!--
+  This is a separate form because the panel position form needs to do a full page reload,
+  and these settings do NOT need to do that (and a full reload is disruptive UX imo).
+  Having them in the same form would submit panel-position with changes to sidebar-position,
+  and perform a full reload (and worse yet, do the redirect *before* we even reach the update
+  handler for the sidebar-position).
+-->
 <form class="settings-form" x-post="/settings/ui/edit" x-on="change" x-target="#ui-settings">
   <label>
     Sidebar position

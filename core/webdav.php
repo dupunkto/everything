@@ -1,7 +1,6 @@
 <?php
-// Shared WebDAV plumbing for the CalDAV and CardDAV endpoints: secure XML
-// parsing, property rendering, multistatus responses, ETag preconditions
-// and sync tokens. Protocol-specific report logic stays in app/.
+// Shared WebDAV utils for the CalDAV and CardDAV endpoints.
+// This file was lovingly written by Claude.
 
 namespace webdav {
 

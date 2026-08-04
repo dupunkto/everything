@@ -268,11 +268,19 @@ CREATE TABLE IF NOT EXISTS org_addresses (
 
 CREATE TABLE IF NOT EXISTS notes (
   id text NOT NULL, -- humid
+  apple_id text,
   title text,
   content text,
   written_at datetime NOT NULL,
   FOREIGN KEY (id) REFERENCES humids (id),
+  UNIQUE (apple_id),
   PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS notes_tombstones (
+  apple_id text NOT NULL,
+  deleted_at datetime NOT NULL,
+  PRIMARY KEY (apple_id)
 );
 
 CREATE TABLE IF NOT EXISTS notes_tags (
@@ -641,14 +649,13 @@ CREATE TABLE IF NOT EXISTS quotas (
 );
 
 CREATE TABLE IF NOT EXISTS imap_credentials (
-  id int(11) NOT NULL,
-  email text NOT NULL,
+  id int(11) NOT NULL AUTO_INCREMENT,
   name text NOT NULL,
   username text NOT NULL,
   password text,
   hostname text NOT NULL,
-  port int(11) NOT NULL,
   ssl_mode text NOT NULL, -- str<plain|tls|ssl>
+  port int(11) NOT NULL,
   PRIMARY KEY (id)
 );
 

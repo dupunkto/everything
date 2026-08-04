@@ -41,6 +41,9 @@ fallback('calendar.default-calendar', @\store\get_first_calendar()['id']);
 
 fallback('notes.layout', "masonry");
 
+fallback('mail.default-account', @\store\get_first_imap_credentials()['id']);
+optional('mail.notes-account');
+
 fallback('todo.default-query', "is:open not:expired");
 fallback('todo.recurrence-horizon', 3);
 fallback('todo.layout', "masonry");
