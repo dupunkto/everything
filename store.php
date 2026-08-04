@@ -104,7 +104,7 @@ function update_note_apple_id($id, $apple_id) {
 }
 
 function clear_note_apple_ids() {
-  return exec_query('UPDATE notes SET apple_id = NULL');
+  return exec_query('UPDATE notes SET apple_id = NULL', []);
 }
 
 function get_note($id) {
@@ -195,7 +195,7 @@ function delete_note_tombstone($apple_id) {
 }
 
 function clear_note_tombstones() {
-  return exec_query('DELETE FROM notes_tombstones');
+  return exec_query('DELETE FROM notes_tombstones', []);
 }
 
 // Tasks
@@ -2811,7 +2811,7 @@ function put_system_log($level, $message, $context = []) {
 }
 
 function clear_system_logs() {
-  return exec_query('DELETE FROM system_logs');
+  return exec_query('DELETE FROM system_logs', []);
 }
 
 function put_http_log($request) {
@@ -2834,7 +2834,7 @@ function put_http_log($request) {
 }
 
 function clear_http_logs() {
-  return exec_query('DELETE FROM http_logs');
+  return exec_query('DELETE FROM http_logs', []);
 }
 
 function logs_query($audit_only = false) {
