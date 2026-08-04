@@ -17,19 +17,13 @@
         <li><a href="<?= CANONICAL ?>/logs">Logs</a></li>
         <li><a href="<?= CANONICAL ?>/settings/developer/git">Git</a></li>
         <li><a href="<?= CANONICAL ?>/settings/developer/custom-code">Custom code</a></li>
+        <li><a href="<?= CANONICAL ?>/settings/developer" x-post="/settings/developer/clear-notes"
+          z-confirm="Clear every Apple UUID and tombstone? This will require an empty IMAP account, otherwise you will end up with duplicate notes.">Clear IMAP sync state</a></li>
+        <li><a href="<?= CANONICAL ?>/settings/developer" x-post="/settings/developer/clear-http-log"
+          z-confirm="Delete every HTTP log entry?">Truncate HTTP log</a></li>
+        <li><a href="<?= CANONICAL ?>/settings/developer" x-post="/settings/developer/clear-system-log"
+          z-confirm="Delete every system log entry?">Truncate system log</a></li>
       </ul>
-
-      <form x-post="/settings/developer/clear-notes">
-        <button type="submit" z-confirm="Clear every Apple UUID and tombstone? This will require an empty IMAP account, otherwise you will end up with duplicate notes.">Clear IMAP sync state</button>
-      </form>
-
-      <form x-post="/settings/developer/clear-http-log">
-        <button type="submit" z-confirm="Delete every HTTP log entry?">Truncate HTTP log</button>
-      </form>
-
-      <form x-post="/settings/developer/clear-system-log">
-        <button type="submit" z-confirm="Delete every system log entry?">Truncate system log</button>
-      </form>
     </main>
   </body>
 </html>
