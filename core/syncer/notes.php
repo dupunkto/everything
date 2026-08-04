@@ -96,7 +96,8 @@ function plan($client, $account) {
       }
       elseif($modified > $note['modified_at']) {
         $appends[] = \imap\build_note_message($account, $uuid,
-          $row['title'], $row['content'], utc_timestamp($row['written_at']), $modified);
+          export_title($row['title'], $row['content']), $row['content'],
+          utc_timestamp($row['written_at']), $modified);
         $expunge[] = $note['uid'];
         $stats['updated_in_imap']++;
       }
@@ -116,7 +117,8 @@ function plan($client, $account) {
 
     $uuid = strtoupper(generate_uuid());
     $appends[] = \imap\build_note_message($account, $uuid,
-      $row['title'], $row['content'], utc_timestamp($row['written_at']), modified_at($row));
+      export_title($row['title'], $row['content']), $row['content'],
+      utc_timestamp($row['written_at']), modified_at($row));
     $apple_ids[] = ['id' => $row['id'], 'uuid' => $uuid];
     $stats['exported']++;
   }
@@ -202,6 +204,11 @@ function modified_at($row) {
   return utc_timestamp($last['changed_at'] ?? null)
     ?? utc_timestamp($row['written_at'])
     ?? time();
+}
+
+function export_title($title, $content) {
+  if($title != "") return $title;
+  return mb_substr(explode("\n", $content)[0], 0, 50, "UTF-8");
 }
 
 function apple_title($note) {
