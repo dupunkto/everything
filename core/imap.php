@@ -87,7 +87,8 @@ class Client {
   function select($mailbox) {
     $exists = 0;
     $this->command("SELECT " . self::quote($mailbox), function($tokens) use (&$exists) {
-      if(strcasecmp($tokens[1] ?? "", "EXISTS") == 0) $exists = (int)$tokens[0];
+      if(is_string($tokens[1] ?? null) && strcasecmp($tokens[1], "EXISTS") == 0)
+        $exists = (int)$tokens[0];
     });
     return $exists;
   }
@@ -99,7 +100,7 @@ class Client {
 
     $messages = [];
     $this->command("FETCH 1:* (UID BODY.PEEK[])", function($tokens) use (&$messages) {
-      if(strcasecmp($tokens[1] ?? "", "FETCH") != 0) return;
+      if(!is_string($tokens[1] ?? null) || strcasecmp($tokens[1], "FETCH") != 0) return;
       $items = is_array($tokens[2] ?? null) ? $tokens[2] : [];
 
       $uid = null;
