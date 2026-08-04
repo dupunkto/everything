@@ -103,6 +103,10 @@ function update_note_apple_id($id, $apple_id) {
   return exec_query('UPDATE notes SET apple_id = ? WHERE id = ?', [$apple_id, $id]);
 }
 
+function clear_note_apple_ids() {
+  return exec_query('UPDATE notes SET apple_id = NULL');
+}
+
 function get_note($id) {
   return one('SELECT * FROM notes WHERE id = ?', [$id]);
 }
@@ -188,6 +192,10 @@ function list_note_tombstones() {
 
 function delete_note_tombstone($apple_id) {
   return exec_query('DELETE FROM notes_tombstones WHERE apple_id = ?', [$apple_id]);
+}
+
+function clear_note_tombstones() {
+  return exec_query('DELETE FROM notes_tombstones');
 }
 
 // Tasks

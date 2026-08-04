@@ -18,6 +18,10 @@
         <li><a href="<?= CANONICAL ?>/settings/developer/git">Git</a></li>
         <li><a href="<?= CANONICAL ?>/settings/developer/custom-code">Custom code</a></li>
       </ul>
+
+      <form x-post="/settings/developer/clear-notes">
+        <button type="submit" z-confirm="Clear every Apple UUID and tombstone? This will require an empty IMAP account, otherwise you will end up with duplicate notes.">Clear IMAP sync state</button>
+      </form>
     </main>
   </body>
 </html>
