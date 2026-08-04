@@ -12,6 +12,13 @@ function generate_uuid() {
   return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
 }
 
+function derive_uuid($value) {
+  $bytes = substr(hash('sha256', $value, binary: true), 0, 16);
+  $bytes[6] = chr((ord($bytes[6]) & 0x0f) | 0x80);
+  $bytes[8] = chr((ord($bytes[8]) & 0x3f) | 0x80);
+  return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
+}
+
 function markdown($text) {
   static $parsedown;
   $parsedown ??= (new Parsedown)->setSafeMode(true)->setBreaksEnabled(true);
