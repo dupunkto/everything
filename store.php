@@ -2810,6 +2810,10 @@ function put_system_log($level, $message, $context = []) {
   return exec_query('INSERT INTO system_logs (level, message, context) VALUES (?, ?, ?)', [$level, $message, $json]);
 }
 
+function clear_system_logs() {
+  return exec_query('DELETE FROM system_logs');
+}
+
 function put_http_log($request) {
   return exec_query('INSERT INTO http_logs (
     method, uri, status, authenticated, remote_addr, user_agent, referer,
@@ -2827,6 +2831,10 @@ function put_http_log($request) {
     $request['response_bytes'],
     $request['duration_ms'],
   ]);
+}
+
+function clear_http_logs() {
+  return exec_query('DELETE FROM http_logs');
 }
 
 function logs_query($audit_only = false) {
