@@ -134,13 +134,14 @@ class Client {
     $this->collect($tag, error: "append failed");
   }
 
-  function mark_deleted($uids) {
+  function expunge($uids) {
     if(!$uids) return;
-    $this->command("UID STORE " . join(",", $uids) . ' +FLAGS.SILENT (\Deleted)');
-  }
+    if(!in_array("UIDPLUS", $this->capability()))
+      fail("IMAP: server does not support targeted expunge (UIDPLUS).");
 
-  function expunge() {
-    $this->command("EXPUNGE");
+    $set = join(",", $uids);
+    $this->command("UID STORE $set" . ' +FLAGS.SILENT (\Deleted)');
+    $this->command("UID EXPUNGE $set");
   }
 
   function logout() {

@@ -191,8 +191,7 @@ function expunge($account, $plan) {
   $client = \imap\connect($account);
   try {
     $client->select($plan['mailbox']);
-    $client->mark_deleted($plan['expunge']);
-    $client->expunge();
+    $client->expunge($plan['expunge']);
   }
   finally {
     try { $client->logout(); } catch(\Throwable) {}
