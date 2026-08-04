@@ -564,7 +564,7 @@ function tags_data() {
 
 function addresses_data() {
   return array_map(fn($row) => [
-    'id' => (int)$row['id'],
+    'id' => $row['id'],
     'label' => $row['label'],
     'street_address' => $row['street_address'],
     'postal_code' => $row['postal_code'],
