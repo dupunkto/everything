@@ -26,7 +26,7 @@ function property_lines($row, $redacted) {
   $known = [
     'UID', 'DTSTAMP', 'SEQUENCE', 'CREATED', 'LAST-MODIFIED', 'SUMMARY',
     'DESCRIPTION', 'PRIORITY', 'DTSTART', 'DTEND', 'DURATION', 'LOCATION',
-    'URL', 'CONFERENCE', 'RRULE', ...\caldav\CALDAV_PRIVATE_PROPERTIES,
+    'URL', 'CONFERENCE', 'RRULE', ...CALDAV_PRIVATE_PROPERTIES,
   ];
 
   foreach(\store\list_properties('appointment', $row['id']) as $property) {
