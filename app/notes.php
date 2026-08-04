@@ -10,7 +10,7 @@
     <?php $query = cast_str(@$_GET['q']) ?? "" ?>
     <main class="main<?= NOTES_LAYOUT == 'masonry' ? ' main--wide' : '' ?> main--scrollable notes notes--<?= esc_attr(NOTES_LAYOUT) ?>" z-nav="#notes-search, .note-card, .listing__item">
       <div class="page-header">
-        <h1 class="page-header__title"><strong>Notes</strong></h1>
+        <h1 class="page-header__title"><strong>Notes</strong> <small id="notes-count" x-get="/notes/count" x-data="#notes-search"><?php fragment("notes/count", ["q" => $query]) ?></small></h1>
         <input
           id="notes-search"
           class="page-header__search"
@@ -22,14 +22,15 @@
           x-get="/notes/listing"
           x-on="input"
           x-target="#notes-listing"
+          x-refresh="#notes-count"
         >
         <?php if(defined('MAIL_NOTES_ACCOUNT')): ?>
           <button type="button" class="page-header__sync" title="Sync notes" x-post="/notes/sync"
-            x-refresh="#notes-listing"><i class="fa-solid fa-rotate"></i></button>
+            x-refresh="#notes-listing, #notes-count"><i class="fa-solid fa-rotate"></i></button>
         <?php endif ?>
       </div>
 
-      <button type="button" z-key="r" x-refresh="#notes-listing" hidden></button>
+      <button type="button" z-key="r" x-refresh="#notes-listing, #notes-count" hidden></button>
 
       <section id="notes-listing" class="main__scroll" x-get="/notes/listing" x-data="#notes-search"><?php fragment("notes/listing", ["q" => $query]) ?></section>
     </main>

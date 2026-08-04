@@ -123,7 +123,7 @@ function set_note_tags($id, $tag_ids) {
   set_tags('notes_tags', 'note_id', $id, $tag_ids);
 }
 
-function notes_query($query, $stable = false) {
+function notes_query($query, $stable = false, $count = false) {
   [$tags, $terms] = \core\parse_query($query);
 
   $where = [];
@@ -143,12 +143,19 @@ function notes_query($query, $stable = false) {
     $params[] = $id;
   }
 
-  $sql = 'SELECT * FROM notes';
+  $sql = $count ? 'SELECT COUNT(*) AS count FROM notes' : 'SELECT * FROM notes';
   if($where) $sql .= ' WHERE ' . join(' AND ', $where);
-  $sql .= ' ORDER BY CASE WHEN written_at IS NULL THEN 1 ELSE 0 END, written_at DESC';
-  if($stable) $sql .= ', id DESC';
+  if(!$count) {
+    $sql .= ' ORDER BY CASE WHEN written_at IS NULL THEN 1 ELSE 0 END, written_at DESC';
+    if($stable) $sql .= ', id DESC';
+  }
 
   return [$sql, $params];
+}
+
+function count_notes($query = "") {
+  [$sql, $params] = notes_query($query, count: true);
+  return one($sql, $params)['count'];
 }
 
 function list_notes($query = "") {
