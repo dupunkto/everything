@@ -99,12 +99,14 @@ $_REQUEST_BEGUN = false;
 
 function bracket_request($hooks) {
   global $_REQUEST_HOOKS;
-  $_REQUEST_HOOKS = [...$_REQUEST_HOOKS, ...$hooks];
+  foreach($hooks as $name => $callback)
+    $_REQUEST_HOOKS[$name][] = $callback;
 }
 
 function request_hook($name, ...$args) {
   global $_REQUEST_HOOKS;
-  if(isset($_REQUEST_HOOKS[$name])) return $_REQUEST_HOOKS[$name](...$args);
+  foreach($_REQUEST_HOOKS[$name] ?? [] as $callback)
+    $callback(...$args);
 }
 
 function begin_request() {
@@ -247,6 +249,7 @@ register_shutdown_function(function() {
     request_hook('before_commit');
     request_hook('commit');
     $committed = true;
+    request_hook('committed');
     request_hook('after_commit');
   }
   catch(Throwable $error) {

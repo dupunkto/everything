@@ -10,7 +10,7 @@
 
 namespace notes;
 
-function reconcile($client, $account) {
+function plan($client, $account) {
   $mailbox = \imap\ensure_notes_mailbox($client);
   $exists = $client->select($mailbox);
 
@@ -48,43 +48,36 @@ function reconcile($client, $account) {
     'unchanged' => 0,
   ];
 
+  $imports = [];
+  $updates = [];
+  $deletes = [];
+  $tombstones = [];
+  $apple_ids = [];
+  $appends = [];
   $expunge = [];
 
   foreach(\store\list_note_tombstones() as $tombstone) {
     $group = $groups[$tombstone['apple_id']] ?? null;
 
-    // Newer edits than a local deletion win. Otherwise mark the message for
-    // deletion. Only actually delete after the request transaction commits.
     if($group && $group['current']['modified_at'] <= utc_timestamp($tombstone['deleted_at'])) {
       $expunge = [...$expunge, ...$group['uids']];
       $stats['deleted_in_imap']++;
       unset($groups[$tombstone['apple_id']]);
     }
 
-    \store\delete_note_tombstone($tombstone['apple_id']);
+    $tombstones[] = $tombstone['apple_id'];
   }
 
   $local = array_column(\store\list_apple_notes(),
     column_key: null, index_key: 'apple_id');
 
-  // Compare remote notes with local ones.
   foreach($groups as $uuid => $group) {
     $note = $group['current'];
     $obsolete = array_diff($group['uids'], [$note['uid']]);
     $row = $local[$uuid] ?? null;
 
     if(!$row) {
-      $id = \store\put_note(
-        $note['title'],
-        $note['content'],
-        utc_iso($note['created_at'])
-      );
-
-      \store\update_note_apple_id($id, $uuid);
-
-      \store\put_audit_log('notes', $id, "Created notes/$id.", 'syncer',
-        operation: 'insert', changed_at: utc_sql($note['modified_at']));
-
+      $imports[] = ['note' => $note, 'uuid' => $uuid];
       $stats['imported']++;
     }
     else {
@@ -96,24 +89,12 @@ function reconcile($client, $account) {
           content: $note['content'],
           written_at: utc_iso($note['created_at'])
         );
-
-        \store\update_note(
-          $row['id'],
-          $note['title'],
-          $note['content'],
-          utc_iso($note['created_at'])
-        );
-
-        \store\put_audit_log('notes', $row['id'],
-          "Updated [" . join(", ", $fields) . "] for notes/{$row['id']}.", 'syncer',
-          changed_at: utc_sql($note['modified_at']));
-
+        $updates[] = ['row' => $row, 'note' => $note, 'fields' => $fields];
         $stats['updated_from_imap']++;
       }
       elseif($modified > $note['modified_at']) {
-        $client->append($mailbox, \imap\build_note_message($account, $uuid,
-          $row['title'], $row['content'], utc_timestamp($row['written_at']), $modified));
-
+        $appends[] = \imap\build_note_message($account, $uuid,
+          $row['title'], $row['content'], utc_timestamp($row['written_at']), $modified);
         $expunge[] = $note['uid'];
         $stats['updated_in_imap']++;
       }
@@ -128,35 +109,90 @@ function reconcile($client, $account) {
     $stats['obsolete_revisions'] += count($obsolete);
   }
 
-  // Import local notes without Apple UUID.
   foreach(\store\list_notes() as $row) {
     if($row['apple_id'] !== null) continue;
 
     $uuid = strtoupper(generate_uuid());
-    $client->append($mailbox, \imap\build_note_message($account, $uuid,
-      $row['title'], $row['content'], utc_timestamp($row['written_at']), modified_at($row)));
-    \store\update_note_apple_id($row['id'], $uuid);
+    $appends[] = \imap\build_note_message($account, $uuid,
+      $row['title'], $row['content'], utc_timestamp($row['written_at']), modified_at($row));
+    $apple_ids[] = ['id' => $row['id'], 'uuid' => $uuid];
     $stats['exported']++;
   }
 
-  // Remove notes that exist locally but no longer remotely.
   foreach($local as $uuid => $row) {
     if(isset($groups[$uuid])) continue;
 
-    \store\delete_note($row['id']);
-    \store\put_audit_log('notes', $row['id'], "Deleted notes/{$row['id']}.", 'syncer',
-      operation: 'delete');
+    $deletes[] = $row;
     $stats['deleted_from_imap']++;
   }
 
-  // If everything ran error-free, we can now safely delete
-  // remote notes marked for deletion earlier.
-  if($expunge) {
-    $client->mark_deleted(array_values(array_unique($expunge)));
-    $client->expunge();
+  return [
+    'mailbox' => $mailbox,
+    'imports' => $imports,
+    'updates' => $updates,
+    'deletes' => $deletes,
+    'tombstones' => $tombstones,
+    'apple_ids' => $apple_ids,
+    'appends' => $appends,
+    'expunge' => array_values(array_unique($expunge)),
+    'stats' => $stats,
+  ];
+}
+
+function append($client, $plan) {
+  foreach($plan['appends'] as $message)
+    $client->append($plan['mailbox'], $message);
+}
+
+function save($plan) {
+  foreach($plan['tombstones'] as $apple_id)
+    \store\delete_note_tombstone($apple_id);
+
+  foreach($plan['imports'] as ['note' => $note, 'uuid' => $uuid]) {
+    $id = \store\put_note(
+      $note['title'],
+      $note['content'],
+      utc_iso($note['created_at'])
+    );
+    \store\update_note_apple_id($id, $uuid);
+    \store\put_audit_log('notes', $id, "Created notes/$id.", 'syncer',
+      operation: 'insert', changed_at: utc_sql($note['modified_at']));
   }
 
-  return $stats;
+  foreach($plan['updates'] as ['row' => $row, 'note' => $note, 'fields' => $fields]) {
+    \store\update_note(
+      $row['id'],
+      $note['title'],
+      $note['content'],
+      utc_iso($note['created_at'])
+    );
+    \store\put_audit_log('notes', $row['id'],
+      "Updated [" . join(", ", $fields) . "] for notes/{$row['id']}.", 'syncer',
+      changed_at: utc_sql($note['modified_at']));
+  }
+
+  foreach($plan['apple_ids'] as ['id' => $id, 'uuid' => $uuid])
+    \store\update_note_apple_id($id, $uuid);
+
+  foreach($plan['deletes'] as $row) {
+    \store\delete_note($row['id']);
+    \store\put_audit_log('notes', $row['id'], "Deleted notes/{$row['id']}.", 'syncer',
+      operation: 'delete');
+  }
+
+  return $plan['stats'];
+}
+
+function expunge($account, $plan) {
+  $client = \imap\connect($account);
+  try {
+    $client->select($plan['mailbox']);
+    $client->mark_deleted($plan['expunge']);
+    $client->expunge();
+  }
+  finally {
+    try { $client->logout(); } catch(\Throwable) {}
+  }
 }
 
 function modified_at($row) {

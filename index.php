@@ -37,7 +37,10 @@ if(!is_https() and FORCE_HTTPS) {
   exit;
 }
 
-if(!in_array($method, ['GET', 'HEAD', 'OPTIONS', 'PROPFIND', 'REPORT'])) {
+$deferred_requests = ['/notes/sync'];
+
+if(!in_array($method, ['GET', 'HEAD', 'OPTIONS', 'PROPFIND', 'REPORT'])
+  && !in_array($path, $deferred_requests)) {
   begin_request();
 }
 
