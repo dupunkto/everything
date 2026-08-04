@@ -10,15 +10,9 @@ $actions = $section ? path_join(__DIR__, "..", $section, "actions.php") : null;
   </div>
 
   <ul>
-    <li><a z-key="1" href="/mail"><i class="fa-regular fa-inbox"></i> <span>Mail</span></a></li>
-    <li><a z-key="2" href="/calendar"><i class="fa-regular fa-calendar"></i> <span>Calendar</span></a></li>
-    <li><a z-key="3" href="/todo"><i class="fa-regular fa-box-check"></i> <span>ToDo</span></a></li>
-    <li><a z-key="4" href="/tracker"><i class="fa-regular fa-timer"></i> <span>Tracker</span></a></li>
-    <li><a z-key="5" href="/notes"><i class="fa-regular fa-notebook"></i> <span>Notes</span></a></li>
-    <li><a z-key="6" href="/bookmarks"><i class="fa-regular fa-bookmark"></i> <span>Bookmarks</span></a></li>
-    <li><a z-key="7" href="/wishlist"><i class="fa-regular fa-book-heart"></i> <span>Wishlist</span></a></li>
-    <li><a z-key="8" href="/contacts"><i class="fa-regular fa-address-book"></i> <span>Contacts</span></a></li>
-    <li><a z-key="9" href="/addresses"><i class="fa-regular fa-location-arrow"></i> <span>Addresses</span></a></li>
+    <?php foreach(applications() as $application): ?>
+      <li><a z-key="<?= $application['key'] ?>" href="/<?= $application['route'] ?>"><i class="<?= $application['icon'] ?>"></i> <span><?= $application['label'] ?></span></a></li>
+    <?php endforeach ?>
     <li hidden><a z-key="?" href="/shortcuts">Shortcuts</a></li>
     <li><a z-key="0" href="/settings"><i class="fa-regular fa-gear"></i> <span>Settings</span></a></li>
   </ul>
@@ -28,6 +22,7 @@ $actions = $section ? path_join(__DIR__, "..", $section, "actions.php") : null;
   </button>
 </nav>
 
+<a z-key="mod+shift+n" href="/<?= esc_attr(UI_INSERT_APPLICATION) ?>/new" hidden></a>
 <button type="button" z-key="mod+/ mod+k" z-toggle="#global-search" data-global-search-toggle hidden></button>
 <div id="global-search" class="global-search" role="dialog" aria-modal="true" aria-label="Global search" z-dismiss="escape" hidden>
   <button type="button" class="global-search__backdrop" z-toggle="#global-search" aria-label="Close search"></button>

@@ -7,6 +7,7 @@
   $groups = [
     "Global" => [
       ["mod+/ / mod+k", "Open global search"],
+      ["mod+shift+n", "Create new " . application_label(UI_INSERT_APPLICATION)],
       ["1", "Open mail"],
       ["2", "Open calendar"],
       ["3", "Open ToDo"],

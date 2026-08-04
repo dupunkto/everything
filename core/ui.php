@@ -3,6 +3,33 @@
 
 define('LISTING_PAGE_SIZE', 50);
 
+function applications() {
+  return [
+    ['route' => 'mail', 'label' => "Mail", 'icon' => 'fa-regular fa-inbox', 'key' => '1'],
+    ['route' => 'calendar', 'label' => "Calendar", 'icon' => 'fa-regular fa-calendar', 'key' => '2'],
+    ['route' => 'todo', 'label' => "ToDo", 'icon' => 'fa-regular fa-box-check', 'key' => '3', 'insertable' => true],
+    ['route' => 'tracker', 'label' => "Tracker", 'icon' => 'fa-regular fa-timer', 'key' => '4'],
+    ['route' => 'notes', 'label' => "Notes", 'icon' => 'fa-regular fa-notebook', 'key' => '5', 'insertable' => true],
+    ['route' => 'bookmarks', 'label' => "Bookmarks", 'icon' => 'fa-regular fa-bookmark', 'key' => '6', 'insertable' => true],
+    ['route' => 'wishlist', 'label' => "Wishlist", 'icon' => 'fa-regular fa-book-heart', 'key' => '7', 'insertable' => true],
+    ['route' => 'contacts', 'label' => "Contacts", 'icon' => 'fa-regular fa-address-book', 'key' => '8'],
+    ['route' => 'addresses', 'label' => "Addresses", 'icon' => 'fa-regular fa-location-arrow', 'key' => '9'],
+  ];
+}
+
+function application_options($insertable = false) {
+  $applications = array_filter(
+    applications(),
+    fn($application) => !$insertable || @$application['insertable']
+  );
+
+  return array_column($applications, 'label', 'route');
+}
+
+function application_label($route) {
+  return application_options()[$route] ?? $route;
+}
+
 function listing_page() {
   $page = max(1, (int)(@$_GET['page'] ?: @$_POST['page'] ?: 1));
   return [$page, ($page - 1) * LISTING_PAGE_SIZE];

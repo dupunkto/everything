@@ -3,6 +3,28 @@
   define('ENUM_UI_POSITION', ['left', 'right']);
   define('ENUM_UI_HABITS_POSITION', ['top', 'bottom']);
   define('ENUM_UI_BORDER_RADIUS', ['square', 'subtle', 'rounded']);
+  define('ENUM_UI_APPLICATION', array_keys(application_options()));
+  define('ENUM_UI_INSERT_APPLICATION', array_keys(application_options(insertable: true)));
+
+  if(isset($_POST['default-application'])) {
+    if(!in_array($_POST['default-application'], ENUM_UI_APPLICATION))
+      fail("Invalid 'default-application' parameter.", status: 400);
+
+    \store\update_config('ui.default-application', $_POST['default-application']);
+    \store\put_audit_log('config', 'ui', "Set ui.default-application to '{$_POST['default-application']}'.", 'user');
+
+    see_other("/settings/ui");
+  }
+
+  if(isset($_POST['insert-application'])) {
+    if(!in_array($_POST['insert-application'], ENUM_UI_INSERT_APPLICATION))
+      fail("Invalid 'insert-application' parameter.", status: 400);
+
+    \store\update_config('ui.insert-application', $_POST['insert-application']);
+    \store\put_audit_log('config', 'ui', "Set ui.insert-application to '{$_POST['insert-application']}'.", 'user');
+
+    see_other("/settings/ui");
+  }
 
   if(isset($_POST['panel-position'])) {
     if(!in_array($_POST['panel-position'], ENUM_UI_POSITION))
@@ -42,6 +64,20 @@
   }
 
 ?>
+<form class="settings-form settings-form--spaced" x-post="/settings/ui/edit" x-on="change" x-target="#ui-settings">
+  <label>
+    Default application
+    <?php \forms\options('default-application', application_options(), \config\fresh_value('ui.default-application'), flat: true) ?>
+  </label>
+</form>
+
+<form class="settings-form settings-form--spaced" x-post="/settings/ui/edit" x-on="change" x-target="#ui-settings">
+  <label>
+    Insert application
+    <?php \forms\options('insert-application', application_options(insertable: true), \config\fresh_value('ui.insert-application'), flat: true) ?>
+  </label>
+</form>
+
 <form class="settings-form settings-form--spaced" x-post="/settings/ui/edit" x-on="change" x-target="#ui-settings">
   <label>
     Panel position

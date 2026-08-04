@@ -29,6 +29,8 @@ fallback('ui.panel-position', "right");
 fallback('ui.sidebar-position', "left");
 fallback('ui.habits-position', "bottom");
 fallback('ui.border-radius', "subtle");
+fallback('ui.default-application', "todo");
+fallback('ui.insert-application', UI_DEFAULT_APPLICATION);
 
 optional('developer.custom-css');
 

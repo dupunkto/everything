@@ -54,7 +54,7 @@ if($path == "/carddav" || str_starts_with($path, "/carddav/")) {
   include __DIR__ . "/app/carddav.php"; exit;
 }
 
-if($path == "/") $path = "/index";
+if($path == "/") $path = "/" . UI_DEFAULT_APPLICATION;
 $controller = path_join(__DIR__, "app", "$path.php");
 
 if(file_exists($controller)) {
