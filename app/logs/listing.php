@@ -99,10 +99,10 @@
   <?php $url = @$log['deleted'] || $not_found ? null : logs_edit_url($log) ?>
   <?php $message_url = $log['message'] ?>
   <?php $context = logs_format_context($context) ?>
-  <?php $datetime = (new \DateTimeImmutable($log['changed_at'], timezone: new \DateTimeZone("UTC")))->format('c') ?>
+  <?php $datetime = (new \DateTimeImmutable($log['logged_at'], timezone: new \DateTimeZone("UTC")))->format('c') ?>
   <tr class="logs__row--<?= esc_attr($log['level']) ?>">
     <td><?= esc_inner($log['level']) ?></td>
-    <td><time datetime="<?= esc_attr($datetime) ?>" local><?= esc_inner($log['changed_at']) ?> UTC</time></td>
+    <td><time datetime="<?= esc_attr($datetime) ?>" local><?= esc_inner($log['logged_at']) ?> UTC</time></td>
     <td<?php if(in_array($log['source'], ['http', 'system'])) echo ' class="logs__message--compact"' ?>>
       <?php if($log['source'] == 'http'): ?>
         HTTP <?= esc_inner($log['http_status']) ?> <span title="<?= esc_attr($message_url) ?>"><?= esc_inner($message_url) ?></span>

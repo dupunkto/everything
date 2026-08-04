@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS migrations (
 
 CREATE TABLE IF NOT EXISTS audit_log (
   id int(11) NOT NULL AUTO_INCREMENT,
+  logged_at datetime NOT NULL DEFAULT current_timestamp,
   changed_at datetime NOT NULL DEFAULT current_timestamp,
   table_name text NOT NULL,
   record_id text NOT NULL,
@@ -18,7 +19,7 @@ CREATE TABLE IF NOT EXISTS audit_log (
 
 CREATE TABLE IF NOT EXISTS system_logs (
   id int(11) NOT NULL AUTO_INCREMENT,
-  changed_at datetime NOT NULL DEFAULT current_timestamp,
+  logged_at datetime NOT NULL DEFAULT current_timestamp,
   level text NOT NULL,
   message text NOT NULL,
   context text,
@@ -27,7 +28,7 @@ CREATE TABLE IF NOT EXISTS system_logs (
 
 CREATE TABLE IF NOT EXISTS http_logs (
   id int(11) NOT NULL AUTO_INCREMENT,
-  changed_at datetime NOT NULL DEFAULT current_timestamp,
+  logged_at datetime NOT NULL DEFAULT current_timestamp,
   method text NOT NULL,
   uri text NOT NULL,
   status int(11) NOT NULL,
@@ -691,5 +692,5 @@ CREATE INDEX caldav_changes_lookup ON caldav_changes (collection, revision);
 CREATE INDEX caldav_changes_href_lookup ON caldav_changes (collection, href, revision);
 CREATE INDEX carddav_changes_lookup ON carddav_changes (collection, revision);
 CREATE INDEX carddav_changes_href_lookup ON carddav_changes (collection, href, revision);
-CREATE INDEX http_logs_lookup ON http_logs (authenticated, changed_at);
-CREATE INDEX system_logs_lookup ON system_logs (changed_at);
+CREATE INDEX http_logs_lookup ON http_logs (authenticated, logged_at);
+CREATE INDEX system_logs_lookup ON system_logs (logged_at);

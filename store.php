@@ -2822,19 +2822,19 @@ function put_http_log($request) {
 }
 
 function logs_query($audit_only = false) {
-  if($audit_only) return "SELECT changed_at, message, operation, author, table_name, record_id,
+  if($audit_only) return "SELECT logged_at, message, operation, author, table_name, record_id,
       'audit_log' AS source
     FROM audit_log
-    ORDER BY changed_at DESC, id DESC";
+    ORDER BY logged_at DESC, id DESC";
 
-  return "SELECT changed_at, message, operation, author, table_name, record_id,
+  return "SELECT logged_at, message, operation, author, table_name, record_id,
       'audit_log' AS source
     FROM audit_log
     UNION ALL
-    SELECT changed_at, 'CalDAV resource changed.', operation, 'caldav', collection, href,
+    SELECT changed_at AS logged_at, 'CalDAV resource changed.', operation, 'caldav', collection, href,
       'caldav_changes'
     FROM caldav_changes
-    ORDER BY changed_at DESC";
+    ORDER BY logged_at DESC";
 }
 
 function list_logs() {
@@ -2861,11 +2861,11 @@ function list_logs_filtered($sources, $levels, $message, $from, $to, $limit) {
       $params[] = "%$message%";
     }
     if($from) {
-      $conditions[] = 'changed_at >= ?';
+      $conditions[] = 'logged_at >= ?';
       $params[] = $from;
     }
     if($to) {
-      $conditions[] = 'changed_at <= ?';
+      $conditions[] = 'logged_at <= ?';
       $params[] = $to;
     }
 
@@ -2873,17 +2873,17 @@ function list_logs_filtered($sources, $levels, $message, $from, $to, $limit) {
   };
 
   if(in_array('audit', $sources) && ($filters = $where('message', 'info')) !== null)
-    $selects[] = "SELECT id AS source_id, changed_at, 'info' AS level, message, operation,
+    $selects[] = "SELECT id AS source_id, logged_at, 'info' AS level, message, operation,
       author, table_name, record_id, 'audit' AS source, NULL AS http_status,
       NULL AS system_context FROM audit_log$filters";
 
   if(in_array('system', $sources) && ($filters = $where('message')) !== null)
-    $selects[] = "SELECT id AS source_id, changed_at, level, message, '' AS operation,
+    $selects[] = "SELECT id AS source_id, logged_at, level, message, '' AS operation,
       'system' AS author, '' AS table_name, '' AS record_id, 'system' AS source,
       NULL AS http_status, context AS system_context FROM system_logs$filters";
 
   if(in_array('http', $sources) && ($filters = $where('uri', 'debug')) !== null)
-    $selects[] = "SELECT id AS source_id, changed_at, 'debug' AS level, uri AS message, method AS operation,
+    $selects[] = "SELECT id AS source_id, logged_at, 'debug' AS level, uri AS message, method AS operation,
       remote_addr AS author, '' AS table_name, '' AS record_id, 'http' AS source,
       status AS http_status, NULL AS system_context FROM http_logs$filters";
 
@@ -2896,7 +2896,7 @@ function list_logs_filtered($sources, $levels, $message, $from, $to, $limit) {
         WHERE latest.table_name = logs.table_name AND latest.record_id = logs.record_id
         ORDER BY latest.changed_at DESC, latest.id DESC LIMIT 1) = 'delete') END AS deleted
       FROM ($query) AS logs
-      ORDER BY changed_at DESC, source DESC, source_id DESC",
+      ORDER BY logged_at DESC, source DESC, source_id DESC",
     $limit, params: $params);
 }
 
@@ -2913,11 +2913,11 @@ function list_audit_logs($table_name, $record_id) {
 }
 
 function list_system_logs() {
-  return all('SELECT * FROM system_logs ORDER BY changed_at DESC, id DESC');
+  return all('SELECT * FROM system_logs ORDER BY logged_at DESC, id DESC');
 }
 
 function list_http_logs() {
-  return all('SELECT * FROM http_logs ORDER BY changed_at DESC, id DESC');
+  return all('SELECT * FROM http_logs ORDER BY logged_at DESC, id DESC');
 }
 
 function get_log_dates($table, $id) {
