@@ -26,6 +26,11 @@ serve() {
   esac
 }
 
+deploy() {
+  # The deployment on the old shared hosting uses a git clone that we need to update.
+  echo 'h sys.geheimesite.nl && git pull && git submodule update' | ssh s11
+}
+
 export() {
   ./export.php enable "${1:-$REPO}"
 }

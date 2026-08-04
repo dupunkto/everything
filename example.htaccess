@@ -1,0 +1,15 @@
+Options -Indexes -MultiViews
+
+RewriteEngine On
+
+SetEnv AUTH_PROVIDER basic
+SetEnv AUTH_PASSWORD pannekoek
+
+RewriteRule ^\.well-known/caldav/?$ /caldav/ [R=301,L]
+RewriteRule ^\.well-known/carddav/?$ /carddav/ [R=301,L]
+RewriteRule ^principals/?$ /carddav/ [R=301,L]
+
+RewriteCond %{DOCUMENT_ROOT}/public/$1 -f
+RewriteRule ^(.+)$ public/$1 [END]
+
+RewriteRule ^ index.php [END]
