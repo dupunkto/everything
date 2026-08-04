@@ -239,7 +239,7 @@ function html_to_markdown($html) {
     $converter->getEnvironment()->addConverter(
       new class implements \League\HTMLToMarkdown\Converter\ConverterInterface {
         function convert(\League\HTMLToMarkdown\ElementInterface $element): string {
-          return $element->getValue() . "\n";
+          return "\n" . $element->getValue();
         }
 
         function getSupportedTags(): array {
