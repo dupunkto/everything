@@ -300,7 +300,7 @@
 
   <div class="field">
     <label for="timezone">Timezone</label>
-    <?php \forms\options('timezone', ['' => "No timezone", ...timezone_options()], @$item['timezone'], flat: true) ?>
+    <?php \forms\options('timezone', ['' => "System timezone", ...timezone_options()], @$item['timezone'], flat: true) ?>
   </div>
 
   <hr>
