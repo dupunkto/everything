@@ -4,7 +4,7 @@
 $kind = @$_GET['kind'] ?: @$_POST['kind'];
 $id = @$_GET['id'] ?: @$_POST['id'];
 
-if(!in_array($kind, ['person', 'org']) || !is_num($id))
+if(!in_array($kind, ['person', 'org']))
   fail("Malformed profile picture target.", status: 400);
 
 $type = $kind == 'org' ? 'organisation' : 'contact';
