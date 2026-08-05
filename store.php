@@ -73,6 +73,10 @@ function reserve_humid($type, $id) {
   return $id;
 }
 
+function convert_humid($id, $type) {
+  return exec_query('UPDATE humids SET type = ? WHERE id = ?', [$type, $id]);
+}
+
 // Notes
 
 function put_note($title, $content, $date = null) {
@@ -210,7 +214,8 @@ function put_task(
   $due_at = null,
   $due_all_day = false,
   $expire_at = null,
-  $comment = null
+  $comment = null,
+  $id = null
 ) {
   if(!in_array($status, ENUM_TASK_STATUS)) fail("status $status does not exist");
 
@@ -227,7 +232,7 @@ function put_task(
     due_all_day,
     expire_at
   ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [
-    $id = put_humid('todo'),
+    $id ? reserve_humid('todo', $id) : put_humid('todo'),
     $title,
     $content,
     $urgent,
