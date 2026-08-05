@@ -232,7 +232,7 @@ function put_task(
     due_all_day,
     expire_at
   ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [
-    $id ? reserve_humid('todo', $id) : put_humid('todo'),
+    $id = $id ? reserve_humid('todo', $id) : put_humid('todo'),
     $title,
     $content,
     $urgent,
