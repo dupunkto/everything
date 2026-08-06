@@ -5,6 +5,7 @@ $labels = [
   'todo' => "ToDo",
   'bookmarks' => "Bookmarks",
   'calendar' => "Calendar",
+  'contacts' => "Contacts and addresses",
 ];
 
 ?>

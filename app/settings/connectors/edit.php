@@ -6,9 +6,6 @@ $connector = \store\get_connector($_POST['id'])
 $apps = array_values(array_unique((array)@$_POST['app']));
 sort($apps);
 
-if(array_diff($apps, MCP_APPS)) 
-  fail("Invalid connector application.", status: 400);
-
 $before = array_column(\store\list_connector_apps($connector['id']), 'app');
 
 $fields = \core\diff($connector, name: $_POST['name']);

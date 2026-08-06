@@ -1167,6 +1167,8 @@ function set_share_sources($share_id, $sources) {
 
 // Connectors
 
+define('ENUM_CONNECTOR_APP', ['notes', 'todo', 'bookmarks', 'calendar', 'contacts']);
+
 function put_connector($name, $token) {
   exec_query('INSERT INTO connectors (name, token) VALUES (?, ?)', [$name, $token]);
   return DBH->lastInsertId();
@@ -1202,7 +1204,10 @@ function list_connector_apps($connector_id) {
 
 function set_connector_apps($connector_id, $apps) {
   $apps = array_values(array_unique($apps));
-  if(array_diff($apps, MCP_APPS)) fail("Invalid connector application.", status: 400);
+
+  foreach($apps as $app) {
+    if(!in_array($app, ENUM_CONNECTOR_APP)) fail("Invalid connector application.", status: 400);
+  }
 
   exec_query('DELETE FROM connector_apps WHERE connector_id = ?', [$connector_id]);
   foreach($apps as $app)

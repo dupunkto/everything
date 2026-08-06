@@ -3,7 +3,6 @@
 
 namespace mcp;
 
-define('MCP_APPS', ['notes', 'todo', 'bookmarks', 'calendar']);
 define('MCP_PROTOCOL_VERSIONS', ['2025-06-18', '2025-03-26', '2024-11-05']);
 
 function tools() {
@@ -27,6 +26,16 @@ function tools() {
       "Search bookmarks. Results contain note excerpts; use get_bookmark for complete content.",
       ['query' => $query, 'limit' => $limit, 'offset' => $offset]),
     'get_bookmark' => tool('bookmarks', 'get_bookmark', "Get a complete bookmark by ID.",
+      ['id' => $id], ['id']),
+    'search_contacts' => tool('contacts', 'search_contacts',
+      "Search contacts. Results are summaries; use get_contact for complete details.",
+      ['query' => $query, 'limit' => $limit, 'offset' => $offset]),
+    'get_contact' => tool('contacts', 'get_contact', "Get a complete contact by ID.",
+      ['id' => $id], ['id']),
+    'search_addresses' => tool('contacts', 'search_addresses',
+      "Search addresses by label or address.",
+      ['query' => $query, 'limit' => $limit, 'offset' => $offset]),
+    'get_address' => tool('contacts', 'get_address', "Get an address by ID.",
       ['id' => $id], ['id']),
     'list_appointments' => tool('calendar', 'list_appointments',
       "List appointment occurrences in the half-open local-time range [from, to), up to 366 days.", [
@@ -121,6 +130,22 @@ function bookmark($bookmark, $complete = false) {
     ($complete ? 'note' : 'note_excerpt') => $complete ? $bookmark['note'] : excerpt($bookmark['note']),
     'saved_at' => $bookmark['saved_at'],
     'tags' => pluck(\store\list_bookmark_tags($bookmark['id']), 'label'),
+  ];
+}
+
+function contact($contact, $complete = false) {
+  $name = \contacts\contact_display_name($contact);
+
+  if($complete) return ['name' => $name, ...$contact];
+
+  return [
+    'id' => $contact['id'],
+    'name' => $name,
+    'first_name' => $contact['first_name'],
+    'family_name' => $contact['family_name'],
+    'nickname' => $contact['nickname'],
+    'pronouns' => $contact['pronouns'],
+    'tags' => pluck(\store\list_contact_tags($contact['id']), 'label'),
   ];
 }
 

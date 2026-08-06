@@ -144,6 +144,74 @@ switch($rpc_method) {
           $data = \mcp\bookmark($row, true);
           break;
 
+        case 'search_contacts':
+          [$query, $limit, $offset] = \mcp\page_arguments($args);
+          [$tags, $terms, $selectors] = \core\parse_query($query);
+
+          $fields = [];
+
+          foreach($selectors as [$key, $value]) {
+            if(in_array($key, ['org', 'phone', 'email'])) $fields[] = [$key, $value];
+          }
+
+          $contacts = array_values(array_filter(\store\list_contacts(),
+            function($contact) use ($tags, $terms, $fields) {
+              if($tags && array_diff($tags, str_explode($contact['tag_ids'] ?: ""))) return false;
+
+              $fuzzy = str_implode(" ", [
+                $contact['first_name'], $contact['middle_name'],
+                $contact['legal_infix'], $contact['legal_name'],
+                $contact['family_infix'], $contact['family_name'],
+                $contact['note'], $contact['emails'], $contact['handles'],
+              ]);
+
+              if(!str_contains_terms($fuzzy, $terms)) return false;
+
+              $values = [
+                'email' => $contact['emails'],
+                'phone' => $contact['phone_numbers'],
+                'org' => $contact['org_names'],
+              ];
+
+              foreach($fields as [$field, $needle]) {
+                if($needle !== "" && !str_contains_term($values[$field] ?: "", $needle)) return false;
+              }
+
+              return true;
+            }));
+
+          usort($contacts, fn($a, $b) =>
+            strcasecmp(\contacts\contact_sort_name($a), \contacts\contact_sort_name($b)) ?:
+            strcasecmp(\contacts\contact_display_name($a), \contacts\contact_display_name($b)));
+
+          $data = array_map(fn($contact) => \mcp\contact($contact),
+            array_slice($contacts, $offset, $limit));
+          break;
+
+        case 'get_contact':
+          \mcp\validate_arguments($args, ['id']);
+
+          $item_id = array_require_string($args, 'id');
+          $row = \store\get_contact($item_id) or throw new ToolError("Contact not found.", id: $id);
+          $data = \mcp\contact($row, true);
+          break;
+
+        case 'search_addresses':
+          [$query, $limit, $offset] = \mcp\page_arguments($args);
+
+          $addresses = array_values(array_filter(\store\list_addresses(), fn($address) =>
+            $query == "" || str_contains_term(address_line($address) . " " . $address['label'], $query)));
+
+          $data = array_slice($addresses, $offset, $limit);
+          break;
+
+        case 'get_address':
+          \mcp\validate_arguments($args, ['id']);
+
+          $item_id = array_require_string($args, 'id');
+          $data = \store\get_address($item_id) or throw new ToolError("Address not found.", id: $id);
+          break;
+
         case 'list_appointments':
           \mcp\validate_arguments($args, ['from', 'to']);
 
