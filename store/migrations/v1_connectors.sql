@@ -10,6 +10,5 @@ CREATE TABLE IF NOT EXISTS connector_apps (
   connector_id int(11) NOT NULL,
   app varchar(16) NOT NULL,
   FOREIGN KEY (connector_id) REFERENCES connectors (id) ON DELETE CASCADE,
-  CHECK (app IN ('notes', 'todo', 'bookmarks', 'calendar')),
   PRIMARY KEY (connector_id, app)
 );
