@@ -82,6 +82,7 @@
         <a class="listing__link" href="<?= esc_attr($href($item)) ?>" tabindex="-1" z-key="enter">
           <?= esc_inner($item['title']) ?>
         </a>
+        <button type="button" z-key="mod+c" z-copy="<?= esc_attr($item['humid']) ?>" hidden></button>
       </h4>
 
       <?php if(@$item['extra']): ?>
