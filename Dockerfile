@@ -11,7 +11,7 @@ ENV VENDOR=public/vendor
 COPY package.json bun.lockb .
 RUN bun install --frozen-lockfile
 RUN mkdir -p $VENDOR
-RUN curl -sLo $VENDOR/reset.css https://cdn.geheimesite.nl/reset.css
+RUN curl -sLo $VENDOR/reset.css https://cdn.dupunkto.org/reset.css
 
 COPY . .
 

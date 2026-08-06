@@ -14,7 +14,7 @@ setup() {
 
 vendor() {
   mkdir -p $VENDOR
-  curl -sLo $VENDOR/reset.css https://cdn.geheimesite.nl/reset.css
+  curl -sLo $VENDOR/reset.css https://cdn.dupunkto.org/reset.css
 }
 
 serve() {
