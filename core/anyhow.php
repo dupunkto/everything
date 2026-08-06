@@ -20,6 +20,23 @@ class DAVError extends HTTPError {
   }
 }
 
+class MCPError extends HTTPError {
+  public $rpc_code;
+  public $id;
+
+  public function __construct($message, $rpc_code, $id = null, $previous = null) {
+    parent::__construct($message, 400, $previous);
+    $this->rpc_code = $rpc_code;
+    $this->id = $id;
+  }
+}
+
+class ToolError extends MCPError {
+  public function __construct($message, $id = null, $previous = null) {
+    parent::__construct($message, -32000, id: $id, previous: $previous);
+  }
+}
+
 function fail($message, $status = 500) {
   throw new HTTPError($message, $status);
 }
@@ -163,6 +180,7 @@ function render_error($error) {
     $error instanceof DAVError => render_dav_error($error),
     str_starts_with($uri, '/caldav') => render_dav_error($error),
     str_starts_with($uri, '/carddav') => render_dav_error($error),
+    str_starts_with($uri, '/mcp/') => render_mcp_error($error),
     default => render_html_error($error),
   };
 }
@@ -195,6 +213,32 @@ function render_dav_error($error) {
 
   header("Content-Type: text/plain; charset=utf-8");
   echo error_message($error);
+}
+
+function render_mcp_error($error) {
+  $id = $error instanceof MCPError ? $error->id : null;
+  $message = error_message($error);
+  $response = ['jsonrpc' => '2.0', 'id' => $id];
+
+  if($error instanceof ToolError) {
+    $response['result'] = [
+      'content' => [['type' => 'text', 'text' => $message]],
+      'isError' => true,
+    ];
+  }
+  else {
+    $status = error_status($error);
+    $code = $error instanceof MCPError
+      ? $error->rpc_code
+      : ($status == 404 ? -32001 : -32603);
+
+    $response['error'] = ['code' => $code, 'message' => $message];
+  }
+
+  http_response_code($error instanceof MCPError ? 200 : error_status($error));
+  header("Content-Type: application/json; charset=utf-8");
+  echo json_encode($response,
+    JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
 }
 
 function render_html_error($error) {

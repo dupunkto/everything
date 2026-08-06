@@ -18,6 +18,7 @@
         <li><a href="<?= CANONICAL ?>/settings/calendar">Calendar</a></li>
         <li><a href="<?= CANONICAL ?>/settings/tags">Tags</a></li>
         <li><a href="<?= CANONICAL ?>/settings/quotas">Quotas</a></li>
+        <li><a href="<?= CANONICAL ?>/settings/connectors">Connectors</a></li>
       </ul>
     </main>
   </body>

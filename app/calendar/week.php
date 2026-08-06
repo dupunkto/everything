@@ -23,7 +23,8 @@ try {
 } catch(\Exception) {
   fail("Invalid date.", status: 400);
 }
-$from = new DateTime($anchor->modify('monday this week')->format('Y-m-d'));
+
+$from = new DateTime($anchor->modify('monday this week')->format('Y-m-d'), $tz);
 $to = (clone $from)->modify('+7 days');
 
 $skeleton = isset($_GET['skeleton']);

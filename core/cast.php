@@ -42,6 +42,29 @@ function cast_date($value): ?string {
   return $date && $date->format('Y-m-d') == $value ? $value : null;
 }
 
+function cast_dt_iso($value, $timezone = null): ?DateTimeImmutable {
+  $value = cast_str($value);
+  if($value === null) return null;
+
+  $pattern = '/^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2})?(?:Z|[+-]\d{2}:\d{2})?)?$/';
+
+  if(!preg_match($pattern, $value)) return null;
+
+  $timezone = new DateTimeZone($timezone ?? TIMEZONE);
+
+  try {
+    $datetime = new DateTimeImmutable($value, $timezone);
+    $errors = DateTimeImmutable::getLastErrors();
+
+    if($errors && ($errors['warning_count'] || $errors['error_count'])) return null;
+
+    return $datetime->setTimezone($timezone);
+  }
+  catch(Exception) {
+    return null;
+  }
+}
+
 function cast_color($color): ?string {
   $color = cast_str($color);
   if($color === null) return null;
@@ -66,7 +89,10 @@ function cast_dt_local($datetime, $timezone = null): ?string {
   $datetime = cast_str($datetime);
   if($datetime === null) return null;
 
-  $timezone = $timezone ?? TIMEZONE;
-  $datetime = new DateTimeImmutable($datetime);
-  return $datetime->setTimezone(new DateTimeZone($timezone))->format('Y-m-d\TH:i:s');
+  $timezone = new DateTimeZone($timezone ?? TIMEZONE);
+
+  try { $datetime = new DateTimeImmutable($datetime, $timezone); }
+  catch(Exception) { return null; }
+
+  return $datetime->setTimezone($timezone)->format('Y-m-d\TH:i:s');
 }

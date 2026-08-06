@@ -256,16 +256,19 @@
   margin-bottom: 0.5em;
 }
 
-.settings-listing--shares {
+.settings-listing--shares,
+.settings-listing--connectors {
   display: grid;
   gap: 1em;
 }
 
-.settings-listing--shares li {
+.settings-listing--shares li,
+.settings-listing--connectors li {
   margin: 0;
 }
 
 .share-editor,
+.connector-editor,
 .account-editor {
   border: 1px solid var(--border);
   padding: 0.75em;
@@ -321,17 +324,21 @@
   opacity: 0.6;
 }
 
-.share-editor__header {
+.share-editor__header,
+.connector-editor__header {
   display: flex;
   gap: 0.25em;
 }
 
 .share-editor__header input[type="text"],
-.share-editor__url {
+.connector-editor__header input[type="text"],
+.share-editor__url,
+.connector-editor__url {
   flex: 1;
 }
 
-.share-editor__url {
+.share-editor__url,
+.connector-editor__url {
   box-sizing: border-box;
   width: 100%;
 }
@@ -340,9 +347,14 @@
   margin-top: 0.75em;
 }
 
-.share-editor__toggles {
+.share-editor__toggles,
+.connector-editor__apps {
   display: flex;
   gap: 1em;
+}
+
+.connector-editor__apps {
+  margin-top: 0.75em;
 }
 
 .subscription-new-form input[type="url"] {

@@ -2,9 +2,9 @@
 // Date and time helpers.
 
 function local_date($format, $timestamp = "now", $timezone = null) {
-  $timezone = $timezone ?: TIMEZONE;
-  $datetime = new DateTimeImmutable($timestamp);
-  return $datetime->setTimezone(new DateTimeZone($timezone))->format($format);
+  $timezone = new DateTimeZone($timezone ?: TIMEZONE);
+  $datetime = new DateTimeImmutable($timestamp, $timezone);
+  return $datetime->setTimezone($timezone)->format($format);
 }
 
 function utc_timestamp($value) {

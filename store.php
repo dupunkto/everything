@@ -1165,6 +1165,51 @@ function set_share_sources($share_id, $sources) {
   return true;
 }
 
+// Connectors
+
+function put_connector($name, $token) {
+  exec_query('INSERT INTO connectors (name, token) VALUES (?, ?)', [$name, $token]);
+  return DBH->lastInsertId();
+}
+
+function update_connector($id, $name) {
+  return exec_query('UPDATE connectors SET name = ? WHERE id = ?', [$name, $id]);
+}
+
+function update_connector_token($id, $token) {
+  return exec_query('UPDATE connectors SET token = ? WHERE id = ?', [$token, $id]);
+}
+
+function list_connectors() {
+  return all('SELECT * FROM connectors ORDER BY name, id');
+}
+
+function get_connector($id) {
+  return one('SELECT * FROM connectors WHERE id = ?', [$id]);
+}
+
+function get_connector_by_token($token) {
+  return one('SELECT * FROM connectors WHERE token = ?', [$token]);
+}
+
+function delete_connector($id) {
+  return exec_query('DELETE FROM connectors WHERE id = ?', [$id]);
+}
+
+function list_connector_apps($connector_id) {
+  return all('SELECT app FROM connector_apps WHERE connector_id = ? ORDER BY app', [$connector_id]);
+}
+
+function set_connector_apps($connector_id, $apps) {
+  $apps = array_values(array_unique($apps));
+  if(array_diff($apps, MCP_APPS)) fail("Invalid connector application.", status: 400);
+
+  exec_query('DELETE FROM connector_apps WHERE connector_id = ?', [$connector_id]);
+  foreach($apps as $app)
+    exec_query('INSERT INTO connector_apps (connector_id, app) VALUES (?, ?)', [$connector_id, $app]);
+  return true;
+}
+
 // Sources
 
 function list_sources() {

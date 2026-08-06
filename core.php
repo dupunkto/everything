@@ -2,7 +2,7 @@
 // Core Everything APIs live here.
 
 define('EVERYTHING_VERSION', "0.1-preview");
-define('STORE_VERSION', 0);
+define('STORE_VERSION', 1);
 
 require __DIR__ . "/core/anyhow.php";
 require __DIR__ . "/core/neuro.php";
@@ -31,7 +31,6 @@ require __DIR__ . "/core/icalendar.php";
 require __DIR__ . "/core/webdav.php";
 require __DIR__ . "/core/caldav.php";
 require __DIR__ . "/core/carddav.php";
-require __DIR__ . "/core/export.php";
 require __DIR__ . "/core/utils.php";
 
 require __DIR__ . "/core/logic/recurrence.php";
@@ -41,5 +40,8 @@ require __DIR__ . "/core/logic/habits.php";
 require __DIR__ . "/core/logic/shares.php";
 require __DIR__ . "/core/logic/quotas.php";
 require __DIR__ . "/core/logic/bookmarks.php";
+require __DIR__ . "/core/logic/mcp.php";
+require __DIR__ . "/core/logic/export.php";
+
 
 require __DIR__ . "/core/syncer/notes.php";
