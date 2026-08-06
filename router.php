@@ -22,7 +22,12 @@ function host($hostname) {
 
 function route($pattern) {
   global $path, $params;
-  return preg_match("@$pattern@", $path, $params);
+
+  $matches = [];
+  if(!preg_match("@$pattern@", $path, $matches)) return false;
+
+  $params = $matches;
+  return true;
 }
 
 function is_builtin() {

@@ -16,10 +16,12 @@ require_once __DIR__ . "/core.php";
 require_once __DIR__ . "/router.php";
 
 $_AUTHENTICATED = false;
+
 $_SHARED = route('^/shared/([a-f0-9]{64})\.ics$');
 $_MCP = route('^/mcp/([a-f0-9]{64})$');
+$_PUBLIC = route('^/\.well-known/oauth') || $path == "/register";
 
-if(!$_SHARED && !$_MCP) {
+if(!$_SHARED && !$_MCP && !$_PUBLIC) {
   require_once __DIR__ . "/auth.php";
   $_AUTHENTICATED = true;
 }
@@ -37,6 +39,8 @@ if(!is_https() and FORCE_HTTPS) {
   header("Location: https://" . HOST . $_SERVER['REQUEST_URI']);
   exit;
 }
+
+if($_PUBLIC) fail("Not found.", status: 404);
 
 $deferred_requests = ['/notes/sync'];
 
