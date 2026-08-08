@@ -403,12 +403,13 @@ function serialize_contact($resource, $row) {
   }
   foreach($row['roles'] as $role) {
     $organisation = \store\get_carddav_resource('organisation', $role['org_id']);
-    if($organisation) $body .= line('X-EVERYTHING-ROLE', implode(';', [
-      escape($role['org_id']),
-      escape($organisation['uid']),
-      cast_bool($role['main']) ? '1' : '0',
-      escape($role['role']),
-    ]));
+    if(!$organisation) continue;
+    $group = 'evr' . ++$groups;
+    $body .= line('X-EVERYTHING-ROLE', escape($role['role']), [], $group);
+    $body .= line('X-EVERYTHING-ORG', implode(';', [
+      escape($role['org_id']), escape($organisation['uid']),
+    ]), [], $group);
+    $body .= line('X-EVERYTHING-PRIMARY', cast_bool($role['main']) ? '1' : '0', [], $group);
   }
 
   if(needs_name_structure($row))
@@ -1027,19 +1028,28 @@ function parse_roles(&$bag, $current, &$retained) {
   if($role_props) {
     $roles = [];
     foreach($role_props as $property) {
-      [$org_id, $uid, $primary, $role] = array_pad($property->getParts(), 4, "");
+      $org = $property->group ? take($bag, 'X-EVERYTHING-ORG', group: $property->group) : null;
+      $primary = $property->group ? take($bag, 'X-EVERYTHING-PRIMARY', group: $property->group) : null;
+      [$org_id, $uid] = array_pad($org ? $org->getParts() : [], 2, "");
       $resource = $uid ? resource_by_uid(trim($uid)) : null;
       if(!$resource || $resource['entity_type'] != 'organisation' || $resource['entity_id'] != $org_id) {
         \logger\warn("Retained CardDAV role with unknown organisation reference.");
         $retained[] = retained_row($property);
+        if($org) $retained[] = retained_row($org);
+        if($primary) $retained[] = retained_row($primary);
         continue;
       }
       $organisation = \store\get_organisation($org_id);
-      if(!$organisation) { $retained[] = retained_row($property); continue; }
+      if(!$organisation) {
+        $retained[] = retained_row($property);
+        if($org) $retained[] = retained_row($org);
+        if($primary) $retained[] = retained_row($primary);
+        continue;
+      }
       $roles[] = [
         'org_id' => $org_id,
-        'role' => cast_str($role),
-        'main' => cast_bool($primary) ? 1 : 0,
+        'role' => cast_str($property->getValue()),
+        'main' => $primary && cast_bool($primary->getValue()) ? 1 : 0,
         'organisation_name' => $organisation['display_name'],
       ];
     }
