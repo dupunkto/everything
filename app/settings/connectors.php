@@ -9,7 +9,7 @@
     <?php include __DIR__ . "/../shell/menu.php" ?>
     <main class="main">
       <header class="page-header">
-        <?php $parent = "/settings/applications"; include __DIR__ . "/back.php" ?>
+        <?php $parent = "/settings/setup"; include __DIR__ . "/back.php" ?>
         <h2>Connectors</h2>
         <button x-post="/settings/connectors/new" x-target="#connectors-listing">Add connector</button>
       </header>
