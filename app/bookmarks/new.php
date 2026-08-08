@@ -15,6 +15,8 @@
     \store\set_bookmark_tags($id, $_POST['tags'] ?? []);
     \store\put_audit_log('bookmarks', $id, "Created bookmarks/$id.", 'user', operation: 'insert');
 
+    \bookmarks\trigger_archive($url);
+
     see_other("/bookmarks");
   }
 

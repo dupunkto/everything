@@ -4,6 +4,10 @@
 
 namespace bookmarks;
 
+function trigger_archive($url) {
+  @\http\post("https://web.archive.org/save", ['url' => $url]);
+}
+
 function fetch_meta($url) {
   $response = \http\get($url);
   if($response['state'] != 'success' || $response['status'] >= 400) {
