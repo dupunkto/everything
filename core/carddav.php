@@ -404,6 +404,7 @@ function serialize_contact($resource, $row) {
   foreach($row['roles'] as $role) {
     $organisation = \store\get_carddav_resource('organisation', $role['org_id']);
     if($organisation) $body .= line('X-EVERYTHING-ROLE', implode(';', [
+      escape($role['org_id']),
       escape($organisation['uid']),
       cast_bool($role['main']) ? '1' : '0',
       escape($role['role']),
@@ -1026,17 +1027,17 @@ function parse_roles(&$bag, $current, &$retained) {
   if($role_props) {
     $roles = [];
     foreach($role_props as $property) {
-      [$uid, $primary, $role] = array_pad($property->getParts(), 3, "");
+      [$org_id, $uid, $primary, $role] = array_pad($property->getParts(), 4, "");
       $resource = $uid ? resource_by_uid(trim($uid)) : null;
-      if(!$resource || $resource['entity_type'] != 'organisation') {
+      if(!$resource || $resource['entity_type'] != 'organisation' || $resource['entity_id'] != $org_id) {
         \logger\warn("Retained CardDAV role with unknown organisation reference.");
         $retained[] = retained_row($property);
         continue;
       }
-      $organisation = \store\get_organisation($resource['entity_id']);
+      $organisation = \store\get_organisation($org_id);
       if(!$organisation) { $retained[] = retained_row($property); continue; }
       $roles[] = [
-        'org_id' => $resource['entity_id'],
+        'org_id' => $org_id,
         'role' => cast_str($role),
         'main' => cast_bool($primary) ? 1 : 0,
         'organisation_name' => $organisation['display_name'],
