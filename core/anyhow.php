@@ -309,7 +309,7 @@ register_shutdown_function(function() {
 // (argueably doesn't below here but it was convient to put it here)
 
 register_shutdown_function(function() {
-  global $_NOW, $_AUTHENTICATED, $_RESPONSE_BYTES;
+  global $_NOW, $_RESPONSE_BYTES;
 
   $failure = error_get_last();
   $status = http_response_code();
@@ -322,7 +322,7 @@ register_shutdown_function(function() {
       'method' => @$_SERVER['REQUEST_METHOD'] ?: 'CLI',
       'uri' => @$_SERVER['REQUEST_URI'] ?: '',
       'status' => $status ?: 200,
-      'authenticated' => @$_AUTHENTICATED ?: false,
+      'authenticated' => isset($_SESSION['authenticated']),
       'remote_addr' => @$_SERVER['REMOTE_ADDR'],
       'user_agent' => @$_SERVER['HTTP_USER_AGENT'],
       'referer' => @$_SERVER['HTTP_REFERER'],

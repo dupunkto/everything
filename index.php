@@ -15,15 +15,12 @@ if($_ENV == 'dev') {
 require_once __DIR__ . "/core.php";
 require_once __DIR__ . "/router.php";
 
-$_AUTHENTICATED = false;
-
 $_SHARED = route('^/shared/([a-f0-9]{64})\.ics$');
 $_MCP = route('^/mcp/([a-f0-9]{64})$');
 $_PUBLIC = route('^/\.well-known/oauth') || $path == "/register";
 
 if(!$_SHARED && !$_MCP && !$_PUBLIC) {
   require_once __DIR__ . "/auth.php";
-  $_AUTHENTICATED = true;
 }
 
 $requested_file = path_join(__DIR__, "public", $path);

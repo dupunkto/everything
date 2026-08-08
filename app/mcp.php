@@ -4,8 +4,6 @@
 $connector = \store\get_connector_by_token($params[1])
   or fail("Connector not found.", status: 404);
 
-$_AUTHENTICATED = true;
-
 if($method == 'OPTIONS') {
   header("Allow: POST, OPTIONS");
   stay_on_page();
