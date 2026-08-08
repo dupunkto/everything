@@ -6,7 +6,7 @@ $labels = [
   'tracker' => "Tracker",
   'bookmarks' => "Bookmarks",
   'calendar' => "Calendar",
-  'contacts' => "Contacts and addresses",
+  'contacts' => "Contacts",
 ];
 
 ?>
