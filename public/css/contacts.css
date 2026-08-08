@@ -32,6 +32,10 @@
   display: contents;
 }
 
+.contacts__title {
+  order: -2;
+}
+
 .contacts__tabs {
   display: flex;
   gap: 0.25em;

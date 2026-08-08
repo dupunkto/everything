@@ -101,6 +101,7 @@
     fn($token) => $token != "is:person" && $token != "is:org")]);
 
 ?>
+<h1 class="page-header__title contacts__title"><strong>Contacts</strong> <small>(<?= esc_inner(count($rows)) ?>)</small></h1>
 <nav class="contacts__tabs">
   <button type="button" class="contacts__tab<?= isset($kinds['person']) ? ' contacts__tab--active' : '' ?>"
     z-set=".contacts__search" value="<?= esc_attr($tab_query('person')) ?>">
