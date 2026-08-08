@@ -69,6 +69,13 @@ if (!window.global_search_bound) {
     if (e.target.closest(".global-search__backdrop") && search?.hidden) restore_search_focus(search);
   });
 
+  document.addEventListener("submit", (e) => {
+    if (!e.target.matches("#global-search-form")) return;
+
+    e.preventDefault();
+    document.querySelector("#global-search-results .listing__link")?.click();
+  });
+
   document.addEventListener("keydown", (e) => {
     const search = document.querySelector("#global-search");
     if (e.key == "Escape" && search?.hidden) restore_search_focus(search);
