@@ -1,6 +1,8 @@
 <?php
 // Pluggable authentication, supporting HTTP Basic auth and Nym.
 
+session_start() or fail("Failed to start session");
+
 $_AUTH_USER = getenv("AUTH_USER") ?: "everything";
 
 $_AUTH_PROVIDER = getenv("AUTH_PROVIDER");
@@ -35,7 +37,17 @@ if($_AUTH_PROVIDER == 'nym') {
 
 if($_AUTH_PROVIDER == 'basic') {
   if(@$_SERVER['PHP_AUTH_USER'] !== $_AUTH_USER || !hash_equals($_AUTH_PASSWORD, @$_SERVER['PHP_AUTH_PW'])) {
+    unset($_SESSION['authenticated']);
     header('WWW-Authenticate: Basic realm="Everything"');
     fail("The password was wrong.", status: 401);
   }
+
+  if(@$_SESSION['authenticated'] != $_AUTH_USER) {
+    \logger\info("$_AUTH_USER@" . @$_SERVER['REMOTE_ADDR'] . " successfully authenticated.");
+
+    $_SESSION['authenticated'] = $_AUTH_USER;
+  }
+
+  // Flush session so request isn't blocking.
+  session_write_close();
 }
