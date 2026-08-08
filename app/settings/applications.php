@@ -14,6 +14,7 @@
       </header>
 
       <ul class="settings-menu">
+        <li><a href="<?= CANONICAL ?>/settings/calendar">Calendar</a></li>
         <li><a href="<?= CANONICAL ?>/settings/todo">ToDo</a></li>
         <li><a href="<?= CANONICAL ?>/settings/notes">Notes</a></li>
         <li><a href="<?= CANONICAL ?>/settings/contacts">Contacts</a></li>

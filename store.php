@@ -1169,7 +1169,9 @@ function delete_share($id) {
 }
 
 function list_share_sources($share_id) {
-  return all('SELECT share_sources.* FROM share_sources
+  return all('SELECT share_sources.*,
+    COALESCE(calendars.title, subscriptions.title) AS title
+    FROM share_sources
     LEFT JOIN calendars ON calendars.id = share_sources.calendar_id
     LEFT JOIN subscriptions ON subscriptions.id = share_sources.subscription_id
     WHERE share_id = ?

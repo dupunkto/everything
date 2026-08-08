@@ -38,6 +38,7 @@ fallback('developer.git-enabled', false);
 optional('developer.git-repository');
 
 fallback('calendar.default-calendar', @\store\get_first_calendar()['id']);
+fallback('calendar.redacted-titles', false);
 
 fallback('notes.layout', "masonry");
 

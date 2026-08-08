@@ -1,7 +1,6 @@
 <?php
 
   define('ENUM_UI_POSITION', ['left', 'right']);
-  define('ENUM_UI_HABITS_POSITION', ['top', 'bottom']);
   define('ENUM_UI_BORDER_RADIUS', ['square', 'subtle', 'rounded']);
   define('ENUM_UI_APPLICATION', array_keys(application_options()));
   define('ENUM_UI_INSERT_APPLICATION', array_keys(application_options(insertable: true)));
@@ -55,14 +54,6 @@
     \store\put_audit_log('config', 'ui', "Set ui.sidebar-position to '{$_POST['sidebar-position']}'.", 'user');
   }
 
-  if(isset($_POST['habits-position'])) {
-    if(!in_array($_POST['habits-position'], ENUM_UI_HABITS_POSITION))
-      fail("Invalid 'habits-position' parameter.", status: 400);
-
-    \store\update_config('ui.habits-position', $_POST['habits-position']);
-    \store\put_audit_log('config', 'ui', "Set ui.habits-position to '{$_POST['habits-position']}'.", 'user');
-  }
-
 ?>
 <form class="settings-form settings-form--spaced" x-post="/settings/ui/edit" x-on="change" x-target="#ui-settings">
   <label>
@@ -101,7 +92,7 @@
 
 <!--
   This is a separate form because the panel position form needs to do a full page reload,
-  and these settings do NOT need to do that (and a full reload is disruptive UX imo).
+  and this setting does NOT need to do that (and a full reload is disruptive UX imo).
   Having them in the same form would submit panel-position with changes to sidebar-position,
   and perform a full reload (and worse yet, do the redirect *before* we even reach the update
   handler for the sidebar-position).
@@ -113,13 +104,5 @@
       'left' => 'Left',
       'right' => 'Right',
     ], \config\fresh_value('ui.sidebar-position'), flat: true) ?>
-  </label>
-
-  <label>
-    Habits position
-    <?php \forms\options('habits-position', [
-      'top' => 'Top',
-      'bottom' => 'Bottom',
-    ], \config\fresh_value('ui.habits-position'), flat: true) ?>
   </label>
 </form>

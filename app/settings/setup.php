@@ -14,8 +14,8 @@
       </header>
 
       <ul class="settings-menu">
-        <li><a href="<?= CANONICAL ?>/settings/mail">Mail & notes</a></li>
-        <li><a href="<?= CANONICAL ?>/settings/calendar">Calendar</a></li>
+        <li><a href="<?= CANONICAL ?>/settings/setup/mail">Mail & notes</a></li>
+        <li><a href="<?= CANONICAL ?>/settings/setup/calendar">Calendar</a></li>
         <li><a href="<?= CANONICAL ?>/settings/tags">Tags</a></li>
         <li><a href="<?= CANONICAL ?>/settings/quotas">Quotas</a></li>
         <li><a href="<?= CANONICAL ?>/settings/connectors">Connectors</a></li>

@@ -39,7 +39,7 @@ function property_lines($row, $redacted) {
   return $body;
 }
 
-function appointment($row, $redacted, $travel = null) {
+function appointment($row, $redacted, $title = "Event", $travel = null) {
   $is_travel = $travel !== null;
   $dates = \store\get_log_dates('appointments', $row['id']);
   $modified = $dates['modified_at'] ?: $dates['created_at'] ?: $row['starts_at'];
@@ -49,7 +49,7 @@ function appointment($row, $redacted, $travel = null) {
   $body .= \caldav\line('UID', \icalendar\escape_text($row['id'] . $suffix . '@' . HOST));
   $body .= \caldav\line('DTSTAMP', \caldav\utc($modified));
   $body .= \caldav\line('SUMMARY', $is_travel || $redacted
-    ? ($is_travel ? "Travel time" : "Event")
+    ? ($is_travel ? "Travel time" : (CALENDAR_REDACTED_TITLES ? \icalendar\escape_text($title) : "Event"))
     : \icalendar\escape_text($row['title']));
 
   if($is_travel) {
@@ -161,11 +161,11 @@ function serialize($share) {
 
     foreach($appointments as $row) {
       if(!\cast_bool($row['going'])) continue;
-      $body .= appointment($row, $redacted);
+      $body .= appointment($row, $redacted, title: $selected['title']);
       if(!\cast_bool($row['all_day']) && (int)$row['travel_before'] > 0)
-        $body .= appointment($row, $redacted, travel: 'before');
+        $body .= appointment($row, $redacted, title: $selected['title'], travel: 'before');
       if(!\cast_bool($row['all_day']) && (int)$row['travel_after'] > 0)
-        $body .= appointment($row, $redacted, travel: 'after');
+        $body .= appointment($row, $redacted, title: $selected['title'], travel: 'after');
     }
   }
 

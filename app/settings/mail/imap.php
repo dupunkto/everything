@@ -9,7 +9,7 @@
     <?php include __DIR__ . "/../../shell/menu.php" ?>
     <main class="main">
       <header class="page-header">
-        <?php $parent = "/settings/mail"; include __DIR__ . "/../back.php" ?>
+        <?php $parent = "/settings/setup/mail"; include __DIR__ . "/../back.php" ?>
         <h2>IMAP accounts</h2>
         <a class="button" z-toggle="#account-new">Add account</a>
       </header>
