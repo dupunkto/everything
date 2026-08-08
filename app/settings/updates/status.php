@@ -11,20 +11,26 @@ if($action == 'check') {
 
 if($action == 'install') {
   if(!git_worktree_is_clean()) fail("The update cannot be installed while the working tree has changes.", status: 409);
-  if(!git_upstream_has_updates()) fail("There are no updates to install.", status: 409);
+  if(!git_upstream_update_count()) fail("There are no updates to install.", status: 409);
 
   [$exit, $error] = git('pull');
   if($exit) fail("Could not install the update: $error", status: 409);
   $installed = true;
 }
 
-$updates = git_upstream_has_updates();
+$updates = git_upstream_update_count();
 
 ?>
 <?php if(@$installed): ?>
   <p class="success">Update installed.</p>
-<?php elseif(@$updates): ?>
-  <p class="info">An update is available.</p>
+<?php elseif($updates): ?>
+  <p class="info">
+    <?php if($updates == 1): ?>
+      An update is available.
+    <?php else: ?>
+      There are <?= esc_inner($updates) ?> updates available.
+    <?php endif ?>
+  </p>
   <form x-post="/settings/updates/status" x-target="#updates-status">
     <button type="submit" name="action" value="install">Download and install update</button>
   </form>

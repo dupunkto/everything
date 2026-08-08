@@ -23,10 +23,10 @@ function git_c($directory, ...$args) {
   return [proc_close($process), trim($output)];
 }
 
-function git_upstream_has_updates() {
+function git_upstream_update_count() {
   [$exit, $count] = git('rev-list', '--count', 'HEAD..@{u}');
   if($exit) fail("Could not compare with the upstream branch: $count", status: 409);
-  return (int)$count > 0;
+  return (int)$count;
 }
 
 function git_worktree_is_clean() {
