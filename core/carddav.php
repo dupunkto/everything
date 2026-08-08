@@ -362,11 +362,15 @@ function main_role($roles) {
 function serialize_contact($resource, $row) {
   $groups = 0;
   $surname = \contacts\contact_display_surname($row);
-  // FN stays name-derived: NICKNAME is transmitted separately and clients
-  // apply their own nickname display preference.
+  // NICKNAME is transmitted separately; clients apply their own nickname
+  // display preference. Apple clients derive the visible name from N, so a
+  // display_name override must be represented there as well as in FN.
   $fn = \contacts\contact_display_name([...$row, 'nickname' => null]);
+  $name = is_str($row['display_name'])
+    ? ["", $fn, ""]
+    : [$surname, $row['first_name'], $row['middle_name']];
   $body = header_lines($resource, $fn,
-    [$surname, $row['first_name'], $row['middle_name'], ...n_extras($row['properties'])]);
+    [...$name, ...n_extras($row['properties'])]);
 
   $body .= picture_line('contact', $row['id'], $row['picture']);
   if(is_str($row['nickname'])) $body .= line('NICKNAME', escape($row['nickname']));
@@ -878,16 +882,20 @@ function parse_contact(VCard $card, $current) {
   take_all($bag, 'FN');
   $fn = $fn_property ? trim($fn_property->getValue()) : "";
 
+  // CardDAV clients only see the override in N and therefore cannot edit the
+  // hidden structured name. Name edits update the override until it is cleared
+  // in the database and the structured name becomes visible again.
+  $display_override = $current && is_str($current['display_name']);
   $fields = [
-    'first_name' => $first_in,
-    'middle_name' => \cast_str($middle_in),
+    'first_name' => $display_override ? $current['first_name'] : $first_in,
+    'middle_name' => $display_override ? $current['middle_name'] : \cast_str($middle_in),
     'family_infix' => $current ? $current['family_infix'] : null,
     'family_name' => $current ? $current['family_name'] : null,
     'legal_infix' => $current ? $current['legal_infix'] : null,
     'legal_name' => $current ? $current['legal_name'] : null,
     'name_order' => $current ? $current['name_order'] : 'family_legal',
   ];
-  if(!$current || $surname_in != \contacts\contact_display_surname($current)) {
+  if(!$display_override && (!$current || $surname_in != \contacts\contact_display_surname($current))) {
     if($current && $current['name_order'] == 'legal_family' && is_str($current['legal_name']))
       [$fields['legal_infix'], $fields['legal_name']] = split_surname($surname_in, @$current['legal_infix']);
     else
