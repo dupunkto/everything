@@ -813,6 +813,29 @@ function list_timings_paginated($limit, $offset = 0) {
   return paginate('SELECT * FROM timings ORDER BY starts_at DESC, id DESC', $limit, offset: $offset);
 }
 
+function search_timings_paginated($query, $limit, $offset = 0) {
+  [$tags, $terms] = \core\parse_query($query);
+  $where = [];
+  $params = [];
+
+  foreach($terms as $term) {
+    $where[] = 'EXO_NORMALIZE(description) LIKE EXO_NORMALIZE(?)';
+    $params[] = "%$term%";
+  }
+
+  foreach($tags as $id) {
+    $where[] = 'EXISTS (SELECT 1 FROM timings_tags tt
+      WHERE tt.timing_id = timings.id AND tt.tag_id = ?)';
+    $params[] = $id;
+  }
+
+  $sql = 'SELECT * FROM timings';
+  if($where) $sql .= ' WHERE ' . join(' AND ', $where);
+  $sql .= ' ORDER BY starts_at DESC, id DESC';
+
+  return paginate($sql, $limit, offset: $offset, params: $params);
+}
+
 function resolve_timing_page($id, $limit) {
   $timing = get_timing($id) or fail("Timing not found.", status: 404);
 
@@ -1167,7 +1190,7 @@ function set_share_sources($share_id, $sources) {
 
 // Connectors
 
-define('ENUM_CONNECTOR_APP', ['notes', 'todo', 'bookmarks', 'calendar', 'contacts']);
+define('ENUM_CONNECTOR_APP', ['notes', 'todo', 'tracker', 'bookmarks', 'calendar', 'contacts']);
 
 function put_connector($name, $token) {
   exec_query('INSERT INTO connectors (name, token) VALUES (?, ?)', [$name, $token]);

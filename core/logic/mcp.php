@@ -22,6 +22,11 @@ function tools() {
       ['query' => $query, 'limit' => $limit, 'offset' => $offset]),
     'get_todo' => tool('todo', 'get_todo', "Get a complete todo by ID.",
       ['id' => $id], ['id']),
+    'search_timings' => tool('tracker', 'search_timings',
+      "Search timings using description text and +tag.",
+      ['query' => $query, 'limit' => $limit, 'offset' => $offset]),
+    'get_timing' => tool('tracker', 'get_timing', "Get a timing by ID.",
+      ['id' => $id], ['id']),
     'search_bookmarks' => tool('bookmarks', 'search_bookmarks',
       "Search bookmarks. Results contain note excerpts; use get_bookmark for complete content.",
       ['query' => $query, 'limit' => $limit, 'offset' => $offset]),
@@ -119,6 +124,17 @@ function todo($task, $complete = false) {
     'recurrence' => $task['recurrence'],
     'updated_at' => $task['updated_date'],
     'tags' => pluck($task['tags'], 'label'),
+  ];
+}
+
+function timing($timing) {
+  return [
+    'id' => $timing['id'],
+    'description' => $timing['description'],
+    'starts_at' => $timing['starts_at'],
+    'ends_at' => $timing['ends_at'],
+    'task_id' => $timing['task_id'],
+    'tags' => pluck(\store\list_timing_tags($timing['id']), 'label'),
   ];
 }
 

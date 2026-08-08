@@ -129,6 +129,21 @@ switch($rpc_method) {
           $data = \mcp\todo($row, true);
           break;
 
+        case 'search_timings':
+          [$query, $limit, $offset] = \mcp\page_arguments($args);
+
+          $data = array_map(fn($row) => \mcp\timing($row),
+            \store\search_timings_paginated($query, $limit, offset: $offset));
+          break;
+
+        case 'get_timing':
+          \mcp\validate_arguments($args, ['id']);
+
+          $item_id = array_require_string($args, 'id');
+          $row = \store\get_timing($item_id) or throw new ToolError("Timing not found.", id: $id);
+          $data = \mcp\timing($row);
+          break;
+
         case 'search_bookmarks':
           [$query, $limit, $offset] = \mcp\page_arguments($args);
 

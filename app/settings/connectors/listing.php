@@ -3,6 +3,7 @@
 $labels = [
   'notes' => "Notes",
   'todo' => "ToDo",
+  'tracker' => "Tracker",
   'bookmarks' => "Bookmarks",
   'calendar' => "Calendar",
   'contacts' => "Contacts and addresses",
