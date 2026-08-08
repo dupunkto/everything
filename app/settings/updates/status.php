@@ -31,9 +31,3 @@ $updates = git_upstream_has_updates();
 <?php elseif($action == 'check'): ?>
   <p class="success">Everything is up to date.</p>
 <?php endif ?>
-
-<?php if(!@$updates): ?>
-  <form x-post="/settings/updates/status" x-target="#updates-status">
-    <button type="submit" name="action" value="check">Check for updates</button>
-  </form>
-<?php endif ?>

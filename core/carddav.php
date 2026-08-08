@@ -368,7 +368,7 @@ function serialize_contact($resource, $row) {
   $fn = \contacts\contact_display_name([...$row, 'nickname' => null]);
   $name = is_str($row['display_name'])
     ? ["", $fn, ""]
-    : [$surname, $row['first_name'], $row['middle_name']];
+    : [$surname, $row['first_name'], ""];
   $body = header_lines($resource, $fn,
     [...$name, ...n_extras($row['properties'])]);
 
@@ -491,6 +491,7 @@ function serialize_tag($resource, $row) {
 // to catch application-side edits without mutation hooks in controllers.
 
 function fingerprint($row) {
+  unset($row['middle_name']);
   return hash('sha256', json_encode($row, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
 }
 
@@ -890,7 +891,7 @@ function parse_contact(VCard $card, $current) {
   $display_override = $current && is_str($current['display_name']);
   $fields = [
     'first_name' => $display_override ? $current['first_name'] : $first_in,
-    'middle_name' => $display_override ? $current['middle_name'] : \cast_str($middle_in),
+    'middle_name' => $middle_in != "" ? \cast_str($middle_in) : @$current['middle_name'],
     'family_infix' => $current ? $current['family_infix'] : null,
     'family_name' => $current ? $current['family_name'] : null,
     'legal_infix' => $current ? $current['legal_infix'] : null,

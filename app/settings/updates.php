@@ -18,8 +18,8 @@ if(!defined('GIT_SHA')) fail("Updates are only available when running from a Git
         <h2>Updates</h2>
       </header>
 
-      <section id="updates-status" x-get="/settings/updates/status">
-        <?php fragment("settings/updates/status") ?>
+      <section id="updates-status" x-post="/settings/updates/status" x-on="load" data-action="check">
+        <p>Checking for updates…</p>
       </section>
     </main>
   </body>

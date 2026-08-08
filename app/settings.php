@@ -14,6 +14,7 @@
 
       <ul class="settings-menu">
         <li><a href="<?= CANONICAL ?>/settings/general">General</a></li>
+        <?php if(defined('GIT_SHA')): ?><li><a href="<?= CANONICAL ?>/settings/updates">Updates</a></li><?php endif ?>
         <li><a href="<?= CANONICAL ?>/settings/setup">Setup</a></li>
         <li><a href="<?= CANONICAL ?>/settings/applications">Applications</a></li>
         <?php if(DEVELOPER_MODE): ?><li><a href="<?= CANONICAL ?>/settings/developer">Developer</a></li><?php endif ?>
