@@ -43,7 +43,10 @@ if($_AUTH_PROVIDER == 'basic') {
   }
 
   if(@$_SESSION['authenticated'] != $_AUTH_USER) {
-    \logger\info("$_AUTH_USER@" . @$_SERVER['REMOTE_ADDR'] . " successfully authenticated.");
+    if($path != "/caldav" && !str_starts_with($path, "/caldav/")
+      && $path != "/carddav" && !str_starts_with($path, "/carddav/")) {
+      \logger\info("$_AUTH_USER@" . @$_SERVER['REMOTE_ADDR'] . " successfully authenticated.");
+    }
 
     $_SESSION['authenticated'] = $_AUTH_USER;
   }
