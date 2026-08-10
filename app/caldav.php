@@ -11,6 +11,14 @@ function collection_href($id) {
   return '/caldav/calendars/' . CALDAV_PRINCIPAL . '/' . rawurlencode($id) . '/';
 }
 
+function caldav_entity_table($type) {
+  return match($type) {
+    'appointment' => 'appointments',
+    'task' => 'tasks',
+    'wish' => 'wishes',
+  };
+}
+
 function collection_properties($collection) {
   $revision = \store\caldav_collection_revision($collection['id']);
   $privileges = '<D:privilege><D:read/></D:privilege>';
@@ -345,7 +353,7 @@ function put() {
     $saved_name = $id . ".ics";
   \store\update_caldav_resource($type, $id, $saved_name, $saved_collection, uid: $data['uid']);
   \store\touch_caldav_resource($type, $id);
-  $table = $type == 'appointment' ? 'appointments' : $type . 's';
+  $table = caldav_entity_table($type);
   $message = $created
     ? "Created $table/$id."
     : "Updated [" . join(", ", $fields) . "] for $table/$id.";
@@ -394,7 +402,7 @@ function delete_resource() {
     \caldav\hide_resource($type, $id);
   }
 
-  $table = $type == 'appointment' ? 'appointments' : $type . 's';
+  $table = caldav_entity_table($type);
   $message = $operation == 'delete'
     ? "Deleted $table/$id."
     : "Updated [status] for $table/$id.";
@@ -442,7 +450,7 @@ function move() {
     \store\set_task_status($id, $status);
   }
   \store\touch_caldav_resource($resource['entity_type'], $id);
-  $table = $resource['entity_type'] == 'appointment' ? 'appointments' : 'tasks';
+  $table = caldav_entity_table($resource['entity_type']);
   \store\put_audit_log($table, $id, "Updated [" . join(", ", $fields) . "] for $table/$id.", 'caldav');
   if($resource['entity_type'] == 'appointment') \caldav\mark_travel_changed($id);
   \store\update_caldav_resource($resource['entity_type'], $id, $target_name, $target['id']);

@@ -48,6 +48,7 @@
     return match($log['table_name']) {
       'addresses' => "/addresses?edit=$id",
       'bookmarks' => "/bookmarks/edit?id=$id",
+      'appointments' => "/calendar?edit=$id",
       'contacts' => "/contacts?kind=person&edit=$id",
       'notes' => "/notes/edit?id=$id",
       'organisations' => "/contacts?kind=org&edit=$id",
