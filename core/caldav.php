@@ -820,7 +820,11 @@ function parse($body, $expected, $type = null) {
   else {
     $start = prop($component, 'DTSTART');
     $data['has_start'] = (bool)$start;
-    $data['open_at'] = $start ? datetime($start)[0] : gmdate('c');
+    if($start) [$data['open_at'], $data['start_all_day']] = datetime($start, allow_date: $type == 'task');
+    else {
+      $data['open_at'] = gmdate('c');
+      $data['start_all_day'] = false;
+    }
     $due = prop($component, 'DUE');
     if($due) [$data['due_at'], $data['due_all_day']] = datetime($due, allow_date: true);
     else [$data['due_at'], $data['due_all_day']] = [null, false];
