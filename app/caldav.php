@@ -320,13 +320,11 @@ function put() {
     }
     elseif($type == 'task') {
       $status = \caldav\task_status($collection['id'], $data['status'], $current['status']);
-      $open_at = $data['has_start'] ? $data['open_at'] : $current['open_at'];
-      if($data['has_start'] && $data['start_all_day']) {
-        $date = (new \DateTimeImmutable($data['open_at']))->setTimezone(new \DateTimeZone(TIMEZONE));
-        $time = (new \DateTimeImmutable($current['open_at']))->setTimezone(new \DateTimeZone(TIMEZONE));
-        $open_at = $time->setDate((int)$date->format('Y'), (int)$date->format('m'), (int)$date->format('d'))
-          ->setTimezone(new \DateTimeZone("UTC"))->format('c');
-      }
+
+      // Apple rewrites DTSTART datetimes as dates matching DUE. We intentionally
+      // ignore this update, even though it's technically valid, because it's wrong.
+      $open_at = $data['has_start'] && !$data['start_all_day']
+        ? $data['open_at'] : $current['open_at'];
       $fields = \core\diff($current,
         title: $data['title'], content: $data['content'], urgent: $data['urgent'],
         recurrence: $data['recurrence'], open_at: $open_at,
