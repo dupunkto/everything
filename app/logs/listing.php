@@ -99,6 +99,9 @@
     : ($log['source'] == 'system' && @$context['status'] == 404) ?>
   <?php $url = @$log['deleted'] || $not_found ? null : logs_edit_url($log) ?>
   <?php $message_url = $log['message'] ?>
+  <?php $author_url = filter_var($log['author'], FILTER_VALIDATE_IP)
+    ? "https://iplookup.flagfox.net/?ip=" . rawurlencode($log['author'])
+    : null ?>
   <?php $context = logs_format_context($context) ?>
   <?php $datetime = (new \DateTimeImmutable($log['logged_at'], timezone: new \DateTimeZone("UTC")))->format('c') ?>
   <tr class="logs__row--<?= esc_attr($log['level']) ?>">
@@ -115,7 +118,13 @@
       <?php endif ?>
     </td>
     <td><?= esc_inner($log['operation']) ?></td>
-    <td><?= esc_inner($log['author']) ?></td>
+    <td>
+      <?php if($author_url): ?>
+        <a href="<?= esc_attr($author_url) ?>"><?= esc_inner($log['author']) ?></a>
+      <?php else: ?>
+        <?= esc_inner($log['author']) ?>
+      <?php endif ?>
+    </td>
     <td>
       <?php if($url): ?>
         <a class="logs__entity" href="<?= esc_attr($url) ?>" title="<?= esc_attr($entity) ?>"><?= esc_inner($entity) ?></a>
