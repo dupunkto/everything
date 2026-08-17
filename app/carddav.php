@@ -172,17 +172,6 @@ function precondition($resource) {
   \webdav\precondition($resource ? \webdav\etag(\carddav\serialize($resource)) : null);
 }
 
-function expected_kind($collection, $card) {
-  $kind = \carddav\card_kind($card);
-  if($collection['id'] == 'organisations') {
-    if($kind == 'tag') dav_error(403, "Group cards belong in the contacts address book.", 'valid-address-data');
-    return 'organisation';
-  }
-  if($kind == 'organisation')
-    dav_error(403, "Organisation cards belong in the organisations address book.", 'valid-address-data');
-  return $kind;
-}
-
 function apply_contact($id, $data) {
   $f = $data['fields'];
   $creating = !$id;
@@ -271,7 +260,7 @@ function put() {
   catch(\InvalidArgumentException $e) { dav_error(403, $e->getMessage(), 'valid-address-data'); }
 
   $uid = \carddav\card_uid($card);
-  $type = expected_kind($collection, $card);
+  $type = \carddav\card_kind($card);
 
   $by_uid = \carddav\resource_by_uid($uid);
   if($by_uid && $by_uid['collection'] != $collection['id'])

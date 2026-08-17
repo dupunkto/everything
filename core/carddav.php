@@ -51,12 +51,7 @@ function collections() {
     'contacts' => [
       'id' => 'contacts',
       'displayname' => "Contacts",
-      'description' => "People and groups",
-    ],
-    'organisations' => [
-      'id' => 'organisations',
-      'displayname' => "Organisations",
-      'description' => "Companies and institutions",
+      'description' => "People, organisations and groups",
     ],
   ];
 }
@@ -540,7 +535,7 @@ function reconcile() {
     foreach(book()['contacts'] as $id => $row)
       $visit('contact', $id, 'contacts', fingerprint($row));
     foreach(book()['organisations'] as $id => $row)
-      $visit('organisation', $id, 'organisations', fingerprint($row));
+      $visit('organisation', $id, 'contacts', fingerprint($row));
     foreach(book()['tags'] as $id => $row)
       if($row['members'])
         $visit('tag', $id, 'contacts', fingerprint($row), uid: "tag-$id");
