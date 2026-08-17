@@ -27,14 +27,14 @@
   }
 
   $fields = \core\diff($share,
-    name: cast_string($_POST['name']),
+    name: cast_str($_POST['name']),
     birthdays: cast_bool(@$_POST['birthdays']),
     deadlines: cast_bool(@$_POST['deadlines'])
   );
 
   \store\update_share(
     $share['id'],
-    cast_string($_POST['name']),
+    cast_str($_POST['name']),
     cast_bool(@$_POST['birthdays']),
     cast_bool(@$_POST['deadlines'])
   );
