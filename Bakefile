@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+use php
+
 PORT=4000
 TLS_PORT=4443
 ENTRYPOINT=index.php
@@ -8,10 +10,6 @@ REPO=export.git
 
 export AUTH_PROVIDER=basic
 export AUTH_PASSWORD=pannekoek
-
-# Configure the PHP server to start two
-# concurrent threads.
-export PHP_CLI_SERVER_WORKERS=2
 
 serve() {
   case ${SECURE:-true} in
