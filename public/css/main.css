@@ -343,6 +343,10 @@ button,
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
+  text-transform: none;
+  color: currentColor;
+  background: transparent;
+  padding: 0;
   margin-bottom: 1em;
   gap: 1em;
 }
