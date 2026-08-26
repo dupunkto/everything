@@ -9,7 +9,7 @@ function applications() {
     ['route' => 'calendar', 'label' => "Calendar", 'icon' => 'fa-regular fa-calendar', 'key' => '2'],
     ['route' => 'todo', 'label' => "ToDo", 'icon' => 'fa-regular fa-list', 'key' => '3', 'insertable' => true],
     ['route' => 'tracker', 'label' => "Tracker", 'icon' => 'fa-regular fa-timer', 'key' => '4'],
-    ['route' => 'notes', 'label' => "Notes", 'icon' => 'fa-regular fa-notebook', 'key' => '5', 'insertable' => true],
+    ['route' => 'notes', 'label' => "Notes", 'icon' => 'fa-regular fa-note-sticky', 'key' => '5', 'insertable' => true],
     ['route' => 'bookmarks', 'label' => "Bookmarks", 'icon' => 'fa-regular fa-bookmark', 'key' => '6', 'insertable' => true],
     ['route' => 'wishlist', 'label' => "Wishlist", 'icon' => 'fa-regular fa-bag-shopping', 'key' => '7', 'insertable' => true],
     ['route' => 'contacts', 'label' => "Contacts", 'icon' => 'fa-regular fa-address-book', 'key' => '8'],
