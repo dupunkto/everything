@@ -7,7 +7,7 @@ function applications() {
   return [
     ['route' => 'mail', 'label' => "Mail", 'icon' => 'fa-regular fa-inbox', 'key' => '1'],
     ['route' => 'calendar', 'label' => "Calendar", 'icon' => 'fa-regular fa-calendar', 'key' => '2'],
-    ['route' => 'todo', 'label' => "ToDo", 'icon' => 'fa-regular fa-box-check', 'key' => '3', 'insertable' => true],
+    ['route' => 'todo', 'label' => "ToDo", 'icon' => 'fa-regular fa-list', 'key' => '3', 'insertable' => true],
     ['route' => 'tracker', 'label' => "Tracker", 'icon' => 'fa-regular fa-timer', 'key' => '4'],
     ['route' => 'notes', 'label' => "Notes", 'icon' => 'fa-regular fa-notebook', 'key' => '5', 'insertable' => true],
     ['route' => 'bookmarks', 'label' => "Bookmarks", 'icon' => 'fa-regular fa-bookmark', 'key' => '6', 'insertable' => true],
