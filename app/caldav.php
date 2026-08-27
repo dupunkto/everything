@@ -292,10 +292,29 @@ function put() {
     elseif($type == 'task') {
       $status = \caldav\task_status($collection['id'], $data['status'], 'todo');
       $saved_collection = \caldav\task_collection($status);
+
+      $tag_ids = [];
+
+      if(preg_match('/(?:^|\s)(\+[^\s+]\S*(?:\s+\+[^\s+]\S*)*)\s*$/u', $data['title'], $match, PREG_OFFSET_CAPTURE)) {
+        $lists = [];
+
+        foreach(\store\list_tags() as $tag) $lists[tag_slug($tag['label'])] = $tag['id'];
+        foreach(preg_split('/\s+/u', $match[1][0]) as $token) {
+          $slug = tag_slug(substr($token, 1));
+
+          if(isset($lists[$slug])) $tag_ids[] = $lists[$slug];
+          else \logger\warn("CalDAV task list '$token' does not exist; ignored.");
+        }
+
+        $data['title'] = rtrim(substr($data['title'], 0, $match[0][1]));
+      }
+
       $id = \store\put_task(
         $data['title'], $data['content'], $status, $data['urgent'], $data['recurrence'],
         $data['open_at'], $data['due_at'], $data['due_all_day']
       );
+
+      \store\set_task_tags($id, array_values(array_unique($tag_ids)));
     }
     else {
       $status = $data['status'] == 'COMPLETED' ? 'bought' : 'dream';
