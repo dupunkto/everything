@@ -276,6 +276,7 @@ function put() {
     dav_error(403, "Existing {$resource['entity_type']} resource {$resource['entity_id']} cannot be stored as $type.");
 
   $created = !$resource;
+  $title_changed = false;
   $saved_collection = $collection['id'];
   $saved_name = $name;
   $old_collection = @$resource['collection'];
@@ -307,6 +308,7 @@ function put() {
         }
 
         $data['title'] = rtrim(substr($data['title'], 0, $match[0][1]));
+        $title_changed = true;
       }
 
       $id = \store\put_task(
@@ -390,10 +392,15 @@ function put() {
   \store\put_caldav_changes($changes);
 
   http_response_code($created ? 201 : 204);
-  $saved = \store\get_caldav_resource_by_href($saved_collection, $saved_name);
-  header('ETag: ' . \webdav\etag(\caldav\serialize($saved)));
+
+  if(!$title_changed) {
+    $saved = \store\get_caldav_resource_by_href($saved_collection, $saved_name);
+    header('ETag: ' . \webdav\etag(\caldav\serialize($saved)));
+  }
+
   if($saved_collection != $collection['id'] || $saved_name != $name)
     header('Content-Location: ' . collection_href($saved_collection) . rawurlencode($saved_name));
+
   exit;
 }
 
