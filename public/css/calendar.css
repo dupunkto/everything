@@ -238,6 +238,7 @@ body:has(.calendar-page) {
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0 0.5em;
+  font-size: 0.9em;
 }
 
 .calendar-week .appointment--task {
