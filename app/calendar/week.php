@@ -169,7 +169,7 @@ $sidebar_right = UI_SIDEBAR_POSITION == 'right';
                    style="--appointment-top: <?= $layout['top'] ?>;
                           --appointment-height: <?= $layout['height'] ?>;
                           <?= cast_bool($appointment['going'])
-                            ? "--appointment-width: {$layout['width']}; --appointment-left: {$layout['left']};"
+                            ? "--appointment-width: {$layout['width']}; --appointment-width-inset: {$layout['width_inset']}; --appointment-left: {$layout['left']}; --appointment-left-inset: {$layout['left_inset']};"
                             : "--appointment-inset: {$layout['inset']};" ?>
                           --appointment-color: <?= $color($appointment) ?>">
             <h3 class="appointment__title"><span class="appointment__title-text"><?php if($is_task): ?><i class="fa-solid <?= $task_icon($appointment) ?>"></i> <?php endif ?><?= esc_inner($appointment['title']) ?></span></h3>

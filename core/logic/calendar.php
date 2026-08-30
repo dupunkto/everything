@@ -159,13 +159,41 @@ function birthdays($from, $to) {
   return $birthdays;
 }
 
+// Assigns strict interval containment before appointments are split over days.
+// The nearest container wins; crossing candidates resolve chronologically.
+function hierarchy($appointments) {
+  chronological($appointments);
+
+  foreach($appointments as $i => $appointment) {
+    $appointments[$i]['layout_key'] = $i;
+    $appointments[$i]['layout_parent'] = null;
+  }
+
+  $contains = fn($outer, $inner) =>
+    $outer['starts_at'] < $inner['starts_at'] && $outer['ends_at'] > $inner['ends_at'];
+
+  foreach($appointments as $i => $appointment) {
+    if(!cast_bool($appointment['going'])) continue;
+
+    $parent = null;
+    foreach($appointments as $j => $candidate) {
+      if(!cast_bool($candidate['going']) || !$contains($candidate, $appointment)) continue;
+      if(is_null($parent) || $contains($appointments[$parent], $candidate)) $parent = $j;
+    }
+    $appointments[$i]['layout_parent'] = $parent;
+  }
+
+  return $appointments;
+}
+
 // Splits appointments over the days they touch, clipped to [$from, $to), into
-// a date-keyed map. Segments carry a layout_end enforcing a 30-minute minimum
-// for stacking, and an editable flag: drag-resizable only when calendar-owned,
-// non-recurring and contained in a single day, so a dragged edge maps cleanly
-// onto one start/end.
+// a date-keyed map. Segments carry their original containment hierarchy, a
+// layout_end enforcing a 30-minute minimum for stacking, and an editable flag:
+// drag-resizable only when calendar-owned, non-recurring and contained in a
+// single day, so a dragged edge maps cleanly onto one start/end.
 function day_segments($appointments, $from, $to) {
   $days = array_fill_keys(dates($from, $to), []);
+  $appointments = hierarchy($appointments);
 
   foreach($appointments as $appointment) {
     $start = new \DateTime($appointment['starts_at']);
@@ -229,13 +257,14 @@ function vertical($segment) {
   ];
 }
 
-// Greedy column layout for one day's segments. Going appointments pack into
-// columns and expand into free columns to their right; 'not going' ones don't
-// participate but overlay the result at (almost) full width, inset a little
-// further per appointment they cover so left borders underneath stay visible.
+// Greedy column layout for one day's segments. Siblings pack into columns and
+// expand into free columns to their right. Contained appointments repeat that
+// layout inside their parent, inset by one rem while sharing its right edge.
+// 'Not going' appointments don't participate but overlay the result at (almost)
+// full width, inset further per appointment they cover so borders stay visible.
 //
-// Credits to @m1kadev for implementing this in Python originally, for a
-// project that shall not be named on legal grounds. Happily stolen:)
+// Credits to @m1kadev for implementing the column packing in Python originally,
+// for a project that shall not be named on legal grounds. Happily stolen:)
 function layout($day) {
   chronological($day);
 
@@ -245,37 +274,66 @@ function layout($day) {
   $overlaps = fn($a, $b) =>
     $a['starts_at'] < $b['layout_end'] && $a['layout_end'] > $b['starts_at'];
 
-  $columns = [];
+  $roots = [];
+  $children = [];
 
   foreach($day as $appointment) {
-    foreach($columns as $i => $column) {
-      if($column[array_key_last($column)]['layout_end'] <= $appointment['starts_at']) {
-        $columns[$i][] = $appointment;
-        continue 2;
-      }
-    }
-    $columns[] = [$appointment];
+    if(is_null($appointment['layout_parent'])) $roots[] = $appointment;
+    else $children[$appointment['layout_parent']][] = $appointment;
   }
 
-  $total = max(count($columns), 1);
   $placed = [];
 
-  foreach($columns as $i => $column) {
-    foreach($column as $j => $appointment) {
-      $span = 1;
-      for($k = $i + 1; $k < $total; $k++) {
-        if(array_any($columns[$k], fn($other) => $overlaps($appointment, $other))) break;
-        $span++;
-      }
+  $place = function($siblings, $parent = null) use(&$place, &$placed, $children, $overlaps) {
+    $columns = [];
 
-      $appointment['layout'] = vertical($appointment) + [
-        'width' => $span / $total * 100,
-        'left' => $i / $total * 100,
-        'adjacent' => isset($column[$j + 1]) && $appointment['ends_at'] == $column[$j + 1]['starts_at'],
-      ];
-      $placed[] = $appointment;
+    foreach($siblings as $appointment) {
+      foreach($columns as $i => $column) {
+        if($column[array_key_last($column)]['layout_end'] <= $appointment['starts_at']) {
+          $columns[$i][] = $appointment;
+          continue 2;
+        }
+      }
+      $columns[] = [$appointment];
     }
-  }
+
+    $total = max(count($columns), 1);
+
+    foreach($columns as $i => $column) {
+      foreach($column as $j => $appointment) {
+        $span = 1;
+        for($k = $i + 1; $k < $total; $k++) {
+          if(array_any($columns[$k], fn($other) => $overlaps($appointment, $other))) break;
+          $span++;
+        }
+
+        $left = $i / $total;
+        $width = $span / $total;
+
+        $horizontal = $parent ? [
+          'left' => $parent['left'] + $left * $parent['width'],
+          'left_inset' => $parent['left_inset'] + 1 - $left * ($parent['width_inset'] + 1),
+          'width' => $width * $parent['width'],
+          'width_inset' => $width * ($parent['width_inset'] + 1),
+        ] : [
+          'left' => $left * 100,
+          'left_inset' => 0,
+          'width' => $width * 100,
+          'width_inset' => 0,
+        ];
+
+        $appointment['layout'] = vertical($appointment) + $horizontal + [
+          'adjacent' => isset($column[$j + 1]) && $appointment['ends_at'] == $column[$j + 1]['starts_at'],
+        ];
+        $placed[] = $appointment;
+
+        if(@$children[$appointment['layout_key']])
+          $place($children[$appointment['layout_key']], $horizontal);
+      }
+    }
+  };
+
+  $place($roots);
 
   foreach($skipped as $appointment) {
     $level = count(array_filter($placed, fn($other) => $overlaps($appointment, $other)));
