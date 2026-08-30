@@ -349,8 +349,8 @@ body:has(.calendar-page) {
   position: absolute;
   top: calc(var(--appointment-top) * 1%);
   height: calc(var(--appointment-height) * 1%);
-  left: calc(var(--appointment-left) * 1% + var(--appointment-left-inset) * 1rem);
-  width: calc(var(--appointment-width) * 1% - var(--appointment-width-inset) * 1rem);
+  left: calc(var(--appointment-left) * 1% + var(--appointment-left-inset) * 0.5rem);
+  width: calc(var(--appointment-width) * 1% - var(--appointment-width-inset) * 0.5rem);
   align-content: start;
 }
 
