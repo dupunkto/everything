@@ -94,7 +94,7 @@ function task_deadlines($from, $to) {
 
     $deadlines[] = [
       'id' => $task['id'],
-      'title' => \esc_inner($task['title']),
+      'title' => $task['title'],
       'starts_at' => $start->format("Y-m-d H:i:s"),
       'ends_at' => $end->format("Y-m-d H:i:s"),
       'all_day' => cast_bool(@$task['due_all_day']),
@@ -134,7 +134,7 @@ function birthdays($from, $to) {
       if(!$date || $date < $from || $date >= $to) continue;
 
       $age = $contact['birth_year'] ? $year - (int) $contact['birth_year'] : null;
-      $name = \esc_inner(\contacts\contact_display_name($contact));
+      $name = \contacts\contact_display_name($contact);
 
       $birthdays[] = [
         'id' => "birthday-{$contact['id']}-$year",
