@@ -413,6 +413,8 @@ function serialize_contact($resource, $row) {
       escape($row['legal_infix']), escape($row['legal_name']),
       $row['name_order'],
     ]));
+  if(is_str($row['display_name']))
+    $body .= line('X-EVERYTHING-DISPLAY-NAME', escape($row['display_name']));
 
   if(is_str($row['note'])) $body .= line('NOTE', escape($row['note']));
   $body .= line('X-EVERYTHING-SCHEMA', '1');
@@ -880,10 +882,19 @@ function parse_contact(VCard $card, $current) {
   take_all($bag, 'FN');
   $fn = $fn_property ? trim($fn_property->getValue()) : "";
 
-  // CardDAV clients only see the override in N and therefore cannot edit the
-  // hidden structured name. Name edits update the override until it is cleared
-  // in the database and the structured name becomes visible again.
-  $display_override = $current && is_str($current['display_name']);
+  $display_property = take($bag, 'X-EVERYTHING-DISPLAY-NAME');
+  take_all($bag, 'X-EVERYTHING-DISPLAY-NAME');
+  $current_display = is_str(@$current['display_name']) ? $current['display_name'] : null;
+  $display_name = $display_property
+    ? \cast_str($display_property->getValue())
+    : $current_display;
+  if($current_display !== null && $display_name == $current_display
+    && $fn != "" && $fn != $current_display)
+    $display_name = $fn;
+
+  // CardDAV clients only see the override in N, so preserve the hidden
+  // structured name while one is set.
+  $display_override = $current_display !== null;
   $fields = [
     'first_name' => $display_override ? $current['first_name'] : $first_in,
     'middle_name' => $middle_in != "" ? \cast_str($middle_in) : @$current['middle_name'],
@@ -911,8 +922,7 @@ function parse_contact(VCard $card, $current) {
   take_all($bag, 'NICKNAME');
   $fields['nickname'] = $nickname ? \cast_str($nickname->getValue()) : null;
 
-  $computed = \contacts\contact_display_name([...$fields, 'display_name' => null, 'nickname' => null]);
-  $fields['display_name'] = ($fn == "" || $fn == $computed) ? null : $fn;
+  $fields['display_name'] = $display_name;
 
   $pronouns = take($bag, 'PRONOUNS') ?: take($bag, 'X-PRONOUNS');
   take_all($bag, 'PRONOUNS');
