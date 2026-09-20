@@ -4,7 +4,8 @@
   // Enable and disable are the explicit lifecycle actions for Git export.
   // Enabling starts while export is still disabled, so the action itself
   // locks the repository and creates the baseline before storing config;
-  // disabling is an ordinary exported mutation that commits its own state.
+  // disabling commits its own state when the repository is usable, or
+  // proceeds without export when the broken repository is what needs disabling.
 
   if(isset($_POST['enable'])) {
     $repository = cast_str(@$_POST['repository'])

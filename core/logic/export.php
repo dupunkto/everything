@@ -150,6 +150,20 @@ function guard($method, $path) {
   if(!enabled()) return;
 
   $repo = repository();
+
+  $disabling = $method == 'POST'
+    && $path == '/settings/developer/git/edit'
+    && isset($_POST['disable']);
+
+  $unavailable = !is_str($repo)
+    || !is_dir($repo)
+    || !git_dir($repo)
+    || !initialized($repo);
+
+  // Disabling may proceed without export when no usable
+  // repository exists or is somehow otherwise unavailable.
+  if($disabling && $unavailable) return;
+
   validate($repo);
   lock($repo);
 
@@ -406,6 +420,7 @@ function tree() {
 
   $tree = [];
 
+  $tree['scratchpad.md'] = \store\get_scratchpad();
   $tree['config.json'] = json(config_map());
   $tree['tags.json'] = json(tags_data());
   $tree['addresses.json'] = json(addresses_data());
