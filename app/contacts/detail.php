@@ -211,6 +211,7 @@
                 'snapchat' => 'fa-brands fa-snapchat',
                 'spacehey' => 'fa-solid fa-user-astronaut',
                 'airbuds' => 'fa-solid fa-album',
+                'letterboxd' => 'fa-brands fa-letterboxd',
                 'tiktok' => 'fa-brands fa-tiktok',
                 'wattpad' => 'fa-solid fa-feather',
                 'github' => 'fa-brands fa-github',
