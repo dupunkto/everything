@@ -2,7 +2,7 @@
 // Core Everything APIs live here.
 
 define('EVERYTHING_VERSION', "0.1-preview");
-define('STORE_VERSION', 1);
+define('STORE_VERSION', 2);
 
 require __DIR__ . "/core/anyhow.php";
 require __DIR__ . "/core/neuro.php";

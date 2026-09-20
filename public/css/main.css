@@ -269,6 +269,65 @@ button,
   display: none;
 }
 
+.scratchpad {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: var(--layer-dialog);
+  display: flex;
+  flex-direction: column;
+  background: var(--popover-bg);
+  border-top: 2px solid var(--border);
+  box-shadow: 0 -4px 20px rgb(0 0 0 / 10%);
+}
+
+.scratchpad__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.2em 0.75em;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.scratchpad__header h3 {
+  margin: 0;
+  font-size: 0.9em;
+  font-weight: 600;
+  opacity: 0.7;
+}
+
+.scratchpad__close {
+  padding: 5px;
+  margin: 0;
+  overflow: visible;
+  background: none;
+  border: 0;
+  opacity: 0.5;
+}
+
+.scratchpad__close:hover {
+  opacity: 1;
+}
+
+.scratchpad__content {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 200px;
+  padding: 1em;
+  overflow-y: auto;
+  resize: none;
+  font-family: monospace;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+
+.scratchpad__content:focus {
+  outline: none;
+}
+
 .global-search__input {
   width: 100%;
   font-size: 1.75em !important;

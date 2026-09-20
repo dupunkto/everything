@@ -7,6 +7,7 @@
   $groups = [
     "Global" => [
       ["mod+/ / mod+k", "Open global search"],
+      ["mod+`", "Open scratchpad"],
       ["mod+shift+n", "Create new " . application_label(UI_INSERT_APPLICATION)],
       ["1", "Open mail"],
       ["2", "Open calendar"],
@@ -53,6 +54,7 @@
   $key = function($key) {
     $label = match($key) {
       "mod" => '<span data-shortcut-mod>Control</span>',
+      "shift" => "Shift",
       "enter" => "Enter",
       "escape" => "Esc",
       default => $key,

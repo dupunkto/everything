@@ -29,6 +29,74 @@ if (!window.autocomplete_bound) {
   });
 }
 
+if (!window.scratchpad_bound) {
+  window.scratchpad_bound = true;
+
+  let content;
+  let loading;
+  let timeout;
+  let previous;
+  let visible = false;
+
+  const resize_scratchpad = (textarea) => {
+    textarea.style.height = "auto";
+    const height = Math.min(textarea.scrollHeight, window.innerHeight * 0.65);
+    textarea.style.height = `${Math.max(200, height)}px`;
+  };
+
+  const hydrate_scratchpad = async () => {
+    const scratchpad = document.querySelector("#scratchpad");
+    const textarea = scratchpad?.querySelector(".scratchpad__content");
+    if(!textarea) return;
+
+    if(content == null) {
+      loading ||= fetch("/scratchpad").then((response) => response.text());
+      content = await loading;
+    }
+
+    textarea.value = content;
+    scratchpad.hidden = !visible;
+
+    if(visible) {
+      textarea.focus();
+      resize_scratchpad(textarea);
+    }
+  };
+
+  document.addEventListener("DOMContentLoaded", hydrate_scratchpad);
+  document.addEventListener("x-swap", (e) => {
+    if(e.target.matches("html")) hydrate_scratchpad();
+  });
+
+  document.addEventListener("click", (e) => {
+    if(!e.target.closest("[data-scratchpad-toggle]")) return;
+
+    const scratchpad = document.querySelector("#scratchpad");
+    if(!scratchpad) return;
+
+    visible = !scratchpad.hidden;
+    if(visible) {
+      previous = document.activeElement;
+      const textarea = scratchpad.querySelector(".scratchpad__content");
+      textarea.focus();
+      resize_scratchpad(textarea);
+    }
+    else if(previous?.isConnected) previous.focus();
+  });
+
+  document.addEventListener("input", (e) => {
+    if(!e.target.matches(".scratchpad__content")) return;
+
+    content = e.target.value;
+    resize_scratchpad(e.target);
+    clearTimeout(timeout);
+    timeout = setTimeout(() => fetch("/scratchpad", {
+      method: "PUT",
+      body: content,
+    }), 500);
+  });
+}
+
 if (!window.global_search_bound) {
   window.global_search_bound = true;
 

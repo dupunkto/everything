@@ -24,6 +24,7 @@ $actions = $section ? path_join(__DIR__, "..", $section, "actions.php") : null;
 
 <a z-key="mod+shift+n" href="/<?= esc_attr(UI_INSERT_APPLICATION) ?>/new" hidden></a>
 <button type="button" z-key="mod+/ mod+k" z-toggle="#global-search" data-global-search-toggle hidden></button>
+<button type="button" z-key="mod+`" z-toggle="#scratchpad" data-scratchpad-toggle hidden></button>
 <div id="global-search" class="global-search" role="dialog" aria-modal="true" aria-label="Global search" z-dismiss="escape" hidden>
   <button type="button" class="global-search__backdrop" z-toggle="#global-search" aria-label="Close search"></button>
   <section class="global-search__content" z-nav=".global-search__input, .global-search__item">
@@ -45,3 +46,13 @@ $actions = $section ? path_join(__DIR__, "..", $section, "actions.php") : null;
     </section>
   </section>
 </div>
+
+<section id="scratchpad" class="scratchpad" role="dialog" aria-modal="true" aria-labelledby="scratchpad-title" hidden>
+  <header class="scratchpad__header">
+    <h3 id="scratchpad-title">Scratchpad</h3>
+    <button type="button" class="scratchpad__close" z-toggle="#scratchpad" data-scratchpad-toggle aria-label="Close">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </header>
+  <textarea class="scratchpad__content" placeholder="Your scratchpad..."></textarea>
+</section>
