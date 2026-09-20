@@ -42,6 +42,9 @@ function tools() {
       ['query' => $query, 'limit' => $limit, 'offset' => $offset]),
     'get_address' => tool('contacts', 'get_address', "Get an address by ID.",
       ['id' => $id], ['id']),
+    'search_appointments' => tool('calendar', 'search_appointments',
+      "Search appointments using text, +tag and selector query. Recurring series are returned once, as their master record, not expanded into occurrences; use list_appointments for a date range instead.",
+      ['query' => $query, 'limit' => $limit, 'offset' => $offset]),
     'list_appointments' => tool('calendar', 'list_appointments',
       "List appointment occurrences in the half-open local-time range [from, to), up to 366 days.", [
         'from' => ['type' => 'string', 'description' => "ISO 8601 date or datetime."],

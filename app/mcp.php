@@ -225,6 +225,19 @@ switch($rpc_method) {
           $data = \store\get_address($item_id) or throw new ToolError("Address not found.", id: $id);
           break;
 
+        case 'search_appointments':
+          [$query, $limit, $offset] = \mcp\page_arguments($args);
+
+          $rows = \store\search_appointments_paginated($query, $limit, offset: $offset);
+
+          $data = array_map(function($row) {
+            $row['starts_at'] = \calendar\wall($row['starts_at']);
+            $row['ends_at'] = \calendar\wall($row['ends_at']);
+            return \mcp\appointment($row, !!$row['recurrence']);
+          }, $rows);
+
+          break;
+
         case 'list_appointments':
           \mcp\validate_arguments($args, ['from', 'to']);
 

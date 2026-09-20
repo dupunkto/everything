@@ -1489,6 +1489,47 @@ function list_appointments_between($from, $to) {
   ORDER BY a.starts_at', [$to, $from]);
 }
 
+function list_appointments_paginated($query, $limit, $offset = 0) {
+  [$tags, $terms] = \core\parse_query($query);
+
+  $where = [];
+  $params = [];
+
+  foreach($terms as $term) {
+    $where[] = '(EXO_NORMALIZE(a.title) LIKE EXO_NORMALIZE(?)
+      OR EXO_NORMALIZE(a.content) LIKE EXO_NORMALIZE(?)
+      OR EXO_NORMALIZE(a.location) LIKE EXO_NORMALIZE(?))';
+    $like = "%$term%";
+    $params[] = $like;
+    $params[] = $like;
+    $params[] = $like;
+  }
+
+  foreach($tags as $id) {
+    $where[] = 'EXISTS (SELECT 1 FROM appointments_tags at
+      WHERE at.appointment_id = a.id AND at.tag_id = ?)';
+    $params[] = $id;
+  }
+
+  $sql = 'SELECT
+    a.*,
+    c.title AS calendar_title,
+    c.subtitle AS calendar_subtitle,
+    c.color AS calendar_color,
+    s.title AS subscription_title,
+    s.subtitle AS subscription_subtitle,
+    s.color AS subscription_color,
+    s.filter AS subscription_filter
+  FROM appointments a
+  LEFT JOIN calendars c ON c.id = a.calendar_id
+  LEFT JOIN subscriptions s ON s.id = a.subscription_id';
+
+  if($where) $sql .= ' WHERE ' . join(' AND ', $where);
+  $sql .= ' ORDER BY a.starts_at DESC, a.id DESC';
+
+  return paginate($sql, $limit, offset: $offset, params: $params);
+}
+
 function list_calendar_appointments() {
   return all('SELECT * FROM appointments
     WHERE subscription_id IS NULL ORDER BY id');
@@ -2671,10 +2712,12 @@ function search($query) {
   ];
 
   $selected = [];
+
   foreach($selectors as [$key, $value]) {
     if($key == 'type' && isset($aliases[strtolower($value)]))
       $selected[] = $aliases[strtolower($value)];
   }
+
   $selected = array_values(array_unique($selected));
   $allows = fn($type) => !$selected || in_array($type, $selected);
   $rows = [];
@@ -2687,14 +2730,20 @@ function search($query) {
 
   if($allows('todo')) foreach(search_entity('tasks', $terms, $tags,
     ['tasks.id', 'tasks.title', 'tasks.content'], 'tasks_tags', 'task_id') as $row) {
-    $row['status'] = @one('SELECT status FROM task_log WHERE task_id = ? ORDER BY changed_at DESC, id DESC', [$row['id']])['status'];
+    $row['status'] = @one('SELECT status FROM task_log
+      WHERE task_id = ? ORDER BY changed_at DESC, id DESC', [$row['id']])['status'];
+
     $rows[] = [...$row, 'type' => 'todo', 'humid' => $row['id']];
   }
 
   if($allows('wish')) foreach(search_entity('wishes', $terms, $tags,
     ['wishes.id', 'wishes.title', 'wishes.content'], 'wishes_tags', 'wish_id') as $row) {
-    $row['status'] = @one('SELECT status FROM wish_log WHERE wish_id = ? ORDER BY changed_at DESC, id DESC', [$row['id']])['status'];
-    $row['total_price'] = one('SELECT SUM(price) AS total FROM wish_urls WHERE wish_id = ?', [$row['id']])['total'];
+    $row['status'] = @one('SELECT status FROM wish_log
+      WHERE wish_id = ? ORDER BY changed_at DESC, id DESC', [$row['id']])['status'];
+
+    $row['total_price'] = one('SELECT SUM(price) AS total FROM wish_urls
+      WHERE wish_id = ?', [$row['id']])['total'];
+
     $rows[] = [...$row, 'type' => 'wish', 'humid' => $row['id']];
   }
 
@@ -2752,10 +2801,12 @@ function search($query) {
 
   $score = function($row) use ($terms) {
     $title = str_normalize($row['title']);
+
     $positions = array_map(function($term) use ($title) {
       $position = mb_strpos($title, str_normalize($term));
       return $position === false ? 1000 : $position;
     }, $terms);
+
     return array_sum($positions);
   };
 
@@ -2788,6 +2839,17 @@ function search_entity($table, $terms, $tags, $columns, $tag_table = null, $tag_
   $sql = "SELECT $table.* FROM $table";
   if($where) $sql .= ' WHERE ' . join(' AND ', $where);
   return all($sql, $params);
+}
+
+// Scratchpad
+
+function get_scratchpad() {
+  $row = one('SELECT content FROM scratchpad WHERE id = 1');
+  return $row['content'];
+}
+
+function update_scratchpad($content) {
+  return exec_query('UPDATE scratchpad SET content = ? WHERE id = 1', [$content]);
 }
 
 // Configuration
