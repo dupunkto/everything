@@ -16,5 +16,5 @@
     include __DIR__ . "/listing.php"; exit;
   }
   else {
-    fail("Could not complete request: missing POST data.", status: 400);
+    fail("Missing data.", status: 400);
   }

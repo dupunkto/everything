@@ -18,6 +18,7 @@
   \store\update_appointment_times($appointment['id'], $starts_at, $ends_at);
 
   $fields = \core\diff($appointment, starts_at: $starts_at, ends_at: $ends_at);
+
   \store\put_audit_log('appointments', $appointment['id'], "Updated [" . join(", ", $fields) . "] for appointments/{$appointment['id']}.", 'user');
 
   \caldav\mark_resource_changed('appointment', $appointment['id']);

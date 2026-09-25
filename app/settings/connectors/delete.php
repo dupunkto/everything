@@ -1,9 +1,11 @@
 <?php
 
-$connector = \store\get_connector($_GET['id'])
-  or fail("Connector not found.", status: 404);
+  if($method != 'DELETE') fail("Method not allowed.", status: 405);
 
-\store\delete_connector($connector['id']);
-\store\put_audit_log('connectors', $connector['id'], "Deleted connectors/{$connector['id']}.", 'user', operation: 'delete');
+  $connector = \store\get_connector($_GET['id'])
+    or fail("Connector not found.", status: 404);
 
-include __DIR__ . "/listing.php"; exit;
+  \store\delete_connector($connector['id']);
+  \store\put_audit_log('connectors', $connector['id'], "Deleted connectors/{$connector['id']}.", 'user', operation: 'delete');
+
+  include __DIR__ . "/listing.php"; exit;

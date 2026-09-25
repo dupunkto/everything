@@ -1,5 +1,7 @@
 <?php
 
+  if($method != 'DELETE') fail("Method not allowed.", status: 405);
+
   \store\delete_calendar($_GET['id']);
 
   if(CALENDAR_DEFAULT_CALENDAR == $_GET['id']) {

@@ -1,13 +1,14 @@
 <?php
 
-$labels = [
-  'notes' => "Notes",
-  'todo' => "ToDo",
-  'tracker' => "Tracker",
-  'bookmarks' => "Bookmarks",
-  'calendar' => "Calendar",
-  'contacts' => "Contacts",
-];
+  // TODO(robin): move these elsewhere too?
+  $labels = [
+    'notes' => "Notes",
+    'todo' => "ToDo",
+    'tracker' => "Tracker",
+    'bookmarks' => "Bookmarks",
+    'calendar' => "Calendar",
+    'contacts' => "Contacts",
+  ];
 
 ?>
 <ul class="settings-listing settings-listing--connectors">

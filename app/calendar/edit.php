@@ -1,7 +1,6 @@
 <?php
-  // Appointment edit popup.
 
-  $appointment = \store\get_appointment(@$_POST['id'] ?? @$_GET['id'])
+  $appointment = \store\get_appointment($_POST['id'] ?? $_GET['id'])
     or fail("Appointment not found.", status: 404);
 
   $is_subscription = !empty($appointment['subscription_id']);

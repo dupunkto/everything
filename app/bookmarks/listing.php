@@ -1,6 +1,7 @@
 <?php
 
-  $query = @$_GET['q'] ?: @$_POST['q'] ?: "";
+  $query = cast_str($_GET['q'] ?? $_POST['q'] ?? "");
+  
   [$page, $offset] = listing_page();
 
   [$bookmarks, $has_more] = listing_batch(

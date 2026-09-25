@@ -1,6 +1,8 @@
 <?php
 // Address and map helpers.
 
+// TODO(robin): namespace this?
+
 function address_line($a) {
   $parts = [
     @$a['street_address'] ?: '',

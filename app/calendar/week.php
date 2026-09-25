@@ -1,77 +1,79 @@
 <?php
 // The calendar week view.
 
-// date is any day within the week
-// filter? is whether or not filters are applied
-// visible[] is the calendars to show
-// travel? is whether to show travel time
-// tasks? is whether to show task deadlines
-// birthdays? is whether to show contact birthdays
-// timings? is whether to show timings
-// declined? is whether to show events marked as 'not going'
-// filtered? is whether to show events hidden by subscription filters
-// habits? is whether to show habit badges
-// skeleton? renders the bare grid: no appointments, extras or now line
+  // date is any day within the week
+  // filter? is whether or not filters are applied
+  // visible[] is the calendars to show
+  // travel? is whether to show travel time
+  // tasks? is whether to show task deadlines
+  // birthdays? is whether to show contact birthdays
+  // timings? is whether to show timings
+  // declined? is whether to show events marked as 'not going'
+  // filtered? is whether to show events hidden by subscription filters
+  // habits? is whether to show habit badges
+  // skeleton? renders the bare grid: no appointments, extras or now line
 
-$tz = new DateTimeZone(TIMEZONE);
-$today = new DateTime('today', $tz);
-$now = new DateTime('now', $tz);
+  $tz = new DateTimeZone(TIMEZONE);
+  $today = new DateTime('today', $tz);
+  $now = new DateTime('now', $tz);
 
-// The window as timezone-naive wall time; all layout math lives there.
-try {
-  $anchor = new DateTime(@$_GET['date'] ?: 'today', $tz);
-} catch(\Exception) {
-  fail("Invalid date.", status: 400);
-}
-
-$from = new DateTime($anchor->modify('monday this week')->format('Y-m-d'), $tz);
-$to = (clone $from)->modify('+7 days');
-
-$skeleton = isset($_GET['skeleton']);
-
-$filtered = isset($_GET['filter']);
-$visible = $filtered ? (array) (@$_GET['visible'] ?: []) : null;
-$show = fn($extra) => !$skeleton && (!$filtered || isset($_GET[$extra]));
-$show_filtered_events = isset($_GET['filtered']);
-
-$appointments = [];
-foreach($skeleton ? [] : \calendar\appointments($from, $to) as $a) {
-  if($a['id'] == cast_str(@$_GET['edit'])) { $appointments[] = $a; continue; }
-  if($visible !== null && !in_array($a['calendar_id'] ?? $a['subscription_id'], $visible)) continue;
-
-  $hidden_by_filter = !empty($a['subscription_filter']) && stripos($a['title'], $a['subscription_filter']) === false;
-  if($hidden_by_filter) {
-    if(!$show_filtered_events) continue;
-    $a['going'] = false;
+  // The window as timezone-naive wall time; all layout math lives there.
+  try {
+    $anchor = new DateTime(@$_GET['date'] ?: 'today', $tz);
+  } catch(\Exception) {
+    fail("Invalid date.", status: 400);
   }
 
-  if(!$hidden_by_filter && !$show('declined') && !cast_bool($a['going'])) continue;
-  $appointments[] = $a;
-}
+  $from = new DateTime($anchor->modify('monday this week')->format('Y-m-d'), $tz);
+  $to = (clone $from)->modify('+7 days');
 
-$timed = array_filter($appointments, fn($a) => !cast_bool($a['all_day']));
-$all_day_appointments = array_filter($appointments, fn($a) => cast_bool($a['all_day']));
+  $skeleton = isset($_GET['skeleton']);
 
-if($show('tasks')) {
-  $tasks = \calendar\task_deadlines($from, $to);
-  $timed = array_merge($timed, array_filter($tasks, fn($a) => !cast_bool($a['all_day'])));
-  $all_day_appointments = array_merge($all_day_appointments, array_filter($tasks, fn($a) => cast_bool($a['all_day'])));
-}
+  $filtered = isset($_GET['filter']);
+  $visible = $filtered ? (array) (@$_GET['visible'] ?: []) : null;
+  $show = fn($extra) => !$skeleton && (!$filtered || isset($_GET[$extra]));
+  $show_filtered_events = isset($_GET['filtered']);
 
-if($show('birthdays')) $all_day_appointments = array_merge($all_day_appointments, \calendar\birthdays($from, $to));
-$all_day = \calendar\all_day_lanes($all_day_appointments, $from);
-$days = array_map('\calendar\layout', \calendar\day_segments($timed, $from, $to));
-$travel = $show('travel') ? \calendar\travel_bands($timed, $from, $to) : [];
-$timings = $show('timings') ? \calendar\timing_lines($from, $to) : [];
-$habits = $show('habits') ? \habits\calendar($from, $to) : [];
+  $appointments = [];
 
-$now_date = $now->format('Y-m-d');
-$now_top = ((int) $now->format('H') * 60 + (int) $now->format('i')) / 1440 * 100;
+  foreach($skeleton ? [] : \calendar\appointments($from, $to) as $a) {
+    if($a['id'] == cast_str(@$_GET['edit'])) { $appointments[] = $a; continue; }
+    if($visible !== null && !in_array($a['calendar_id'] ?? $a['subscription_id'], $visible)) continue;
 
-$color = fn($a) => esc_attr($a['calendar_color'] ?? $a['subscription_color'] ?? '#cccccc');
-$task_icon = fn($a) => ['done' => 'fa-check', 'blocked' => 'fa-xmark'][@$a['task_status']] ?? 'fa-alarm-clock';
+    $hidden_by_filter = !empty($a['subscription_filter']) && stripos($a['title'], $a['subscription_filter']) === false;
+    if($hidden_by_filter) {
+      if(!$show_filtered_events) continue;
+      $a['going'] = false;
+    }
 
-$sidebar_right = UI_SIDEBAR_POSITION == 'right';
+    if(!$hidden_by_filter && !$show('declined') && !cast_bool($a['going'])) continue;
+    $appointments[] = $a;
+  }
+
+  $timed = array_filter($appointments, fn($a) => !cast_bool($a['all_day']));
+  $all_day_appointments = array_filter($appointments, fn($a) => cast_bool($a['all_day']));
+
+  if($show('tasks')) {
+    $tasks = \calendar\task_deadlines($from, $to);
+    $timed = array_merge($timed, array_filter($tasks, fn($a) => !cast_bool($a['all_day'])));
+    $all_day_appointments = array_merge($all_day_appointments, array_filter($tasks, fn($a) => cast_bool($a['all_day'])));
+  }
+
+  if($show('birthdays')) $all_day_appointments = array_merge($all_day_appointments, \calendar\birthdays($from, $to));
+
+  $all_day = \calendar\all_day_lanes($all_day_appointments, $from);
+  $days = array_map('\calendar\layout', \calendar\day_segments($timed, $from, $to));
+  $travel = $show('travel') ? \calendar\travel_bands($timed, $from, $to) : [];
+  $timings = $show('timings') ? \calendar\timing_lines($from, $to) : [];
+  $habits = $show('habits') ? \habits\calendar($from, $to) : [];
+
+  $now_date = $now->format('Y-m-d');
+  $now_top = ((int) $now->format('H') * 60 + (int) $now->format('i')) / 1440 * 100;
+
+  $color = fn($a) => esc_attr($a['calendar_color'] ?? $a['subscription_color'] ?? '#cccccc');
+  $task_icon = fn($a) => ['done' => 'fa-check', 'blocked' => 'fa-xmark'][@$a['task_status']] ?? 'fa-alarm-clock';
+
+  $sidebar_right = UI_SIDEBAR_POSITION == 'right';
 
 ?>
 <div class="page-header">

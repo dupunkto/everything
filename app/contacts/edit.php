@@ -1,6 +1,8 @@
 <?php
   // Contact edit form.
 
+  // TODO(robin): this should probably be split into two endpoints (/new and /edit) too
+
   $kind = $_GET['kind'] ?? $_POST['kind'] ?? "person";
   $id = @$_GET['id'] ?: @$_POST['id'];
 

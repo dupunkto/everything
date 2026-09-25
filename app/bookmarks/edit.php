@@ -21,9 +21,7 @@
     \store\put_audit_log('bookmarks', $_POST['id'],
       "Updated [" . join(", ", $fields) . "] for bookmarks/{$_POST['id']}.", 'user');
 
-    if(isset($_POST['close'])) {
-      see_other("/bookmarks");
-    }
+    if(isset($_POST['close'])) see_other("/bookmarks");
   }
 
   $bookmark = \store\get_bookmark(@$_GET['id'] ?: @$_POST['id'])

@@ -4,8 +4,9 @@
     $note = \store\get_note($_POST['id']) or fail("Note not found.", status: 404);
 
     if(isset($_POST['convert'])) {
-      if($note['apple_id'])
+      if($note['apple_id']) {
         \store\put_note_tombstone($note['apple_id'], gmdate('Y-m-d H:i:s'));
+      }
 
       \store\delete_note($note['id']);
       \store\convert_humid($note['id'], 'todo');
@@ -20,7 +21,6 @@
       \store\set_task_tags($note['id'], $_POST['tags'] ?? []);
 
       \store\put_audit_log('notes', $note['id'], "Converted notes/{$note['id']} to tasks/{$note['id']}.", 'user', operation: 'delete');
-
       \store\put_audit_log('tasks', $note['id'], "Created tasks/{$note['id']} from notes/{$note['id']}.", 'user', operation: 'insert');
 
       \caldav\mark_resource_changed('task', $note['id']);

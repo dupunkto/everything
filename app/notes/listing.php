@@ -1,7 +1,9 @@
 <?php
 
-  $query = @$_GET['q'] ?: @$_POST['q'] ?: "";
+  $query = cast_str($_GET['q'] ?? $_POST['q'] ?? "");
+
   [$page, $offset] = listing_page();
+
   [$notes, $has_more] = listing_batch(
     \store\list_notes_paginated($query, LISTING_PAGE_SIZE + 1, offset: $offset)
   );

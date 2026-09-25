@@ -67,7 +67,7 @@
   </div>
   <div class="actions">
     <button type="button" data-edit z-key="e" x-get="/contacts/edit?kind=<?= $kind ?>&id=<?= $item['id'] ?>" x-target="#contacts-panel">Edit</button>
-    <!-- Deselects: a detail request without an id renders nothing. -->
+    <!-- Deselect: a detail request without an id renders nothing. -->
     <button type="button" z-key="escape" x-get="/contacts/detail" x-target="#contacts-panel" hidden></button>
   </div>
 </header>
@@ -80,7 +80,7 @@
     if(is_nonempty_str($item['pronouns'])) $meta[] = $item['pronouns'];
 
     if($item['birth_day'] && $item['birth_month']) {
-      // If the birth year is unknown, we take 2000 as a safe default,
+      // If the birth year is unknown, take 2000 as a safe default,
       // so we can still do calculations on a proper DateTime object.
       $birthday = DateTime::createFromFormat('!Y-m-d', join("-", [
         str_pad($item['birth_year'] ?: 2000, 4, "0", STR_PAD_LEFT),

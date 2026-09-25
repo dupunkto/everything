@@ -1,18 +1,20 @@
 <?php
 
-  $query = cast_str(@$_GET['q'] ?: @$_POST['q']) ?? "";
+  $query = cast_str($_GET['q'] ?? @$_POST['q'] ?? "");
 
   if(isset($_POST['todo'], $_POST['status'])) {
     $task = \store\get_task($_POST['todo']) or fail("Task not found.", status: 404);
     $fields = \core\diff($task, status: $_POST['status'], comment: null);
 
     \store\set_task_status($_POST['todo'], $_POST['status']);
+
     \store\put_audit_log('tasks', $_POST['todo'],
       "Updated [" . join(", ", $fields) . "] for tasks/{$_POST['todo']}.", 'user');
+
     \caldav\mark_resource_changed('task', $_POST['todo']);
   }
 
-  if(trim($query) == "") exit;
+  if(!$query) exit;
 
   $items = array_slice(\store\search($query), 0, LISTING_PAGE_SIZE);
 
@@ -30,8 +32,10 @@
       ($start->format('Y-m-d') == $end->format('Y-m-d') ? $end->format('H:i') : $end->format('D j M H:i'));
   };
 
+  // TODO(robin): move these to somewhere else?
   $status_colors = ['todo' => 'blue', 'wip' => 'yellow', 'blocked' => 'red', 'backlog' => 'purple', 'done' => 'green', 'nvm' => 'gray'];
 
+  // TODO(robin): same here
   $icons = [
     'note' => 'fa-regular fa-notebook',
     'wish' => 'fa-regular fa-book-heart',
@@ -42,6 +46,7 @@
     'address' => 'fa-regular fa-location-dot',
   ];
 
+  // TODO(robin): same here
   $href = fn($item) => match($item['type']) {
     'note' => "/notes/edit?id=" . rawurlencode($item['id']),
     'todo' => "/todo/edit?id=" . rawurlencode($item['id']),

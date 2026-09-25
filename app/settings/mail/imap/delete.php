@@ -1,5 +1,7 @@
 <?php
 
+  if($method != 'DELETE') fail("Method not allowed.", status: 405);
+
   \store\get_imap_credentials($_GET['id'])
     or fail("Account not found.", status: 404);
 

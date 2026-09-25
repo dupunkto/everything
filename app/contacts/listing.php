@@ -1,7 +1,7 @@
 <?php
   // Contact listing.
 
-  $query = $_GET['q'] ?? $_POST['q'] ?? "";
+  $query = cast_str($_GET['q'] ?? $_POST['q'] ?? "");
 
   [$tags, $terms, $selectors] = \core\parse_query($query);
 

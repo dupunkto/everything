@@ -5,12 +5,7 @@
   $tags = array_filter(\store\list_tags(), fn($tag) => !in_array($tag['id'], $used));
 
   if(isset($_POST['tag_id'])) {
-    \store\put_quota(
-      cast_num($_POST['tag_id']),
-      'week',
-      60,
-      local_date("Y-m-d")
-    );
+    \store\put_quota(cast_num($_POST['tag_id']), 'week', 60, local_date("Y-m-d"));
     \store\put_audit_log('quotas', $_POST['tag_id'], "Created quotas/{$_POST['tag_id']}.", 'user', operation: 'insert');
 
     include __DIR__ . "/listing.php"; exit;

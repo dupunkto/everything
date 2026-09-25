@@ -11,7 +11,6 @@
 
   if($id && isset($_POST['note'])) {
     if($kind == "org") \store\update_organisation_note($id, $_POST['note']);
-
     if($kind == "person") \store\update_contact_note($id, $_POST['note']);
 
     $table = $kind == 'org' ? 'organisations' : 'contacts';

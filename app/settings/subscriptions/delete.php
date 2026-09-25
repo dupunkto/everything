@@ -1,5 +1,7 @@
 <?php
 
+  if($method != 'DELETE') fail("Method not allowed.", status: 405);
+
   \store\delete_subscription($_GET['id']);
   \store\put_audit_log('subscriptions', $_GET['id'], "Deleted subscriptions/{$_GET['id']}.", 'user', operation: 'delete');
 

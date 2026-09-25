@@ -3,7 +3,7 @@
   define('ENUM_VIRTUAL_STATUS', ['overdue', 'todo', 'wip', 'blocked', 'backlog', 'done', 'nvm']);
   define('STATUS_COLORS', ['overdue' => 'red', 'todo' => 'blue', 'wip' => 'yellow', 'blocked' => 'red', 'backlog' => 'purple', 'done' => 'green']);
 
-  $query = $_GET['q'] ?? $_POST['q'] ?? "";
+  $query = cast_str($_GET['q'] ?? $_POST['q'] ?? "");
   $pinned = json_decode(@$_GET['i'] ?: @$_POST['i'] ?: "[]", true);
 
   if(!is_array($pinned)) $pinned = [];

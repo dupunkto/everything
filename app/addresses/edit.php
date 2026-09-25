@@ -1,5 +1,4 @@
 <?php
-  // The address editor; blank for a new address, filled when ?id is given.
 
   if(isset($_GET['id'])) {
     $address = \store\get_address($_GET['id'])

@@ -1,4 +1,5 @@
 <?php
+
   if(isset($_POST["id"], $_POST["label"], $_POST["parent"])) {
     $tag = \store\get_tag($_POST['id']) or fail("Tag not found.", status: 404);
     $fields = \core\diff($tag,
@@ -11,5 +12,5 @@
     include __DIR__ . "/listing.php"; exit;
   }
   else {
-    fail("Could not complete request: missing POST data.", status: 400);
+    fail("Missing data.", status: 400);
   }

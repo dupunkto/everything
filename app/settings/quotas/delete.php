@@ -1,5 +1,7 @@
 <?php
 
+  if($method != 'DELETE') fail("Method not allowed.", status: 405);
+
   \store\delete_quota($_GET['tag_id']);
   \store\put_audit_log('quotas', $_GET['tag_id'], "Deleted quotas/{$_GET['tag_id']}.", 'user', operation: 'delete');
 

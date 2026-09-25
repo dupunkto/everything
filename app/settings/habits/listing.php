@@ -1,5 +1,6 @@
 <?php
 
+  // TODO(robin): move these elsewhere?
   define('PRESET', [
     'fa-circle-check',
     'fa-dumbbell',

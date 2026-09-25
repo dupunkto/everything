@@ -1,21 +1,22 @@
 <?php
 
-$connector = \store\get_connector($_POST['id'])
-  or fail("Connector not found.", status: 404);
+  $connector = \store\get_connector($_POST['id'])
+    or fail("Connector not found.", status: 404);
 
-$apps = array_values(array_unique((array)@$_POST['app']));
-sort($apps);
+  $apps = array_values(array_unique((array)@$_POST['app']));
 
-$before = array_column(\store\list_connector_apps($connector['id']), 'app');
+  sort($apps);
 
-$fields = \core\diff($connector, name: $_POST['name']);
-if($before != $apps) $fields[] = 'apps';
+  $before = array_column(\store\list_connector_apps($connector['id']), 'app');
 
-\store\update_connector($connector['id'], $_POST['name']);
+  $fields = \core\diff($connector, name: $_POST['name']);
+  if($before != $apps) $fields[] = 'apps';
 
-\store\set_connector_apps($connector['id'], $apps);
+  \store\update_connector($connector['id'], $_POST['name']);
 
-if($fields) \store\put_audit_log('connectors', $connector['id'],
-  "Updated [" . join(", ", $fields) . "] for connectors/{$connector['id']}.", 'user');
+  \store\set_connector_apps($connector['id'], $apps);
 
-include __DIR__ . "/listing.php"; exit;
+  if($fields) \store\put_audit_log('connectors', $connector['id'],
+    "Updated [" . join(", ", $fields) . "] for connectors/{$connector['id']}.", 'user');
+
+  include __DIR__ . "/listing.php"; exit;

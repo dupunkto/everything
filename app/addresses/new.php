@@ -4,6 +4,9 @@
     if(is_str(@$_POST['addr_country']) && !in_array($_POST['addr_country'], country_codes()))
       fail("Invalid 'addr_country' parameter.", status: 400);
 
+    // TODO(robin): correct pattern?
+    // This route should probably be split into /new and /edit
+
     $fields = [
       'label' => cast_str($_POST['addr_label']),
       'street_address' => cast_str($_POST['addr_street_address']),
@@ -13,21 +16,22 @@
       'country' => cast_str(@$_POST['addr_country']),
     ];
 
-    if($_POST['addr_id']) {
+    if(isset($_POST['addr_id'])) {
       $address = \store\get_address($_POST['addr_id']) or fail("Address not found.", status: 404);
+
       \store\update_address($_POST['addr_id'], ...$fields);
-      $id = $_POST['addr_id'];
+
       $changed = \core\diff($address, ...$fields);
-      $message = "Updated [" . join(", ", $changed) . "] for addresses/$id.";
-      $operation = 'update';
+
+      \store\put_audit_log('addresses', $_POST['addr_id'],
+        "Updated [" . join(", ", $changed) . "] for addresses/{$_POST['addr_id']}.", 'user');
     }
     else {
       $id = \store\put_address(...$fields);
-      $message = "Created addresses/$id.";
-      $operation = 'insert';
+      \store\put_audit_log('addresses', $id, "Created addresses/$id.", 'user', operation: 'insert');
     }
 
-    \store\put_audit_log('addresses', $id, $message, 'user', operation: $operation);
+
   }
 
   include __DIR__ . "/listing.php";
