@@ -345,12 +345,13 @@ function layout($day) {
 }
 
 // All-day appointments as grid placements over $days columns starting at
-// $from, rows assigned first-fit. One ending at midnight ends the day before.
+// $from, rows assigned first-fit: multi-day appointments, birthdays, single-day
+// appointments, tasks. One ending at midnight ends the day before.
 function all_day_lanes($appointments, $from, $days = 7) {
   chronological($appointments);
 
   $last = (clone $from)->modify('+' . ($days - 1) . ' days');
-  $lanes = []; // rightmost occupied column per row
+
   $placed = [];
 
   foreach($appointments as $appointment) {
@@ -362,16 +363,35 @@ function all_day_lanes($appointments, $from, $days = 7) {
 
     if($end < $start) continue;
 
-    $column = $from->diff($start)->days + 1;
-    $span = $start->diff($end)->days + 1;
-
-    $row = 1;
-    while(($lanes[$row] ?? 0) >= $column) $row++;
-    $lanes[$row] = $column + $span - 1;
-
-    $appointment['layout'] = ['column' => $column, 'span' => $span, 'row' => $row];
+    $appointment['layout'] = [
+      'column' => $from->diff($start)->days + 1,
+      'span' => $start->diff($end)->days + 1,
+    ];
     $placed[] = $appointment;
   }
+
+  $rank = fn($a) => match(true) {
+    cast_bool(@$a['is_task']) => 3,
+    cast_bool(@$a['is_birthday']) => 1,
+    $a['layout']['span'] > 1 => 0,
+    default => 2,
+  };
+  usort($placed, fn($a, $b) => $rank($a) <=> $rank($b));
+
+  $taken = [];
+
+  foreach($placed as &$appointment) {
+    ['column' => $column, 'span' => $span] = $appointment['layout'];
+
+    $columns = range($column, $column + $span - 1);
+    $row = 1;
+    while(array_any($columns, fn($c) => isset($taken[$row][$c]))) $row++;
+    foreach($columns as $c) $taken[$row][$c] = true;
+
+    $appointment['layout']['row'] = $row;
+  }
+
+  unset($appointment);
 
   return $placed;
 }

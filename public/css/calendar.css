@@ -585,9 +585,15 @@ body:has(.calendar-page) {
   /* comment the following line in if you want the all day bar to always be visible */
   /* TODO(robin): make this configurable? */
   /* min-height: 2rem; */
+  /* one line of 0.9em appointment text plus its 4px vertical padding */
+  --all-day-row: calc(0.9lh + 8px);
   display: grid;
   grid-template-columns: subgrid;
+  grid-auto-rows: var(--all-day-row);
   gap: 1px;
+  /* half a row peeks out to show there is more */
+  max-height: calc(3.5 * var(--all-day-row) + 3px);
+  overflow-y: auto;
   background: light-dark(#fbfbfb, #3a3a42);
 }
 
