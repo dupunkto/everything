@@ -592,7 +592,7 @@ body:has(.calendar-page) {
   grid-auto-rows: var(--all-day-row);
   gap: 1px;
   /* half a row peeks out to show there is more */
-  max-height: calc(3.5 * var(--all-day-row) + 3px);
+  max-height: calc(2.5 * var(--all-day-row) + 2px);
   overflow-y: auto;
   background: light-dark(#fbfbfb, #3a3a42);
 }
