@@ -13,7 +13,7 @@
           <option value="month" <?= $quota['period'] == 'month' ? 'selected' : '' ?>>monthly</option>
         </select>
         <label>
-          starting from:
+          starting:
           <input name="start_date" type="date" value="<?= esc_attr($quota['start_date']) ?>" required aria-label="Start date">
         </label>
         <button type="button" x-delete="/settings/quotas/delete?tag_id=<?= esc_attr($quota['tag_id']) ?>" x-target="#quotas-listing" x-refresh="#quota-new" title="Delete quota">&times;</button>
