@@ -20,14 +20,14 @@ function period_start($value, $period): \DateTimeImmutable {
     : $date->modify("first day of this month");
 }
 
-const PERIOD_DAYS = ['week' => 7, 'month' => 30.436875];
+const PERIOD_DAYS = ['week' => 7, 'month' => 7 * 52 / 12];
 
 function overview($period, \DateTimeImmutable $from, \DateTimeImmutable $to, $quotas): array {
   $quotas = array_filter($quotas, fn($quota) =>
     PERIOD_DAYS[$quota['period']] <= PERIOD_DAYS[$period] && $quota['start_date'] < $to->format("Y-m-d"));
 
-  return array_map(fn($row) => isset($row['minutes']) && $row['period'] != $period
-    ? ['minutes' => target($row, $from, $to)] + $row
+  return array_map(fn($row) => isset($row['minutes'])
+    ? ['minutes' => $row['minutes'] * PERIOD_DAYS[$period] / PERIOD_DAYS[$row['period']]] + $row
     : $row, rows($quotas, $from, $to));
 }
 
@@ -35,15 +35,21 @@ function total(\DateTimeImmutable $now, $quotas): array {
   $quotas = array_filter($quotas, fn($quota) => $quota['start_date'] <= $now->format("Y-m-d"));
   $rows = rows($quotas, (new \DateTimeImmutable("@0"))->setTimezone($now->getTimezone()), $now);
   $rows = array_filter($rows, fn($row) => isset($row['minutes']) || !$row['parent_id']);
-  $week_end = period_start($now->format("Y-m-d"), 'week')->modify("+1 week");
 
-  return array_map(fn($row) => isset($row['minutes'])
-    ? ['minutes' => target($row, new \DateTimeImmutable($row['start_date'], $now->getTimezone()), $week_end)] + $row
-    : $row, array_values($rows));
+  return array_map(function($row) use ($now) {
+    if(!isset($row['minutes'])) return $row;
+
+    $start = new \DateTimeImmutable($row['start_date'], $now->getTimezone());
+    $end = period_start($now->format("Y-m-d"), $row['period'])->modify("+1 {$row['period']}");
+    return ['minutes' => $row['minutes'] * periods($row['period'], $start, $end)] + $row;
+  }, array_values($rows));
 }
 
-function target($quota, \DateTimeImmutable $from, \DateTimeImmutable $to): float {
-  return $quota['minutes'] * $from->diff($to)->days / PERIOD_DAYS[$quota['period']];
+function periods($period, \DateTimeImmutable $from, \DateTimeImmutable $to): float {
+  $diff = $from->diff($to);
+  return $period == 'week'
+    ? $diff->days / PERIOD_DAYS['week']
+    : $diff->y * 12 + $diff->m + $diff->d / PERIOD_DAYS['month'];
 }
 
 // Quota rows first, then every other tag with time tracked in the range.
