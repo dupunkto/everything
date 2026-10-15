@@ -9,7 +9,10 @@
     <?php include __DIR__ . "/../shell/menu.php" ?>
     <main class="main licenses">
       <header class="page-header">
-        <?php $parent = "/about"; include __DIR__ . "/../settings/back.php" ?>
+        <?php
+          $parent = "/about";
+          include __DIR__ . "/../settings/back.php"
+        ?>
         <h2>Licenses</h2>
       </header>
 

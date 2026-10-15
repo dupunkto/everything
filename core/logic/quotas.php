@@ -24,16 +24,7 @@ function overview($period, \DateTimeImmutable $from, \DateTimeImmutable $to, $qu
   $quotas = array_filter($quotas, fn($quota) =>
     $quota['period'] == $period && $quota['start_date'] < $to->format("Y-m-d"));
 
-  if(!$quotas) return [];
-
-  $by_tag = [];
-  foreach($quotas as $quota) $by_tag[$quota['tag_id']] = $quota;
-
-  $worked = worked_by_tag($by_tag, $from, $to);
-  return array_map(function($quota) use ($worked) {
-    $quota['worked_seconds'] = $worked[$quota['tag_id']];
-    return $quota;
-  }, array_values($by_tag));
+  return rows($quotas, $from, $to);
 }
 
 // Average Gregorian month and week length, for scaling a per-period quota
@@ -42,30 +33,44 @@ const PERIOD_SECONDS = ['week' => 604800, 'month' => 2629746];
 
 function total(\DateTimeImmutable $now, $quotas): array {
   $quotas = array_filter($quotas, fn($quota) => $quota['start_date'] <= $now->format("Y-m-d"));
-  if(!$quotas) return [];
 
-  $by_tag = [];
-  foreach($quotas as $quota) $by_tag[$quota['tag_id']] = $quota;
+  return array_map(function($row) use ($now) {
+    if(!isset($row['minutes'])) return $row;
 
-  $earliest = min(array_column($by_tag, 'start_date'));
-  $from = new \DateTimeImmutable($earliest, $now->getTimezone());
-  $worked = worked_by_tag($by_tag, $from, $now);
-
-  return array_map(function($quota) use ($now, $worked) {
-    $start = new \DateTimeImmutable($quota['start_date'], $now->getTimezone());
+    $start = new \DateTimeImmutable($row['start_date'], $now->getTimezone());
     $elapsed = max(0, $now->getTimestamp() - $start->getTimestamp());
-    $periods = $elapsed / PERIOD_SECONDS[$quota['period']];
+    $periods = $elapsed / PERIOD_SECONDS[$row['period']];
     // Scale the per-period target across every period elapsed since the quota began.
-    $quota['minutes'] = $quota['minutes'] * $periods;
-    $quota['worked_seconds'] = $worked[$quota['tag_id']];
-    return $quota;
-  }, array_values($by_tag));
+    $row['minutes'] = $row['minutes'] * $periods;
+    return $row;
+  }, rows($quotas, (new \DateTimeImmutable("@0"))->setTimezone($now->getTimezone()), $now));
 }
 
-function worked_by_tag($by_tag, \DateTimeImmutable $from, \DateTimeImmutable $to): array {
-  $parents = [];
-  foreach(\store\list_tags() as $tag) $parents[$tag['id']] = $tag['parent_id'];
+// Quota rows first, then every other tag with time tracked in the range.
+function rows($quotas, \DateTimeImmutable $from, \DateTimeImmutable $to): array {
+  $tags = \store\list_tags();
+  $quotas = array_column($quotas, null, 'tag_id');
+  $worked = worked_by_tag(array_column($tags, 'parent_id', 'id'), $quotas, $from, $to);
 
+  $rows = array_map(fn($quota) =>
+    $quota + ['worked_seconds' => $worked[$quota['tag_id']] ?? 0], array_values($quotas));
+
+  foreach($tags as $tag) {
+    if(isset($quotas[$tag['id']]) || empty($worked[$tag['id']])) continue;
+    $rows[] = [
+      'tag_id' => $tag['id'],
+      'label' => $tag['label'],
+      'color' => $tag['color'],
+      'worked_seconds' => $worked[$tag['id']],
+    ];
+  }
+
+  return $rows;
+}
+
+// Time per tag, rolled up into its ancestors. A quota only counts time from
+// its start date onwards.
+function worked_by_tag($parents, $quotas, \DateTimeImmutable $from, \DateTimeImmutable $to): array {
   $from_utc = $from->setTimezone(new \DateTimeZone("UTC"))->format('c');
   $to_utc = $to->setTimezone(new \DateTimeZone("UTC"))->format('c');
   $timings = [];
@@ -73,22 +78,24 @@ function worked_by_tag($by_tag, \DateTimeImmutable $from, \DateTimeImmutable $to
   foreach(\store\list_timing_tags_between($from_utc, $to_utc) as $link) {
     $tag_id = $link['tag_id'];
     while($tag_id) {
-      if(isset($by_tag[$tag_id])) $timings[$link['id']]['quotas'][$tag_id] = true;
+      $timings[$link['id']]['tags'][$tag_id] = true;
       $tag_id = @$parents[$tag_id];
     }
     $timings[$link['id']]['starts_at'] = $link['starts_at'];
     $timings[$link['id']]['ends_at'] = $link['ends_at'];
   }
 
-  $worked = array_fill_keys(array_keys($by_tag), 0);
+  $worked = [];
   foreach($timings as $timing) {
-    foreach(array_keys(@$timing['quotas'] ?: []) as $tag_id) {
-      $quota = $by_tag[$tag_id];
-      $quota_start = new \DateTimeImmutable($quota['start_date'], $from->getTimezone());
-      $effective_from = max($from->getTimestamp(), $quota_start->getTimestamp());
+    foreach(array_keys($timing['tags']) as $tag_id) {
+      $effective_from = $from->getTimestamp();
+      if(isset($quotas[$tag_id])) {
+        $quota_start = new \DateTimeImmutable($quotas[$tag_id]['start_date'], $from->getTimezone());
+        $effective_from = max($effective_from, $quota_start->getTimestamp());
+      }
       $starts_at = max($effective_from, (new \DateTimeImmutable($timing['starts_at']))->getTimestamp());
       $ends_at = min($to->getTimestamp(), (new \DateTimeImmutable($timing['ends_at']))->getTimestamp());
-      $worked[$tag_id] += max(0, $ends_at - $starts_at);
+      $worked[$tag_id] = ($worked[$tag_id] ?? 0) + max(0, $ends_at - $starts_at);
     }
   }
 
