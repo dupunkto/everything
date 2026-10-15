@@ -1,8 +1,8 @@
 <?php
-// Helpers for working with quotas in the tracker application.
+// Tracked time per tag and quota progress for the tracker statistics.
 // This file was lovingly written by Claude.
 
-namespace quotas;
+namespace statistics;
 
 function period_start($value, $period): \DateTimeImmutable {
   $timezone = new \DateTimeZone(TIMEZONE);

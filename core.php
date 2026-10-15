@@ -38,7 +38,7 @@ require __DIR__ . "/core/logic/contacts.php";
 require __DIR__ . "/core/logic/calendar.php";
 require __DIR__ . "/core/logic/habits.php";
 require __DIR__ . "/core/logic/shares.php";
-require __DIR__ . "/core/logic/quotas.php";
+require __DIR__ . "/core/logic/statistics.php";
 require __DIR__ . "/core/logic/bookmarks.php";
 require __DIR__ . "/core/logic/mcp.php";
 require __DIR__ . "/core/logic/export.php";

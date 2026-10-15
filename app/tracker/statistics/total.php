@@ -1,7 +1,7 @@
 <?php
 
   $now = new \DateTimeImmutable("now", new \DateTimeZone(TIMEZONE));
-  $rows = \quotas\total($now, \store\list_quotas());
+  $rows = \statistics\total($now, \store\list_quotas());
 
 ?>
 <header class="page-header">
