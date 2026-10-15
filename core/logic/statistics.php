@@ -33,6 +33,8 @@ const PERIOD_SECONDS = ['week' => 604800, 'month' => 2629746];
 
 function total(\DateTimeImmutable $now, $quotas): array {
   $quotas = array_filter($quotas, fn($quota) => $quota['start_date'] <= $now->format("Y-m-d"));
+  $rows = rows($quotas, (new \DateTimeImmutable("@0"))->setTimezone($now->getTimezone()), $now);
+  $rows = array_filter($rows, fn($row) => isset($row['minutes']) || !$row['parent_id']);
 
   return array_map(function($row) use ($now) {
     if(!isset($row['minutes'])) return $row;
@@ -43,7 +45,7 @@ function total(\DateTimeImmutable $now, $quotas): array {
     // Scale the per-period target across every period elapsed since the quota began.
     $row['minutes'] = $row['minutes'] * $periods;
     return $row;
-  }, rows($quotas, (new \DateTimeImmutable("@0"))->setTimezone($now->getTimezone()), $now));
+  }, array_values($rows));
 }
 
 // Quota rows first, then every other tag with time tracked in the range.
@@ -59,6 +61,7 @@ function rows($quotas, \DateTimeImmutable $from, \DateTimeImmutable $to): array 
     if(isset($quotas[$tag['id']]) || empty($worked[$tag['id']])) continue;
     $rows[] = [
       'tag_id' => $tag['id'],
+      'parent_id' => $tag['parent_id'],
       'label' => $tag['label'],
       'color' => $tag['color'],
       'worked_seconds' => $worked[$tag['id']],
