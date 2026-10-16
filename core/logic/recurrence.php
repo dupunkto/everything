@@ -96,12 +96,13 @@ function task_state($task) {
 
   $rrule = trim((string)$task['recurrence']);
   $latest_status = $task['status'];
+  $now = new \DateTimeImmutable("now", $tz);
+  $opened = $now >= ($from_utc(@$task['open_at']) ?: $now);
 
   if($rrule == "") {
-    return ['status' => $latest_status, 'next' => $task['due_at'], 'previous' => null, 'visible' => true];
+    return ['status' => $latest_status, 'next' => $task['due_at'], 'previous' => null, 'visible' => $opened];
   }
 
-  $now = new \DateTimeImmutable("now", $tz);
   $base = $from_utc(@$task['due_at']) ?: $from_utc(@$task['open_at']) ?: $now;
   [$previous, $next] = neighbours($rrule, $base, $now);
   $latest_date = $from_utc($task['updated_date']);
@@ -117,8 +118,8 @@ function task_state($task) {
   }
 
   $horizon = (int) \TODO_RECURRENCE_HORIZON;
-  $visible = $status == 'blocked'
-    || ($next && $now >= $next->modify("-$horizon days"));
+  $visible = $opened && ($status == 'blocked'
+    || ($next && $now >= $next->modify("-$horizon days")));
 
   return [
     'status' => $status,

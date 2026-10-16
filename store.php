@@ -335,8 +335,9 @@ function set_task_tags($id, $tag_ids) {
 // task's effective status can differ from its latest log row, so filtering
 // happens in PHP rather than SQL. $override lists ids that bypass the filter
 // entirely (freshly clicked tasks that shouldn't vanish under the cursor).
-// $respect_horizon hides recurring tasks outside their visibility window; the
-// calendar passes false to keep future deadlines addressable.
+// $respect_horizon hides tasks that aren't open yet and recurring tasks outside
+// their visibility window; the calendar passes false to keep future deadlines
+// addressable.
 function list_tasks($query = "", $override = [], $respect_horizon = true) {
   $include = [];
   $exclude = [];
