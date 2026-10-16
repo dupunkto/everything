@@ -444,8 +444,8 @@ button,
 
 .listing--masonry {
   display: grid;
+  display: grid-lanes;
   grid-template-columns: repeat(auto-fill, minmax(435px, 1fr));
-  grid-template-rows: masonry;
   column-gap: 1em;
 }
 
