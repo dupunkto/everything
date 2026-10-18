@@ -343,6 +343,7 @@ function list_tasks($query = "", $override = [], $respect_horizon = true) {
   $exclude = [];
   $urgent = null;
   $expired = null;
+  $due = null;
   $overdue = null;
 
   foreach(explode(" ", $query) as $segment) {
@@ -352,6 +353,7 @@ function list_tasks($query = "", $override = [], $respect_horizon = true) {
 
     if($value == 'urgent') $urgent = $selector == "is";
     elseif($value == 'expired') $expired = $selector == 'is';
+    elseif($value == 'due') $due = $selector == 'is';
     elseif($value == 'overdue') $overdue = $selector == 'is';
     elseif($selector == "is" && $value == 'open') $include = [...$include, 'todo', 'wip', 'blocked'];
     elseif($selector == "is" && in_array($value, ENUM_TASK_STATUS)) $include[] = $value;
@@ -393,6 +395,7 @@ function list_tasks($query = "", $override = [], $respect_horizon = true) {
 
   $colors = array_column(list_tags(), 'color', 'id');
   $now = new \DateTimeImmutable("now", new \DateTimeZone(TIMEZONE));
+  $day_after_tomorrow = $now->setTime(0, 0)->modify('+2 days');
 
   foreach(collect_by($rows, 'tag', 'tags') as $task) {
     foreach($task['tags'] as &$tag) {
@@ -403,19 +406,22 @@ function list_tasks($query = "", $override = [], $respect_horizon = true) {
     $state = \recurrence\task_state($task);
     $task = array_merge($task, $state);
 
+    $deadline = $task['next'] ? new \DateTimeImmutable($task['next']) : null;
+    if($deadline && cast_bool($task['due_all_day'])) {
+      $deadline = $deadline->setTimezone(new \DateTimeZone(TIMEZONE))->modify('+1 day');
+    }
+    $task['overdue'] = $deadline && $deadline <= $now && !in_array($state['status'], ['done', 'nvm']);
+
     if(in_array($task['id'], $override, true)) { $result[] = $task; continue; }
 
     $is_expired = $task['expire_at'] && strtotime($task['expire_at']) <= time();
     if($expired !== null && $is_expired != $expired) continue;
     if($respect_horizon && !$is_expired && !$state['visible']) continue;
 
-    $due = $task['next'] ? new \DateTimeImmutable($task['next']) : null;
-    if($due && cast_bool($task['due_all_day'])) {
-      $due = $due->setTimezone(new \DateTimeZone(TIMEZONE))->modify('+1 day');
-    }
-    $is_overdue = $due && $due <= $now;
+    $is_due = $deadline && $deadline <= $day_after_tomorrow;
 
-    if($overdue !== null && $is_overdue != $overdue) continue;
+    if($overdue !== null && $task['overdue'] != $overdue) continue;
+    if($due !== null && $is_due != $due) continue;
     if($urgent !== null && filter_var($task['urgent'], FILTER_VALIDATE_BOOLEAN) != $urgent) continue;
     if($include && !in_array($state['status'], $include)) continue;
     if($exclude && in_array($state['status'], $exclude)) continue;

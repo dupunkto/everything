@@ -21,17 +21,8 @@
   }
 
   $tasks = \store\list_tasks($query, array_keys($pinned));
-  $today = local_date("Y-m-d");
-  $now = time();
 
   [$query_tags, $query_terms] = \core\parse_query($query, $tags);
-
-  $is_overdue = fn($task) =>
-    in_array($task['status'], ['todo', 'wip', 'blocked'])
-    && $task['next']
-    && (cast_bool($task['due_all_day'])
-      ? local_date("Y-m-d", $task['next']) < $today
-      : strtotime($task['next']) < $now);
 
   $depth_of = function($tag) use ($tags) {
     $depth = 0;
@@ -50,7 +41,6 @@
     if($query_tags && array_diff($query_tags, $ids)) continue;
     if(!str_contains_terms("{$task['title']} {$task['content']}", $query_terms)) continue;
 
-    $task['overdue'] = $is_overdue($task);
     $task['virtual_status'] = in_array(@$pinned[$task['id']], ENUM_VIRTUAL_STATUS)
       ? $pinned[$task['id']]
       : ($task['overdue'] ? 'overdue' : $task['status']);
